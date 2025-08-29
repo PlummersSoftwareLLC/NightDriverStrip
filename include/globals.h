@@ -564,7 +564,11 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef NUM_INFO_PAGES
-#define NUM_INFO_PAGES 2
+#define NUM_INFO_PAGES 3
+#endif
+
+#ifndef DEFAULT_INFO_PAGE
+#define DEFAULT_INFO_PAGE 0
 #endif
 
 // When you press a color button on the remote, the color is used to create a temporary fill effect, but

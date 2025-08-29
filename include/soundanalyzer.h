@@ -148,6 +148,13 @@ inline constexpr AudioInputParams kParamsI2SExternal{
   #define MIN_VU 0.05f
 #endif
 
+void IRAM_ATTR AudioSamplerTaskEntry(void *);
+void IRAM_ATTR AudioSerialTaskEntry(void *);
+
+#ifndef GAINDAMPEN
+    #define GAINDAMPEN 10      // How slowly brackets narrow in for spectrum bands
+#endif
+
 #ifndef VUDAMPEN
   #define VUDAMPEN 0
 #endif
@@ -256,6 +263,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *);
 template<const AudioInputParams& Params>
 class SoundAnalyzer : public ISoundAnalyzer
 {
+  public:
     // Give internal audio task functions access to private members
     friend void IRAM_ATTR AudioSamplerTaskEntry(void *);
     friend void IRAM_ATTR AudioSerialTaskEntry(void *);

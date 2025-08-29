@@ -1,3 +1,4 @@
+
 //+--------------------------------------------------------------------------
 //
 // File:        PatternPongClock.h
@@ -65,6 +66,8 @@
 
 #ifndef PatternPongClock_H
 #define PatternPongClock_H
+
+#if USE_HUB75
 
 #include "systemcontainer.h"
 
@@ -497,5 +500,5 @@ class PatternPongClock : public EffectWithId<PatternPongClock>
         return newY;
     }
 };
-
+#endif
 #endif

@@ -121,9 +121,11 @@ uint16_t LocalDraw()
                 effectManager.Update(); // Draw the current built in effect
 
                 #if SHOW_VU_METER
-                    static auto spectrum = std::static_pointer_cast<SpectrumAnalyzerEffect>(GetSpectrumAnalyzer(0));
-                    if (effectManager.IsVUVisible())
-                        spectrum->DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0, g_Analyzer.IsRemoteAudioActive() ? &vuPaletteBlue : &vuPaletteGreen);
+                    #if ENABLE_AUDIO
+                        static auto spectrum = std::static_pointer_cast<SpectrumAnalyzerEffect>(GetSpectrumAnalyzer(0));
+                        if (effectManager.IsVUVisible())
+                            spectrum->DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0, g_Analyzer.IsRemoteAudioActive() ? & vuPaletteBlue : &vuPaletteGreen);
+                    #endif
                 #endif
 
                 debugV("LocalDraw claims to have drawn %d pixels", NUM_LEDS);

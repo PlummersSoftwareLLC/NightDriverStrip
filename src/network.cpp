@@ -474,19 +474,29 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                     uint64_t seconds   = ULONGFromMemory(&payloadData[8]);
                     uint64_t micros    = ULONGFromMemory(&payloadData[16]);
 
-                    debugV("ProcessIncomingData -- Bands: %u, Length: %u, Seconds: %llu, Micros: %llu ... ",
-                        numbands,
-                        length32,
-                        seconds,
-                        micros);
+                debugV("ProcessIncomingData -- Bands: %u, Length: %u, Seconds: %llu, Micros: %llu ... ",
+                       numbands,
+                       length32,
+                       seconds,
+                       micros);
 
-                    const float* pFloats = reinterpret_cast<const float*>(payloadData.get() + STANDARD_DATA_HEADER_SIZE);
-                    PeakData peaks{};
-                    std::copy_n(pFloats, NUM_BANDS, peaks.begin());
-                    g_Analyzer.SetPeakDataFromRemote(peaks);
-                #endif
-                return true;
-            }
+                // Data is transmitted as NUM_BANDS floats following the standard header
+                const uint8_t* dataStart = payloadData.get() + STANDARD_DATA_HEADER_SIZE;
+                const size_t availableFloats = (payloadLength > STANDARD_DATA_HEADER_SIZE)
+                                                ? (payloadLength - STANDARD_DATA_HEADER_SIZE) / sizeof(float)
+                                                : 0;
+                const size_t copyCount = std::min<size_t>(NUM_BANDS, std::min<size_t>(numbands, availableFloats));
+
+                PeakData peaks{}; // zero-initialized for any bands not provided
+                if (copyCount > 0)
+                {
+                    const float* pFloats = reinterpret_cast<const float*>(dataStart);
+                    std::copy_n(pFloats, copyCount, peaks.begin());
+                }
+                g_Analyzer.SetPeakDataFromRemote(peaks);
+            #endif
+            return true;
+        }
 
             // WIFI_COMMAND_PIXELDATA64 has a header plus length32 CRGBs
 
