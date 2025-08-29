@@ -39,7 +39,6 @@
 #include "effects/strip/stareffect.h"           // star effects
 #include "effects/strip/bouncingballeffect.h"   // bouncing ball effects
 #include "effects/strip/tempeffect.h"
-#include "effects/strip/stareffect.h"
 #include "effects/strip/laserline.h"
 #include "effects/strip/misceffects.h"
 #include "effects/matrix/PatternClock.h"        // No matrix dependencies
@@ -59,10 +58,32 @@
 
 #if USE_HUB75
     #include "ledmatrixgfx.h"
+    #include "effects/matrix/PatternPongClock.h"
+    #include "effects/matrix/PatternMandala.h"
+    // These effects require LEDMatrixGFX::getPolarMap()
+    #include "effects/matrix/PatternSMHypnosis.h"
+    #include "effects/matrix/PatternSMRainbowTunnel.h"
+    #include "effects/matrix/PatternSMRadialWave.h"
+    #include "effects/matrix/PatternSMRadialFire.h"
 
-    #include "effects/matrix/PatternSMStrobeDiffusion.h"
+
+    #if ENABLE_WIFI
+        #include "effects/matrix/PatternSubscribers.h"
+        #include "effects/matrix/PatternWeather.h"
+        #include "effects/matrix/PatternStocks.h"
+    #endif
+
+    #if USE_NOISE
+        #include "effects/matrix/PatternNoiseSmearing.h"
+        #include "effects/matrix/PatternSMSmoke.h"
+    #endif
+
+#endif
+
+#if USE_HUB75 || USE_MATRIX
+
+    #include "effects/matrix/PatternAnimatedGIF.h"
     #include "effects/matrix/PatternSM2DDPR.h"
-
     #include "effects/matrix/PatternSMStarDeep.h"
     #include "effects/matrix/PatternSMAmberRain.h"
     #include "effects/matrix/PatternSMBlurringColors.h"
@@ -82,6 +103,7 @@
     #include "effects/matrix/PatternSMRadialWave.h"
     #include "effects/matrix/PatternSMRadialFire.h"
     #include "effects/matrix/PatternSMSmoke.h"
+    #include "effects/matrix/PatternSMStrobeDiffusion.h"
     #include "effects/matrix/PatternSerendipity.h"
     #include "effects/matrix/PatternSwirl.h"
     #include "effects/matrix/PatternPulse.h"
@@ -135,25 +157,6 @@ void LoadEffectFactories()
         return;
 
     g_ptrEffectFactories = make_unique_psram<EffectFactories>();
-
-    // The EFFECT_SET_VERSION macro defines the "effect set version" for a project. This version
-    // is persisted to JSON with the effect objects, and compared to it when the effects JSON file
-    // is deserialized.
-    //
-    // If the persisted version and the one defined below don't match, the effects JSON is ignored
-    // and the default set is loaded. This means that a "reset" of a project's effect set on the
-    // boards running the project can be forced by bumping up the effect set version for that project.
-    // As the user may have customized their effect set config or order, this should be done with
-    // some hesitation - and increasingly so when the web UI starts offering more facilities for
-    // customizing one's effect setup.
-    //
-    // The effect set version defaults to 1, so a project only needs to define it if it's different
-    // than that; refer to MESMERIZER as an example. If the effect set version is defined to 0, the
-    // default set will be loaded at every startup.
-    //
-    // The following line can be uncommented to override the per-project effect set version.
-
-    // #define EFFECT_SET_VERSION   0
 
     // Include custom effects header if available - it overrides whatever the effect set flags
     // would otherwise include.
@@ -271,6 +274,58 @@ void LoadEffectFactories()
         // Lantern effect set
         RegisterAll(*g_ptrEffectFactories,
             Effect<FireEffect>("Calm Fire", NUM_LEDS, 40, 5, 50, 3, 3, true, true)
+        );
+    #endif
+
+    #if defined(EFFECTS_STACKDEMO)
+        RegisterAll(*g_ptrEffectFactories,
+            Effect<SpectrumBarEffect>("Audiograph", 16, 4, 0),
+            Effect<SpectrumAnalyzerEffect>("Spectrum", NUM_BANDS, spectrumAltColors, false, 0, 0, 1.6, 1.6),
+            Effect<SpectrumAnalyzerEffect>("AudioWave", MATRIX_WIDTH, CRGB(0,0,40), 0, 1.25, 1.25, true),
+            Effect<PatternAnimatedGIF>("Nyancat", GIFIdentifier::Nyancat),
+            Effect<PatternAnimatedGIF>("Pacman", GIFIdentifier::Pacman),
+            Effect<PatternAnimatedGIF>("Atomic", GIFIdentifier::Atomic),
+            Effect<PatternAnimatedGIF>("Banana", GIFIdentifier::Banana),
+            Effect<PatternSMFire2021>(),
+            Effect<GhostWave>("GhostWave", 0, 30, false, 10),
+            Effect<PatternSMGamma>(),
+            Effect<PatternSMMetaBalls>(),
+            Effect<PatternSMSupernova>(),
+            Effect<PatternCube>(),
+            Effect<PatternLife>(),
+            Effect<PatternCircuit>(),
+            Effect<SpectrumAnalyzerEffect>("USA", NUM_BANDS, USAColors_p, true, 0, 0, 0.75, 0.75),
+            Effect<SpectrumAnalyzerEffect>("Spectrum 2", 32, spectrumBasicColors, false, 100, 0, 0.75, 0.75),
+            Effect<SpectrumAnalyzerEffect>("Spectrum++", NUM_BANDS, spectrumBasicColors, false, 0, 40, -1.0, 2.0),
+            Effect<WaveformEffect>("WaveIn", 8),
+            Effect<GhostWave>("WaveOut", 0, 0, true, 0),
+            Effect<StarEffect<MusicStar>>("Stars", RainbowColors_p, 1.0, 1, LINEARBLEND, 2.0, 0.5, 10.0),
+            Effect<GhostWave>("PlasmaWave", 0, 255, false),
+            Effect<PatternSMNoise>("Shikon", PatternSMNoise::EffectType::Shikon_t),
+            Effect<PatternSMFlowFields>(),
+            Effect<PatternSMBlurringColors>(),
+            Effect<PatternSMWalkingMachine>(),
+            Effect<PatternSMStarDeep>(),
+            Effect<PatternSM2DDPR>(),
+            Effect<PatternSMPicasso3in1>("Lines", 38),
+            Effect<PatternSMPicasso3in1>("Circles", 73),
+            Effect<PatternSMAmberRain>(),
+            Effect<PatternSMStrobeDiffusion>(),
+            Effect<PatternSMSpiroPulse>(),
+            Effect<PatternSMTwister>(),
+            Effect<PatternSMHolidayLights>(),
+            Effect<PatternRose>(),
+            Effect<PatternPinwheel>(),
+            Effect<PatternSunburst>(),
+            Effect<PatternClock>(),
+            Effect<PatternAlienText>(),
+            Effect<PatternPulsar>(),
+            Effect<PatternBounce>(),
+            Effect<PatternWave>(),
+            Effect<PatternSwirl>(),
+            Effect<PatternSerendipity>(),
+            Effect<PatternMunch>(),
+            Effect<PatternMaze>()
         );
     #endif
 
@@ -559,49 +614,4 @@ void LoadEffectFactories()
 
     auto factoriesHashString = fnv1a::hash_to_string(fnv1a::hash<uint64_t>(g_ptrEffectFactories->FactoryIDs()));
     g_ptrEffectFactories->HashString(factoriesHashString);
-}
-
-#ifndef NO_EFFECT_PERSISTENCE
-    #define NO_EFFECT_PERSISTENCE 0
-#endif
-
-// Load the effects JSON file and check if it's appropriate to use
-std::optional<JsonObjectConst> LoadEffectsJSONFile(JsonDocument& jsonDoc)
-{
-    // If ordered to do so, we ignore whatever is persisted
-    if (NO_EFFECT_PERSISTENCE || !LoadJSONFile(EFFECTS_CONFIG_FILE, jsonDoc))
-        return {};
-
-    auto jsonObject = jsonDoc.as<JsonObjectConst>();
-
-    // Ignore JSON if it was persisted for a different project
-    if (jsonObject[PTY_PROJECT].is<String>()
-        && jsonObject[PTY_PROJECT].as<String>() != PROJECT_NAME)
-    {
-        return {};
-    }
-
-    auto jsonVersion = jsonObject[PTY_EFFECTSETVER];
-
-    // Only return the JSON object if the persistent version matches the current one
-    if (jsonVersion.is<String>()
-        && g_ptrEffectFactories->HashString() == jsonVersion.as<String>())
-    {
-        return jsonObject;
-    }
-
-    return {};
-}
-
-// Load the default effect set. It's defined here because it uses EFFECT_SET_VERSION.
-void EffectManager::LoadDefaultEffects()
-{
-    _effectSetHashString = g_ptrEffectFactories->HashString();
-
-    for (const auto &numberedFactory : g_ptrEffectFactories->GetDefaultFactories())
-        ProduceAndLoadDefaultEffect(numberedFactory);
-
-    SetInterval(DEFAULT_EFFECT_INTERVAL, true);
-
-    construct(true);
 }
