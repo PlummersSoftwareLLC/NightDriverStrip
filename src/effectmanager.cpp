@@ -113,9 +113,54 @@ void InitEffectsManager()
     #endif
 }
 
+#ifndef NO_EFFECT_PERSISTENCE
+    #define NO_EFFECT_PERSISTENCE 0
+#endif
+
+// Load the effects JSON file and check if it's appropriate to use
+std::optional<JsonObjectConst> LoadEffectsJSONFile(JsonDocument& jsonDoc)
+{
+    // If ordered to do so, we ignore whatever is persisted
+    if (NO_EFFECT_PERSISTENCE || !LoadJSONFile(EFFECTS_CONFIG_FILE, jsonDoc))
+        return {};
+
+    auto jsonObject = jsonDoc.as<JsonObjectConst>();
+
+    // Ignore JSON if it was persisted for a different project
+    if (jsonObject[PTY_PROJECT].is<String>()
+        && jsonObject[PTY_PROJECT].as<String>() != PROJECT_NAME)
+    {
+        return {};
+    }
+
+    auto jsonVersion = jsonObject[PTY_EFFECTSETVER];
+
+    // Only return the JSON object if the persistent version matches the current one
+    if (jsonVersion.is<String>()
+        && g_ptrEffectFactories->HashString() == jsonVersion.as<String>())
+    {
+        return jsonObject;
+    }
+
+    return {};
+}
+
 //
 // EffectManager member function definitions
 //
+
+void EffectManager::LoadDefaultEffects()
+{
+    _effectSetHashString = g_ptrEffectFactories->HashString();
+
+    for (const auto &numberedFactory : g_ptrEffectFactories->GetDefaultFactories())
+        ProduceAndLoadDefaultEffect(numberedFactory);
+
+    SetInterval(DEFAULT_EFFECT_INTERVAL, true);
+
+    construct(true);
+}
+
 
 void EffectManager::SaveCurrentEffectIndex()
 {

@@ -229,7 +229,6 @@ public:
         _effectEventListeners.emplace_back(listener);
     }
 
-    // Implementation is in effects.cpp
     void LoadDefaultEffects();
 
     // DeserializeFromJSON
