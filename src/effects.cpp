@@ -39,6 +39,7 @@
 #include "effects/strip/stareffect.h"           // star effects
 #include "effects/strip/bouncingballeffect.h"   // bouncing ball effects
 #include "effects/strip/tempeffect.h"
+#include "effects/strip/stareffect.h"
 #include "effects/strip/laserline.h"
 #include "effects/strip/misceffects.h"
 #include "effects/matrix/PatternClock.h"        // No matrix dependencies
@@ -58,31 +59,7 @@
 
 #if USE_HUB75
     #include "ledmatrixgfx.h"
-    #include "effects/matrix/PatternPongClock.h"
-    #include "effects/matrix/PatternMandala.h"
-    // These effects require LEDMatrixGFX::getPolarMap()
-    #include "effects/matrix/PatternSMHypnosis.h"
-    #include "effects/matrix/PatternSMRainbowTunnel.h"
-    #include "effects/matrix/PatternSMRadialWave.h"
-    #include "effects/matrix/PatternSMRadialFire.h"
-
-
-    #if ENABLE_WIFI
-        #include "effects/matrix/PatternSubscribers.h"
-        #include "effects/matrix/PatternWeather.h"
-        #include "effects/matrix/PatternStocks.h"
-    #endif
-
-    #if USE_NOISE
-        #include "effects/matrix/PatternNoiseSmearing.h"
-        #include "effects/matrix/PatternSMSmoke.h"
-    #endif
-
-#endif
-
-#if USE_HUB75 || USE_MATRIX
-
-    #include "effects/matrix/PatternAnimatedGIF.h"
+    #include "effects/matrix/PatternSMStrobeDiffusion.h"
     #include "effects/matrix/PatternSM2DDPR.h"
     #include "effects/matrix/PatternSMStarDeep.h"
     #include "effects/matrix/PatternSMAmberRain.h"
@@ -103,7 +80,6 @@
     #include "effects/matrix/PatternSMRadialWave.h"
     #include "effects/matrix/PatternSMRadialFire.h"
     #include "effects/matrix/PatternSMSmoke.h"
-    #include "effects/matrix/PatternSMStrobeDiffusion.h"
     #include "effects/matrix/PatternSerendipity.h"
     #include "effects/matrix/PatternSwirl.h"
     #include "effects/matrix/PatternPulse.h"
@@ -274,58 +250,6 @@ void LoadEffectFactories()
         // Lantern effect set
         RegisterAll(*g_ptrEffectFactories,
             Effect<FireEffect>("Calm Fire", NUM_LEDS, 40, 5, 50, 3, 3, true, true)
-        );
-    #endif
-
-    #if defined(EFFECTS_STACKDEMO)
-        RegisterAll(*g_ptrEffectFactories,
-            Effect<SpectrumBarEffect>("Audiograph", 16, 4, 0),
-            Effect<SpectrumAnalyzerEffect>("Spectrum", NUM_BANDS, spectrumAltColors, false, 0, 0, 1.6, 1.6),
-            Effect<SpectrumAnalyzerEffect>("AudioWave", MATRIX_WIDTH, CRGB(0,0,40), 0, 1.25, 1.25, true),
-            Effect<PatternAnimatedGIF>("Nyancat", GIFIdentifier::Nyancat),
-            Effect<PatternAnimatedGIF>("Pacman", GIFIdentifier::Pacman),
-            Effect<PatternAnimatedGIF>("Atomic", GIFIdentifier::Atomic),
-            Effect<PatternAnimatedGIF>("Banana", GIFIdentifier::Banana),
-            Effect<PatternSMFire2021>(),
-            Effect<GhostWave>("GhostWave", 0, 30, false, 10),
-            Effect<PatternSMGamma>(),
-            Effect<PatternSMMetaBalls>(),
-            Effect<PatternSMSupernova>(),
-            Effect<PatternCube>(),
-            Effect<PatternLife>(),
-            Effect<PatternCircuit>(),
-            Effect<SpectrumAnalyzerEffect>("USA", NUM_BANDS, USAColors_p, true, 0, 0, 0.75, 0.75),
-            Effect<SpectrumAnalyzerEffect>("Spectrum 2", 32, spectrumBasicColors, false, 100, 0, 0.75, 0.75),
-            Effect<SpectrumAnalyzerEffect>("Spectrum++", NUM_BANDS, spectrumBasicColors, false, 0, 40, -1.0, 2.0),
-            Effect<WaveformEffect>("WaveIn", 8),
-            Effect<GhostWave>("WaveOut", 0, 0, true, 0),
-            Effect<StarEffect<MusicStar>>("Stars", RainbowColors_p, 1.0, 1, LINEARBLEND, 2.0, 0.5, 10.0),
-            Effect<GhostWave>("PlasmaWave", 0, 255, false),
-            Effect<PatternSMNoise>("Shikon", PatternSMNoise::EffectType::Shikon_t),
-            Effect<PatternSMFlowFields>(),
-            Effect<PatternSMBlurringColors>(),
-            Effect<PatternSMWalkingMachine>(),
-            Effect<PatternSMStarDeep>(),
-            Effect<PatternSM2DDPR>(),
-            Effect<PatternSMPicasso3in1>("Lines", 38),
-            Effect<PatternSMPicasso3in1>("Circles", 73),
-            Effect<PatternSMAmberRain>(),
-            Effect<PatternSMStrobeDiffusion>(),
-            Effect<PatternSMSpiroPulse>(),
-            Effect<PatternSMTwister>(),
-            Effect<PatternSMHolidayLights>(),
-            Effect<PatternRose>(),
-            Effect<PatternPinwheel>(),
-            Effect<PatternSunburst>(),
-            Effect<PatternClock>(),
-            Effect<PatternAlienText>(),
-            Effect<PatternPulsar>(),
-            Effect<PatternBounce>(),
-            Effect<PatternWave>(),
-            Effect<PatternSwirl>(),
-            Effect<PatternSerendipity>(),
-            Effect<PatternMunch>(),
-            Effect<PatternMaze>()
         );
     #endif
 
