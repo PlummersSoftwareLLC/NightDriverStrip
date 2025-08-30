@@ -39,7 +39,7 @@
 #include <HTTPClient.h>
 #include <UrlEncode.h>
 #include <ledstripeffect.h>
-#include <ledmatrixgfx.h>
+#include <smartmatrixgfx.h>
 #include <ArduinoJson.h>
 #include "systemcontainer.h"
 #include <array>

@@ -33,7 +33,7 @@
 #include "effects.h"
 #include "gfxbase.h"
 #include "jsonserializer.h"
-#include "ledmatrixgfx.h"
+#include "smartmatrixgfx.h"
 #include "types.h"
 #include "hashing.h"
 
@@ -264,12 +264,12 @@ class LEDStripEffect : public IJSONSerializable
         return _GFX[channel];
     }
 
-    // mg is a shortcut for MATRIX projects to retrieve a pointer to the specialized LEDMatrixGFX type
+    // mg is a shortcut for MATRIX projects to retrieve a pointer to the specialized SmartMatrixGFX type
 
     #if USE_HUB75
-      std::shared_ptr<LEDMatrixGFX> mg(size_t channel = 0)
+      std::shared_ptr<SmartMatrixGFX> mg(size_t channel = 0)
       {
-        return std::static_pointer_cast<LEDMatrixGFX>(_GFX[channel]);
+        return std::static_pointer_cast<SmartMatrixGFX>(_GFX[channel]);
       }
     #endif
 

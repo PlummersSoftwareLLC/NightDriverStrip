@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        LEDStripGFX.h
+// File:        FastLEDGFX.h
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
@@ -33,11 +33,11 @@
 #pragma once
 #include "gfxbase.h"
 
-// LEDStripGFX
+// FastLEDGFX
 //
 // A derivation of GFXBase that adds LED-strip-specific functionality
 
-class LEDStripGFX : public GFXBase
+class FastLEDGFX : public GFXBase
 {
 protected:
     static void AddLEDsToFastLED(std::vector<std::shared_ptr<GFXBase>>& devices)
@@ -100,15 +100,15 @@ protected:
 
 public:
 
-    LEDStripGFX(size_t w, size_t h) : GFXBase(w, h)
+    FastLEDGFX(size_t w, size_t h) : GFXBase(w, h)
     {
         debugV("Creating Device of size %zu x %zu", w, h);
         leds = static_cast<CRGB *>(calloc(w * h, sizeof(CRGB)));
         if(!leds)
-            throw std::runtime_error("Unable to allocate LEDs in LEDStripGFX");
+            throw std::runtime_error("Unable to allocate LEDs in FastLEDGFX");
     }
 
-    ~LEDStripGFX() override
+    ~FastLEDGFX() override
     {
         free(leds);
         leds = nullptr;
@@ -123,8 +123,8 @@ public:
 
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
-            debugW("Allocating LEDStripGFX for channel %d", i);
-            devices.push_back(make_shared_psram<LEDStripGFX>(MATRIX_WIDTH, MATRIX_HEIGHT));
+            debugW("Allocating FastLEDGFX for channel %d", i);
+            devices.push_back(make_shared_psram<FastLEDGFX>(MATRIX_WIDTH, MATRIX_HEIGHT));
         }
 
         AddLEDsToFastLED(devices);
@@ -142,14 +142,14 @@ public:
 
 // HexagonGFX
 //
-// A version of the LEDStripGFX class that accounts for the layout of the hexagon LEDs
+// A version of the FastLEDGFX class that accounts for the layout of the hexagon LEDs
 //
 
-class HexagonGFX : public LEDStripGFX
+class HexagonGFX : public FastLEDGFX
 {
   public:
 
-    HexagonGFX(size_t numLeds) : LEDStripGFX(numLeds, 1)
+    HexagonGFX(size_t numLeds) : FastLEDGFX(numLeds, 1)
     {
     }
 
