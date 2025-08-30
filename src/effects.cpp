@@ -28,6 +28,10 @@
 //              Sep-26-2023         Rbergen     Extracted EffectManager stuff
 //---------------------------------------------------------------------------
 
+// Ensure Adafruit font types are seen before any potential LGFX aliasing from M5Unified
+#include <gfxfont.h>
+#include <Adafruit_GFX.h>
+
 #include "effectsupport.h"
 
 // Include the effect classes we'll need later
@@ -66,13 +70,6 @@
     #include "effects/matrix/PatternSMRadialWave.h"
     #include "effects/matrix/PatternSMRadialFire.h"
 
-
-    #if ENABLE_WIFI
-        #include "effects/matrix/PatternSubscribers.h"
-        #include "effects/matrix/PatternWeather.h"
-        #include "effects/matrix/PatternStocks.h"
-    #endif
-
     #if USE_NOISE
         #include "effects/matrix/PatternNoiseSmearing.h"
         #include "effects/matrix/PatternSMSmoke.h"
@@ -81,6 +78,12 @@
 #endif
 
 #if USE_HUB75 || USE_MATRIX
+
+    #if ENABLE_WIFI
+        #include "effects/matrix/PatternSubscribers.h"
+        #include "effects/matrix/PatternWeather.h"
+        #include "effects/matrix/PatternStocks.h"
+    #endif
 
     #include "effects/matrix/PatternAnimatedGIF.h"
     #include "effects/matrix/PatternSMStarDeep.h"
@@ -119,7 +122,7 @@
 #endif
 
 
-#ifdef USE_WS281X
+#if USE_WS281X
     #include "ledstripgfx.h"
 #endif
 
@@ -131,9 +134,16 @@
 
 INIT_EFFECT_SETTING_SPECS(LEDStripEffect, _baseSettingSpecs);
 
-#if USE_HUB75 && ENABLE_WIFI
+//#if USE_HUB75 && ENABLE_WIFI
+#if (USE_HUB75 || USE_MATRIX) && ENABLE_WIFI
     INIT_EFFECT_SETTING_SPECS(PatternSubscribers, mySettingSpecs);
     INIT_EFFECT_SETTING_SPECS(PatternStocks, mySettingSpecs);
+#endif
+
+// Apple5x7 font definition - needed for WiFi-enabled matrix patterns using Adafruit-style fonts
+// Define this unconditionally (guarded by ENABLE_WIFI) so the symbol is always available regardless of M5/LGFX usage.
+#if ENABLE_WIFI
+#include <FontGfx_apple5x7.h>           // Requires the SmartMatrix dependency to pick up this font
 #endif
 
 // Default and JSON factory functions + decoration for effects
@@ -270,65 +280,16 @@ void LoadEffectFactories()
 
     #if defined(EFFECTS_STACKDEMO)
         RegisterAll(*g_ptrEffectFactories,
+            Effect<PatternStocks>(),
+            Effect<PatternSubscribers>(),
+            Effect<PatternWeather>(),
             Effect<SpectrumBarEffect>("Audiograph", 16, 4, 0),
             Effect<SpectrumAnalyzerEffect>("Spectrum", NUM_BANDS, spectrumAltColors, false, 0, 0, 1.6, 1.6),
             Effect<SpectrumAnalyzerEffect>("AudioWave", MATRIX_WIDTH, CRGB(0,0,40), 0, 1.25, 1.25, true),
             Effect<PatternAnimatedGIF>("Nyancat", GIFIdentifier::Nyancat),
             Effect<PatternAnimatedGIF>("Pacman", GIFIdentifier::Pacman),
             Effect<PatternAnimatedGIF>("Atomic", GIFIdentifier::Atomic),
-            Effect<PatternAnimatedGIF>("Banana", GIFIdentifier::Banana),
-            Effect<PatternSMFire2021>(),
-            Effect<GhostWave>("GhostWave", 0, 30, false, 10),
-            Effect<PatternSMGamma>(),
-            Effect<PatternSMMetaBalls>(),
-            Effect<PatternSMSupernova>(),
-            Effect<PatternCube>(),
-            Effect<PatternLife>(),
-            Effect<PatternCircuit>(),
-            Effect<SpectrumAnalyzerEffect>("USA", NUM_BANDS, USAColors_p, true, 0, 0, 0.75, 0.75),
-            Effect<SpectrumAnalyzerEffect>("Spectrum 2", 32, spectrumBasicColors, false, 100, 0, 0.75, 0.75),
-            Effect<SpectrumAnalyzerEffect>("Spectrum++", NUM_BANDS, spectrumBasicColors, false, 0, 40, -1.0, 2.0),
-            Effect<WaveformEffect>("WaveIn", 8),
-            Effect<GhostWave>("WaveOut", 0, 0, true, 0),
-            Effect<StarEffect<MusicStar>>("Stars", RainbowColors_p, 1.0, 1, LINEARBLEND, 2.0, 0.5, 10.0),
-            Effect<GhostWave>("PlasmaWave", 0, 255, false),
-            Effect<PatternSMNoise>("Shikon", PatternSMNoise::EffectType::Shikon_t),
-            Effect<PatternSMFlowFields>(),
-            Effect<PatternSMBlurringColors>(),
-            Effect<PatternSMWalkingMachine>(),
-            Effect<PatternSMStarDeep>(),
-            Effect<PatternSM2DDPR>(),
-            Effect<PatternSMPicasso3in1>("Lines", 38),
-            Effect<PatternSMPicasso3in1>("Circles", 73),
-            Effect<PatternSMAmberRain>(),
-            Effect<PatternSMStrobeDiffusion>(),
-            Effect<PatternSMSpiroPulse>(),
-            Effect<PatternSMTwister>(),
-            Effect<PatternSMHolidayLights>(),
-            Effect<PatternRose>(),
-            Effect<PatternPinwheel>(),
-            Effect<PatternSunburst>(),
-            Effect<PatternClock>(),
-            Effect<PatternAlienText>(),
-            Effect<PatternPulsar>(),
-            Effect<PatternBounce>(),
-            Effect<PatternWave>(),
-            Effect<PatternSwirl>(),
-            Effect<PatternSerendipity>(),
-            Effect<PatternMunch>(),
-            Effect<PatternMaze>()
-        );
-    #endif
-
-    #if defined(EFFECTS_STACKDEMO)
-        RegisterAll(*g_ptrEffectFactories,
-            Effect<SpectrumBarEffect>("Audiograph", 16, 4, 0),
-            Effect<SpectrumAnalyzerEffect>("Spectrum", NUM_BANDS, spectrumAltColors, false, 0, 0, 1.6, 1.6),
-            Effect<SpectrumAnalyzerEffect>("AudioWave", MATRIX_WIDTH, CRGB(0,0,40), 0, 1.25, 1.25, true),
-            Effect<PatternAnimatedGIF>("Nyancat", GIFIdentifier::Nyancat),
-            Effect<PatternAnimatedGIF>("Pacman", GIFIdentifier::Pacman),
-            Effect<PatternAnimatedGIF>("Atomic", GIFIdentifier::Atomic),
-            Effect<PatternAnimatedGIF>("Banana", GIFIdentifier::Banana),
+            Effect<PatternAnimatedGIF>("Banana", GIFIdentifier::Banana, true, CRGB::DarkBlue),
             Effect<PatternSMFire2021>(),
             Effect<GhostWave>("GhostWave", 0, 30, false, 10),
             Effect<PatternSMGamma>(),

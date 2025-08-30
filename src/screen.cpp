@@ -483,10 +483,7 @@ class EffectSimulatorPage final : public TitlePage
                 }
                 else // Real matrix
                 {
-                    if (x < MATRIX_WIDTH && y < MATRIX_HEIGHT)
-                        c = gfx->getPixel(x, y);
-                    else
-                        c = CRGB::Black; // Safety padding
+                    c = gfx->leds[XY(x, y)];
                 }
                 
                 uint16_t c16 = display.to16bit(c);
@@ -598,7 +595,7 @@ void IRAM_ATTR Screen::RunUpdateLoop()
     }
 
     // Frame rate timing variables
-    constexpr uint32_t kTargetFPS = 30;
+    constexpr uint32_t kTargetFPS = 60;
     constexpr uint32_t kTargetFrameTimeMs = 1000 / kTargetFPS; // 33.33ms for 30fps
     constexpr uint32_t kMinDelayMs = 1;
     uint32_t lastFrameTime = millis();

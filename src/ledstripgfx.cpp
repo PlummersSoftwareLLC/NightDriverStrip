@@ -43,11 +43,13 @@ void LEDStripGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixel
         return;
     }
 
-    // If we've drawn anything from either source, we can now show it if we have LEDs to output to
+    // If there are no LEDs to show, we can just return now
+
     if (FastLED.count() == 0)
     {
-        debugW("Draw loop is drawing before LEDs are ready, so delaying 100ms...");
-        delay(100);
+        static auto lastDrawTime = millis();
+        g_Values.FPS = 1000.0 / max(1UL, millis() - lastDrawTime);
+        lastDrawTime = millis();
         return;
     }
 

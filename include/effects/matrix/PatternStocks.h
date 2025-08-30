@@ -35,15 +35,12 @@
 #ifndef PatternStocks_H
 #define PatternStocks_H
 
-#if USE_HUB75
-
 #include <Arduino.h>
 #include <gfxfont.h>                // Adafruit GFX font structs
 #include <string.h>
 #include <HTTPClient.h>
 #include <UrlEncode.h>
 #include <ledstripeffect.h>
-#include <ledmatrixgfx.h>
 #include <ArduinoJson.h>
 #include "systemcontainer.h"
 #include <chrono>
@@ -583,5 +580,4 @@ public:
 
 };
 
-#endif
 #endif

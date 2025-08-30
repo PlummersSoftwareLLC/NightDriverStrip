@@ -61,35 +61,35 @@ protected:
         // The following "unrolled conditional compile loop" to set up the channels is needed because the LED pin
         //   is a template parameter to FastLED.addLeds()
 
-        #if NUM_CHANNELS >= 1
+        #if NUM_CHANNELS >= 1 && LED_PIN0 >= 0
             ADD_CHANNEL(0);
         #endif
 
-        #if NUM_CHANNELS >= 2
+        #if NUM_CHANNELS >= 2 && LED_PIN1 >= 0
             ADD_CHANNEL(1);
         #endif
 
-        #if NUM_CHANNELS >= 3
+        #if NUM_CHANNELS >= 3 && LED_PIN2 >= 0      
             ADD_CHANNEL(2);
         #endif
 
-        #if NUM_CHANNELS >= 4
+        #if NUM_CHANNELS >= 4 && LED_PIN3 >= 0
             ADD_CHANNEL(3);
         #endif
 
-        #if NUM_CHANNELS >= 5
+        #if NUM_CHANNELS >= 5 && LED_PIN4 >= 0
             ADD_CHANNEL(4);
         #endif
 
-        #if NUM_CHANNELS >= 6
+        #if NUM_CHANNELS >= 6 && LED_PIN5 >= 0
             ADD_CHANNEL(5);
         #endif
 
-        #if NUM_CHANNELS >= 7
+        #if NUM_CHANNELS >= 7 && LED_PIN6 >= 0
             ADD_CHANNEL(6);
         #endif
 
-        #if NUM_CHANNELS >= 8
+        #if NUM_CHANNELS >= 8 && LED_PIN7 >= 0
             ADD_CHANNEL(7);
         #endif
 
