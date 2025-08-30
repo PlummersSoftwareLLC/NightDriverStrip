@@ -62,7 +62,6 @@
 
 #if USE_HUB75
     #include "ledmatrixgfx.h"
-    #include "effects/matrix/PatternPongClock.h"
     #include "effects/matrix/PatternMandala.h"    
     // These effects require LEDMatrixGFX::getPolarMap()
     #include "effects/matrix/PatternSMHypnosis.h"
@@ -85,6 +84,7 @@
         #include "effects/matrix/PatternStocks.h"
     #endif
 
+    #include "effects/matrix/PatternPongClock.h"
     #include "effects/matrix/PatternAnimatedGIF.h"  
     #include "effects/matrix/PatternSMStarDeep.h"
     #include "effects/matrix/PatternSMAmberRain.h"
@@ -295,12 +295,15 @@ void LoadEffectFactories()
 
     #if defined(EFFECTS_STACKDEMO)
         RegisterAll(*g_ptrEffectFactories,
+            Effect<PatternPongClock>(),
             Effect<PatternStocks>(),
             Effect<PatternSubscribers>(),
             Effect<PatternWeather>(),
             Effect<SpectrumBarEffect>("Audiograph", 16, 4, 0),
             Effect<SpectrumAnalyzerEffect>("Spectrum", NUM_BANDS, spectrumAltColors, false, 0, 0, 1.6, 1.6),
             Effect<SpectrumAnalyzerEffect>("AudioWave", MATRIX_WIDTH, CRGB(0,0,40), 0, 1.25, 1.25, true),
+            Effect<PatternAnimatedGIF>("Rings", GIFIdentifier::ThreeRings),
+            Effect<PatternAnimatedGIF>("Fire Log", GIFIdentifier::Firelog),
             Effect<PatternAnimatedGIF>("Nyancat", GIFIdentifier::Nyancat),
             Effect<PatternAnimatedGIF>("Pacman", GIFIdentifier::Pacman),
             Effect<PatternAnimatedGIF>("Atomic", GIFIdentifier::Atomic),

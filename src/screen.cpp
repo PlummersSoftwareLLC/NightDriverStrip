@@ -465,7 +465,7 @@ class EffectSimulatorPage final : public TitlePage
         if (!gfx || gfx->leds == nullptr)
             return;
 
-        // Blit: draw each LED as a scale x scale rectangle
+        // Blit: draw each LED as a scale x scale rectangle (direct buffer reads, no per-dest-pixel loop)
         int ledIndex = 0;
         for (int y = 0; y < mh; ++y)
         {
@@ -484,7 +484,7 @@ class EffectSimulatorPage final : public TitlePage
                 else // Real matrix
                 {
                     if (x < MATRIX_WIDTH && y < MATRIX_HEIGHT)
-                        c = gfx->getPixel(x, y);
+                        c = gfx->leds[XY(x, y)]; // direct buffer read avoids getPixel overhead
                     else
                         c = CRGB::Black; // Safety padding
                 }
@@ -598,7 +598,7 @@ void IRAM_ATTR Screen::RunUpdateLoop()
     }
 
     // Frame rate timing variables
-    constexpr uint32_t kTargetFPS = 30;
+    constexpr uint32_t kTargetFPS = 60;
     constexpr uint32_t kTargetFrameTimeMs = 1000 / kTargetFPS; // 33.33ms for 30fps
     constexpr uint32_t kMinDelayMs = 1;
     uint32_t lastFrameTime = millis();
