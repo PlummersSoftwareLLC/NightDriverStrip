@@ -22,7 +22,11 @@ class PatternSMStrobeDiffusion : public EffectWithId<PatternSMStrobeDiffusion>
 
     uint8_t hue, hue2; // gradual hue shift or some other cyclic counter
     uint8_t step { 0 }; // some counter of frames or sequences of operations
-    std::bitset<MATRIX_WIDTH * MATRIX_HEIGHT> noise3d[MATRIX_WIDTH * MATRIX_HEIGHT]; // Locations of snowflakes.
+    // Locations of snowflakes. One bitset per X column, with one bit per Y row.
+    // NOTE: The previous declaration mistakenly allocated (W*H) bitsets each of size (W*H),
+    // which scales as (W*H)^2 bits and blew PSRAM for larger matrices (e.g., 96x48 -> ~2.65MB).
+    // This correct structure uses W * H bits total (~576 bytes at 96x48).
+    std::bitset<MATRIX_HEIGHT> noise3d[MATRIX_WIDTH];
     uint8_t Speed = 150;                                                             // 1-255 is speed
     uint8_t Scale = 90;                                                              // 1-100 is something parameter
     uint8_t FPSdelay;        // BUGBUG: This is set but never used. :-(

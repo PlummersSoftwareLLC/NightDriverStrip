@@ -82,9 +82,7 @@
     #if ENABLE_WIFI
         #include "effects/matrix/PatternSubscribers.h"
         #include "effects/matrix/PatternWeather.h"
-        #if !defined(M5STACKCORE2)
-            #include "effects/matrix/PatternStocks.h"
-        #endif
+        #include "effects/matrix/PatternStocks.h"
     #endif
 
     #include "effects/matrix/PatternAnimatedGIF.h"  
@@ -139,154 +137,10 @@ INIT_EFFECT_SETTING_SPECS(LEDStripEffect, _baseSettingSpecs);
 //#if USE_HUB75 && ENABLE_WIFI
 #if (USE_HUB75 || USE_MATRIX) && ENABLE_WIFI
     INIT_EFFECT_SETTING_SPECS(PatternSubscribers, mySettingSpecs);
-    #if !defined(M5STACKCORE2)
-        INIT_EFFECT_SETTING_SPECS(PatternStocks, mySettingSpecs);
-    #endif
+    INIT_EFFECT_SETTING_SPECS(PatternStocks, mySettingSpecs);
 #endif
 
-// Apple5x7 font definition - needed for WiFi-enabled matrix patterns using Adafruit-style fonts
-// Define this unconditionally (guarded by ENABLE_WIFI) so the symbol is always available regardless of M5/LGFX usage.
-#if ENABLE_WIFI
-    const uint8_t Apple5x7Bitmaps[] PROGMEM = {
-          0x00, 0xF0, 0xB4, 0xFE, 0xB4, 0xFE, 0xB4, 0x00, 0x48, 0x7C, 0x50, 0x7C, 
-          0x94, 0x48, 0x44, 0xA4, 0x48, 0x90, 0xA8, 0x44, 0x68, 0x90, 0x68, 0x94, 
-          0x68, 0xC0, 0x60, 0x90, 0x90, 0x60, 0x60, 0x90, 0x90, 0x60, 0x50, 0x20, 
-          0xF8, 0x20, 0x50, 0x20, 0x20, 0xF8, 0x20, 0x20, 0x60, 0xC0, 0xF8, 0xF0, 
-          0x08, 0x10, 0x20, 0x40, 0x80, 0x70, 0x88, 0x88, 0x88, 0x70, 0x20, 0x60, 
-          0x20, 0x20, 0x70, 0x70, 0x88, 0x10, 0x60, 0xF8, 0x70, 0x88, 0x30, 0x88, 
-          0x70, 0x10, 0x30, 0x50, 0xF8, 0x10, 0xF8, 0x80, 0xF0, 0x08, 0xF0, 0x70, 
-          0x80, 0xF0, 0x88, 0x70, 0xF8, 0x08, 0x10, 0x20, 0x20, 0x70, 0x88, 0x70, 
-          0x88, 0x70, 0x70, 0x88, 0x78, 0x08, 0x70, 0xF0, 0x00, 0xF0, 0xF0, 0x00, 
-          0x60, 0xC0, 0x18, 0x60, 0x80, 0x60, 0x18, 0xF8, 0x00, 0xF8, 0xC0, 0x18, 
-          0x04, 0x18, 0xC0, 0x70, 0x88, 0x10, 0x20, 0x00, 0x20, 0x70, 0x88, 0xB8, 
-          0xA8, 0xB8, 0x80, 0x78, 0x20, 0x50, 0x88, 0xF8, 0x88, 0xF0, 0x88, 0xF0, 
-          0x88, 0xF0, 0x78, 0x80, 0x80, 0x80, 0x78, 0xF0, 0x88, 0x88, 0x88, 0xF0, 
-          0xF8, 0x80, 0xF0, 0x80, 0xF8, 0xF8, 0x80, 0xF0, 0x80, 0x80, 0x78, 0x80, 
-          0xB8, 0x88, 0x78, 0x88, 0x88, 0xF8, 0x88, 0x88, 0x70, 0x20, 0x20, 0x20, 
-          0x70, 0x38, 0x10, 0x10, 0x90, 0x60, 0x88, 0x90, 0xE0, 0x90, 0x88, 0x80, 
-          0x80, 0x80, 0x80, 0xF8, 0x88, 0xD8, 0xA8, 0x88, 0x88, 0x88, 0xC8, 0xA8, 
-          0x98, 0x88, 0x70, 0x88, 0x88, 0x88, 0x70, 0xF0, 0x88, 0xF0, 0x80, 0x80, 
-          0x70, 0x88, 0x88, 0xA8, 0x78, 0xF0, 0x88, 0xF0, 0x90, 0x88, 0x78, 0x80, 
-          0x70, 0x08, 0xF0, 0xF8, 0x20, 0x20, 0x20, 0x20, 0x88, 0x88, 0x88, 0x88, 
-          0x70, 0x88, 0x88, 0x50, 0x50, 0x20, 0x88, 0x88, 0xA8, 0xD8, 0x88, 0x88, 
-          0x50, 0x20, 0x50, 0x88, 0x88, 0x50, 0x20, 0x20, 0x20, 0xF8, 0x08, 0x70, 
-          0x80, 0xF8, 0xF0, 0x80, 0x80, 0x80, 0xF0, 0x80, 0x40, 0x20, 0x10, 0x08, 
-          0xF0, 0x10, 0x10, 0x10, 0xF0, 0x20, 0x50, 0x88, 0xF8, 0x60, 0x90, 0x70, 
-          0x90, 0x70, 0x80, 0xF0, 0x88, 0x88, 0xF0, 0x70, 0x80, 0x80, 0x70, 0x08, 
-          0x78, 0x88, 0x88, 0x78, 0x70, 0x88, 0xF0, 0x80, 0x70, 0x30, 0x40, 0xE0, 
-          0x40, 0x40, 0x78, 0x88, 0x78, 0x08, 0x70, 0x80, 0xF0, 0x88, 0x88, 0x88, 
-          0x40, 0x00, 0xC0, 0x40, 0xE0, 0x10, 0x00, 0x10, 0x10, 0x90, 0x60, 0x80, 
-          0x90, 0xE0, 0x90, 0x88, 0xC0, 0x40, 0x40, 0x40, 0xE0, 0xD0, 0xA8, 0xA8, 
-          0x88, 0xF0, 0x88, 0x88, 0x88, 0x70, 0x88, 0x88, 0x70, 0xF0, 0x88, 0xF0, 
-          0x80, 0x80, 0x78, 0x88, 0x78, 0x08, 0x08, 0xB0, 0xC0, 0x80, 0x80, 0x78, 
-          0x80, 0x70, 0x08, 0xF0, 0x40, 0xE0, 0x40, 0x40, 0x30, 0x88, 0x88, 0x88, 
-          0x78, 0x88, 0x88, 0x50, 0x20, 0x88, 0xA8, 0xA8, 0xD0, 0x88, 0x50, 0x20, 
-          0x50, 0x88, 0x88, 0x50, 0x20, 0x40, 0x80, 0xF8, 0x10, 0x60, 0x80, 0xF8, 
-          0x30, 0x40, 0x80, 0x40, 0x30, 0x80, 0x80, 0x80, 0x80, 0x80, 0xC0, 0x20, 
-          0x10, 0x20, 0xC0, 0x68, 0xB0 };
-
-    const GFXglyph Apple5x7Glyphs[] PROGMEM = {
-          {     0,   1,   1,   2,    0,    0 },   // 0x20 ' '
-          {     1,   1,   5,   2,    0,   -4 },   // 0x21 '!'
-          {     2,   3,   2,   4,    0,   -4 },   // 0x22 '"'
-          {     3,   5,   5,   6,    0,   -4 },   // 0x23 '#'
-          {     7,   3,   7,   4,    0,   -5 },   // 0x24 '$'
-          {    10,   5,   5,   6,    0,   -4 },   // 0x25 '%'
-          {    14,   5,   5,   6,    0,   -4 },   // 0x26 '&'
-          {    18,   1,   2,   2,    0,   -4 },   // 0x27 '''
-          {    19,   2,   5,   3,    0,   -4 },   // 0x28 '('
-          {    21,   2,   5,   3,    0,   -4 },   // 0x29 ')'
-          {    23,   5,   3,   6,    0,   -4 },   // 0x2A '*'
-          {    25,   3,   3,   4,    0,   -3 },   // 0x2B '+'
-          {    27,   2,   2,   3,    0,    0 },   // 0x2C ','
-          {    28,   3,   1,   4,    0,   -2 },   // 0x2D '-'
-          {    29,   1,   1,   2,    0,    0 },   // 0x2E '.'
-          {    30,   5,   5,   6,    0,   -4 },   // 0x2F '/'
-          {    34,   3,   5,   4,    0,   -4 },   // 0x30 '0'
-          {    37,   3,   5,   4,    0,   -4 },   // 0x31 '1'
-          {    40,   3,   5,   4,    0,   -4 },   // 0x32 '2'
-          {    43,   3,   5,   4,    0,   -4 },   // 0x33 '3'
-          {    46,   4,   5,   5,    0,   -4 },   // 0x34 '4'
-          {    49,   3,   5,   4,    0,   -4 },   // 0x35 '5'
-          {    52,   3,   5,   4,    0,   -4 },   // 0x36 '6'
-          {    55,   3,   5,   4,    0,   -4 },   // 0x37 '7'
-          {    58,   3,   5,   4,    0,   -4 },   // 0x38 '8'
-          {    61,   3,   5,   4,    0,   -4 },   // 0x39 '9'
-          {    64,   1,   3,   2,    0,   -3 },   // 0x3A ':'
-          {    65,   2,   4,   3,    0,   -3 },   // 0x3B ';'
-          {    67,   3,   5,   4,    0,   -4 },   // 0x3C '<'
-          {    70,   3,   3,   4,    0,   -3 },   // 0x3D '='
-          {    72,   3,   5,   4,    0,   -4 },   // 0x3E '>'
-          {    75,   3,   6,   4,    0,   -5 },   // 0x3F '?'
-          {    78,   5,   6,   6,    0,   -5 },   // 0x40 '@'
-          {    82,   3,   5,   4,    0,   -4 },   // 0x41 'A'
-          {    85,   3,   5,   4,    0,   -4 },   // 0x42 'B'
-          {    88,   3,   5,   4,    0,   -4 },   // 0x43 'C'
-          {    91,   3,   5,   4,    0,   -4 },   // 0x44 'D'
-          {    94,   3,   5,   4,    0,   -4 },   // 0x45 'E'
-          {    97,   3,   5,   4,    0,   -4 },   // 0x46 'F'
-          {   100,   3,   5,   4,    0,   -4 },   // 0x47 'G'
-          {   103,   3,   5,   4,    0,   -4 },   // 0x48 'H'
-          {   106,   3,   5,   4,    0,   -4 },   // 0x49 'I'
-          {   109,   4,   5,   5,    0,   -4 },   // 0x4A 'J'
-          {   112,   3,   5,   4,    0,   -4 },   // 0x4B 'K'
-          {   115,   3,   5,   4,    0,   -4 },   // 0x4C 'L'
-          {   118,   3,   5,   4,    0,   -4 },   // 0x4D 'M'
-          {   121,   3,   5,   4,    0,   -4 },   // 0x4E 'N'
-          {   124,   3,   5,   4,    0,   -4 },   // 0x4F 'O'
-          {   127,   3,   5,   4,    0,   -4 },   // 0x50 'P'
-          {   130,   4,   5,   5,    0,   -4 },   // 0x51 'Q'
-          {   133,   3,   5,   4,    0,   -4 },   // 0x52 'R'
-          {   136,   3,   5,   4,    0,   -4 },   // 0x53 'S'
-          {   139,   3,   5,   4,    0,   -4 },   // 0x54 'T'
-          {   142,   3,   5,   4,    0,   -4 },   // 0x55 'U'
-          {   145,   3,   5,   4,    0,   -4 },   // 0x56 'V'
-          {   148,   3,   5,   4,    0,   -4 },   // 0x57 'W'
-          {   151,   3,   5,   4,    0,   -4 },   // 0x58 'X'
-          {   154,   3,   5,   4,    0,   -4 },   // 0x59 'Y'
-          {   157,   3,   5,   4,    0,   -4 },   // 0x5A 'Z'
-          {   160,   2,   5,   3,    0,   -4 },   // 0x5B '['
-          {   162,   5,   5,   6,    0,   -4 },   // 0x5C '\'
-          {   166,   2,   5,   3,    0,   -4 },   // 0x5D ']'
-          {   168,   3,   2,   4,    0,   -4 },   // 0x5E '^'
-          {   169,   3,   1,   4,    0,    1 },   // 0x5F '_'
-          {   170,   2,   2,   3,    0,   -4 },   // 0x60 '`'
-          {   171,   3,   4,   4,    0,   -3 },   // 0x61 'a'
-          {   173,   3,   5,   4,    0,   -4 },   // 0x62 'b'
-          {   176,   3,   4,   4,    0,   -3 },   // 0x63 'c'
-          {   178,   3,   5,   4,    0,   -4 },   // 0x64 'd'
-          {   181,   3,   4,   4,    0,   -3 },   // 0x65 'e'
-          {   183,   2,   5,   3,    0,   -4 },   // 0x66 'f'
-          {   185,   3,   5,   4,    0,   -3 },   // 0x67 'g'
-          {   188,   3,   5,   4,    0,   -4 },   // 0x68 'h'
-          {   191,   3,   5,   4,    0,   -4 },   // 0x69 'i'
-          {   194,   4,   6,   5,    0,   -4 },   // 0x6A 'j'
-          {   197,   3,   5,   4,    0,   -4 },   // 0x6B 'k'
-          {   200,   3,   5,   4,    0,   -4 },   // 0x6C 'l'
-          {   203,   3,   4,   4,    0,   -3 },   // 0x6D 'm'
-          {   205,   3,   4,   4,    0,   -3 },   // 0x6E 'n'
-          {   207,   3,   4,   4,    0,   -3 },   // 0x6F 'o'
-          {   209,   3,   5,   4,    0,   -3 },   // 0x70 'p'
-          {   212,   3,   5,   4,    0,   -3 },   // 0x71 'q'
-          {   215,   2,   4,   3,    0,   -3 },   // 0x72 'r'
-          {   216,   3,   4,   4,    0,   -3 },   // 0x73 's'
-          {   218,   2,   5,   3,    0,   -4 },   // 0x74 't'
-          {   220,   3,   4,   4,    0,   -3 },   // 0x75 'u'
-          {   222,   3,   4,   4,    0,   -3 },   // 0x76 'v'
-          {   224,   3,   4,   4,    0,   -3 },   // 0x77 'w'
-          {   226,   3,   4,   4,    0,   -3 },   // 0x78 'x'
-          {   228,   3,   5,   4,    0,   -3 },   // 0x79 'y'
-          {   231,   3,   4,   4,    0,   -3 },   // 0x7A 'z'
-          {   233,   3,   5,   4,    0,   -4 },   // 0x7B '{'
-          {   236,   1,   5,   2,    0,   -4 },   // 0x7C '|'
-          {   237,   3,   5,   4,    0,   -4 },   // 0x7D '}'
-          {   240,   4,   2,   5,    0,   -4 } }; // 0x7E '~'
-
-        const GFXfont Apple5x7 PROGMEM = {
-            (uint8_t  *)Apple5x7Bitmaps,
-            (GFXglyph *)Apple5x7Glyphs,
-            0x20, 0x7E, 7 };
-    #endif
+// Apple5x7 font moved to src/fonts/apple5x7.cpp and declared in include/fonts/apple5x7.h
 
 // Default and JSON factory functions + decoration for effects
 DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories = nullptr;
@@ -441,9 +295,7 @@ void LoadEffectFactories()
 
     #if defined(EFFECTS_STACKDEMO)
         RegisterAll(*g_ptrEffectFactories,
-            #if !defined(M5STACKCORE2)
-                Effect<PatternStocks>(),
-            #endif
+            Effect<PatternStocks>(),
             Effect<PatternSubscribers>(),
             Effect<PatternWeather>(),
             Effect<SpectrumBarEffect>("Audiograph", 16, 4, 0),
@@ -530,9 +382,7 @@ void LoadEffectFactories()
 
         #if ENABLE_WIFI
         RegisterAll(*g_ptrEffectFactories,
-            #if !defined(M5STACKCORE2)
-                Effect<PatternStocks>(),
-            #endif
+            Effect<PatternStocks>(),
             Effect<PatternSubscribers>(),
             Effect<PatternWeather>()
         );
