@@ -49,6 +49,7 @@
 #include "TJpg_Decoder.h"
 #include "effects.h"
 #include "types.h"
+#include "fonts/apple5x7.h"
 
 extern const GFXfont Apple5x7 PROGMEM;
 

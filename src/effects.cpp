@@ -83,6 +83,7 @@
         #include "effects/matrix/PatternSubscribers.h"
         #include "effects/matrix/PatternWeather.h"
         #include "effects/matrix/PatternStocks.h"
+        #include "effects/matrix/PatternStocks.h"
     #endif
 
     #include "effects/matrix/PatternAnimatedGIF.h"
