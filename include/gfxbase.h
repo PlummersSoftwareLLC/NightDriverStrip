@@ -72,6 +72,7 @@
 #include "effects/matrix/Boid.h" // Depends on MATRIX_WIDTH/HEIGHT from globals.h
 #include "effects/matrix/Vector.h"
 #include <memory>
+#include <mutex>
 
 // Calculates a weight for anti-aliasing in Wu's algorithm.
 constexpr static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
@@ -158,12 +159,30 @@ protected:
     static constexpr int _randomPaletteIndex = 9;
 
 public:
+    static const uint8_t kMatrixWidth = MATRIX_WIDTH;                                   // known working for actual matrix effects: 32, 64, 96, 128
+    static const uint8_t kMatrixHeight = MATRIX_HEIGHT;                                 // known working for actual matrix effects: 16, 32, 48, 64
+
+    // A 3-byte struct will have one byte of padding so each element
+    // begins on a NA boundary. Making this
+    // struct __attribute__((packed)) PolarMap
+    // might conserve 25% of this buffer, but it might also force
+    // single elements to be split across a (locked) cache line.
+    // We'll thus leave this naturally aligned unless we have a
+    // really great reason not to.
+    struct PolarMap {
+        uint8_t angle;
+        uint8_t scaled_radius;
+        uint8_t unscaled_radius;
+    };
+
     // Many of the Aurora effects need direct access to these from external classes
 
     CRGB *leds = nullptr;
     #if MATRIX_HEIGHT > 1
         std::unique_ptr<Boid[]> _boids;
     #endif
+
+    using PolarMapArray = PolarMap[kMatrixWidth][kMatrixHeight];
 
     // Definition moved to GFXBase.cpp because it uses the FillGetNoise() function template
     GFXBase(int w, int h);
@@ -1412,5 +1431,54 @@ public:
 
     virtual void PostProcessFrame(uint16_t, uint16_t)
     {
+    }
+
+    static const PolarMapArray& getPolarMap()
+    {
+        static std::unique_ptr<PolarMapArray> rMap_ptr;
+        static std::mutex rMap_mutex;
+
+        // Double-checked locking for thread-safe, on-demand initialization
+        if (!rMap_ptr)
+        {
+            std::lock_guard lock(rMap_mutex);
+            if (!rMap_ptr)
+            {
+                // Allocate from PSRAM using the project's helper
+                rMap_ptr = make_unique_psram<PolarMapArray>();
+
+                auto& rMap = *rMap_ptr;
+                const uint8_t C_X = kMatrixWidth / 2;
+                const uint8_t C_Y = kMatrixHeight / 2;
+                const float mapp = 255.0f / kMatrixWidth;
+
+                for (int8_t x = -C_X; x < C_X + (kMatrixWidth % 2); x++)
+                {
+                    for (int8_t y = -C_Y; y < C_Y + (MATRIX_HEIGHT % 2); y++)
+                    {
+                        float angle_rad = atan2f(static_cast<float>(y), static_cast<float>(x));
+                        float radius_float = hypotf(static_cast<float>(x), static_cast<float>(y));
+
+                        rMap[x + C_X][y + C_Y].angle = 128.0f * (angle_rad / (float)M_PI);
+                        rMap[x + C_X][y + C_Y].scaled_radius = radius_float * mapp;
+                        rMap[x + C_X][y + C_Y].unscaled_radius = radius_float;
+                    }
+                }
+
+                // A note on the radius calculations:
+                //
+                // `unscaled_radius` is the true geometric distance from the center of the
+                // matrix to the pixel. This is useful for effects that need the real
+                // physical distance.
+                //
+                // `scaled_radius` maps the geometric radius to a range that is more
+                // suitable for use with 8-bit FastLED functions (like inoise8).
+                // The scaling is normalized by the matrix width, which is a common
+                // technique to make radial effects work consistently across different
+                // matrix sizes.
+            }
+        }
+
+        return *rMap_ptr;
     }
 };

@@ -22,7 +22,7 @@
 //
 // Description:
 //
-//    Code for handling HUB75 matrix panels
+//    Code for handling HUB75 matrix panels with the SmartMatrix library
 //
 // History:     May-24-2021         Davepl      Commented
 //
@@ -33,17 +33,17 @@
 #if USE_HUB75
 
 #include <SmartMatrix.h>
-#include "ledmatrixgfx.h"
+#include "smartmatrixgfx.h"
 #include "systemcontainer.h"
 #include "soundanalyzer.h"
 
 // The declarations create the "layers" that make up the matrix display
 
-SMLayerBackground<LEDMatrixGFX::SM_RGB, LEDMatrixGFX::kBackgroundLayerOptions> LEDMatrixGFX::backgroundLayer(kMatrixWidth, kMatrixHeight);
-SMLayerBackground<LEDMatrixGFX::SM_RGB, LEDMatrixGFX::kBackgroundLayerOptions> LEDMatrixGFX::titleLayer(kMatrixWidth, kMatrixHeight);
-SmartMatrixHub75Calc<COLOR_DEPTH, LEDMatrixGFX::kMatrixWidth, LEDMatrixGFX::kMatrixHeight, LEDMatrixGFX::kPanelType, LEDMatrixGFX::kMatrixOptions> LEDMatrixGFX::matrix;
+SMLayerBackground<SmartMatrixGFX::SM_RGB, SmartMatrixGFX::kBackgroundLayerOptions> SmartMatrixGFX::backgroundLayer(kMatrixWidth, kMatrixHeight);
+SMLayerBackground<SmartMatrixGFX::SM_RGB, SmartMatrixGFX::kBackgroundLayerOptions> SmartMatrixGFX::titleLayer(kMatrixWidth, kMatrixHeight);
+SmartMatrixHub75Calc<COLOR_DEPTH, SmartMatrixGFX::kMatrixWidth, SmartMatrixGFX::kMatrixHeight, SmartMatrixGFX::kPanelType, SmartMatrixGFX::kMatrixOptions> SmartMatrixGFX::matrix;
 
-void LEDMatrixGFX::StartMatrix()
+void SmartMatrixGFX::StartMatrix()
 {
     matrix.addLayer(&backgroundLayer);
     matrix.addLayer(&titleLayer);
@@ -68,7 +68,7 @@ void LEDMatrixGFX::StartMatrix()
     matrix.setBrightness(255);
 }
 
-void LEDMatrixGFX::PrepareFrame()
+void SmartMatrixGFX::PrepareFrame()
 {
     // We treat the internal matrix buffer as our own little playground to draw in, but that assumes they're
     // both 24-bits RGB triplets.  Or at least the same size!
@@ -82,7 +82,7 @@ void LEDMatrixGFX::PrepareFrame()
         matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
         matrix.setRefreshRate(MATRIX_REFRESH_RATE);
 
-        auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics()[0]);
+        auto pMatrix = std::static_pointer_cast<SmartMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics()[0]);
         pMatrix->setLeds(GetMatrixBackBuffer());
 
         // We set ourselves to the lower of the fader value or the brightness value,
@@ -143,13 +143,13 @@ void LEDMatrixGFX::PrepareFrame()
 //
 // Things we do with the matrix after rendering a frame, such as setting the brightness and swapping the backbuffer forward
 
-void LEDMatrixGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
+void SmartMatrixGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
 {
     // If we drew no pixels, there's nothing to post process
     if ((localPixelsDrawn + wifiPixelsDrawn) == 0)
         return;
 
-    auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(g_ptrSystem->EffectManager().g());
+    auto pMatrix = std::static_pointer_cast<SmartMatrixGFX>(g_ptrSystem->EffectManager().g());
 
     constexpr auto kCaptionPower = 500;                                                 // A guess as the power the caption will consume
     g_Values.MatrixPowerMilliwatts = pMatrix->EstimatePowerDraw();                             // What our drawn pixels will consume
@@ -194,7 +194,7 @@ void LEDMatrixGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixe
     FastLED.countFPS();
 }
 
-CRGB *LEDMatrixGFX::GetMatrixBackBuffer()
+CRGB *SmartMatrixGFX::GetMatrixBackBuffer()
 {
     for (auto& device : g_ptrSystem->Devices())
         device->UpdatePaletteCycle();
@@ -202,7 +202,7 @@ CRGB *LEDMatrixGFX::GetMatrixBackBuffer()
     return (CRGB *)backgroundLayer.backBuffer();
 }
 
-void LEDMatrixGFX::MatrixSwapBuffers(bool bSwapBackground)
+void SmartMatrixGFX::MatrixSwapBuffers(bool bSwapBackground)
 {
     // If an effect redraws itself entirely ever frame, it can skip saving the most recent buffer, so
     // can swap without waiting for a copy.

@@ -57,10 +57,10 @@
 //
 
 #if USE_HUB75
-    #include "ledmatrixgfx.h"
+    #include "smartmatrixgfx.h"
     #include "effects/matrix/PatternPongClock.h"
     #include "effects/matrix/PatternMandala.h"
-    // These effects require LEDMatrixGFX::getPolarMap()
+    // These effects require SmartMatrixGFX::getPolarMap()
     #include "effects/matrix/PatternSMHypnosis.h"
     #include "effects/matrix/PatternSMRainbowTunnel.h"
     #include "effects/matrix/PatternSMRadialWave.h"
@@ -120,7 +120,7 @@
 
 
 #ifdef USE_WS281X
-    #include "ledstripgfx.h"
+    #include "fastledgfx.h"
 #endif
 
 // Global effect set version

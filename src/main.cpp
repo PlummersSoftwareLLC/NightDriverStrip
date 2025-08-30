@@ -435,7 +435,7 @@ void setup()
         #endif
     }
     #endif
-    
+
     // TOGGLE_BUTTON_0/1 are configured inside Screen's update loop
 
     #if AMOLED_S3
@@ -490,13 +490,13 @@ void setup()
 
     #if USE_HUB75
         // LEDMatrixGFX is used for HUB75 projects like the Mesmerizer
-        LEDMatrixGFX::InitializeHardware(devices);
+        SmartMatrixGFX::InitializeHardware(devices);
     #elif HEXAGON
         // Hexagon is for a PCB wtih 271 LEDss arranged in the face of a hexagon
         HexagonGFX::InitializeHardware(devices);
     #elif USE_WS281X
-        // LEDStripGFX is used for simple strips or for matrices woven from strips
-        LEDStripGFX::InitializeHardware(devices);
+        // FastLEDGFX is used for simple strips or for matrices woven from strips
+        FastLEDGFX::InitializeHardware(devices);
     #endif
 
     // Initialize all the built-in effects
@@ -599,7 +599,7 @@ void loop()
             #endif
 
             #if USE_HUB75
-                strOutput += str_sprintf("Refresh: %d Hz, Power: %d mW, Brite: %3.0lf%%, ", LEDMatrixGFX::matrix.getRefreshRate(), g_Values.MatrixPowerMilliwatts, g_Values.MatrixScaledBrightness / 2.55);
+                strOutput += str_sprintf("Refresh: %d Hz, Power: %d mW, Brite: %3.0lf%%, ", SmartMatrixGFX::matrix.getRefreshRate(), g_Values.MatrixPowerMilliwatts, g_Values.MatrixScaledBrightness / 2.55);
             #endif
 
             #if ENABLE_AUDIO

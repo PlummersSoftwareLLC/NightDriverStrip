@@ -43,10 +43,10 @@ The text in this document regularly mentions "LED display" as the visualization 
 
 ### `LEDMatrixGfx`
 
-- Located in: [ledmatrixgfx.h](./include/ledmatrixgfx.h) and [ledmatrixgfx.cpp](./src/ledmatrixgfx.cpp)
-- Role: Extends `GFXBase` for matrix-style LED arrangements.
+- Located in: [smartmatrixgfx.h](./include/smartmatrixgfx.h) and [smartmatrixgfx.cpp](./src/smartmatrixgfx.cpp)
+- Role: Extends `GFXBase` for HUB75 matrix-style LED arrangements, driven through the [SmartMatrix](https://github.com/pixelmatix/SmartMatrix) library.
 - Key functionalities: Matrix-specific drawing, dimension management.
-- Explanation: This class extends the functionalities of [`GFXBase`](#the-core-gfxbase) to cater to matrix-style LED arrangements. It provides methods to draw on a matrix, manage its dimensions, and handle matrix-specific effects.
+- Explanation: This class extends the functionalities of [`GFXBase`](#the-core-gfxbase) to cater to matrix-style LED arrangements, as supported by SmartMatrix. It provides methods to draw on a matrix, manage its dimensions, and handle matrix-specific effects.
 
 ### `EffectManager`
 
