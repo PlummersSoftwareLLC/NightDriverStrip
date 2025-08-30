@@ -1095,13 +1095,15 @@ public:
 
     // Finally, convert heat to a color
 
+    constexpr auto num_channels = max(1, NUM_CHANNELS);
+
     for (int i = 0; i < LEDCount; i++)
     {
       // uint8_t maxv = 0;
       // for (int iCell = 0; iCell < CellsPerLED; iCell++)
       //   maxv = max(maxv, heat[i * CellsPerLED + iCell]);
 
-      for (int iChannel = 0; iChannel < NUM_CHANNELS; iChannel++)
+      for (int iChannel = 0; iChannel < num_channels; iChannel++)
       {
         CRGB color = GetBlackBodyHeatColorByte(abHeat[i * CellsPerLED]);
 
@@ -1109,7 +1111,7 @@ public:
         if (bMulticolor)
         {
             CHSV hsv = rgb2hsv_approximate(color);
-                 hsv.hue += iChannel * (255/NUM_CHANNELS);
+                 hsv.hue += iChannel * (255/num_channels);
             color = hsv;
         }
 

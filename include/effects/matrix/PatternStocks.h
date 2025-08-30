@@ -35,15 +35,12 @@
 #ifndef PatternStocks_H
 #define PatternStocks_H
 
-#if USE_HUB75
-
 #include <Arduino.h>
 #include <gfxfont.h>                // Adafruit GFX font structs
 #include <string.h>
 #include <HTTPClient.h>
 #include <UrlEncode.h>
 #include <ledstripeffect.h>
-#include <ledmatrixgfx.h>
 #include <ArduinoJson.h>
 #include "systemcontainer.h"
 #include <chrono>
@@ -54,7 +51,9 @@
 // We can only include the font header once, and Weather already does it, so we just extern it.  If
 // the weather effect is not included in the build, we'll then have to include it here.
 
+#if !defined(M5STACKCORE2)
 extern const uint8_t Apple5x7Bitmaps[] PROGMEM;
+#endif
 
 using namespace std;
 using namespace std::chrono;
@@ -183,6 +182,7 @@ public:
 //
 // Retrieves stock quotes from private server and displays them
 
+#if !defined(M5STACKCORE2)
 class PatternStocks : public EffectWithId<PatternStocks>
 {
     AnimatedText textSymbol = AnimatedText("STOCK",  CRGB::White, &Apple5x7,  1.0f, MATRIX_WIDTH, 0,  0, 0);
@@ -583,5 +583,6 @@ public:
 
 };
 
-#endif
+#endif // !defined(M5STACKCORE2)
+
 #endif

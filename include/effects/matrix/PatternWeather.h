@@ -50,8 +50,9 @@
 #include "effects.h"
 #include "types.h"
 
-#if USE_HUB75
-  #include <FontGfx_apple5x7.h>
+// Only declare Apple5x7 font when not using LovyanGFX-based systems (M5Stack)
+#if !defined(M5STACKCORE2) && !defined(M5STICKC) && !defined(M5STICKCPLUS) && !defined(M5STICKCPLUS2)
+    extern const GFXfont Apple5x7 PROGMEM;
 #endif
 
 using namespace std::chrono;
@@ -492,9 +493,9 @@ public:
         g()->fillScreen(BLACK16);
         g()->fillRect(0, 0, MATRIX_WIDTH, 9, g()->to16bit(CRGB(0,0,128)));
 
-        #if USE_HUB75
-            g()->setFont(&Apple5x7);
-        #endif
+#if !defined(M5STACKCORE2)
+        g()->setFont(&Apple5x7);
+#endif
 
         auto now = system_clock::now();
 
@@ -529,9 +530,9 @@ public:
         }
 
         // Print the town/city name
-
         int x = 0;
         int y = fontHeight + 1;
+#if !defined(M5STACKCORE2)
         g()->setCursor(x, y);
         g()->setTextColor(WHITE16);
         String showLocation = strLocation;
@@ -551,6 +552,7 @@ public:
             g()->setTextColor(g()->to16bit(CRGB(192,192,192)));
             g()->print(strTemp);
         }
+#endif
 
         // Draw the separator lines
 
@@ -568,17 +570,19 @@ public:
         const char * pszTomorrow = pszDaysOfWeek[ (todayTime->tm_wday + 1) % 7 ];
 
         // Draw the day of the week and tomorrow's day as well
-
+#if !defined(M5STACKCORE2)
         g()->setTextColor(WHITE16);
         g()->setCursor(0, MATRIX_HEIGHT);
         g()->print(pszToday);
         g()->setCursor(xHalf+2, MATRIX_HEIGHT);
         g()->print(pszTomorrow);
+#endif
 
         // Draw the temperature in lighter white
 
         if (dataReady)
         {
+#if !defined(M5STACKCORE2)
             g()->setTextColor(g()->to16bit(CRGB(192,192,192)));
             String strHi((int) highToday);
             String strLo((int) loToday);
@@ -606,6 +610,7 @@ public:
             y+= fontHeight;
             g()->setCursor(x,y);
             g()->print(strLo);
+#endif
         }
     }
 };
