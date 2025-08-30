@@ -465,7 +465,7 @@ class EffectSimulatorPage final : public TitlePage
         if (!gfx || gfx->leds == nullptr)
             return;
 
-        // Blit: draw each LED as a scale x scale rectangle
+        // Blit: draw each LED as a scale x scale rectangle (direct buffer reads, no per-dest-pixel loop)
         int ledIndex = 0;
         for (int y = 0; y < mh; ++y)
         {
