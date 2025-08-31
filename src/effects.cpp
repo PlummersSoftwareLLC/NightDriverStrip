@@ -82,7 +82,6 @@
         #include "effects/matrix/PatternSubscribers.h"
         #include "effects/matrix/PatternWeather.h"
         #include "effects/matrix/PatternStocks.h"
-        #include "effects/matrix/PatternStocks.h"
     #endif
 
     #include "effects/matrix/PatternPongClock.h"
@@ -135,6 +134,8 @@
 
 INIT_EFFECT_SETTING_SPECS(LEDStripEffect, _baseSettingSpecs);
 
+//#if USE_HUB75 && ENABLE_WIFI
+#if (USE_HUB75 || USE_MATRIX) && ENABLE_WIFI
 //#if USE_HUB75 && ENABLE_WIFI
 #if (USE_HUB75 || USE_MATRIX) && ENABLE_WIFI
     INIT_EFFECT_SETTING_SPECS(PatternSubscribers, mySettingSpecs);

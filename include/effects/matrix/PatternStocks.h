@@ -47,11 +47,9 @@
 #include <thread>
 #include <vector>
 #include <map>
+#include "fonts/apple5x7.h"
 
-// We can only include the font header once, and Weather already does it, so we just extern it.  If
-// the weather effect is not included in the build, we'll then have to include it here.
-
-extern const uint8_t Apple5x7Bitmaps[] PROGMEM;
+// Apple5x7 font is declared in a centralized header now
 
 using namespace std;
 using namespace std::chrono;
