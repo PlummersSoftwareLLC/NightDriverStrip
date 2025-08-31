@@ -68,8 +68,8 @@
 #define PatternPongClock_H
 
 #include "systemcontainer.h"
-// Use Adafruit GFX font through our GFXBase pipeline
-#include "fonts/apple5x7.h"
+
+extern const GFXfont Apple5x7 PROGMEM;
 
 #define BAT1_X 2 // Pong left bat x pos (this is where the ball collision occurs, the bat is drawn 1 behind these coords)
 #define BAT2_X (MATRIX_WIDTH - 4)

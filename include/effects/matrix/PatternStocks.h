@@ -47,10 +47,8 @@
 #include <thread>
 #include <vector>
 #include <map>
-#include "fonts/apple5x7.h"
 
-// Apple5x7 font is declared in a centralized header now
-
+extern const GFXfont Apple5x7 PROGMEM;
 using namespace std;
 using namespace std::chrono;
 using namespace std::chrono_literals;

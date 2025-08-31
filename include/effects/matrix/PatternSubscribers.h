@@ -35,7 +35,6 @@
 
 #include <UrlEncode.h>
 #include "systemcontainer.h"
-#include "fonts/apple5x7.h"
 
 extern const GFXfont Apple5x7 PROGMEM;
 
