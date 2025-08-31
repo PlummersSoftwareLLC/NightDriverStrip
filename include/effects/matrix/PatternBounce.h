@@ -58,6 +58,8 @@
 #include "Boid.h"
 #include "ledstripeffect.h"
 
+#if MATRIX_HEIGHT > 1
+
 // Description: This file defines the PatternBounce class, a subclass of LEDStripEffect.
 //              The class creates a bouncing effect on an LED matrix, where multiple points
 //              (referred to as 'boids') bounce off the bottom edge of the matrix.
@@ -142,5 +144,7 @@ public:
             Start();
     }
 };
+
+#endif // MATRIX_HEIGHT > 1
 
 #endif

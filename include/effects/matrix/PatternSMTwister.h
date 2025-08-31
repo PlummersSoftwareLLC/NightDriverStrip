@@ -45,7 +45,7 @@ class PatternSMTwister : public EffectWithId<PatternSMTwister>
     void Draw() override
     {
         uint16_t a = millis() / 10;
-        FastLED.clear();
+        g()->Clear();
 
         for (uint16_t i = 0; i < MATRIX_HEIGHT; i++)
         {

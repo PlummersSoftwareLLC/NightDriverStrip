@@ -58,7 +58,7 @@
 //    gives effects access to the audio data, and there are a number
 //    of sound-reactive and beat-driven effects built in.
 //
-//    In addition to simple trips, the app handles matrixes as well.
+//    In addition to simple strips, the app handles matrixes as well.
 //    It also handles groups of rings.  In one incarnation, 10 RGB
 //    LED PC fans are connected in a LianLi case plus the 32 or so
 //    on the front of the case.  The fans are grouped into NUM_FANS
@@ -167,7 +167,7 @@
 #include <TJpg_Decoder.h>
 #include <esp_now.h>
 
-#if defined(TOGGLE_BUTTON_1) || defined(TOGGLE_BUTTON_2)
+#if defined(TOGGLE_BUTTON_0) || defined(TOGGLE_BUTTON_1)
   #include "Bounce2.h"                            // For Bounce button class
 #endif
 
@@ -213,7 +213,7 @@ void PrintOutputHeader()
 {
     debugI("NightDriverStrip\n");
     debugI("------------------------------------------------------------------------------------------------------------");
-    debugI("M5STICKC: %d, USE_M5DISPLAY: %d, USE_OLED: %d, USE_TFTSPI: %d, USE_LCD: %d, USE_AUDIO: %d, ENABLE_REMOTE: %d", M5STICKC, USE_M5DISPLAY, USE_OLED, USE_TFTSPI, USE_LCD, ENABLE_AUDIO, ENABLE_REMOTE);
+    debugI("M5STICKC: %d, USE_M5DISPLAY: %d, USE_TFTSPI: %d, USE_LCD: %d, AUDIO_ENABLED: %d, ENABLE_REMOTE: %d", M5STICKC, USE_M5DISPLAY, USE_TFTSPI, USE_LCD, ENABLE_AUDIO, ENABLE_REMOTE);
 
     #if USE_PSRAM
         debugI("ESP32 PSRAM Init: %s", psramInit() ? "OK" : "FAIL");
@@ -246,17 +246,7 @@ void TerminateHandler()
     Serial.flush();
 }
 
-#ifdef TOGGLE_BUTTON_1
-Bounce2::Button Button1;
-#endif
-
-#ifdef TOGGLE_BUTTON_2
-Bounce2::Button Button2;
-#endif
-
-#ifdef TOGGLE_BUTTON_3
-Bounce2::Button Button3;
-#endif
+// Buttons are now owned/managed by Screen
 
 // setup
 //
@@ -433,6 +423,7 @@ void setup()
     #endif
 
     #if ENABLE_AUDIO
+    {
         #if INPUT_PIN
             pinMode(INPUT_PIN, INPUT);
         #endif
@@ -442,25 +433,10 @@ void setup()
             pinMode(38, OUTPUT);
             digitalWrite(38, HIGH);
         #endif
+    }
     #endif
-
-    #ifdef TOGGLE_BUTTON_1
-        Button1.attach(TOGGLE_BUTTON_1, INPUT_PULLUP);
-        Button1.interval(1);
-        Button1.setPressedState(LOW);
-    #endif
-
-    #ifdef TOGGLE_BUTTON_2
-        Button2.attach(TOGGLE_BUTTON_2, INPUT_PULLUP);
-        Button2.interval(1);
-        Button2.setPressedState(LOW);
-    #endif
-
-    #ifdef TOGGLE_BUTTON_3
-        Button3.attach(TOGGLE_BUTTON_3, INPUT_PULLUP);
-        Button3.interval(1);
-        Button3.setPressedState(LOW);
-    #endif
+    
+    // TOGGLE_BUTTON_0/1 are configured inside Screen's update loop
 
     #if AMOLED_S3
         #include "amoled/LilyGo_AMOLED.h"

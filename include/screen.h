@@ -35,10 +35,40 @@
 
 #include <mutex>
 #include "gfxbase.h"
+#include <string>
+#include <vector>
+#include <memory>
+#if defined(TOGGLE_BUTTON_0) || defined(TOGGLE_BUTTON_1)
+    #include "Bounce2.h"
+#endif
+
+class Screen; // forward declaration for Page interface
+
+// Page
+//
+// Abstract base for renderable pages on the small status screen.
+// Implement Draw to render the page into the provided Screen. Optional
+// hooks handle button presses and whether the page should pause effect
+// rotation while visible.
+
+class Page
+{
+  public:
+    virtual ~Page() = default;
+
+    // Human-readable name (for diagnostics)
+    virtual std::string Name() const { return std::string("Page"); }
+
+    // Render this page. bRedraw indicates a full redraw is requested.
+    virtual void Draw(Screen& display, bool bRedraw) = 0;
+
+    // Optional button hook. Default behavior is provided in screen.cpp.
+    virtual void OnButtonPress(uint8_t buttonIndex);
+};
 
 class Screen : public GFXBase
 {
-public:
+  public:
     static DRAM_ATTR std::mutex _screenMutex;
 
     Screen(int w, int h) : GFXBase(w, h)
@@ -55,16 +85,22 @@ public:
     {
     }
 
+    // Display capabilities and theme colors
+    // Default: color display with a blue theme and white/yellow accents.
+    virtual bool IsMonochrome() const { return false; }
+    virtual uint16_t GetTextColor() const { return WHITE16; }
+    virtual uint16_t GetBkgndColor() const { return BLUE16; }
+    virtual uint16_t GetBorderColor() const { return YELLOW16; }
+
     // Define the drawable area for the spectrum to render into the status area
 
     const int BottomMargin = 12;
 
     virtual void ScreenStatus(const String &strStatus)
     {
-        fillScreen(BLACK16);
-        //setFont();
+        fillScreen(GetBkgndColor());
         setTextSize(1);
-        setTextColor(0xFBE0, BLACK16);
+        setTextColor(GetTextColor(), GetBkgndColor());
         auto xh = 10;
         auto yh = 0;
         setCursor(xh, yh);
@@ -106,6 +142,28 @@ public:
         getTextBounds(str, 0, 0, &x1, &y1, &w, &h);
         return w;
     }
+
+    // Render the current page into this screen.
+    void Update(bool bRedraw);
+
+    // Run the screen update loop (button handling + periodic redraw)
+    void RunUpdateLoop();
+
+    // Flip to the next page and handle effect-rotation pause/resume semantics.
+    // Safe to call from button handlers.
+    static void FlipToNextPage();
+
+  private:
+    // Page registry and page count helpers
+    static std::vector<std::unique_ptr<class Page>>& Pages();
+    static int ActivePageCount();
+
+    #if defined(TOGGLE_BUTTON_0)
+        Bounce2::Button _button0;
+    #endif
+    #if defined(TOGGLE_BUTTON_1)
+        Bounce2::Button _button1;
+    #endif
 };
 
 // Class specializations of the Screen class for various display types can implement hardware-specific versions of functions
@@ -150,12 +208,8 @@ public:
 #endif
 
 #if USE_TFTSPI
-    #if TTGO
-        #include <User_Setups/Setup25_TTGO_T_Display.h>
-    #endif
     #include <TFT_eSPI.h>
     #include <SPI.h>
-
 
     // TFTScreen
     //
@@ -171,7 +225,7 @@ public:
             tft.begin();
 
             #ifdef TFT_BL
-                pinMode(TFT_BL, OUTPUT);
+                pinMode(TFT_BL, OUTPUT);                // REVIEW begin() might do this for us
                 digitalWrite(TFT_BL, 128);
             #endif
 
@@ -206,7 +260,7 @@ public:
     // AMOLEDScreen
     //
     // Screen class that works with the AMOLED S3
-
+    
     class AMOLEDScreen : public Screen
     {
         LilyGo_Class amoled;
@@ -233,7 +287,7 @@ public:
             }
 
             amoled.setBrightness(255);
-
+            
             // Register lvgl helper
             beginLvglHelper(amoled);
 
@@ -245,11 +299,11 @@ public:
                 return;
             }
             debugW("Allocated %d bytes for lvgl canvas: %p\n", sizeof(lv_color_t) * w * h, cbuf);
-
+            
             canvas = lv_canvas_create(lv_scr_act());
             lv_canvas_set_buffer(canvas, cbuf, w, h, LV_IMG_CF_TRUE_COLOR);
             lv_obj_center(canvas);
-            lv_canvas_fill_bg(canvas, lv_from16Bit(GREEN16), LV_OPA_COVER);
+            lv_canvas_fill_bg(canvas, lv_from16Bit(GREEN16), LV_OPA_COVER);            
         }
 
         ~AMOLEDScreen()
@@ -264,14 +318,14 @@ public:
                 heap_caps_free(cbuf);
                 cbuf = NULL;
             }
-        }
+        }   
 
         virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
         {
             assert(canvas != NULL);
             assert(cbuf != NULL);
 
-            lv_color_t lv_color = lv_from16Bit(color);
+            lv_color_t lv_color = lv_from16Bit(color); 
             lv_canvas_set_px_color(canvas, x, y, lv_color);
 
         }
@@ -285,7 +339,7 @@ public:
             lv_draw_rect_dsc_t rect_dsc;
             lv_draw_rect_dsc_init(&rect_dsc);
             rect_dsc.bg_opa = LV_OPA_COVER;
-            rect_dsc.bg_color = lv_from16Bit(color);
+            rect_dsc.bg_color = lv_from16Bit(color); 
 
             // Draw the rectangle
             lv_canvas_draw_rect(canvas, x, y, w, h, &rect_dsc);
@@ -296,9 +350,15 @@ public:
             assert(canvas);
             assert(cbuf);
 
-            lv_color_t lv_color = lv_from16Bit(color);
+            lv_color_t lv_color = lv_from16Bit(color); 
             lv_canvas_fill_bg(canvas, lv_color, LV_OPA_COVER);
         }
+
+    // AMOLED is a full color panel but we want a different default theme
+    virtual bool IsMonochrome() const override { return false; }
+    virtual uint16_t GetTextColor() const override { return Screen::to16bit(CRGB(100, 255, 20)); }
+    virtual uint16_t GetBkgndColor() const override { return Screen::to16bit(CRGB::Black); }
+    virtual uint16_t GetBorderColor() const override { return Screen::to16bit(CRGB::Red); }
 
     };
 #endif
@@ -347,6 +407,12 @@ public:
         {
             oled.clearDisplay();
         }
+
+    // Monochrome OLED defaults
+    virtual bool IsMonochrome() const override { return true; }
+    virtual uint16_t GetTextColor() const override { return WHITE16; }
+    virtual uint16_t GetBkgndColor() const override { return BLACK16; }
+    virtual uint16_t GetBorderColor() const override { return WHITE16; }
     };
 #endif
 
@@ -394,13 +460,19 @@ public:
         {
             Heltec.display->clear();
         }
+
+    // Monochrome OLED defaults
+    virtual bool IsMonochrome() const override { return true; }
+    virtual uint16_t GetTextColor() const override { return WHITE16; }
+    virtual uint16_t GetBkgndColor() const override { return BLACK16; }
+    virtual uint16_t GetBorderColor() const override { return WHITE16; }
     };
 #endif
 
 #if ELECROW
     // ElecrowScreen
     //
-    // Display code for the Elecrow display on their 3.5"
+    // Display code for the Elecrow display on their 3.5" 
 
     #define LGFX_USE_V1
 
@@ -410,13 +482,13 @@ public:
     #include <LovyanGFX.hpp>            // For the Elecrow display
 
     // TFT Pinout
-
+    
     #define LCD_MOSI 13
-    #define LCD_MISO 14
+    #define LCD_MISO 14 
     #define LCD_SCK  12
     #define LCD_CS    3
-    #define LCD_RST  -1
-    #define LCD_DC   42
+    #define LCD_RST  -1 
+    #define LCD_DC   42  
 
     class ElecrowScreen : public Screen, lgfx::LGFX_Device
     {
@@ -428,7 +500,7 @@ public:
         ElecrowScreen(int w, int h) : Screen(w, h)
         {
              // I'm not a fan of these local clauses but it keeps it the same as the original sample code
-
+            
              {
                 auto cfg = _bus_instance.config();
                 cfg.spi_host = SPI3_HOST;
@@ -471,8 +543,8 @@ public:
             setPanel(&_panel_instance);
 
             constexpr auto LCD_BL = 46;
-            lgfx::LGFX_Device::init();
-            lgfx::LGFX_Device::setRotation( 1 );
+            lgfx::LGFX_Device::init();     
+            lgfx::LGFX_Device::setRotation( 1 ); 
             pinMode(LCD_BL, OUTPUT);
             digitalWrite(LCD_BL, HIGH);
             lgfx::LGFX_Device::fillScreen(TFT_BLUE);
@@ -487,7 +559,7 @@ public:
         virtual void endWrite(void) override
         {
             lgfx::LGFX_Device::endWrite();
-        }
+        }   
 
         virtual void StartFrame() override
         {
@@ -502,7 +574,7 @@ public:
         virtual void writePixel(int16_t x, int16_t y, uint16_t color) override
         {
             lgfx::LGFX_Device::writePixel(x, y, color);
-        }
+        }   
 
         virtual void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override
         {
@@ -513,7 +585,7 @@ public:
         {
             lgfx::LGFX_Device::writeFastVLine(x, y, h, color);
         }
-
+        
         virtual void writeFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) override
         {
             lgfx::LGFX_Device::writeFastHLine(x, y, w, color);
@@ -568,7 +640,7 @@ public:
             #ifdef TFT_BL
             pinMode(TFT_BL, OUTPUT); //initialize BL
             #endif
-
+            
             pLCD = std::make_unique<Adafruit_ILI9341>(&hspi, TFT_DC, TFT_CS, TFT_RST);
             pLCD->begin();
             pLCD->setRotation(1);

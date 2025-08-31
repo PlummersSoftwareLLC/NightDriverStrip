@@ -1,3 +1,4 @@
+
 //+--------------------------------------------------------------------------
 //
 // File:        PatternWeather.h
@@ -41,7 +42,6 @@
 #include <ledmatrixgfx.h>
 #include <ArduinoJson.h>
 #include "systemcontainer.h"
-#include <FontGfx_apple5x7.h>
 #include <array>
 #include <chrono>
 #include <thread>
@@ -49,6 +49,10 @@
 #include "TJpg_Decoder.h"
 #include "effects.h"
 #include "types.h"
+
+#if USE_HUB75
+  #include <FontGfx_apple5x7.h>
+#endif
 
 using namespace std::chrono;
 using namespace std::chrono_literals;
@@ -488,7 +492,9 @@ public:
         g()->fillScreen(BLACK16);
         g()->fillRect(0, 0, MATRIX_WIDTH, 9, g()->to16bit(CRGB(0,0,128)));
 
-        g()->setFont(&Apple5x7);
+        #if USE_HUB75
+            g()->setFont(&Apple5x7);
+        #endif
 
         auto now = system_clock::now();
 
