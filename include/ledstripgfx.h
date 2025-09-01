@@ -69,7 +69,7 @@ protected:
             ADD_CHANNEL(1);
         #endif
 
-        #if NUM_CHANNELS >= 3 && LED_PIN2 >= 0      
+        #if NUM_CHANNELS >= 3 && LED_PIN2 >= 0
             ADD_CHANNEL(2);
         #endif
 

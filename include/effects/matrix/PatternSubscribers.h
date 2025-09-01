@@ -220,8 +220,8 @@ class PatternSubscribers : public EffectWithId<PatternSubscribers>
         // Draw a border around the edge of the panel
         g()->drawRect(0, 1, MATRIX_WIDTH - 1, MATRIX_HEIGHT - 2, g()->to16bit(borderColor));
 
-    // Use the centralized Apple5x7 Adafruit font
-    g()->setFont(&Apple5x7);
+        // Use the centralized Apple5x7 Adafruit font
+        g()->setFont(&Apple5x7);
 
         // Draw the channel name
         g()->setTextColor(g()->to16bit(CRGB::White));
