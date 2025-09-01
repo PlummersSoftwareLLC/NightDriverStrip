@@ -252,7 +252,7 @@ class PatternSubscribers : public EffectWithId<PatternSubscribers>
         g()->setCursor(x+1, y);   g()->print(pszText);
         g()->setCursor(x, y-1);   g()->print(pszText);
         g()->setCursor(x, y+1);   g()->print(pszText);
-        
+
         g()->setTextColor(g()->to16bit(CRGB::White));
         g()->setCursor(x, y);
         g()->print(pszText);

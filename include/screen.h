@@ -260,7 +260,7 @@ class Screen : public GFXBase
     // AMOLEDScreen
     //
     // Screen class that works with the AMOLED S3
-    
+
     class AMOLEDScreen : public Screen
     {
         LilyGo_Class amoled;
@@ -287,7 +287,7 @@ class Screen : public GFXBase
             }
 
             amoled.setBrightness(255);
-            
+
             // Register lvgl helper
             beginLvglHelper(amoled);
 
@@ -299,11 +299,11 @@ class Screen : public GFXBase
                 return;
             }
             debugW("Allocated %d bytes for lvgl canvas: %p\n", sizeof(lv_color_t) * w * h, cbuf);
-            
+
             canvas = lv_canvas_create(lv_scr_act());
             lv_canvas_set_buffer(canvas, cbuf, w, h, LV_IMG_CF_TRUE_COLOR);
             lv_obj_center(canvas);
-            lv_canvas_fill_bg(canvas, lv_from16Bit(GREEN16), LV_OPA_COVER);            
+            lv_canvas_fill_bg(canvas, lv_from16Bit(GREEN16), LV_OPA_COVER);
         }
 
         ~AMOLEDScreen()
@@ -318,14 +318,14 @@ class Screen : public GFXBase
                 heap_caps_free(cbuf);
                 cbuf = NULL;
             }
-        }   
+        }
 
         virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
         {
             assert(canvas != NULL);
             assert(cbuf != NULL);
 
-            lv_color_t lv_color = lv_from16Bit(color); 
+            lv_color_t lv_color = lv_from16Bit(color);
             lv_canvas_set_px_color(canvas, x, y, lv_color);
 
         }
@@ -339,7 +339,7 @@ class Screen : public GFXBase
             lv_draw_rect_dsc_t rect_dsc;
             lv_draw_rect_dsc_init(&rect_dsc);
             rect_dsc.bg_opa = LV_OPA_COVER;
-            rect_dsc.bg_color = lv_from16Bit(color); 
+            rect_dsc.bg_color = lv_from16Bit(color);
 
             // Draw the rectangle
             lv_canvas_draw_rect(canvas, x, y, w, h, &rect_dsc);
@@ -350,7 +350,7 @@ class Screen : public GFXBase
             assert(canvas);
             assert(cbuf);
 
-            lv_color_t lv_color = lv_from16Bit(color); 
+            lv_color_t lv_color = lv_from16Bit(color);
             lv_canvas_fill_bg(canvas, lv_color, LV_OPA_COVER);
         }
 
@@ -472,7 +472,7 @@ class Screen : public GFXBase
 #if ELECROW
     // ElecrowScreen
     //
-    // Display code for the Elecrow display on their 3.5" 
+    // Display code for the Elecrow display on their 3.5"
 
     #define LGFX_USE_V1
 
@@ -482,13 +482,13 @@ class Screen : public GFXBase
     #include <LovyanGFX.hpp>            // For the Elecrow display
 
     // TFT Pinout
-    
+
     #define LCD_MOSI 13
-    #define LCD_MISO 14 
+    #define LCD_MISO 14
     #define LCD_SCK  12
     #define LCD_CS    3
-    #define LCD_RST  -1 
-    #define LCD_DC   42  
+    #define LCD_RST  -1
+    #define LCD_DC   42
 
     class ElecrowScreen : public Screen, lgfx::LGFX_Device
     {
@@ -500,7 +500,7 @@ class Screen : public GFXBase
         ElecrowScreen(int w, int h) : Screen(w, h)
         {
              // I'm not a fan of these local clauses but it keeps it the same as the original sample code
-            
+
              {
                 auto cfg = _bus_instance.config();
                 cfg.spi_host = SPI3_HOST;
@@ -543,8 +543,8 @@ class Screen : public GFXBase
             setPanel(&_panel_instance);
 
             constexpr auto LCD_BL = 46;
-            lgfx::LGFX_Device::init();     
-            lgfx::LGFX_Device::setRotation( 1 ); 
+            lgfx::LGFX_Device::init();
+            lgfx::LGFX_Device::setRotation( 1 );
             pinMode(LCD_BL, OUTPUT);
             digitalWrite(LCD_BL, HIGH);
             lgfx::LGFX_Device::fillScreen(TFT_BLUE);
@@ -559,7 +559,7 @@ class Screen : public GFXBase
         virtual void endWrite(void) override
         {
             lgfx::LGFX_Device::endWrite();
-        }   
+        }
 
         virtual void StartFrame() override
         {
@@ -574,7 +574,7 @@ class Screen : public GFXBase
         virtual void writePixel(int16_t x, int16_t y, uint16_t color) override
         {
             lgfx::LGFX_Device::writePixel(x, y, color);
-        }   
+        }
 
         virtual void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) override
         {
@@ -585,7 +585,7 @@ class Screen : public GFXBase
         {
             lgfx::LGFX_Device::writeFastVLine(x, y, h, color);
         }
-        
+
         virtual void writeFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) override
         {
             lgfx::LGFX_Device::writeFastHLine(x, y, w, color);
@@ -640,7 +640,7 @@ class Screen : public GFXBase
             #ifdef TFT_BL
             pinMode(TFT_BL, OUTPUT); //initialize BL
             #endif
-            
+
             pLCD = std::make_unique<Adafruit_ILI9341>(&hspi, TFT_DC, TFT_CS, TFT_RST);
             pLCD->begin();
             pLCD->setRotation(1);

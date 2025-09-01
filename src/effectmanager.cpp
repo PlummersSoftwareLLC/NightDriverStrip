@@ -47,7 +47,7 @@ static DRAM_ATTR size_t l_CurrentEffectWriterIndex = SIZE_MAX;
 // EffectManager initialization functions
 //
 
-#if USE_HUB75 
+#if USE_HUB75
 
     void InitSplashEffectManager()
     {

@@ -435,7 +435,7 @@ void setup()
         #endif
     }
     #endif
-    
+
     // TOGGLE_BUTTON_0/1 are configured inside Screen's update loop
 
     #if AMOLED_S3

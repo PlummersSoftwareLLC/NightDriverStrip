@@ -55,7 +55,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * compressing a large file under no significant time constraint,
  * but when you're compressing little bits in real time, things get
  * hairier.
- * 
+ *
  * I suppose it's possible that I could compute Huffman trees based
  * on the frequencies in the _previous_ block, as a sort of
  * heuristic, but I'm not confident that the gain would balance out
@@ -216,7 +216,7 @@ void zlib_match(struct Outbuf *out, int distance, int len)
          * We can transmit matches of lengths 3 through 258
          * inclusive. So if len exceeds 258, we must transmit in
          * several steps, with 258 or less in each step.
-         * 
+         *
          * Specifically: if len >= 261, we can transmit 258 and be
          * sure of having at least 3 left for the next step. And if
          * len <= 258, we can just transmit len. But if len == 259

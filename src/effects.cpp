@@ -62,7 +62,7 @@
 
 #if USE_HUB75
     #include "ledmatrixgfx.h"
-    #include "effects/matrix/PatternMandala.h"    
+    #include "effects/matrix/PatternMandala.h"
     // These effects require LEDMatrixGFX::getPolarMap()
     #include "effects/matrix/PatternSMHypnosis.h"
     #include "effects/matrix/PatternSMRainbowTunnel.h"
@@ -85,7 +85,7 @@
     #endif
 
     #include "effects/matrix/PatternPongClock.h"
-    #include "effects/matrix/PatternAnimatedGIF.h"  
+    #include "effects/matrix/PatternAnimatedGIF.h"
     #include "effects/matrix/PatternSMStarDeep.h"
     #include "effects/matrix/PatternSMAmberRain.h"
     #include "effects/matrix/PatternSMBlurringColors.h"

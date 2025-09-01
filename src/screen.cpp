@@ -217,11 +217,11 @@ class TitlePage : public Page
   protected:
     // Cached content top calculated using the header text size to avoid shifting
     int _contentTop = 0;
-    int ContentTop(Screen &display) const 
-    { 
+    int ContentTop(Screen &display) const
+    {
         if (IsSmallDisplay(display))
             return display.fontHeight() + 2; // Just one line for effect name on small displays
-        return _contentTop > 0 ? _contentTop : (display.fontHeight() * 3 + 4); 
+        return _contentTop > 0 ? _contentTop : (display.fontHeight() * 3 + 4);
     }
 
   public:
@@ -328,7 +328,7 @@ class TitlePage : public Page
             #if ENABLE_AUDIO
                 footer = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d Scr: %02d", g_Values.FPS, g_Analyzer.AudioFPS(), g_Analyzer.SerialFPS(), (int)screenFPS);
             #endif
-            
+
             if (footer != lastFooter)
             {
                 lastFooter = footer;
@@ -430,7 +430,7 @@ class EffectSimulatorPage final : public TitlePage
         // Matrix dimensions - handle single-row LED strips by wrapping into a matrix
         int mw = MATRIX_WIDTH;
         int mh = MATRIX_HEIGHT;
-        
+
         // If we have a single row of LEDs (strip), wrap it into a matrix for better visualization
         if (mh == 1 && mw > 32) // Only wrap if we have more than 32 LEDs in a single row
         {
@@ -438,7 +438,7 @@ class EffectSimulatorPage final : public TitlePage
             int targetRows = contentHeight / 3; // Aim for ~3 pixel high rows
             if (targetRows < 4) targetRows = 4; // Minimum 4 rows
             if (targetRows > 16) targetRows = 16; // Maximum 16 rows
-            
+
             mh = targetRows;
             mw = (MATRIX_WIDTH + mh - 1) / mh; // Round up division
         }
@@ -485,7 +485,7 @@ class EffectSimulatorPage final : public TitlePage
                 {
                     c = gfx->leds[XY(x, y)];
                 }
-                
+
                 uint16_t c16 = display.to16bit(c);
                 int px = xOffset + x * scale;
                 int py = yOffset + y * scale;
@@ -603,7 +603,7 @@ void IRAM_ATTR Screen::RunUpdateLoop()
     for (;;)
     {
         uint32_t frameStartTime = millis();
-        
+
         // bRedraw is set when the page changes so that it can get a full redraw.  It is also set initially as
         // nothing has been drawn for any page yet
 
@@ -661,18 +661,18 @@ void IRAM_ATTR Screen::RunUpdateLoop()
         // Calculate frame rate-based delay for 30fps
         uint32_t frameProcessingTime = millis() - frameStartTime;
         uint32_t delayTime = kMinDelayMs; // Start with minimum delay
-        
+
         if (frameProcessingTime < kTargetFrameTimeMs)
         {
             delayTime = kTargetFrameTimeMs - frameProcessingTime;
         }
-        
+
         // Ensure minimum delay of 1ms
         if (delayTime < kMinDelayMs)
         {
             delayTime = kMinDelayMs;
         }
-        
+
         delay(delayTime);
         lastFrameTime = millis();
     }
