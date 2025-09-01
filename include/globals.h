@@ -150,6 +150,12 @@
     #define USE_M5 1
 #endif
 
+#if USE_HUB75
+    #ifndef USE_MATRIX
+        #define USE_MATRIX 1
+    #endif
+#endif
+
 
 #if USE_M5
 #include "M5Unified.h"

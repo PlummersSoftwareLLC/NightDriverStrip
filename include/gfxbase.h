@@ -79,7 +79,7 @@ constexpr static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
     return (uint8_t)(((a) * (b) + (a) + (b)) >> 8);
 }
 
-#if USE_HUB75 || USE_MATRIX
+#if USE_MATRIX
     #define USE_NOISE 1
 #endif
 
@@ -302,7 +302,7 @@ public:
     #if USE_HUB75
         #define XY(x, y) ((y) * MATRIX_WIDTH + (x))
     #elif HELMET
-        #define XY(x, y) xy(x, MATRIX_HEIGHT - 1 - y)           // Invert the Y axis for the helmet display
+        #define XY(x, y) (x, MATRIX_HEIGHT - 1 - y)           // Invert the Y axis for the helmet display
     #else
         #define XY(x, y) (((x) & 0x01) ? (((x) * MATRIX_HEIGHT) + ((MATRIX_HEIGHT - 1) - (y))) : (((x) * MATRIX_HEIGHT) + (y)))
     #endif
