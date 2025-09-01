@@ -154,7 +154,43 @@ class Screen : public GFXBase
     static void FlipToNextPage();
 
   private:
-    // Page registry and page count helpers
+    // Cached screen refresh FPS (updated each loop iteration)
+    float _screenFPS = 0.0f;
+    uint32_t _lastScreenMillis = 0;
+    bool _fpsTouchedThisFrame = false;
+
+  public:
+
+    inline float GetScreenFPS() const { return _screenFPS; }
+    
+    inline void SetScreenFPS(float fps)
+    {
+        _screenFPS = fps;
+        _fpsTouchedThisFrame = true;
+    }
+    
+    // TouchFPS
+    // Marks the FPS value as intentionally managed this frame without changing it.
+    // This prevents the fallback loop-based FPS from overwriting an effect-driven FPS
+    // when the active page prefers to keep the last effect cadence.
+    inline void TouchFPS()
+    {
+        _fpsTouchedThisFrame = true;
+    }
+
+    inline void UpdateScreenFPSFromDelta(uint32_t dtMs)
+    {
+        if (dtMs == 0) 
+            return;
+        const float inst = 1000.0f / (float)dtMs;
+        // Light smoothing to avoid flicker
+        _screenFPS = (_screenFPS * 0.8f) + (inst * 0.2f);
+        _fpsTouchedThisFrame = true;
+    }
+
+  private:
+  
+  // Page registry and page count helpers
     static std::vector<std::unique_ptr<class Page>>& Pages();
     static int ActivePageCount();
 
