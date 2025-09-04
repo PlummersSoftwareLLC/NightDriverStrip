@@ -26,7 +26,7 @@ class PatternSMRadialWave : public EffectWithId<PatternSMRadialWave>
     {
         static uint32_t t = 0;
         t++;
-        const auto& rMap = LEDMatrixGFX::getPolarMap();
+        const auto& rMap = GFXBase::getPolarMap();
 
         for (uint8_t x = 0; x < MATRIX_WIDTH; x++)
         {

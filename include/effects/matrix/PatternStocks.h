@@ -43,7 +43,7 @@
 #include <HTTPClient.h>
 #include <UrlEncode.h>
 #include <ledstripeffect.h>
-#include <ledmatrixgfx.h>
+#include <hub75gfx.h>
 #include <ArduinoJson.h>
 #include "systemcontainer.h"
 #include <chrono>

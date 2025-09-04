@@ -216,15 +216,15 @@ class PatternSubscribers : public EffectWithId<PatternSubscribers>
 
     void Draw() override
     {
-        LEDMatrixGFX::backgroundLayer.fillScreen(rgb24(backgroundColor.r, backgroundColor.g, backgroundColor.b));
-        LEDMatrixGFX::backgroundLayer.setFont(font5x7);
+        HUB75GFX::backgroundLayer.fillScreen(rgb24(backgroundColor.r, backgroundColor.g, backgroundColor.b));
+        HUB75GFX::backgroundLayer.setFont(font5x7);
 
         // Draw a border around the edge of the panel
-        LEDMatrixGFX::backgroundLayer.drawRectangle(0, 1, MATRIX_WIDTH - 1, MATRIX_HEIGHT - 2,
+        HUB75GFX::backgroundLayer.drawRectangle(0, 1, MATRIX_WIDTH - 1, MATRIX_HEIGHT - 2,
                                                     rgb24(borderColor.r, borderColor.g, borderColor.b));
 
         // Draw the channel name
-        LEDMatrixGFX::backgroundLayer.drawString(2, 3, rgb24(255,255,255), youtubeChannelName.c_str());
+        HUB75GFX::backgroundLayer.drawString(2, 3, rgb24(255,255,255), youtubeChannelName.c_str());
 
         // Start in the middle of the panel and then back up a half a row to center vertically,
         // then back up left one half a char for every 10s digit in the subscriber count.  This
@@ -242,12 +242,12 @@ class PatternSubscribers : public EffectWithId<PatternSubscribers>
         String result = str_sprintf("%ld", subscribers);
         const char * pszText = result.c_str();
 
-        LEDMatrixGFX::backgroundLayer.setFont(gohufont11b);
-        LEDMatrixGFX::backgroundLayer.drawString(x-1, y,   rgb24(0,0,0),          pszText);
-        LEDMatrixGFX::backgroundLayer.drawString(x+1, y,   rgb24(0,0,0),          pszText);
-        LEDMatrixGFX::backgroundLayer.drawString(x,   y-1, rgb24(0,0,0),          pszText);
-        LEDMatrixGFX::backgroundLayer.drawString(x,   y+1, rgb24(0,0,0),          pszText);
-        LEDMatrixGFX::backgroundLayer.drawString(x,   y,   rgb24(255,255,255),    pszText);
+        HUB75GFX::backgroundLayer.setFont(gohufont11b);
+        HUB75GFX::backgroundLayer.drawString(x-1, y,   rgb24(0,0,0),          pszText);
+        HUB75GFX::backgroundLayer.drawString(x+1, y,   rgb24(0,0,0),          pszText);
+        HUB75GFX::backgroundLayer.drawString(x,   y-1, rgb24(0,0,0),          pszText);
+        HUB75GFX::backgroundLayer.drawString(x,   y+1, rgb24(0,0,0),          pszText);
+        HUB75GFX::backgroundLayer.drawString(x,   y,   rgb24(255,255,255),    pszText);
     }
 
     // Extension override to serialize our settings on top of those from LEDStripEffect
