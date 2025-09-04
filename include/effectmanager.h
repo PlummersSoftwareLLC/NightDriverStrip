@@ -40,6 +40,7 @@
 #include <functional>
 #include <math.h>
 
+#include "ledmatrixgfx.h"
 #include "effectfactories.h"
 
 #define JSON_FORMAT_VERSION         1
