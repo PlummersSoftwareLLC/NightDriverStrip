@@ -42,7 +42,7 @@
 #include "globals.h"
 #include <string.h>
 #include <ledstripeffect.h>
-#include <ledmatrixgfx.h>
+#include <hub75gfx.h>
 #include <ArduinoJson.h>
 #include "systemcontainer.h"
 #include <map>

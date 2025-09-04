@@ -64,7 +64,7 @@
 //              Mar-16-2022  v023       Davepl      Response packet on socket with stats
 //              Mar-17-2022  v024       Davepl      Catchup clock to server when in future
 //              May-17-2022  v025       Davepl      After merge of RepsonsePacket into main
-//              May-24-2022  v026       Davepl      Adding BaseGFX/LEDMatrixGFX/LEDStripGFX
+//              May-24-2022  v026       Davepl      Adding BaseGFX/HUB75GFX/WS281xGFX
 //              Oct-01-2022  v027       Davepl      Mesmerizer integration and screen fixes
 //              Oct-01-2022  v028       Davepl      Adjust buffer sizes due to lower mem free
 //              Oct-02-2022  v029       Davepl      Change WiFiUDP to use free/malloc
@@ -927,7 +927,7 @@ inline auto accumulate(const Range& r)
 
 #include "gfxbase.h"                            // GFXBase drawing interface
 #include "socketserver.h"                       // Incoming WiFi data connections
-#include "ledstripgfx.h"                        // Essential drawing code for strips
+#include "ws281xgfx.h"                           // Essential drawing code for strips
 #include "ledstripeffect.h"                     // Defines base led effect classes
 #include "ntptimeclient.h"                      // setting the system clock from ntp
 #include "effectmanager.h"                      // For g_EffectManager

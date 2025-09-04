@@ -61,9 +61,10 @@
 //
 
 #if USE_HUB75
-    #include "ledmatrixgfx.h"
+    #include "hub75gfx.h"
+    #include "effects/matrix/PatternPongClock.h"
     #include "effects/matrix/PatternMandala.h"
-    // These effects require LEDMatrixGFX::getPolarMap()
+    // These effects require HUB75GFX::getPolarMap()
     #include "effects/matrix/PatternSMHypnosis.h"
     #include "effects/matrix/PatternSMRainbowTunnel.h"
     #include "effects/matrix/PatternSMRadialWave.h"
@@ -122,8 +123,8 @@
 #endif
 
 
-#if USE_WS281X
-    #include "ledstripgfx.h"
+#ifdef USE_WS281X
+    #include "ws281xgfx.h"
 #endif
 
 // Global effect set version

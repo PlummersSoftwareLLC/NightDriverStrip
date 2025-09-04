@@ -39,8 +39,8 @@
 #include <algorithm>
 #include <functional>
 #include <math.h>
-
 #include "effectfactories.h"
+#include "hub75gfx.h"
 
 #define JSON_FORMAT_VERSION         1
 #define CURRENT_EFFECT_CONFIG_FILE  "/current.cfg"
@@ -373,7 +373,7 @@ public:
         std::shared_ptr<LEDStripEffect> & effect = _tempEffect ? _tempEffect : _vEffects[_iCurrentEffect];
 
         #if USE_HUB75
-            auto pMatrix = std::static_pointer_cast<LEDMatrixGFX>(_gfx[0]);
+            auto pMatrix = std::static_pointer_cast<HUB75GFX>(_gfx[0]);
             pMatrix->SetCaption(effect->FriendlyName(), CAPTION_TIME);
         #endif
 
