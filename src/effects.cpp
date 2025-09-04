@@ -120,7 +120,7 @@
 
 
 #ifdef USE_WS281X
-    #include "fastledgfx.h"
+    #include "ws281xgfx.h"
 #endif
 
 // Global effect set version
