@@ -4,6 +4,7 @@
 
 #include "effectmanager.h"
 #include "effects/strip/musiceffect.h"
+#include "types.h"
 
 // Inspired by
 // https://editor.soulmatelights.com/gallery/1685-strobe-and-diffusion Was
@@ -22,11 +23,9 @@ class PatternSMStrobeDiffusion : public EffectWithId<PatternSMStrobeDiffusion>
 
     uint8_t hue, hue2; // gradual hue shift or some other cyclic counter
     uint8_t step { 0 }; // some counter of frames or sequences of operations
-    // Locations of snowflakes. One bitset per X column, with one bit per Y row.
-    // NOTE: The previous declaration mistakenly allocated (W*H) bitsets each of size (W*H),
-    // which scales as (W*H)^2 bits and blew PSRAM for larger matrices (e.g., 96x48 -> ~2.65MB).
-    // This correct structure uses W * H bits total (~576 bytes at 96x48).
-    std::bitset<MATRIX_HEIGHT> noise3d[MATRIX_WIDTH];
+    // Locations of snowflakes stored in a single flattened bitset (X-major).
+    // Index calculation: idx = y * MATRIX_WIDTH + x
+    std::unique_ptr<std::bitset<MATRIX_WIDTH * MATRIX_HEIGHT>> snowBits = make_unique_psram<std::bitset<MATRIX_WIDTH * MATRIX_HEIGHT>>();
     uint8_t Speed = 150;                                                             // 1-255 is speed
     uint8_t Scale = 90;                                                              // 1-100 is something parameter
     uint8_t FPSdelay;        // BUGBUG: This is set but never used. :-(
@@ -37,6 +36,24 @@ class PatternSMStrobeDiffusion : public EffectWithId<PatternSMStrobeDiffusion>
 #else
     const int top_line_offset = 0;
 #endif
+
+    // Compile-time index calculation for (x,y) -> flat bit index.
+    static constexpr size_t bitIndex(uint8_t x, uint8_t y)
+    {
+        return y * MATRIX_WIDTH + x;
+    }
+
+    // Accessor for snow bitfield: non-const returns a reference proxy for read/write,
+    // const overload returns a bool for read-only contexts.
+    inline std::bitset<MATRIX_WIDTH * MATRIX_HEIGHT>::reference snowAt(uint8_t x, uint8_t y)
+    {
+        return (*snowBits)[bitIndex(x, y)];
+    }
+
+    inline bool snowAt(uint8_t x, uint8_t y) const
+    {
+        return snowBits->test(bitIndex(x, y));
+    }
 
   public:
 
@@ -83,8 +100,8 @@ class PatternSMStrobeDiffusion : public EffectWithId<PatternSMStrobeDiffusion>
             {
                 assert((x >= 0) && (x < MATRIX_WIDTH));
                 assert((y >= 0) && (y < MATRIX_HEIGHT));
-                noise3d[x][y] = noise3d[x][y - 1];
-                if (noise3d[x][y] > 0)
+                snowAt(x, y) = snowAt(x, y - 1);
+                if (snowAt(x, y) > 0)
                 {
                     g()->drawPixel(x, y, CHSV(170, 5U, 127 + random8(128)));
                 }
@@ -100,7 +117,7 @@ class PatternSMStrobeDiffusion : public EffectWithId<PatternSMStrobeDiffusion>
         for (uint8_t x = 0U; x < MATRIX_WIDTH; x++)
         {
             // randomly fill in the top row
-            noise3d[x][top_line_offset] = (posX == x) && (step % 3 == 0);
+            snowAt(x, top_line_offset) = (posX == x) && (step % 3 == 0);
         }
     }
 
