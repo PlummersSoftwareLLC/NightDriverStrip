@@ -159,8 +159,8 @@ protected:
     static constexpr int _randomPaletteIndex = 9;
 
 public:
-    static const uint8_t kMatrixWidth = MATRIX_WIDTH;                                   // known working for actual matrix effects: 32, 64, 96, 128
-    static const uint8_t kMatrixHeight = MATRIX_HEIGHT;                                 // known working for actual matrix effects: 16, 32, 48, 64
+    static const uint16_t kMatrixWidth = MATRIX_WIDTH;                                  // known working for actual matrix effects: 32, 64, 96, 128
+    static const uint16_t kMatrixHeight = MATRIX_HEIGHT;                                // known working for actual matrix effects: 16, 32, 48, 64
 
     // A 3-byte struct will have one byte of padding so each element
     // begins on a NA boundary. Making this
@@ -1448,13 +1448,13 @@ public:
                 rMap_ptr = make_unique_psram<PolarMapArray>();
 
                 auto& rMap = *rMap_ptr;
-                const uint8_t C_X = kMatrixWidth / 2;
-                const uint8_t C_Y = kMatrixHeight / 2;
+                const uint16_t C_X = kMatrixWidth / 2;
+                const uint16_t C_Y = kMatrixHeight / 2;
                 const float mapp = 255.0f / kMatrixWidth;
 
-                for (int8_t x = -C_X; x < C_X + (kMatrixWidth % 2); x++)
+                for (int16_t x = -C_X; x < C_X + (kMatrixWidth % 2); x++)
                 {
-                    for (int8_t y = -C_Y; y < C_Y + (MATRIX_HEIGHT % 2); y++)
+                    for (int16_t y = -C_Y; y < C_Y + (kMatrixHeight% 2); y++)
                     {
                         float angle_rad = atan2f(static_cast<float>(y), static_cast<float>(x));
                         float radius_float = hypotf(static_cast<float>(x), static_cast<float>(y));
