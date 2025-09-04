@@ -234,7 +234,7 @@ void SetupOTA(const String & strHostname)
                 debugI("OTA Progress: %u%%\r", p);
 
                 #if USE_HUB75
-                    auto pMatrix = std::static_pointer_cast<SmartMatrixGFX>(g_ptrSystem->EffectManager().GetBaseGraphics()[0]);
+                    auto pMatrix = std::static_pointer_cast<HUB75GFX>(g_ptrSystem->EffectManager().GetBaseGraphics()[0]);
                     pMatrix->SetCaption(str_sprintf("Update:%d%%", p), CAPTION_TIME);
                 #endif
             }

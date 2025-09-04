@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        fastledgfx.cpp
+// File:        ws281xgfx.cpp
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
@@ -29,10 +29,10 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
-#include "fastledgfx.h"
+#include "ws281xgfx.h"
 #include "systemcontainer.h"
 
-void FastLEDGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
+void WS281xGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
 {
     auto pixelsDrawn = wifiPixelsDrawn > 0 ? wifiPixelsDrawn : localPixelsDrawn;
 

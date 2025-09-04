@@ -26,7 +26,7 @@ class PatternSMRainbowTunnel : public EffectWithId<PatternSMRainbowTunnel>
         static uint16_t t;
 
         t += speed;
-        const auto& rMap = SmartMatrixGFX::getPolarMap();
+        const auto& rMap = HUB75GFX::getPolarMap();
 
         for (uint8_t x = 0; x < MATRIX_WIDTH; x++)
         {

@@ -57,10 +57,10 @@
 //
 
 #if USE_HUB75
-    #include "smartmatrixgfx.h"
+    #include "hub75gfx.h"
     #include "effects/matrix/PatternPongClock.h"
     #include "effects/matrix/PatternMandala.h"
-    // These effects require SmartMatrixGFX::getPolarMap()
+    // These effects require HUB75GFX::getPolarMap()
     #include "effects/matrix/PatternSMHypnosis.h"
     #include "effects/matrix/PatternSMRainbowTunnel.h"
     #include "effects/matrix/PatternSMRadialWave.h"

@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        FastLEDGFX.h
+// File:        ws281xgfx.h
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
@@ -33,14 +33,14 @@
 #pragma once
 #include "gfxbase.h"
 
-// FastLEDGFX
+// WS281xGfx
 //
 // A derivation of GFXBase that adds LED-strip-specific functionality
 
-class FastLEDGFX : public GFXBase
+class WS281xGFX : public GFXBase
 {
 protected:
-    static void AddLEDsToFastLED(std::vector<std::shared_ptr<GFXBase>>& devices)
+    static void AddLEDs(std::vector<std::shared_ptr<GFXBase>>& devices)
     {
         // Macro to add LEDs to a channel
 
@@ -100,15 +100,15 @@ protected:
 
 public:
 
-    FastLEDGFX(size_t w, size_t h) : GFXBase(w, h)
+    WS281xGFX(size_t w, size_t h) : GFXBase(w, h)
     {
         debugV("Creating Device of size %zu x %zu", w, h);
         leds = static_cast<CRGB *>(calloc(w * h, sizeof(CRGB)));
         if(!leds)
-            throw std::runtime_error("Unable to allocate LEDs in FastLEDGFX");
+            throw std::runtime_error("Unable to allocate LEDs in WS281xGFX");
     }
 
-    ~FastLEDGFX() override
+    ~WS281xGFX() override
     {
         free(leds);
         leds = nullptr;
@@ -123,11 +123,11 @@ public:
 
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
-            debugW("Allocating FastLEDGFX for channel %d", i);
-            devices.push_back(make_shared_psram<FastLEDGFX>(MATRIX_WIDTH, MATRIX_HEIGHT));
+            debugW("Allocating WS281xGFX for channel %d", i);
+            devices.push_back(make_shared_psram<WS281xGFX>(MATRIX_WIDTH, MATRIX_HEIGHT));
         }
 
-        AddLEDsToFastLED(devices);
+        AddLEDs(devices);
 
     }
 
@@ -142,14 +142,14 @@ public:
 
 // HexagonGFX
 //
-// A version of the FastLEDGFX class that accounts for the layout of the hexagon LEDs
+// A version of the WS281xGFX class that accounts for the layout of the hexagon LEDs
 //
 
-class HexagonGFX : public FastLEDGFX
+class HexagonGFX : public WS281xGFX
 {
   public:
 
-    HexagonGFX(size_t numLeds) : FastLEDGFX(numLeds, 1)
+    HexagonGFX(size_t numLeds) : WS281xGFX(numLeds, 1)
     {
     }
 
@@ -166,7 +166,7 @@ class HexagonGFX : public FastLEDGFX
             devices.push_back(make_shared_psram<HexagonGFX>(NUM_LEDS));
         }
 
-        AddLEDsToFastLED(devices);
+        AddLEDs(devices);
     }
 
     virtual int getStartIndexOfRow(int row) const

@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        smartmatrixgfx.h
+// File:        hub75gfx.h
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
@@ -23,7 +23,7 @@
 //
 // Description:
 //
-//   Provides an Adafruit_GFX implementation for our RGB LED panel so that
+//   Provides a HUB75 GFX implementation for our RGB LED panel so that
 //   we can use primitives such as lines and fills on it.
 //
 // History:     Oct-9-2018         Davepl      Created from other projects
@@ -45,7 +45,7 @@
 
 #define COLOR_DEPTH 24 // known working: 24, 48 - If the sketch uses type `rgb24` directly, COLOR_DEPTH must be 24
 
-class SmartMatrixGFX : public GFXBase
+class HUB75GFX : public GFXBase
 {
 protected:
     String strCaption;
@@ -65,11 +65,11 @@ public:
     static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> titleLayer;
     static SmartMatrixHub75Calc<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrix;
 
-    SmartMatrixGFX(size_t w, size_t h) : GFXBase(w, h)
+    HUB75GFX(size_t w, size_t h) : GFXBase(w, h)
     {
     }
 
-    ~SmartMatrixGFX() override
+    ~HUB75GFX() override
     = default;
 
     static void InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devices)
@@ -78,7 +78,7 @@ public:
 
         for (int i = 0; i < NUM_CHANNELS; i++)
         {
-            auto tmp_matrix = make_shared_psram<SmartMatrixGFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+            auto tmp_matrix = make_shared_psram<HUB75GFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
             devices.push_back(tmp_matrix);
             tmp_matrix->loadPalette(0);
         }
@@ -89,7 +89,7 @@ public:
         backgroundLayer.enableColorCorrection(true);
 
         // Starting an effect might need to draw, so we need to set the leds up before doing so
-        std::static_pointer_cast<SmartMatrixGFX>(devices[0])->setLeds(GetMatrixBackBuffer());
+        std::static_pointer_cast<HUB75GFX>(devices[0])->setLeds(GetMatrixBackBuffer());
     }
 
     static void SetBrightness(byte amount)
@@ -130,7 +130,7 @@ public:
         return 0;
     }
 
-    // Whereas an FastLEDGFX would track its own memory for the CRGB array, we simply point to the buffer already used for
+    // Whereas an WS281xGFX would track its own memory for the CRGB array, we simply point to the buffer already used for
     // the matrix display memory.  That also eliminated having a local draw buffer that is then copied, because the effects
     // can render directly to the right back buffer automatically.
 
@@ -155,7 +155,7 @@ public:
         if (color.g == color.r && color.r == color.b)
         {
             memset((void *) leds, color.r, sizeof(CRGB) * _ledcount);
-            memset((void *) backgroundLayer.backBuffer(), color.r, sizeof(SmartMatrixGFX::SM_RGB) * _ledcount);
+            memset((void *) backgroundLayer.backBuffer(), color.r, sizeof(HUB75GFX::SM_RGB) * _ledcount);
         }
         else
         {

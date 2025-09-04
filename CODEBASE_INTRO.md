@@ -5,7 +5,7 @@
 - [Welcome!](#welcome)
 - [Key components to focus on](#key-components-to-focus-on)
   - [The core: `GFXBase`](#the-core-gfxbase)
-  - [`LEDMatrixGfx`](#ledmatrixgfx)
+  - [`HUB75GFX`](#hub75gfx)
   - [`EffectManager`](#effectmanager)
   - [`LEDStripEffect`](#ledstripeffect)
   - [Device configuration](#device-configuration)
@@ -41,9 +41,9 @@ The text in this document regularly mentions "LED display" as the visualization 
 - Key functionalities: Drawing pixels, setting colors, managing graphical objects chain.
 - Explanation: The `GFXBase` class lies at the heart of the codebase. It provides the basic functionalities required for any graphical operation, and is thus the basis for all graphical classes and effects. Familiarizing yourself with its methods and properties will give you a solid understanding of the basic operations like drawing pixels, setting colors, and managing the chain of graphical objects.
 
-### `LEDMatrixGfx`
+### `HUB75GFX`
 
-- Located in: [smartmatrixgfx.h](./include/smartmatrixgfx.h) and [smartmatrixgfx.cpp](./src/smartmatrixgfx.cpp)
+- Located in: [hub75gfx.h](./include/hub75gfx.h) and [hub75gfx.cpp](./src/hub75gfx.cpp)
 - Role: Extends `GFXBase` for HUB75 matrix-style LED arrangements, driven through the [SmartMatrix](https://github.com/pixelmatix/SmartMatrix) library.
 - Key functionalities: Matrix-specific drawing, dimension management.
 - Explanation: This class extends the functionalities of [`GFXBase`](#the-core-gfxbase) to cater to matrix-style LED arrangements, as supported by SmartMatrix. It provides methods to draw on a matrix, manage its dimensions, and handle matrix-specific effects.

@@ -146,7 +146,7 @@ class PatternPongClock : public EffectWithId<PatternPongClock>
             g()->setPixel(MATRIX_WIDTH / 2, 6, RED16);
         }
 
-        SmartMatrixGFX::backgroundLayer.setFont(gohufont11b);
+        HUB75GFX::backgroundLayer.setFont(gohufont11b);
 
         // The compiler warns that with a nul terminator, 4 bytes could be needed, which is true
         // but we're only writing 3 bytes, but I'll waste the byte to avoid the warning.
@@ -155,10 +155,10 @@ class PatternPongClock : public EffectWithId<PatternPongClock>
 
         auto clockColor = rgb24(255,255,255);
         sprintf(buffer, "%2d", hours);
-        SmartMatrixGFX::backgroundLayer.drawString(MATRIX_WIDTH / 2 - 12, 0, clockColor, buffer);
+        HUB75GFX::backgroundLayer.drawString(MATRIX_WIDTH / 2 - 12, 0, clockColor, buffer);
 
         sprintf(buffer, "%02d", mins);
-        SmartMatrixGFX::backgroundLayer.drawString(MATRIX_WIDTH / 2 + 2, 0, clockColor, buffer);
+        HUB75GFX::backgroundLayer.drawString(MATRIX_WIDTH / 2 + 2, 0, clockColor, buffer);
 
         // if restart flag is 1, set up a new game
         if (restart)
@@ -306,7 +306,7 @@ class PatternPongClock : public EffectWithId<PatternPongClock>
 
         // draw bat 1
         //       if (bat1_update) {
-        SmartMatrixGFX::backgroundLayer.fillRectangle(BAT1_X - 1, bat1_y, BAT1_X, bat1_y + BAT_HEIGHT, rgb24(255,255,255));
+        HUB75GFX::backgroundLayer.fillRectangle(BAT1_X - 1, bat1_y, BAT1_X, bat1_y + BAT_HEIGHT, rgb24(255,255,255));
         //      }
 
         // move bat 2 towards target (don't go any further or bat will move off screen)
@@ -324,7 +324,7 @@ class PatternPongClock : public EffectWithId<PatternPongClock>
             bat2_update = 1;
         }
 
-        SmartMatrixGFX::backgroundLayer.fillRectangle(BAT2_X + 1, bat2_y, BAT2_X + 2, bat2_y +BAT_HEIGHT, rgb24(255,255,255));
+        HUB75GFX::backgroundLayer.fillRectangle(BAT2_X + 1, bat2_y, BAT2_X + 2, bat2_y +BAT_HEIGHT, rgb24(255,255,255));
 
         // update the ball position using the velocity
         ballpos_x = ballpos_x + ballvel_x;
