@@ -33,7 +33,6 @@
 #include "effects.h"
 #include "gfxbase.h"
 #include "jsonserializer.h"
-#include "hub75gfx.h"
 #include "types.h"
 #include "hashing.h"
 
@@ -263,15 +262,6 @@ class LEDStripEffect : public IJSONSerializable
     {
         return _GFX[channel];
     }
-
-    // mg is a shortcut for MATRIX projects to retrieve a pointer to the specialized HUB75GFX type
-
-    #if USE_HUB75
-      std::shared_ptr<HUB75GFX> mg(size_t channel = 0)
-      {
-        return std::static_pointer_cast<HUB75GFX>(_GFX[channel]);
-      }
-    #endif
 
     #if HEXAGON
       std::shared_ptr<HexagonGFX> hg(size_t channel = 0)

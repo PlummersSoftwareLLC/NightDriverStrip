@@ -39,8 +39,8 @@
 #include <algorithm>
 #include <functional>
 #include <math.h>
-
 #include "effectfactories.h"
+#include "hub75gfx.h"
 
 #define JSON_FORMAT_VERSION         1
 #define CURRENT_EFFECT_CONFIG_FILE  "/current.cfg"
