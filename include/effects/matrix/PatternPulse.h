@@ -61,7 +61,6 @@
 class PatternPulse : public EffectWithId<PatternPulse>
 {
   private:
-
     int hue;
     int centerX = 0;
     int centerY = 0;
@@ -71,9 +70,12 @@ class PatternPulse : public EffectWithId<PatternPulse>
     int diff;
 
   public:
-
-    PatternPulse() : EffectWithId<PatternPulse>("Pulse") {}
-    PatternPulse(const JsonObjectConst& jsonObject) : EffectWithId<PatternPulse>(jsonObject) {}
+    PatternPulse() : EffectWithId<PatternPulse>("Pulse")
+    {
+    }
+    PatternPulse(const JsonObjectConst &jsonObject) : EffectWithId<PatternPulse>(jsonObject)
+    {
+    }
 
     void Draw() override
     {
@@ -99,12 +101,16 @@ class PatternPulse : public EffectWithId<PatternPulse>
             if (step < maxSteps)
             {
                 // initial pulse
-                graphics->DrawSafeCircle(centerX, centerY, step, graphics->to16bit(ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255)));
+                graphics->DrawSafeCircle(
+                    centerX, centerY, step,
+                    graphics->to16bit(ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255)));
 
                 // secondary pulse
                 if (step > 5)
                 {
-                    graphics->DrawSafeCircle(centerX, centerY, step - 3, graphics->to16bit(ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255)));
+                    graphics->DrawSafeCircle(
+                        centerX, centerY, step - 3,
+                        graphics->to16bit(ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255)));
                 }
                 step++;
             }
@@ -116,16 +122,15 @@ class PatternPulse : public EffectWithId<PatternPulse>
         // effects.standardNoiseSmearing();
     }
 };
-class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar> {
+class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar>
+{
   private:
     struct PulsePop
     {
-      public:
-
         int hue = HUE_RED;
         int centerX = 0;
         int centerY = 0;
-        int maxSteps = random_range(0, 8)+6;
+        int maxSteps = random_range(0, 10) + 6; // wider pulse variety
         int step = -1;
     };
 
@@ -135,16 +140,15 @@ class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar> 
     int diff;
 
   public:
-    PatternPulsar() :
-        BeatEffectBase(1.5, 0.25 ),
-        EffectWithId<PatternPulsar>("Pulsars")
+    PatternPulsar() : BeatEffectBase(1.5, 0.25), EffectWithId<PatternPulsar>("Pulsars")
     {
+        SetBeatSensitivity(1.5f, 0.25f, 2);
     }
 
-    PatternPulsar(const JsonObjectConst& jsonObject) :
-        BeatEffectBase(1.5, 0.25 ),
-        EffectWithId<PatternPulsar>(jsonObject)
+    PatternPulsar(const JsonObjectConst &jsonObject)
+        : BeatEffectBase(1.5, 0.25), EffectWithId<PatternPulsar>(jsonObject)
     {
+        SetBeatSensitivity(1.5f, 0.25f, 2);
     }
 
     virtual size_t DesiredFramesPerSecond() const override
@@ -154,72 +158,71 @@ class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar> 
 
     virtual void HandleBeat(bool bMajor, float elapsed, float span) override
     {
-        if (span > 1.5)
+        // Consider a major beat if it's been a while or the energy span is large
+        const bool major = bMajor || elapsed > 0.6f || span > 2.0f;
+        if (major)
         {
-            for (int i = 0; i < random(2)+2; i ++)
-                _pops.push_back( PulsePop() );
+            int count = 2 + random(3); // 2..4 pops
+            while (count--)
+                _pops.push_back(PulsePop());
         }
         else
         {
             PulsePop small;
-            small.maxSteps = random(8)+4;
-            _pops.push_back( small );
+            small.maxSteps = random(8) + 4;
+            _pops.push_back(small);
         }
-
+        // Prevent unbounded growth in extreme audio, trim oldest
+        constexpr size_t kMaxPops = 64;
+        if (_pops.size() > kMaxPops)
+            _pops.erase(_pops.begin(), _pops.begin() + (_pops.size() - kMaxPops));
     }
 
     void Draw() override
     {
         ProcessAudio();
         fadeAllChannelsToBlackBy(10);
-
         // Add some sparkle
-
         const int maxNewStarsPerFrame = 8;
         for (int i = 0; i < maxNewStarsPerFrame; i++)
             if (random(4) < g_Analyzer.VURatio())
                 g()->drawPixel(random(MATRIX_WIDTH), random(MATRIX_HEIGHT), RandomSaturatedColor());
-
-
         for (auto pop = _pops.begin(); pop != _pops.end();)
         {
             if (pop->step == -1)
             {
+                // Initialize at full size immediately for tight audio sync
                 pop->centerX = random(MATRIX_WIDTH);
                 pop->centerY = random(MATRIX_HEIGHT);
-                pop->hue = random(256); // 170;
-                pop->step = 0;
+                pop->hue = random(256);
+                pop->step = pop->maxSteps; // start at full radius, then shrink
             }
-
-            if (pop->step == 0)
+            if (pop->step > 0)
             {
-                g()->DrawSafeCircle(pop->centerX, pop->centerY, pop->step, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue)));
-                pop->step++;
-                pop++;
+                // Brightest at start, then decay as radius shrinks
+                const float a1 = powf(fadeRate, (float)(pop->maxSteps - pop->step));
+                const uint8_t v1 = (uint8_t)std::min(255.0f, a1 * 255.0f);
+                g()->DrawSafeCircle(pop->centerX, pop->centerY, pop->step,
+                                    g()->to16bit(g()->ColorFromCurrentPalette(pop->hue, v1)));
+                // Secondary outer ring, if still within bounds
+                int r2 = pop->step + 3;
+                if (r2 <= pop->maxSteps)
+                {
+                    const float a2 = powf(fadeRate, (float)(pop->maxSteps - r2));
+                    const uint8_t v2 = (uint8_t)std::min(255.0f, a2 * 255.0f);
+                    g()->DrawSafeCircle(pop->centerX, pop->centerY, r2,
+                                        g()->to16bit(g()->ColorFromCurrentPalette(pop->hue, v2)));
+                }
+                // Shrink for next frame
+                pop->step--;
+                ++pop;
             }
             else
             {
-                if (pop->step < pop->maxSteps)
-                {
-                    // initial pulse
-                    g()->DrawSafeCircle(pop->centerX, pop->centerY, pop->step, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 1) * 255)));
-
-                    // secondary pulse
-                    if (pop->step > 3)
-                        g()->DrawSafeCircle(pop->centerX, pop->centerY, pop->step - 3, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 2) * 255)));
-
-                    // This looks like PDP-11 code to me.  double post-inc for the win!
-                    pop++->step++;
-                }
-                else
-                {
-                    // We remove the pulsar and do not increment the pop in the loop
-                    // because we just deleted the current position
-                    _pops.erase(pop);
-                }
+                // Finished shrinking; remove this pop
+                _pops.erase(pop);
             }
         }
-
         // effects.standardNoiseSmearing();
     }
 };
