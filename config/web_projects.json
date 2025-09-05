@@ -118,10 +118,6 @@
                     "name":"Demo"
                 },
                 {
-                    "tag": "magicmirror",
-                    "name": "Magic Mirror"
-                },
-                {
                     "tag": "spectrumlite",
                     "name": "Spectrum"
                 }
