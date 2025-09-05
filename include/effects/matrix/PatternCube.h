@@ -223,7 +223,7 @@ class PatternCube : public EffectWithId<PatternCube>
     {
       construct();
     }
-    
+
     void Draw() override
     {
         g()->Clear();

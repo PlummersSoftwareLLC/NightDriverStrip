@@ -51,7 +51,7 @@ int uzlib_zlib_parse_header(TINF_DATA *d)
    /* -- check format -- */
 
    /* check checksum */
-   if ((256*cmf + flg) % 31) 
+   if ((256*cmf + flg) % 31)
    {
        //debugW("Bad Checksum header flag\n");
        return TINF_DATA_ERROR;
@@ -65,16 +65,16 @@ int uzlib_zlib_parse_header(TINF_DATA *d)
    }
 
    /* check window size is valid */
-   if ((cmf >> 4) > 7) 
+   if ((cmf >> 4) > 7)
     {
        //debugW("Window Size is not valid\n");
        return TINF_DATA_ERROR;
     }
 
    /* check there is no preset dictionary */
-   if (flg & 0x20) 
+   if (flg & 0x20)
    {
-       //debugW("Cannot use preset dictionary\n");  
+       //debugW("Cannot use preset dictionary\n");
        return TINF_DATA_ERROR;
    }
 

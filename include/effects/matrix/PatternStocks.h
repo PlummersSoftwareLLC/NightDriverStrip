@@ -35,15 +35,12 @@
 #ifndef PatternStocks_H
 #define PatternStocks_H
 
-#if USE_HUB75
-
 #include <Arduino.h>
 #include <gfxfont.h>                // Adafruit GFX font structs
 #include <string.h>
 #include <HTTPClient.h>
 #include <UrlEncode.h>
 #include <ledstripeffect.h>
-#include <hub75gfx.h>
 #include <ArduinoJson.h>
 #include "systemcontainer.h"
 #include <chrono>
@@ -51,11 +48,7 @@
 #include <vector>
 #include <map>
 
-// We can only include the font header once, and Weather already does it, so we just extern it.  If
-// the weather effect is not included in the build, we'll then have to include it here.
-
-extern const uint8_t Apple5x7Bitmaps[] PROGMEM;
-
+extern const GFXfont Apple5x7 PROGMEM;
 using namespace std;
 using namespace std::chrono;
 using namespace std::chrono_literals;
@@ -583,5 +576,4 @@ public:
 
 };
 
-#endif
 #endif

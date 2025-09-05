@@ -50,9 +50,8 @@
 #include "effects.h"
 #include "types.h"
 
-#if USE_HUB75
-  #include <FontGfx_apple5x7.h>
-#endif
+// Use centralized Apple5x7 font across all targets
+extern const GFXfont Apple5x7 PROGMEM;
 
 using namespace std::chrono;
 using namespace std::chrono_literals;
@@ -491,10 +490,7 @@ public:
 
         g()->fillScreen(BLACK16);
         g()->fillRect(0, 0, MATRIX_WIDTH, 9, g()->to16bit(CRGB(0,0,128)));
-
-        #if USE_HUB75
-            g()->setFont(&Apple5x7);
-        #endif
+        g()->setFont(&Apple5x7);
 
         auto now = system_clock::now();
 
@@ -529,7 +525,6 @@ public:
         }
 
         // Print the town/city name
-
         int x = 0;
         int y = fontHeight + 1;
         g()->setCursor(x, y);
@@ -568,7 +563,6 @@ public:
         const char * pszTomorrow = pszDaysOfWeek[ (todayTime->tm_wday + 1) % 7 ];
 
         // Draw the day of the week and tomorrow's day as well
-
         g()->setTextColor(WHITE16);
         g()->setCursor(0, MATRIX_HEIGHT);
         g()->print(pszToday);

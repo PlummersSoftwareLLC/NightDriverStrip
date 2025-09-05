@@ -203,13 +203,26 @@ class BasicInfoSummaryPage final : public Page
     }
 };
 
+// Helper function to determine if we're on a small display that should skip headers/footers
+inline bool IsSmallDisplay(const Screen &display)
+{
+    // Use actual screen dimensions - if height is less than 160px, consider it small
+    constexpr auto kSmallDisplayHeight = 160;
+    return display.height() < kSmallDisplayHeight;
+}
+
 // Shared header/footer for effect pages
 class TitlePage : public Page
 {
   protected:
     // Cached content top calculated using the header text size to avoid shifting
     int _contentTop = 0;
-    int ContentTop(Screen &display) const { return _contentTop > 0 ? _contentTop : (display.fontHeight() * 3 + 4); }
+    int ContentTop(Screen &display) const
+    {
+        if (IsSmallDisplay(display))
+            return display.fontHeight() + 2; // Just one line for effect name on small displays
+        return _contentTop > 0 ? _contentTop : (display.fontHeight() * 3 + 4);
+    }
 
   public:
     std::string Name() const override { return "Title"; }
@@ -219,6 +232,39 @@ class TitlePage : public Page
         if (bRedraw)
             display.fillScreen(BLACK16);
 
+        // Use compact header on small displays
+        if (IsSmallDisplay(display))
+        {
+            const uint16_t backColor = display.IsMonochrome() ? BLACK16 : Screen::to16bit(CRGB(0, 0, 64));
+            static int lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
+            static uint32_t lastFullDraw = 0;
+
+            _contentTop = display.fontHeight() + 2;
+
+            // Redraw compact header when needed
+            if (bRedraw || lastFullDraw == 0 || millis() - lastFullDraw > 1000)
+            {
+                lastFullDraw = millis();
+                const int currentEffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
+
+                if (bRedraw || lasteffect != currentEffect)
+                {
+                    display.fillRect(0, 0, display.width(), _contentTop, backColor);
+                    lasteffect = currentEffect;
+
+                    // Just show effect name, centered
+                    display.setTextSize(1);
+                    display.setTextColor(display.GetTextColor(), backColor);
+                    String effectName = g_ptrSystem->EffectManager().GetCurrentEffectName();
+                    auto w = display.textWidth(effectName);
+                    display.setCursor((display.width() - w) / 2, 2);
+                    display.print(effectName);
+                }
+            }
+            return;
+        }
+
+        // Full header/footer for larger displays
         const uint16_t backColor = display.IsMonochrome() ? BLACK16 : Screen::to16bit(CRGB(0, 0, 64));
         static int lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
         static String sip = WiFi.localIP().toString();
@@ -282,7 +328,7 @@ class TitlePage : public Page
             #if ENABLE_AUDIO
                 footer = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d Scr: %02d", g_Values.FPS, g_Analyzer.AudioFPS(), g_Analyzer.SerialFPS(), (int)screenFPS);
             #endif
-            
+
             if (footer != lastFooter)
             {
                 lastFooter = footer;
@@ -318,13 +364,14 @@ class CurrentEffectSummaryPage final : public TitlePage
 
     void Draw(Screen &display, bool bRedraw) override
     {
-        // Draw shared header/footer
+        // Draw shared header/footer (will be skipped on small displays)
         TitlePage::Draw(display, bRedraw);
 
         // Add spectrum analyzer content
         #if ENABLE_AUDIO
         {
             const int topMargin = ContentTop(display);
+            const int bottomMargin = IsSmallDisplay(display) ? 0 : display.BottomMargin;
 
             // Draw VU
             const int xHalf = display.width() / 2 - 1;
@@ -341,7 +388,7 @@ class CurrentEffectSummaryPage final : public TitlePage
 
             // Spectrum bands
             const int spectrumTop = topMargin + ySizeVU + 1;
-            const int bandHeight = display.height() - spectrumTop - display.BottomMargin;
+            const int bandHeight = display.height() - spectrumTop - bottomMargin;
             for (int iBand = 0; iBand < NUM_BANDS; iBand++)
             {
                 CRGB bandColor = ColorFromPalette(RainbowColors_p, ((int)map(iBand, 0, NUM_BANDS, 0, 255)) % 256);
@@ -366,18 +413,36 @@ class EffectSimulatorPage final : public TitlePage
 
     void Draw(Screen &display, bool bRedraw) override
     {
-        // Draw shared header/footer first
+        // Draw shared header/footer first (will be compact on small displays)
         TitlePage::Draw(display, bRedraw);
 
         // Determine content area between header and footer
         const int headerTop = ContentTop(display);
         const int contentTop = headerTop;
-        const int contentHeight = display.height() - display.BottomMargin - contentTop;
+        const int bottomMargin = IsSmallDisplay(display) ? 0 : display.BottomMargin;
+        const int contentHeight = display.height() - bottomMargin - contentTop;
         const int contentWidth = display.width();
 
-        // Matrix dimensions
-        const int mw = MATRIX_WIDTH;
-        const int mh = MATRIX_HEIGHT;
+        // Clear content area first
+        if (bRedraw)
+            display.fillRect(0, contentTop, contentWidth, contentHeight, BLACK16);
+
+        // Matrix dimensions - handle single-row LED strips by wrapping into a matrix
+        int mw = MATRIX_WIDTH;
+        int mh = MATRIX_HEIGHT;
+
+        // If we have a single row of LEDs (strip), wrap it into a matrix for better visualization
+        if (mh == 1 && mw > 32) // Only wrap if we have more than 32 LEDs in a single row
+        {
+            // Calculate optimal wrapping based on available screen space
+            int targetRows = contentHeight / 3; // Aim for ~3 pixel high rows
+            if (targetRows < 4) targetRows = 4; // Minimum 4 rows
+            if (targetRows > 16) targetRows = 16; // Maximum 16 rows
+
+            mh = targetRows;
+            mw = (MATRIX_WIDTH + mh - 1) / mh; // Round up division
+        }
+
         if (mw <= 0 || mh <= 0 || contentWidth <= 0 || contentHeight <= 0)
             return;
 
@@ -394,23 +459,33 @@ class EffectSimulatorPage final : public TitlePage
         const int xOffset = (contentWidth - drawWidth) / 2;
         const int yOffset = contentTop + (contentHeight - drawHeight) / 2;
 
-        // Optional: clear content area on full redraw to avoid ghosting around edges
-        if (bRedraw)
-            display.fillRect(0, contentTop, contentWidth, contentHeight, BLACK16);
-
         // Fetch current graphics buffer
         auto &effectManager = g_ptrSystem->EffectManager();
         auto gfx = effectManager.g();
         if (!gfx || gfx->leds == nullptr)
             return;
 
-        // Blit: draw each LED as a scale x scale rectangle
+        // Blit: draw each LED as a scale x scale rectangle (direct buffer reads, no per-dest-pixel loop)
+        int ledIndex = 0;
         for (int y = 0; y < mh; ++y)
         {
             for (int x = 0; x < mw; ++x)
             {
-                // Use getPixel to respect XY mapping
-                CRGB c = gfx->getPixel(x, y);
+                // Handle both matrix and wrapped strip cases
+                CRGB c;
+                if (MATRIX_HEIGHT == 1) // Single row strip - wrap it
+                {
+                    if (ledIndex < MATRIX_WIDTH)
+                        c = gfx->leds[ledIndex];
+                    else
+                        c = CRGB::Black; // Padding if we run out of LEDs
+                    ledIndex++;
+                }
+                else // Real matrix
+                {
+                    c = gfx->leds[XY(x, y)];
+                }
+
                 uint16_t c16 = display.to16bit(c);
                 int px = xOffset + x * scale;
                 int py = yOffset + y * scale;
@@ -520,7 +595,7 @@ void IRAM_ATTR Screen::RunUpdateLoop()
     }
 
     // Frame rate timing variables
-    constexpr uint32_t kTargetFPS = 30;
+    constexpr uint32_t kTargetFPS = 60;
     constexpr uint32_t kTargetFrameTimeMs = 1000 / kTargetFPS; // 33.33ms for 30fps
     constexpr uint32_t kMinDelayMs = 1;
     uint32_t lastFrameTime = millis();
@@ -528,7 +603,7 @@ void IRAM_ATTR Screen::RunUpdateLoop()
     for (;;)
     {
         uint32_t frameStartTime = millis();
-        
+
         // bRedraw is set when the page changes so that it can get a full redraw.  It is also set initially as
         // nothing has been drawn for any page yet
 
@@ -586,18 +661,18 @@ void IRAM_ATTR Screen::RunUpdateLoop()
         // Calculate frame rate-based delay for 30fps
         uint32_t frameProcessingTime = millis() - frameStartTime;
         uint32_t delayTime = kMinDelayMs; // Start with minimum delay
-        
+
         if (frameProcessingTime < kTargetFrameTimeMs)
         {
             delayTime = kTargetFrameTimeMs - frameProcessingTime;
         }
-        
+
         // Ensure minimum delay of 1ms
         if (delayTime < kMinDelayMs)
         {
             delayTime = kMinDelayMs;
         }
-        
+
         delay(delayTime);
         lastFrameTime = millis();
     }
