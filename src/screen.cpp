@@ -419,16 +419,11 @@ class EffectSimulatorPage final : public TitlePage
 
     void Draw(Screen &display, bool bRedraw) override
     {
-        if (!bClearCompleted)
+        if (!bClearCompleted || bRedraw)
         {
             display.fillScreen(BLACK16);
             bClearCompleted = true;
-        }
-
-        if (bRedraw)
-        {
-            display.fillScreen(BLACK16);
-        }
+        } 
 
         // Always update shared header/footer so stats (LED/Aud/Ser/Scr) stay fresh
         TitlePage::Draw(display, bRedraw);
