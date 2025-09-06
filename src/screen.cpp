@@ -657,13 +657,13 @@ void IRAM_ATTR Screen::RunUpdateLoop()
             if (M5.BtnB.wasPressed())
             {
                 auto &pages = Pages();
-                pages[g_iCurrentPage]->OnButtonPress(0); // BtnA -> button 0
+                pages[g_iCurrentPage]->OnButtonPress(0); // BtnB -> button 0
                 bRedraw = true;
             }
             if (M5.BtnA.wasPressed())
             {
                 auto &pages = Pages();
-                pages[g_iCurrentPage]->OnButtonPress(1); // BtnB -> button 1
+                pages[g_iCurrentPage]->OnButtonPress(1); // BtnA -> button 1
                 bRedraw = true;
             }
         #endif
