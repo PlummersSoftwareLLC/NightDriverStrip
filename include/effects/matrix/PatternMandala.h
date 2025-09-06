@@ -58,8 +58,6 @@
 
 #ifndef PatternMandala_H
 #define PatternMandala_H
-#if     USE_HUB75
-
 // Introduction:
 // -------------
 // This file contains the implementation of the `PatternMandala` class, a sophisticated
@@ -177,5 +175,4 @@ public:
     }
 };
 
-#endif
 #endif
