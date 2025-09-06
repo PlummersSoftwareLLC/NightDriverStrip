@@ -27,7 +27,7 @@ class PatternSMHypnosis : public EffectWithId<PatternSMHypnosis>
     void Draw() override
     {
         t += 4;
-        const auto& rMap = HUB75GFX::getPolarMap(); // Get the map on demand
+        const auto& rMap = GFXBase::getPolarMap();
 
         for (uint x = 0; x < MATRIX_WIDTH; x++)
             for (uint y = 0; y < MATRIX_HEIGHT; y++)

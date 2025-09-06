@@ -270,19 +270,14 @@ class TitlePage : public Page
         static String sip = WiFi.localIP().toString();
         static String lastFooter;
         static uint32_t lastFullDraw = 0;
-        static uint32_t lastScreen = millis();
-
+    
         // Pick text size based on width (header size)
         display.setTextSize(display.width() > 160 ? 2 : 1);
         // Compute and cache content top using the header text size so it stays stable
         const int topMargin = display.fontHeight() * 3 + 4;
         _contentTop = topMargin;
 
-        // Screen FPS (for display updates)
-        float screenFPS = (millis() - lastScreen) / 1000.0f;
-        if (screenFPS != 0)
-            screenFPS = 1.0f / screenFPS;
-        lastScreen = millis();
+        const float screenFPS = display.GetScreenFPS();
 
         // Redraw header when needed
         if (bRedraw || lastFullDraw == 0 || millis() - lastFullDraw > 1000)
@@ -338,7 +333,9 @@ class TitlePage : public Page
                 int yh = display.height() - display.fontHeight();
                 auto w = display.textWidth(footer);
                 display.setCursor(display.width() / 2 - w / 2, yh);
-                display.print(footer);
+                
+                // Trailing spaces in case string got shorter...
+                display.print(footer + "   ");
             }
         }
     }
@@ -408,13 +405,37 @@ class CurrentEffectSummaryPage final : public TitlePage
 
 class EffectSimulatorPage final : public TitlePage
 {
+    BaseFrameEventListener frameEventListener;
+    bool bClearCompleted = false;
+    uint32_t _lastEffectDrawMs = 0;
+
   public:
+    EffectSimulatorPage()
+    {
+        g_ptrSystem->EffectManager().AddFrameEventListener(frameEventListener);
+    }
+
     std::string Name() const override { return "CurrentEffect"; }
 
     void Draw(Screen &display, bool bRedraw) override
     {
-        // Draw shared header/footer first (will be compact on small displays)
+        if (!bClearCompleted || bRedraw)
+        {
+            display.fillScreen(BLACK16);
+            bClearCompleted = true;
+        } 
+
+        // Always update shared header/footer so stats (LED/Aud/Ser/Scr) stay fresh
         TitlePage::Draw(display, bRedraw);
+
+        // If no new effect frame, skip the matrix blit but keep the refreshed footer.
+        // Also mark FPS as touched so the loop-based fallback doesn't overwrite the
+        // effect-driven FPS with the UI refresh cadence.
+        if (!frameEventListener.CheckAndClearNewFrameAvailable())
+        {
+            display.TouchFPS();
+            return;
+        }
 
         // Determine content area between header and footer
         const int headerTop = ContentTop(display);
@@ -423,9 +444,6 @@ class EffectSimulatorPage final : public TitlePage
         const int contentHeight = display.height() - bottomMargin - contentTop;
         const int contentWidth = display.width();
 
-        // Clear content area first
-        if (bRedraw)
-            display.fillRect(0, contentTop, contentWidth, contentHeight, BLACK16);
 
         // Matrix dimensions - handle single-row LED strips by wrapping into a matrix
         int mw = MATRIX_WIDTH;
@@ -466,6 +484,17 @@ class EffectSimulatorPage final : public TitlePage
             return;
 
         // Blit: draw each LED as a scale x scale rectangle (direct buffer reads, no per-dest-pixel loop)
+        // Track effect draw cadence and update the screen FPS to reflect actual effect rendering rate
+        uint32_t nowMs = millis();
+        if (_lastEffectDrawMs != 0)
+        {
+            uint32_t dt = nowMs - _lastEffectDrawMs;
+            if (dt > 0)
+            {
+                display.UpdateScreenFPSFromDelta(dt);
+            }
+        }
+        _lastEffectDrawMs = nowMs;
         int ledIndex = 0;
         for (int y = 0; y < mh; ++y)
         {
@@ -561,10 +590,30 @@ void IRAM_ATTR Screen::Update(bool bRedraw)
     if (g_iCurrentPage >= activeCount)
         g_iCurrentPage = std::max(0, activeCount - 1);
 
+    // Reset per-frame override flag
+    _fpsTouchedThisFrame = false;
+
     StartFrame();
     auto &pages = Pages();
     pages[g_iCurrentPage]->Draw(*this, bRedraw);
     EndFrame();
+
+    // If the active page did not set FPS explicitly, fall back to generic frame cadence
+    static uint32_t s_lastFrameMs = 0;
+    const uint32_t now = millis();
+    if (!_fpsTouchedThisFrame)
+    {
+        if (s_lastFrameMs != 0)
+        {
+            const uint32_t dt = now - s_lastFrameMs;
+            if (dt > 0)
+            {
+                const float inst = 1000.0f / (float)dt;
+                _screenFPS = (_screenFPS * 0.8f) + (inst * 0.2f);
+            }
+        }
+    }
+    s_lastFrameMs = now;
 }
 
 // Screen::RunUpdateLoop
@@ -594,11 +643,6 @@ void IRAM_ATTR Screen::RunUpdateLoop()
         s_buttonsInited = true;
     }
 
-    // Frame rate timing variables
-    constexpr uint32_t kTargetFPS = 60;
-    constexpr uint32_t kTargetFrameTimeMs = 1000 / kTargetFPS; // 33.33ms for 30fps
-    constexpr uint32_t kMinDelayMs = 1;
-    uint32_t lastFrameTime = millis();
 
     for (;;)
     {
@@ -657,24 +701,7 @@ void IRAM_ATTR Screen::RunUpdateLoop()
             delay(1);
         }
         bRedraw = false;
-
-        // Calculate frame rate-based delay for 30fps
-        uint32_t frameProcessingTime = millis() - frameStartTime;
-        uint32_t delayTime = kMinDelayMs; // Start with minimum delay
-
-        if (frameProcessingTime < kTargetFrameTimeMs)
-        {
-            delayTime = kTargetFrameTimeMs - frameProcessingTime;
-        }
-
-        // Ensure minimum delay of 1ms
-        if (delayTime < kMinDelayMs)
-        {
-            delayTime = kMinDelayMs;
-        }
-
-        delay(delayTime);
-        lastFrameTime = millis();
+        delay(1);
     }
 }
 
