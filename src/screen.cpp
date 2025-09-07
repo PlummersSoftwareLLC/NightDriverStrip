@@ -17,7 +17,7 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with Nightdriver.  It is normally found in copying.txt
+//    along with NightDriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
 //
 // Description:
@@ -26,6 +26,7 @@
 //    displays info like the IP address buffer depth and clock info, FPS, etc.
 //
 // History:     Jul-14-2021         Davepl      Moved out of main.cpp
+//              Aug-31-2025         Davepl      Rewritten w/ Page objects
 //---------------------------------------------------------------------------
 
 #include "globals.h"
@@ -83,14 +84,9 @@ class BasicInfoSummaryPage final : public Page
 
     void Draw(Screen &display, bool bRedraw) override
     {
-        // No border will be drawn so no inset margin needed on Heltec OLED
-        #ifdef ARDUINO_HELTEC_WIFI_KIT_32
-            const int xMargin = 0;
-            const int yMargin = 0;
-        #else
-            const int xMargin = 8;
-            const int yMargin = 5;
-        #endif
+        // No border will be drawn on small displays
+        const int xMargin = display.IsSmallDisplay() ? 0 : 8;
+        const int yMargin = display.IsSmallDisplay() ? 0 : 5;
 
         const uint16_t bkgndColor = display.GetBkgndColor();
         if (bRedraw)
@@ -203,14 +199,6 @@ class BasicInfoSummaryPage final : public Page
     }
 };
 
-// Helper function to determine if we're on a small display that should skip headers/footers
-inline bool IsSmallDisplay(const Screen &display)
-{
-    // Use actual screen dimensions - if height is less than 160px, consider it small
-    constexpr auto kSmallDisplayHeight = 160;
-    return display.height() < kSmallDisplayHeight;
-}
-
 // Shared header/footer for effect pages
 class TitlePage : public Page
 {
@@ -219,7 +207,7 @@ class TitlePage : public Page
     int _contentTop = 0;
     int ContentTop(Screen &display) const
     {
-        if (IsSmallDisplay(display))
+        if (display.IsSmallDisplay())
             return display.fontHeight() + 2; // Just one line for effect name on small displays
         return _contentTop > 0 ? _contentTop : (display.fontHeight() * 3 + 4);
     }
@@ -233,7 +221,7 @@ class TitlePage : public Page
             display.fillScreen(BLACK16);
 
         // Use compact header on small displays
-        if (IsSmallDisplay(display))
+        if (display.IsSmallDisplay())
         {
             const uint16_t backColor = display.IsMonochrome() ? BLACK16 : Screen::to16bit(CRGB(0, 0, 64));
             static int lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
@@ -333,9 +321,7 @@ class TitlePage : public Page
                 int yh = display.height() - display.fontHeight();
                 auto w = display.textWidth(footer);
                 display.setCursor(display.width() / 2 - w / 2, yh);
-                
-                // Trailing spaces in case string got shorter...
-                display.print(footer + "   ");
+                display.print(footer);
             }
         }
     }
@@ -368,7 +354,7 @@ class CurrentEffectSummaryPage final : public TitlePage
         #if ENABLE_AUDIO
         {
             const int topMargin = ContentTop(display);
-            const int bottomMargin = IsSmallDisplay(display) ? 0 : display.BottomMargin;
+            const int bottomMargin = display.IsSmallDisplay() ? 0 : display.BottomMargin;
 
             // Draw VU
             const int xHalf = display.width() / 2 - 1;
@@ -378,7 +364,7 @@ class CurrentEffectSummaryPage final : public TitlePage
             const int litBlocks = (g_Analyzer.VURatioFade() / 2.0f) * cPixels;
             for (int iPixel = 0; iPixel < cPixels; iPixel++)
             {
-                uint16_t color16 = iPixel > litBlocks ? BLACK16 : display.to16bit(ColorFromPalette(vuPaletteGreen, iPixel * (256 / (cPixels))));
+                uint16_t color16 = iPixel > litBlocks ? BLACK16 : display.PanelColor(ColorFromPalette(vuPaletteGreen, iPixel * (256 / (cPixels))));
                 display.fillRect(xHalf - iPixel * xSize, topMargin, xSize - 1, ySizeVU, color16);
                 display.fillRect(xHalf + iPixel * xSize, topMargin, xSize - 1, ySizeVU, color16);
             }
@@ -390,7 +376,7 @@ class CurrentEffectSummaryPage final : public TitlePage
             {
                 CRGB bandColor = ColorFromPalette(RainbowColors_p, ((int)map(iBand, 0, NUM_BANDS, 0, 255)) % 256);
                 int bandWidth = display.width() / NUM_BANDS;
-                auto color16 = display.to16bit(bandColor);
+                auto color16 = display.PanelColor(bandColor);
                 auto topSection = bandHeight - bandHeight * g_Analyzer.Peak2Decay(iBand);
                 if (topSection > 0)
                     display.fillRect(iBand * bandWidth, spectrumTop, bandWidth - 1, topSection, BLACK16);
@@ -440,7 +426,7 @@ class EffectSimulatorPage final : public TitlePage
         // Determine content area between header and footer
         const int headerTop = ContentTop(display);
         const int contentTop = headerTop;
-        const int bottomMargin = IsSmallDisplay(display) ? 0 : display.BottomMargin;
+        const int bottomMargin = display.IsSmallDisplay() ? 0 : display.BottomMargin;
         const int contentHeight = display.height() - bottomMargin - contentTop;
         const int contentWidth = display.width();
 
@@ -477,22 +463,21 @@ class EffectSimulatorPage final : public TitlePage
         const int xOffset = (contentWidth - drawWidth) / 2;
         const int yOffset = contentTop + (contentHeight - drawHeight) / 2;
 
+        
         // Fetch current graphics buffer
         auto &effectManager = g_ptrSystem->EffectManager();
         auto gfx = effectManager.g();
         if (!gfx || gfx->leds == nullptr)
             return;
 
-        // Blit: draw each LED as a scale x scale rectangle (direct buffer reads, no per-dest-pixel loop)
+        // Blit: build a full-frame RGB565 buffer (with scale and 1px grid) and push once.
         // Track effect draw cadence and update the screen FPS to reflect actual effect rendering rate
         uint32_t nowMs = millis();
         if (_lastEffectDrawMs != 0)
         {
             uint32_t dt = nowMs - _lastEffectDrawMs;
             if (dt > 0)
-            {
                 display.UpdateScreenFPSFromDelta(dt);
-            }
         }
         _lastEffectDrawMs = nowMs;
         int ledIndex = 0;
@@ -515,7 +500,7 @@ class EffectSimulatorPage final : public TitlePage
                     c = gfx->leds[XY(x, y)];
                 }
 
-                uint16_t c16 = display.to16bit(c);
+                uint16_t c16 = display.PanelColor(c);
                 int px = xOffset + x * scale;
                 int py = yOffset + y * scale;
                 // Draw filled rect; subtract 1 to create a fine 1px grid line when scale > 1

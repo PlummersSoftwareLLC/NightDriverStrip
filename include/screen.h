@@ -91,6 +91,7 @@ class Screen : public GFXBase
     virtual uint16_t GetTextColor() const { return WHITE16; }
     virtual uint16_t GetBkgndColor() const { return BLUE16; }
     virtual uint16_t GetBorderColor() const { return YELLOW16; }
+    virtual inline bool IsSmallDisplay() const { return width() <= 160; }
 
     // Define the drawable area for the spectrum to render into the status area
 
@@ -152,6 +153,13 @@ class Screen : public GFXBase
     // Flip to the next page and handle effect-rotation pause/resume semantics.
     // Safe to call from button handlers.
     static void FlipToNextPage();
+
+    // PanelColor helpers
+    // Packs CRGB to the panel's native format. Default is standard RGB565.
+    // Centralizing this lets pages use a single call regardless of backend.
+    inline uint16_t PanelColor(const CRGB &c) const { return to16bit(c); }
+    inline uint16_t PanelColor(uint8_t r, uint8_t g, uint8_t b) const { return to16bit(r, g, b); }
+    inline uint16_t PanelColor(CRGB::HTMLColorCode code) const { return to16bit(code); }
 
   private:
     // Cached screen refresh FPS (updated each loop iteration)

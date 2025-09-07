@@ -21,7 +21,7 @@ class PatternSMRainbowTunnel : public EffectWithId<PatternSMRainbowTunnel>
     {
         static constexpr uint8_t scaleX = 4;
         static constexpr uint8_t scaleY = 4;
-        static constexpr uint8_t speed = 2;
+        static constexpr uint8_t speed = 16;
 
         static uint16_t t;
 
@@ -34,8 +34,7 @@ class PatternSMRainbowTunnel : public EffectWithId<PatternSMRainbowTunnel>
             {
                 uint8_t angle = rMap[x][y].angle;
                 uint8_t radius = rMap[x][y].scaled_radius;
-                g()->leds[XY(x, y)] =
-                    CHSV((angle * scaleX) - t + (radius * scaleY), 255, constrain(radius * 3, 0, 255));
+                g()->leds[XY(x, y)] = CHSV((angle * scaleX) - t + (radius * scaleY), 255, constrain(radius * 3, 0, 255));
             }
         }
     }
