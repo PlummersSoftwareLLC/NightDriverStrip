@@ -2,7 +2,8 @@
 //
 // File:        secrets.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -27,15 +28,19 @@
 //
 //---------------------------------------------------------------------------
 
-// NOTE: do NOT enter your network details in this file (secrets.example.h)!
-// Instead, copy this file to secrets.h, and set the below defines in that file!
+// NOTE: do NOT enter your network details in this file
+// (secrets.example.h)! Instead, copy this file to secrets.h, and set the
+// below defines in that file!
 
-#define cszSSID              "Your SSID"
-#define cszPassword          "Your PASS"
-#define cszHostname          ""                     // An empty hostname will make it default to esp32-XXXXXX,
-                                                    //   with the Xs being 3 bytes of the device's MAC address
-#define cszOpenWeatherAPIKey ""                     // Your OpenWeatherMap API key goes Here
+#define cszSSID     "Your SSID"
+#define cszPassword "Your PASS"
+#define cszHostname                                                      \
+    "" // An empty hostname will make it default to esp32-XXXXXX,
+       //   with the Xs being 3 bytes of the device's MAC address
+#define cszOpenWeatherAPIKey "" // Your OpenWeatherMap API key goes Here
 #define cszLocation          "98074"
 #define bLocationIsZip       true
-#define cszCountryCode       "us"                   // Look up the Alpha-2 code for your country at https://www.iban.com/country-codes
-#define cszTimeZone          "America/Los_Angeles"
+#define cszCountryCode                                                   \
+    "us" // Look up the Alpha-2 code for your country at
+         // https://www.iban.com/country-codes
+#define cszTimeZone "America/Los_Angeles"

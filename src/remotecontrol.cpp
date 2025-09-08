@@ -2,7 +2,8 @@
 //
 // File:        remotecontrol.cpp
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -25,18 +26,18 @@
 //
 //    Handles a simple IR remote for changing effects, brightness, etc.
 //
-// History:     Jun-14-2023     Rbergen        Extracted handle() from header
+// History:     Jun-14-2023     Rbergen        Extracted handle() from
+// header
 //---------------------------------------------------------------------------
 
 #include "globals.h"
 
 #if ENABLE_REMOTE
 
-#include "systemcontainer.h"
 #include "effects/strip/misceffects.h"
 #include "systemcontainer.h"
 
-#define BRIGHTNESS_STEP     20
+#define BRIGHTNESS_STEP 20
 
 void RemoteControl::handle()
 {
@@ -49,27 +50,31 @@ void RemoteControl::handle()
     uint result = results.value;
     _IR_Receive.resume();
 
-    debugI("Received IR Remote Code: 0x%08X, Decode: %08X\n", result, results.decode_type);
+    debugI("Received IR Remote Code: 0x%08X, Decode: %08X\n", result,
+           results.decode_type);
 
     if (0xFFFFFFFF == result || result == lastResult)
     {
         static uint lastRepeatTime = millis();
 
-        // Only the OFF key runs at the full unbounded speed, so you can rapidly dim.  But everything
-        // else has its repeat rate clamped here.
+        // Only the OFF key runs at the full unbounded speed, so you can
+        // rapidly dim.  But everything else has its repeat rate clamped
+        // here.
 
         auto kMinRepeatms = 200;
         if (result == IR_OFF)
-            kMinRepeatms = 0;               // Dim as fast as the remote sends it
+            kMinRepeatms = 0;   // Dim as fast as the remote sends it
         else if (result == 0xFFFFFFFF)
-            kMinRepeatms = 500;             // Repeats happen at 500ms
+            kMinRepeatms = 500; // Repeats happen at 500ms
         else if (result == lastResult)
-            kMinRepeatms = 50;              // Manual presses get debounced to at least 50ms
+            kMinRepeatms =
+                50; // Manual presses get debounced to at least 50ms
 
         if (millis() - lastRepeatTime > kMinRepeatms)
         {
-            debugV("Remote Repeat; lastResult == %08x, elapsed = %lu\n", lastResult, millis()-lastRepeatTime);
-            result = lastResult;
+            debugV("Remote Repeat; lastResult == %08x, elapsed = %lu\n",
+                   lastResult, millis() - lastRepeatTime);
+            result         = lastResult;
             lastRepeatTime = millis();
         }
         else
@@ -80,7 +85,7 @@ void RemoteControl::handle()
     lastResult = result;
 
     auto &effectManager = g_ptrSystem->EffectManager();
-    auto &deviceConfig = g_ptrSystem->DeviceConfig();
+    auto &deviceConfig  = g_ptrSystem->DeviceConfig();
 
     if (IR_ON == result)
     {
@@ -93,14 +98,15 @@ void RemoteControl::handle()
     }
     else if (IR_OFF == result)
     {
-        #if USE_HUB75
-            deviceConfig.SetBrightness((int)deviceConfig.GetBrightness() - BRIGHTNESS_STEP);
-        #else
-            effectManager.ClearRemoteColor();
-            effectManager.SetInterval(0);
-            effectManager.StartEffect();
-            deviceConfig.SetBrightness(0);
-        #endif
+#if USE_HUB75
+        deviceConfig.SetBrightness((int)deviceConfig.GetBrightness() -
+                                   BRIGHTNESS_STEP);
+#else
+        effectManager.ClearRemoteColor();
+        effectManager.SetInterval(0);
+        effectManager.StartEffect();
+        deviceConfig.SetBrightness(0);
+#endif
         return;
     }
     else if (IR_BPLUS == result)
@@ -138,28 +144,33 @@ void RemoteControl::handle()
     }
     else if (IR_FADE == result)
     {
-        effectManager.ShowVU( !effectManager.IsVUVisible() );
+        effectManager.ShowVU(!effectManager.IsVUVisible());
     }
 
     debugI("Looking for match for remote color code: %08X\n", result);
 
-    for (const auto & RemoteColorCode : RemoteColorCodes)
+    for (const auto &RemoteColorCode : RemoteColorCodes)
     {
         if (RemoteColorCode.code == result)
         {
-            // To set a solid color fill based on the remote buttons, we take the color from the table,
-            // crate a ColorFillEffect, and apply it as a temporary effect.  This will override the current
-            // effect until the next effect change or remote command.
+            // To set a solid color fill based on the remote buttons, we
+            // take the color from the table, crate a ColorFillEffect, and
+            // apply it as a temporary effect.  This will override the
+            // current effect until the next effect change or remote
+            // command.
 
-            debugI("Changing Color via remote: %08X\n", (uint32_t) RemoteColorCode.color);
+            debugI("Changing Color via remote: %08X\n",
+                   (uint32_t)RemoteColorCode.color);
             effectManager.ApplyGlobalColor(RemoteColorCode.color);
-            #if FULL_COLOR_REMOTE_FILL
-                auto effect = make_shared_psram<ColorFillEffect>("Remote Color", RemoteColorCode.color, 1, true);
-                if (effect->Init(g_ptrSystem->EffectManager().GetBaseGraphics()))
-                    g_ptrSystem->EffectManager().SetTempEffect(effect);
-                else
-                    debugE("Could not initialize new color fill effect");
-            #endif
+#if FULL_COLOR_REMOTE_FILL
+            auto effect = make_shared_psram<ColorFillEffect>(
+                "Remote Color", RemoteColorCode.color, 1, true);
+            if (effect->Init(
+                    g_ptrSystem->EffectManager().GetBaseGraphics()))
+                g_ptrSystem->EffectManager().SetTempEffect(effect);
+            else
+                debugE("Could not initialize new color fill effect");
+#endif
             return;
         }
     }

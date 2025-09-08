@@ -23,10 +23,10 @@ struct Circle
     void reset()
     {
         startTime = millis();
-        centerX = random(0, MATRIX_WIDTH);
-        centerY = random(0, MATRIX_HEIGHT);
-        hue = random(0, 255);
-        offset = random(0, 60000 / bpm);
+        centerX   = random(0, MATRIX_WIDTH);
+        centerY   = random(0, MATRIX_HEIGHT);
+        hue       = random(0, 255);
+        offset    = random(0, 60000 / bpm);
     }
 
     float radius()
@@ -40,27 +40,26 @@ const int NUMBER_OF_CIRCLES = 20;
 
 class PatternSMAmberRain : public EffectWithId<PatternSMAmberRain>
 {
-  private:
-
+private:
     Circle circles[NUMBER_OF_CIRCLES] = {};
 
     void drawCircle(Circle circle)
     {
         int16_t centerX = circle.centerX;
         int16_t centerY = circle.centerY;
-        int hue = circle.hue;
-        float radius = circle.radius();
+        int hue         = circle.hue;
+        float radius    = circle.radius();
 
         int16_t startX = centerX - ceil(radius);
-        int16_t endX = centerX + ceil(radius);
+        int16_t endX   = centerX + ceil(radius);
         int16_t startY = centerY - ceil(radius);
-        int16_t endY = centerY + ceil(radius);
+        int16_t endY   = centerY + ceil(radius);
 
         for (u_int16_t x = startX; x < endX; x++)
         {
             for (u_int16_t y = startY; y < endY; y++)
             {
-                int16_t index = XY(x, y);
+                int16_t index   = XY(x, y);
                 double distance = sqrt(sq(x - centerX) + sq(y - centerY));
                 if (distance > radius)
                     continue;
@@ -73,8 +72,8 @@ class PatternSMAmberRain : public EffectWithId<PatternSMAmberRain>
                 else
                 {
                     double percentage = distance / radius;
-                    double fraction = 1.0 - percentage;
-                    brightness = 255.0 * fraction;
+                    double fraction   = 1.0 - percentage;
+                    brightness        = 255.0 * fraction;
                 }
 
                 if (g()->isValidPixel(index))
@@ -83,10 +82,14 @@ class PatternSMAmberRain : public EffectWithId<PatternSMAmberRain>
         }
     }
 
-  public:
-
-    PatternSMAmberRain() : EffectWithId<PatternSMAmberRain>("Color Rain") {}
-    PatternSMAmberRain(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMAmberRain>(jsonObject) {}
+public:
+    PatternSMAmberRain() : EffectWithId<PatternSMAmberRain>("Color Rain")
+    {
+    }
+    PatternSMAmberRain(const JsonObjectConst &jsonObject) :
+        EffectWithId<PatternSMAmberRain>(jsonObject)
+    {
+    }
 
     void Start() override
     {

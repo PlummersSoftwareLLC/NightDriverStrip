@@ -2,7 +2,8 @@
 //
 // File:        LEDBuffer.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -23,9 +24,9 @@
 //
 // Description:
 //
-//   Provides a timestamped buffer of colordata.  The LEDBufferManager keeps
-//   N of these buffers in a circular queue, and each has a timestamp on it
-//   indicating when it becomes valid.
+//   Provides a timestamped buffer of colordata.  The LEDBufferManager
+//   keeps N of these buffers in a circular queue, and each has a
+//   timestamp on it indicating when it becomes valid.
 //
 // History:     Oct-9-2018         Davepl      Created from other projects
 //
@@ -33,49 +34,56 @@
 
 #pragma once
 
-#include <pixeltypes.h>
-#include <memory>
-#include <iostream>
-#include <utility>
 #include "values.h"
+
+#include <iostream>
+#include <memory>
+#include <pixeltypes.h>
+#include <utility>
 
 class LEDBuffer
 {
-  public:
+public:
+    std::shared_ptr<GFXBase> _pStrand;
 
-     std::shared_ptr<GFXBase> _pStrand;
+private:
+    std::unique_ptr<CRGB[]> _leds;
+    uint32_t _pixelCount;
+    uint64_t _timeStampMicroseconds;
+    uint64_t _timeStampSeconds;
 
-  private:
-
-    std::unique_ptr<CRGB []> _leds;
-    uint32_t                 _pixelCount;
-    uint64_t                 _timeStampMicroseconds;
-    uint64_t                 _timeStampSeconds;
-
-  public:
-
+public:
     explicit LEDBuffer(std::shared_ptr<GFXBase> pStrand) :
-                 _pStrand(std::move(pStrand)),
-                 _pixelCount(0),
-                 _timeStampMicroseconds(0),
-                 _timeStampSeconds(0)
+        _pStrand(std::move(pStrand)),
+        _pixelCount(0),
+        _timeStampMicroseconds(0),
+        _timeStampSeconds(0)
     {
         _leds.reset(psram_allocator<CRGB>().allocate(NUM_LEDS));
     }
 
-    ~LEDBuffer()
-    = default;
+    ~LEDBuffer() = default;
 
-    uint64_t Seconds()      const  { return _timeStampSeconds;      }
-    uint64_t MicroSeconds() const  { return _timeStampMicroseconds; }
-    uint32_t Length()       const  { return _pixelCount;            }
+    uint64_t Seconds() const
+    {
+        return _timeStampSeconds;
+    }
+    uint64_t MicroSeconds() const
+    {
+        return _timeStampMicroseconds;
+    }
+    uint32_t Length() const
+    {
+        return _pixelCount;
+    }
 
     double TimeTillDue() const
     {
-        return g_Values.AppTime.CurrentTime() - _timeStampSeconds - (_timeStampMicroseconds / (double) MICROS_PER_SECOND);
+        return g_Values.AppTime.CurrentTime() - _timeStampSeconds -
+               (_timeStampMicroseconds / (double)MICROS_PER_SECOND);
     }
 
-    bool IsBufferOlderThan(const timeval & tv) const
+    bool IsBufferOlderThan(const timeval &tv) const
     {
         if (Seconds() < tv.tv_sec)
             return true;
@@ -91,20 +99,21 @@ class LEDBuffer
     //
     // Parse and deposit a WiFi packet into a buffer
 
-    bool UpdateFromWire(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength)
+    bool UpdateFromWire(std::unique_ptr<uint8_t[]> &payloadData,
+                        size_t payloadLength)
     {
-        if (payloadLength < 24)                 // Our header size
+        if (payloadLength < 24) // Our header size
         {
             debugW("Not enough data received to process");
             return false;
         }
 
-        #if 0
+#if 0
             debugV("========");
             for (int i = 0; i < 24; i++)
                 debugV("%02x ", payloadData[i]);
             debugV("========");
-        #endif
+#endif
 
         uint16_t command16 = WORDFromMemory(&payloadData[0]);
         uint16_t channel16 = WORDFromMemory(&payloadData[2]);
@@ -112,9 +121,13 @@ class LEDBuffer
         uint64_t seconds   = ULONGFromMemory(&payloadData[8]);
         uint64_t micros    = ULONGFromMemory(&payloadData[16]);
 
-        //printf("UpdateFromWire -- Command: %u, Channel: %d, Length: %u, Seconds: %u, Micros: %u\n", command16, channel16, length32, seconds, micros);
+        // printf("UpdateFromWire -- Command: %u, Channel: %d, Length: %u,
+        // Seconds: %u, Micros: %u\n", command16, channel16, length32,
+        // seconds, micros);
 
-        const size_t cbHeader = sizeof(command16) + sizeof(channel16) + sizeof(length32) + sizeof(seconds) + sizeof(micros);
+        const size_t cbHeader = sizeof(command16) + sizeof(channel16) +
+                                sizeof(length32) + sizeof(seconds) +
+                                sizeof(micros);
 
         _timeStampSeconds      = seconds;
         _timeStampMicroseconds = micros;
@@ -122,7 +135,8 @@ class LEDBuffer
 
         if (payloadLength < length32 * sizeof(CRGB) + cbHeader)
         {
-            debugW("command16: %d   length32: %d,  payloadLength: %d\n", command16, length32, payloadLength);
+            debugW("command16: %d   length32: %d,  payloadLength: %d\n",
+                   command16, length32, payloadLength);
             debugW("Data size mismatch");
             return false;
         }
@@ -131,13 +145,14 @@ class LEDBuffer
             debugW("More data than we have LEDs\n");
             return false;
         }
-        debugV("PayloadLength: %d, command16: %d, Length32: %d", payloadLength, command16, length32);
+        debugV("PayloadLength: %d, command16: %d, Length32: %d",
+               payloadLength, command16, length32);
 
-        CRGB * pRGB = reinterpret_cast<CRGB *>(&payloadData[cbHeader]);
+        CRGB *pRGB = reinterpret_cast<CRGB *>(&payloadData[cbHeader]);
 
         memcpy(_leds.get(), pRGB, length32 * sizeof(CRGB));
         debugV("seconds, micros: %llu.%llu", seconds, micros);
-        debugV("Color0: %08x", (uint32_t) _leds[0]);
+        debugV("Color0: %08x", (uint32_t)_leds[0]);
         return true;
     }
 
@@ -151,29 +166,35 @@ class LEDBuffer
 
 // LEDBufferManager
 //
-// Manages a circular buffer of LEDBuffer objects.  The buffer itself is an array of shared_ptrs to
-// LEDBuffer objects.  The buffer is managed through a unique_ptr.  The LEDBuffer objects are managed
-// through shared_ptrs as they are also returned to callers.
+// Manages a circular buffer of LEDBuffer objects.  The buffer itself is
+// an array of shared_ptrs to LEDBuffer objects.  The buffer is managed
+// through a unique_ptr.  The LEDBuffer objects are managed through
+// shared_ptrs as they are also returned to callers.
 
 class LEDBufferManager
 {
-    std::unique_ptr<std::vector<std::shared_ptr<LEDBuffer>>> _ppBuffers;          // The circular array of buffer ptrs
-    std::shared_ptr<LEDBuffer> _pLastBufferAdded;   // Keeps track of the MRU buffer
-    size_t                                               _iNextBuffer;        // Head pointer index
-    size_t                                               _iLastBuffer;        // Tail pointer index
-    uint32_t                                             _cBuffers;           // Number of buffers
+    std::unique_ptr<std::vector<std::shared_ptr<LEDBuffer>>>
+        _ppBuffers;        // The circular array of buffer ptrs
+    std::shared_ptr<LEDBuffer>
+        _pLastBufferAdded; // Keeps track of the MRU buffer
+    size_t _iNextBuffer;   // Head pointer index
+    size_t _iLastBuffer;   // Tail pointer index
+    uint32_t _cBuffers;    // Number of buffers
 
-  public:
-
-    LEDBufferManager(uint32_t cBuffers, const std::shared_ptr<GFXBase>& pGFX)
-     : _ppBuffers(std::make_unique<std::vector<std::shared_ptr<LEDBuffer>>>()), // Create the circular array of ptrs
-       _iNextBuffer(0),
-       _iLastBuffer(0),
-       _cBuffers(cBuffers)
+public:
+    LEDBufferManager(uint32_t cBuffers,
+                     const std::shared_ptr<GFXBase> &pGFX) :
+        _ppBuffers(
+            std::make_unique<std::vector<std::shared_ptr<
+                LEDBuffer>>>()), // Create the circular array of ptrs
+        _iNextBuffer(0),
+        _iLastBuffer(0),
+        _cBuffers(cBuffers)
     {
-        // The initializer creates a uniquely owned table of shared pointers.
-        // We exclusively can see the table, but the buffer objects it contains
-        // are returned back out to callers so they must be shared pointers.
+        // The initializer creates a uniquely owned table of shared
+        // pointers. We exclusively can see the table, but the buffer
+        // objects it contains are returned back out to callers so they
+        // must be shared pointers.
 
         for (int i = 0; i < _cBuffers; i++)
             _ppBuffers->push_back(make_shared_psram<LEDBuffer>(pGFX));
@@ -184,7 +205,9 @@ class LEDBufferManager
         if (false == IsEmpty())
         {
             auto pOldest = PeekOldestBuffer();
-            return (pOldest->Seconds() + pOldest->MicroSeconds() / MICROS_PER_SECOND) - g_Values.AppTime.CurrentTime();
+            return (pOldest->Seconds() +
+                    pOldest->MicroSeconds() / MICROS_PER_SECOND) -
+                   g_Values.AppTime.CurrentTime();
         }
         else
         {
@@ -197,7 +220,9 @@ class LEDBufferManager
         if (false == IsEmpty())
         {
             auto pNewest = PeekNewestBuffer();
-            return (pNewest->Seconds() + pNewest->MicroSeconds() / MICROS_PER_SECOND) - g_Values.AppTime.CurrentTime();
+            return (pNewest->Seconds() +
+                    pNewest->MicroSeconds() / MICROS_PER_SECOND) -
+                   g_Values.AppTime.CurrentTime();
         }
         else
         {
@@ -233,7 +258,8 @@ class LEDBufferManager
 
     // PeekNewestBuffer
     //
-    // Get a pointer to the most recently added (newest) buffer, or nullptr if empty
+    // Get a pointer to the most recently added (newest) buffer, or
+    // nullptr if empty
 
     std::shared_ptr<LEDBuffer> PeekNewestBuffer() const
     {
@@ -244,8 +270,9 @@ class LEDBufferManager
 
     // GetNewBuffer
     //
-    // Grabs the next buffer in the circle, advancing the tail pointer as well if we've
-    // 'caught up' to the head pointer, which effective throws away that buffer via reuse
+    // Grabs the next buffer in the circle, advancing the tail pointer as
+    // well if we've 'caught up' to the head pointer, which effective
+    // throws away that buffer via reuse
 
     std::shared_ptr<LEDBuffer> GetNewBuffer()
     {
@@ -298,5 +325,3 @@ class LEDBufferManager
         return (*_ppBuffers)[i];
     }
 };
-
-

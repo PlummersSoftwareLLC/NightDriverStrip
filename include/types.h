@@ -2,7 +2,8 @@
 //
 // File:        types.h
 //
-// NightDriverStrip - (c) 2023 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2023 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -30,40 +31,39 @@
 
 #pragma once
 
+#include <WString.h>
 #include <cstddef>
 #include <cstdint>
-#include <memory>                      // for std::shared_ptr
-#include <type_traits>
+#include <memory> // for std::shared_ptr
 #include <optional>
 #include <sys/time.h>
-#include <WString.h>
+#include <type_traits>
 
 #ifndef MICROS_PER_SECOND
-    #define MICROS_PER_SECOND 1000000
+#define MICROS_PER_SECOND 1000000
 #endif
 
 // AppTime
 //
-// A class that keeps track of the clock, how long the last frame took, calculating FPS, etc.
+// A class that keeps track of the clock, how long the last frame took,
+// calculating FPS, etc.
 
 class CAppTime
 {
-  protected:
-
+protected:
     double _lastFrame = CurrentTime();
     double _deltaTime = 1.0;
 
-  public:
-
+public:
     // NewFrame
     //
-    // Call this at the start of every frame or update, and it'll figure out and keep track of how
-    // long between frames
+    // Call this at the start of every frame or update, and it'll figure
+    // out and keep track of how long between frames
 
     void NewFrame()
     {
         double current = CurrentTime();
-        _deltaTime = current - _lastFrame;
+        _deltaTime     = current - _lastFrame;
 
         // Cap the delta time at one full second
 
@@ -87,7 +87,8 @@ class CAppTime
     {
         timeval tv;
         gettimeofday(&tv, nullptr);
-        return (double)tv.tv_sec + (tv.tv_usec/(double)MICROS_PER_SECOND);
+        return (double)tv.tv_sec +
+               (tv.tv_usec / (double)MICROS_PER_SECOND);
     }
 
     double FrameElapsedTime() const
@@ -95,15 +96,15 @@ class CAppTime
         return FrameStartTime() - CurrentTime();
     }
 
-    static double TimeFromTimeval(const timeval & tv)
+    static double TimeFromTimeval(const timeval &tv)
     {
-        return tv.tv_sec + (tv.tv_usec/(double)MICROS_PER_SECOND);
+        return tv.tv_sec + (tv.tv_usec / (double)MICROS_PER_SECOND);
     }
 
     static timeval TimevalFromTime(double t)
     {
         timeval tv;
-        tv.tv_sec = (long)t;
+        tv.tv_sec  = (long)t;
         tv.tv_usec = t - tv.tv_sec;
         return tv;
     }
@@ -122,9 +123,9 @@ struct EmbeddedFile
     const uint8_t *const contents;
 
     EmbeddedFile(const uint8_t start[], const uint8_t end[]) :
-        length(end - start),
-        contents(start)
-    {}
+        length(end - start), contents(start)
+    {
+    }
 };
 
 struct SettingSpec
@@ -149,14 +150,16 @@ struct SettingSpec
         ReadWrite
     };
 
-    // "Technical" name of the setting, as in the (JSON) property it is stored in.
-    const char* Name{};
+    // "Technical" name of the setting, as in the (JSON) property it is
+    // stored in.
+    const char *Name{};
 
-    // "Friendly" name of the setting, as in the one to be presented to the user in a user interface.
-    const char* FriendlyName{};
+    // "Friendly" name of the setting, as in the one to be presented to
+    // the user in a user interface.
+    const char *FriendlyName{};
 
     // Description of the purpose and/or value of the setting
-    const char* Description{};
+    const char *Description{};
 
     // Value type of the setting
     SettingType Type;
@@ -167,19 +170,24 @@ struct SettingSpec
     // Indication if a setting is read-only, write-only or read/write
     SettingAccess Access = SettingAccess::ReadWrite;
 
-    // Indication if an empty value is allowed for the setting. This only applies to String settings.
+    // Indication if an empty value is allowed for the setting. This only
+    // applies to String settings.
     std::optional<bool> EmptyAllowed = {};
 
-    // Minimum valid value for the setting. This only applies to numeric settings.
+    // Minimum valid value for the setting. This only applies to numeric
+    // settings.
     std::optional<double> MinimumValue = {};
 
-    // Maximum valid value for the setting. This only applies to numeric settings.
+    // Maximum valid value for the setting. This only applies to numeric
+    // settings.
     std::optional<double> MaximumValue = {};
 
-    // Finishes the initialization of the spec, and then validates the consistency of its overall contents.
-    // Note that it does the latter quite rudely: it uses assert() on things it feels should be in order.
-    // This function is called by this struct's constructors that initialize values, but this being a struct
-    // allows itself to be called from the outside as well.
+    // Finishes the initialization of the spec, and then validates the
+    // consistency of its overall contents. Note that it does the latter
+    // quite rudely: it uses assert() on things it feels should be in
+    // order. This function is called by this struct's constructors that
+    // initialize values, but this being a struct allows itself to be
+    // called from the outside as well.
     void FinishAndValidateInitialization()
     {
         // Default to front-end rejection of empty Strings
@@ -187,14 +195,19 @@ struct SettingSpec
             EmptyAllowed = false;
         else
             // Check that both min and max value are set for Slider
-            assert(Type != SettingType::Slider || (MinimumValue.has_value() && MaximumValue.has_value()));
+            assert(
+                Type != SettingType::Slider ||
+                (MinimumValue.has_value() && MaximumValue.has_value()));
 
-        // If min and max value are both set, min must be less or equal than max
-        assert(!(MinimumValue.has_value() && MaximumValue.has_value()) || MinimumValue.value() <= MaximumValue.value());
+        // If min and max value are both set, min must be less or equal
+        // than max
+        assert(!(MinimumValue.has_value() && MaximumValue.has_value()) ||
+               MinimumValue.value() <= MaximumValue.value());
     }
 
-    SettingSpec(const char* name, const char* friendlyName, const char* description, SettingType type)
-      : Name(name),
+    SettingSpec(const char *name, const char *friendlyName,
+                const char *description, SettingType type) :
+        Name(name),
         FriendlyName(friendlyName),
         Description(description),
         Type(type)
@@ -202,12 +215,17 @@ struct SettingSpec
         FinishAndValidateInitialization();
     }
 
-    SettingSpec(const char* name, const char* friendlyName, SettingType type) : SettingSpec(name, friendlyName, nullptr, type)
-    {}
+    SettingSpec(const char *name, const char *friendlyName,
+                SettingType type) :
+        SettingSpec(name, friendlyName, nullptr, type)
+    {
+    }
 
     // Constructor that sets both minimum and maximum values
-    SettingSpec(const char* name, const char* friendlyName, const char* description, SettingType type, double min, double max)
-      : Name(name),
+    SettingSpec(const char *name, const char *friendlyName,
+                const char *description, SettingType type, double min,
+                double max) :
+        Name(name),
         FriendlyName(friendlyName),
         Description(description),
         Type(type),
@@ -218,16 +236,20 @@ struct SettingSpec
     }
 
     // Constructor that sets both minimum and maximum values
-    SettingSpec(const char* name, const char* friendlyName, SettingType type, double min, double max)
-      : SettingSpec(name, friendlyName, nullptr, type, min, max)
-    {}
+    SettingSpec(const char *name, const char *friendlyName,
+                SettingType type, double min, double max) :
+        SettingSpec(name, friendlyName, nullptr, type, min, max)
+    {
+    }
 
-    SettingSpec()
-    = default;
+    SettingSpec() = default;
 
     virtual String TypeName() const
     {
-        const String names[] = { "Integer", "PositiveBigInteger", "Float", "Boolean", "String", "Palette", "Color", "Slider" };
+        const String names[] = {"Integer", "PositiveBigInteger",
+                                "Float",   "Boolean",
+                                "String",  "Palette",
+                                "Color",   "Slider"};
         return names[static_cast<int>(Type)];
     }
 };
@@ -237,9 +259,11 @@ struct SettingSpec
 // Will return PSRAM if it's available, regular ram otherwise
 
 // Cache PSRAM availability and prefer it when allocating large buffers.
-inline void * PreferPSRAMAlloc(size_t s)
+inline void *PreferPSRAMAlloc(size_t s)
 {
-    // Compute PSRAM availability once in a thread-safe way (I believe C++11+ guarantees thread-safe initialization of function-local statics).
+    // Compute PSRAM availability once in a thread-safe way (I believe
+    // C++11+ guarantees thread-safe initialization of function-local
+    // statics).
     static const int s_psramAvailable = []() noexcept -> int {
         return psramInit() ? 1 : 0;
     }();
@@ -269,44 +293,54 @@ inline void * PreferPSRAMAlloc(size_t s)
 
 // psram_allocator
 //
-// A C++ allocator that allocates from PSRAM instead of the regular heap. Initially
-// I had just overloaded new for the classes I wanted in PSRAM, but that doesn't work
-// with make_shared<> so I had to provide this allocator instead.
+// A C++ allocator that allocates from PSRAM instead of the regular heap.
+// Initially I had just overloaded new for the classes I wanted in PSRAM,
+// but that doesn't work with make_shared<> so I had to provide this
+// allocator instead.
 //
-// When enabled, this puts all the LEDBuffers in PSRAM.  The table that keeps track
-// of them is still in base ram.
+// When enabled, this puts all the LEDBuffers in PSRAM.  The table that
+// keeps track of them is still in base ram.
 //
-// (Davepl - I opted to make this *prefer* psram but return regular ram otherwise. It
-//           avoids a lot of ifdef USE_PSRAM in the code.  But I've only proved it
-//           correct, not tried it on a chip without yet.)
+// (Davepl - I opted to make this *prefer* psram but return regular ram
+// otherwise. It
+//           avoids a lot of ifdef USE_PSRAM in the code.  But I've only
+//           proved it correct, not tried it on a chip without yet.)
 
-template <typename T>
-class psram_allocator
+template <typename T> class psram_allocator
 {
 public:
     typedef size_t size_type;
     typedef ptrdiff_t difference_type;
-    typedef T* pointer;
-    typedef const T* const_pointer;
-    typedef T& reference;
-    typedef const T& const_reference;
+    typedef T *pointer;
+    typedef const T *const_pointer;
+    typedef T &reference;
+    typedef const T &const_reference;
     typedef T value_type;
 
-    psram_allocator()= default;
-    ~psram_allocator()= default;
+    psram_allocator()  = default;
+    ~psram_allocator() = default;
 
-    template <class U> struct rebind { typedef psram_allocator<U> other; };
-    template <class U> explicit psram_allocator(const psram_allocator<U>&){}
+    template <class U> struct rebind
+    {
+        typedef psram_allocator<U> other;
+    };
+    template <class U>
+    explicit psram_allocator(const psram_allocator<U> &)
+    {
+    }
 
-    size_type max_size() const noexcept { return size_t(-1) / sizeof(value_type); }
+    size_type max_size() const noexcept
+    {
+        return size_t(-1) / sizeof(value_type);
+    }
 
-    pointer allocate(size_type n, const void * hint = 0)
+    pointer allocate(size_type n, const void *hint = 0)
     {
         (void)hint;
         if (n > max_size())
             throw std::bad_array_new_length();
-        void * pmem = PreferPSRAMAlloc(n * sizeof(T));
-        return static_cast<pointer>(pmem) ;
+        void *pmem = PreferPSRAMAlloc(n * sizeof(T));
+        return static_cast<pointer>(pmem);
     }
 
     void deallocate(pointer p, size_type /*n*/)
@@ -314,10 +348,9 @@ public:
         free(p);
     }
 
-    template< class U, class... Args >
-    void construct( U* p, Args&&... args )
+    template <class U, class... Args> void construct(U *p, Args &&...args)
     {
-        ::new((void *) p ) U(std::forward<Args>(args)...);
+        ::new ((void *)p) U(std::forward<Args>(args)...);
     }
 
     void destroy(pointer p)
@@ -326,13 +359,12 @@ public:
     }
 };
 
-// Typically we do not need a deleter because the regular one can handle PSRAM deallocations just fine,
-// but for completeness, here it is.
+// Typically we do not need a deleter because the regular one can handle
+// PSRAM deallocations just fine, but for completeness, here it is.
 
-template<typename T>
-struct psram_deleter
+template <typename T> struct psram_deleter
 {
-    void operator()(T* ptr)
+    void operator()(T *ptr)
     {
         psram_allocator<T> allocator;
         allocator.destroy(ptr);
@@ -342,56 +374,60 @@ struct psram_deleter
 
 // make_unique_psram
 //
-// Like std::make_unique, but returns PSRAM instead of base RAM.  We cheat a little here by not providing
-// a deleter, because we know that PSRAM can be freed with the regular free() call and does not require
-// special handling.
+// Like std::make_unique, but returns PSRAM instead of base RAM.  We cheat
+// a little here by not providing a deleter, because we know that PSRAM
+// can be freed with the regular free() call and does not require special
+// handling.
 
 // Overload for single objects (non-array types)
-template<typename T, typename... Args>
+template <typename T, typename... Args>
 std::enable_if_t<!std::is_array<T>::value, std::unique_ptr<T>>
-make_unique_psram(Args&&... args)
+make_unique_psram(Args &&...args)
 {
     psram_allocator<T> allocator;
-    T* ptr = allocator.allocate(1);
+    T *ptr = allocator.allocate(1);
     allocator.construct(ptr, std::forward<Args>(args)...);
     return std::unique_ptr<T>(ptr);
 }
 
 // Overload for unknown-bound arrays: make_unique_psram<U[]>(n)
-template<typename T>
-std::enable_if_t<std::is_array<T>::value && std::extent<T>::value == 0, std::unique_ptr<T>>
+template <typename T>
+std::enable_if_t<std::is_array<T>::value && std::extent<T>::value == 0,
+                 std::unique_ptr<T>>
 make_unique_psram(size_t size)
 {
     using U = typename std::remove_extent<T>::type; // element type
     psram_allocator<U> allocator;
-    U* ptr = allocator.allocate(size);
-    // NOTE: This returns a std::unique_ptr with the default deleter which will call delete[].
-    // On our toolchain, delete[] ultimately routes to free() and is compatible with ps_malloc().
-    // If that ever changes, consider introducing a custom deleter and updating call sites to use it.
+    U *ptr = allocator.allocate(size);
+    // NOTE: This returns a std::unique_ptr with the default deleter which
+    // will call delete[]. On our toolchain, delete[] ultimately routes to
+    // free() and is compatible with ps_malloc(). If that ever changes,
+    // consider introducing a custom deleter and updating call sites to
+    // use it.
     return std::unique_ptr<T>(ptr);
 }
 
 // Overload for 2D arrays
-template<typename T>
+template <typename T>
 std::enable_if_t<std::rank<T>::value == 2, std::unique_ptr<T>>
 make_unique_psram()
 {
-    using U = typename std::remove_all_extents<T>::type;
+    using U     = typename std::remove_all_extents<T>::type;
     size_t size = std::extent<T, 0>::value * std::extent<T, 1>::value;
     psram_allocator<U> allocator;
-    U* ptr = allocator.allocate(size);
-    return std::unique_ptr<T>(reinterpret_cast<T*>(ptr));
+    U *ptr = allocator.allocate(size);
+    return std::unique_ptr<T>(reinterpret_cast<T *>(ptr));
 }
 
 // make_shared_psram
 //
-// Same as std::make_shared except allocates preferentially from the PSRAM pool
+// Same as std::make_shared except allocates preferentially from the PSRAM
+// pool
 
-template<typename T, typename... Args>
-std::shared_ptr<T> make_shared_psram(Args&&... args)
+template <typename T, typename... Args>
+std::shared_ptr<T> make_shared_psram(Args &&...args)
 {
     psram_allocator<T> allocator;
-    return std::allocate_shared<T>(allocator, std::forward<Args>(args)...);
+    return std::allocate_shared<T>(allocator,
+                                   std::forward<Args>(args)...);
 }
-
-

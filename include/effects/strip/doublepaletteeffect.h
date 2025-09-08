@@ -2,7 +2,8 @@
 //
 // File:        DoublePaletteEffect.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -34,28 +35,28 @@
 
 class DoublePaletteEffect : public EffectWithId<DoublePaletteEffect>
 {
-  private:
+private:
+    PaletteEffect _PaletteEffect1;
+    PaletteEffect _PaletteEffect2;
 
-    PaletteEffect   _PaletteEffect1;
-    PaletteEffect   _PaletteEffect2;
-
-  public:
-
-    DoublePaletteEffect()
-     :  EffectWithId<DoublePaletteEffect>("Double Palette"),
-        _PaletteEffect1(RainbowColors_p, 1.0,  0.03,  4.0, 3, 3, LINEARBLEND, false, 0.5),
-        _PaletteEffect2(RainbowColors_p, 1.0, -0.03, -4.0, 3, 3, LINEARBLEND, false, 0.5)
+public:
+    DoublePaletteEffect() :
+        EffectWithId<DoublePaletteEffect>("Double Palette"),
+        _PaletteEffect1(RainbowColors_p, 1.0, 0.03, 4.0, 3, 3,
+                        LINEARBLEND, false, 0.5),
+        _PaletteEffect2(RainbowColors_p, 1.0, -0.03, -4.0, 3, 3,
+                        LINEARBLEND, false, 0.5)
     {
     }
 
-    DoublePaletteEffect(const JsonObjectConst&  jsonObject)
-      : EffectWithId<DoublePaletteEffect>(jsonObject),
+    DoublePaletteEffect(const JsonObjectConst &jsonObject) :
+        EffectWithId<DoublePaletteEffect>(jsonObject),
         _PaletteEffect1(jsonObject["pt1"].as<JsonObjectConst>()),
         _PaletteEffect2(jsonObject["pt2"].as<JsonObjectConst>())
     {
     }
 
-    bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject &jsonObject) override
     {
         auto jsonDoc = CreateJsonDocument();
 
@@ -67,10 +68,11 @@ class DoublePaletteEffect : public EffectWithId<DoublePaletteEffect>
         paletteObj = jsonDoc["pt2"].to<JsonObject>();
         _PaletteEffect2.SerializeToJSON(paletteObj);
 
-        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
+        return SetIfNotOverflowed(jsonDoc, jsonObject,
+                                  __PRETTY_FUNCTION__);
     }
 
-    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>> &gfx) override
     {
         LEDStripEffect::Init(gfx);
         if (!_PaletteEffect1.Init(gfx) || !_PaletteEffect2.Init(gfx))
@@ -80,10 +82,8 @@ class DoublePaletteEffect : public EffectWithId<DoublePaletteEffect>
 
     void Draw() override
     {
-        setAllOnAllChannels(0,0,0);
+        setAllOnAllChannels(0, 0, 0);
         _PaletteEffect1.Draw();
         _PaletteEffect2.Draw();
     }
-
 };
-

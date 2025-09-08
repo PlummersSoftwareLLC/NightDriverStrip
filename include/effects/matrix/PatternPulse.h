@@ -2,7 +2,8 @@
 //
 // File:        PatternPulse.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -34,25 +35,27 @@
  * Aurora: https://github.com/pixelmatix/aurora
  * Copyright (c) 2014 Jason Coon
  *
- * Based at least in part on someone else's work that I can no longer find.
- * Please let me know if you recognize any of this code!
+ * Based at least in part on someone else's work that I can no longer
+ * find. Please let me know if you recognize any of this code!
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
- * the Software, and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #ifndef PatternPulse_H
@@ -60,20 +63,23 @@
 
 class PatternPulse : public EffectWithId<PatternPulse>
 {
-  private:
-
+private:
     int hue;
-    int centerX = 0;
-    int centerY = 0;
-    int step = -1;
-    int maxSteps = min(MATRIX_HEIGHT, MATRIX_WIDTH);
+    int centerX    = 0;
+    int centerY    = 0;
+    int step       = -1;
+    int maxSteps   = min(MATRIX_HEIGHT, MATRIX_WIDTH);
     float fadeRate = 0.90;
     int diff;
 
-  public:
-
-    PatternPulse() : EffectWithId<PatternPulse>("Pulse") {}
-    PatternPulse(const JsonObjectConst& jsonObject) : EffectWithId<PatternPulse>(jsonObject) {}
+public:
+    PatternPulse() : EffectWithId<PatternPulse>("Pulse")
+    {
+    }
+    PatternPulse(const JsonObjectConst &jsonObject) :
+        EffectWithId<PatternPulse>(jsonObject)
+    {
+    }
 
     void Draw() override
     {
@@ -85,13 +91,16 @@ class PatternPulse : public EffectWithId<PatternPulse>
         {
             centerX = random(MATRIX_WIDTH);
             centerY = random(MATRIX_HEIGHT);
-            hue = random(256); // 170;
-            step = 0;
+            hue     = random(256); // 170;
+            step    = 0;
         }
 
         if (step == 0)
         {
-            graphics->DrawSafeCircle(centerX, centerY, step, graphics->to16bit(graphics->ColorFromCurrentPalette(hue)));
+            graphics->DrawSafeCircle(
+                centerX, centerY, step,
+                graphics->to16bit(
+                    graphics->ColorFromCurrentPalette(hue)));
             step++;
         }
         else
@@ -99,12 +108,20 @@ class PatternPulse : public EffectWithId<PatternPulse>
             if (step < maxSteps)
             {
                 // initial pulse
-                graphics->DrawSafeCircle(centerX, centerY, step, graphics->to16bit(ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255)));
+                graphics->DrawSafeCircle(
+                    centerX, centerY, step,
+                    graphics->to16bit(
+                        ColorFromPalette(RainbowColors_p, hue,
+                                         pow(fadeRate, step - 2) * 255)));
 
                 // secondary pulse
                 if (step > 5)
                 {
-                    graphics->DrawSafeCircle(centerX, centerY, step - 3, graphics->to16bit(ColorFromPalette(RainbowColors_p, hue, pow(fadeRate, step - 2) * 255)));
+                    graphics->DrawSafeCircle(
+                        centerX, centerY, step - 3,
+                        graphics->to16bit(ColorFromPalette(
+                            RainbowColors_p, hue,
+                            pow(fadeRate, step - 2) * 255)));
                 }
                 step++;
             }
@@ -116,17 +133,19 @@ class PatternPulse : public EffectWithId<PatternPulse>
         // effects.standardNoiseSmearing();
     }
 };
-class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar> {
-  private:
+class PatternPulsar :
+    public BeatEffectBase,
+    public EffectWithId<PatternPulsar>
+{
+private:
     struct PulsePop
     {
-      public:
-
-        int hue = HUE_RED;
-        int centerX = 0;
-        int centerY = 0;
-        int maxSteps = random_range(0, 8)+6;
-        int step = -1;
+    public:
+        int hue      = HUE_RED;
+        int centerX  = 0;
+        int centerY  = 0;
+        int maxSteps = random_range(0, 8) + 6;
+        int step     = -1;
     };
 
     std::vector<PulsePop> _pops;
@@ -134,16 +153,14 @@ class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar> 
     float fadeRate = 0.9;
     int diff;
 
-  public:
+public:
     PatternPulsar() :
-        BeatEffectBase(1.5, 0.25 ),
-        EffectWithId<PatternPulsar>("Pulsars")
+        BeatEffectBase(1.5, 0.25), EffectWithId<PatternPulsar>("Pulsars")
     {
     }
 
-    PatternPulsar(const JsonObjectConst& jsonObject) :
-        BeatEffectBase(1.5, 0.25 ),
-        EffectWithId<PatternPulsar>(jsonObject)
+    PatternPulsar(const JsonObjectConst &jsonObject) :
+        BeatEffectBase(1.5, 0.25), EffectWithId<PatternPulsar>(jsonObject)
     {
     }
 
@@ -152,20 +169,20 @@ class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar> 
         return 30;
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
+    virtual void HandleBeat(bool bMajor, float elapsed,
+                            float span) override
     {
         if (span > 1.5)
         {
-            for (int i = 0; i < random(2)+2; i ++)
-                _pops.push_back( PulsePop() );
+            for (int i = 0; i < random(2) + 2; i++)
+                _pops.push_back(PulsePop());
         }
         else
         {
             PulsePop small;
-            small.maxSteps = random(8)+4;
-            _pops.push_back( small );
+            small.maxSteps = random(8) + 4;
+            _pops.push_back(small);
         }
-
     }
 
     void Draw() override
@@ -178,8 +195,9 @@ class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar> 
         const int maxNewStarsPerFrame = 8;
         for (int i = 0; i < maxNewStarsPerFrame; i++)
             if (random(4) < g_Analyzer.VURatio())
-                g()->drawPixel(random(MATRIX_WIDTH), random(MATRIX_HEIGHT), RandomSaturatedColor());
-
+                g()->drawPixel(random(MATRIX_WIDTH),
+                               random(MATRIX_HEIGHT),
+                               RandomSaturatedColor());
 
         for (auto pop = _pops.begin(); pop != _pops.end();)
         {
@@ -187,13 +205,15 @@ class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar> 
             {
                 pop->centerX = random(MATRIX_WIDTH);
                 pop->centerY = random(MATRIX_HEIGHT);
-                pop->hue = random(256); // 170;
-                pop->step = 0;
+                pop->hue     = random(256); // 170;
+                pop->step    = 0;
             }
 
             if (pop->step == 0)
             {
-                g()->DrawSafeCircle(pop->centerX, pop->centerY, pop->step, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue)));
+                g()->DrawSafeCircle(
+                    pop->centerX, pop->centerY, pop->step,
+                    g()->to16bit(g()->ColorFromCurrentPalette(pop->hue)));
                 pop->step++;
                 pop++;
             }
@@ -202,19 +222,29 @@ class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar> 
                 if (pop->step < pop->maxSteps)
                 {
                     // initial pulse
-                    g()->DrawSafeCircle(pop->centerX, pop->centerY, pop->step, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 1) * 255)));
+                    g()->DrawSafeCircle(
+                        pop->centerX, pop->centerY, pop->step,
+                        g()->to16bit(g()->ColorFromCurrentPalette(
+                            pop->hue,
+                            pow(fadeRate, pop->step - 1) * 255)));
 
                     // secondary pulse
                     if (pop->step > 3)
-                        g()->DrawSafeCircle(pop->centerX, pop->centerY, pop->step - 3, g()->to16bit(g()->ColorFromCurrentPalette(pop->hue, pow(fadeRate, pop->step - 2) * 255)));
+                        g()->DrawSafeCircle(
+                            pop->centerX, pop->centerY, pop->step - 3,
+                            g()->to16bit(g()->ColorFromCurrentPalette(
+                                pop->hue,
+                                pow(fadeRate, pop->step - 2) * 255)));
 
-                    // This looks like PDP-11 code to me.  double post-inc for the win!
+                    // This looks like PDP-11 code to me.  double post-inc
+                    // for the win!
                     pop++->step++;
                 }
                 else
                 {
-                    // We remove the pulsar and do not increment the pop in the loop
-                    // because we just deleted the current position
+                    // We remove the pulsar and do not increment the pop
+                    // in the loop because we just deleted the current
+                    // position
                     _pops.erase(pop);
                 }
             }

@@ -5,23 +5,27 @@
 // Derived from https://editor.soulmatelights.com/gallery/2164-spiro
 // A spirograph that evolves the number of spines, becomign a yen-yang.
 //
-// This is one of relatively few that would look better at a higher refresh.
+// This is one of relatively few that would look better at a higher
+// refresh.
 
 class PatternSMSpiroPulse : public EffectWithId<PatternSMSpiroPulse>
 {
-  private:
-
+private:
     static constexpr int CenterX = ((MATRIX_WIDTH / 2) - 0.5);
     static constexpr int CenterY = ((MATRIX_HEIGHT / 2) - 0.5);
-    bool incenter {false};
-    uint8_t AM {1};
-    float Angle {0.f};
+    bool incenter{false};
+    uint8_t AM{1};
+    float Angle{0.f};
     bool change = true;
 
-  public:
-
-    PatternSMSpiroPulse() : EffectWithId<PatternSMSpiroPulse>("Spiro") {}
-    PatternSMSpiroPulse(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMSpiroPulse>(jsonObject) {}
+public:
+    PatternSMSpiroPulse() : EffectWithId<PatternSMSpiroPulse>("Spiro")
+    {
+    }
+    PatternSMSpiroPulse(const JsonObjectConst &jsonObject) :
+        EffectWithId<PatternSMSpiroPulse>(jsonObject)
+    {
+    }
 
     void Start() override
     {
@@ -33,7 +37,7 @@ class PatternSMSpiroPulse : public EffectWithId<PatternSMSpiroPulse>
         // fadeToBlackBy(leds, NUM_LEDS, 8);
         fadeAllChannelsToBlackBy(8);
 
-        float t = (float)millis() / 500.0f;
+        float t       = (float)millis() / 500.0f;
         float CalcRad = (sin(t / 2) + 1);
         if (CalcRad <= 0.001)
         {
@@ -55,9 +59,12 @@ class PatternSMSpiroPulse : public EffectWithId<PatternSMSpiroPulse>
         float radY = CalcRad * CenterY / 2;
         for (uint8_t i = 0; i < AM; i++)
         {
-            g()->drawPixelXYF_Wu((CenterX + sin(t + (Angle * i)) * radX),
-                MATRIX_HEIGHT - 1 - (CenterY + cos(t + (Angle * i)) * radY),
-                ColorFromPalette(HeatColors_p, t * 10 + ((256 / AM) * i)));
+            g()->drawPixelXYF_Wu(
+                CenterX + sin(t + (Angle * i)) * radX,
+                MATRIX_HEIGHT - 1 -
+                    (CenterY + cos(t + (Angle * i)) * radY),
+                ColorFromPalette(HeatColors_p,
+                                 t * 10 + ((256 / AM) * i)));
         }
     }
 };

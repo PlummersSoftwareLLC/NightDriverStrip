@@ -7,10 +7,14 @@
 
 class PatternSMHypnosis : public EffectWithId<PatternSMHypnosis>
 {
-  public:
-
-    PatternSMHypnosis() : EffectWithId<PatternSMHypnosis>("Hypnosis") {}
-    PatternSMHypnosis(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMHypnosis>(jsonObject) {}
+public:
+    PatternSMHypnosis() : EffectWithId<PatternSMHypnosis>("Hypnosis")
+    {
+    }
+    PatternSMHypnosis(const JsonObjectConst &jsonObject) :
+        EffectWithId<PatternSMHypnosis>(jsonObject)
+    {
+    }
 
     size_t DesiredFramesPerSecond() const override
     {
@@ -27,12 +31,16 @@ class PatternSMHypnosis : public EffectWithId<PatternSMHypnosis>
     void Draw() override
     {
         t += 4;
-        const auto& rMap = LEDMatrixGFX::getPolarMap(); // Get the map on demand
+        const auto &rMap =
+            LEDMatrixGFX::getPolarMap(); // Get the map on demand
 
         for (uint x = 0; x < MATRIX_WIDTH; x++)
             for (uint y = 0; y < MATRIX_HEIGHT; y++)
-                g()->leds[XY(x, y)] = ColorFromPalette(g()->IsPalettePaused()
-                                      ? g()->GetCurrentPalette()
-                                      : RainbowStripeColors_p, t / 2 + rMap[x][y].scaled_radius + rMap[x][y].angle, sin8(rMap[x][y].angle + (rMap[x][y].scaled_radius * 2) - t));
+                g()->leds[XY(x, y)] = ColorFromPalette(
+                    g()->IsPalettePaused() ? g()->GetCurrentPalette()
+                                           : RainbowStripeColors_p,
+                    t / 2 + rMap[x][y].scaled_radius + rMap[x][y].angle,
+                    sin8(rMap[x][y].angle +
+                         (rMap[x][y].scaled_radius * 2) - t));
     }
 };

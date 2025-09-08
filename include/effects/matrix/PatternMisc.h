@@ -2,7 +2,8 @@
 //
 // File:        PatternMisc.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -29,29 +30,30 @@
 //
 //---------------------------------------------------------------------------
 
-
 /*
-*
-* Aurora: https://github.com/pixelmatix/aurora
-* Copyright (c) 2014 Jason Coon
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy of
-* this software and associated documentation files (the "Software"), to deal in
-* the Software without restriction, including without limitation the rights to
-* use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-* the Software, and to permit persons to whom the Software is furnished to do so,
-* subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in all
-* copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-* FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-* COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-* IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-* CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
+ *
+ * Aurora: https://github.com/pixelmatix/aurora
+ * Copyright (c) 2014 Jason Coon
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 
 #ifndef PatternMisc_H
 #define PatternMisc_H
@@ -60,10 +62,14 @@
 
 class PatternSunburst : public EffectWithId<PatternSunburst>
 {
-  public:
-
-    PatternSunburst() : EffectWithId<PatternSunburst>("Sunburst") {}
-    PatternSunburst(const JsonObjectConst& jsonObject) : EffectWithId<PatternSunburst>(jsonObject) {}
+public:
+    PatternSunburst() : EffectWithId<PatternSunburst>("Sunburst")
+    {
+    }
+    PatternSunburst(const JsonObjectConst &jsonObject) :
+        EffectWithId<PatternSunburst>(jsonObject)
+    {
+    }
 
     virtual size_t DesiredFramesPerSecond() const override
     {
@@ -77,17 +83,22 @@ class PatternSunburst : public EffectWithId<PatternSunburst>
 
         for (int i = 2; i <= MATRIX_WIDTH / 2; i++)
         {
-            CRGB color = g()->ColorFromCurrentPalette((i - 2) * (240 / (MATRIX_WIDTH / 2)));
+            CRGB color = g()->ColorFromCurrentPalette(
+                (i - 2) * (240 / (MATRIX_WIDTH / 2)));
 
-            // The LIB8TION library defines beatsin8, but this needed beatcos8 which did not exist, so I
-            // added it to the graphics interface rathe than adding it to a custom version of lib8tion
+            // The LIB8TION library defines beatsin8, but this needed
+            // beatcos8 which did not exist, so I added it to the graphics
+            // interface rathe than adding it to a custom version of
+            // lib8tion
 
-            uint8_t x = g()->beatcos8((17 - i) * 2, MATRIX_CENTER_X - i, MATRIX_CENTER_X + i);
-            uint8_t y = beatsin8((17 - i) * 2, MATRIX_CENTER_Y - i, MATRIX_CENTER_Y + i);
+            uint8_t x = g()->beatcos8((17 - i) * 2, MATRIX_CENTER_X - i,
+                                      MATRIX_CENTER_X + i);
+            uint8_t y = beatsin8((17 - i) * 2, MATRIX_CENTER_Y - i,
+                                 MATRIX_CENTER_Y + i);
 
             if (color.r != 0 || color.g != 0 || color.b != 0)
             {
-                if (g()->isValidPixel(x,y))
+                if (g()->isValidPixel(x, y))
                     g()->setPixel(x, y, color);
             }
         }
@@ -96,10 +107,14 @@ class PatternSunburst : public EffectWithId<PatternSunburst>
 
 class PatternRose : public EffectWithId<PatternRose>
 {
-  public:
-
-    PatternRose() : EffectWithId<PatternRose>("Rose") {}
-    PatternRose(const JsonObjectConst& jsonObject) : EffectWithId<PatternRose>(jsonObject) {}
+public:
+    PatternRose() : EffectWithId<PatternRose>("Rose")
+    {
+    }
+    PatternRose(const JsonObjectConst &jsonObject) :
+        EffectWithId<PatternRose>(jsonObject)
+    {
+    }
 
     virtual size_t DesiredFramesPerSecond() const override
     {
@@ -115,7 +130,6 @@ class PatternRose : public EffectWithId<PatternRose>
     {
         uint8_t dim = beatsin8(2, 170, 250);
         g()->DimAll(dim);
-
 
         for (uint16_t i = 0; i < MATRIX_HEIGHT; i++)
         {
@@ -145,11 +159,15 @@ class PatternRose : public EffectWithId<PatternRose>
 
 class PatternPinwheel : public EffectWithId<PatternPinwheel>
 {
-  public:
+public:
+    PatternPinwheel() : EffectWithId<PatternPinwheel>("Pinwheel")
+    {
+    }
 
-    PatternPinwheel() : EffectWithId<PatternPinwheel>("Pinwheel") {}
-
-    PatternPinwheel(const JsonObjectConst& jsonObject) : EffectWithId<PatternPinwheel>(jsonObject) {}
+    PatternPinwheel(const JsonObjectConst &jsonObject) :
+        EffectWithId<PatternPinwheel>(jsonObject)
+    {
+    }
 
     void Start() override
     {
@@ -173,8 +191,8 @@ class PatternPinwheel : public EffectWithId<PatternPinwheel>
             uint8_t x = 0;
             uint8_t y = 0;
 
-            x = beatsin8((64 - i) * 2, MATRIX_HEIGHT - i, i + 1) + 16;
-            y = g()->beatcos8((64 - i) * 2, MATRIX_HEIGHT - i, i + 1);
+            x     = beatsin8((64 - i) * 2, MATRIX_HEIGHT - i, i + 1) + 16;
+            y     = g()->beatcos8((64 - i) * 2, MATRIX_HEIGHT - i, i + 1);
             color = g()->ColorFromCurrentPalette((64 - i) * 14);
 
             if (g()->isValidPixel(x, y))
@@ -186,9 +204,13 @@ class PatternPinwheel : public EffectWithId<PatternPinwheel>
 class PatternInfinity : public EffectWithId<PatternInfinity>
 {
 public:
-
-    PatternInfinity() : EffectWithId<PatternInfinity>("Infinity") {}
-    PatternInfinity(const JsonObjectConst& jsonObject) : EffectWithId<PatternInfinity>(jsonObject) {}
+    PatternInfinity() : EffectWithId<PatternInfinity>("Infinity")
+    {
+    }
+    PatternInfinity(const JsonObjectConst &jsonObject) :
+        EffectWithId<PatternInfinity>(jsonObject)
+    {
+    }
 
     virtual size_t DesiredFramesPerSecond() const override
     {
@@ -215,7 +237,8 @@ public:
         // the vertical position of the head oscillates up and down
 
         const int ymargin = 6;
-        int y = map8(sin8(g()->osci[3]), ymargin, MATRIX_HEIGHT - ymargin);
+        int y =
+            map8(sin8(g()->osci[3]), ymargin, MATRIX_HEIGHT - ymargin);
 
         // the hue oscillates from 0 to 255, overflowing back to 0
 
@@ -228,29 +251,31 @@ public:
             _lastY = y;
         }
 
-        g()->drawLine(_lastX, _lastY, x, y, g()->ColorFromCurrentPalette(hue));
+        g()->drawLine(_lastX, _lastY, x, y,
+                      g()->ColorFromCurrentPalette(hue));
         _lastX = x;
         _lastY = y;
 
-        //g()->setPixel(x, y, g()->ColorFromCurrentPalette(hue));
-
+        // g()->setPixel(x, y, g()->ColorFromCurrentPalette(hue));
     }
 };
-
 
 class PatternMunch : public EffectWithId<PatternMunch>
 {
 private:
-
-    uint8_t count = 0;
-    uint8_t dir = 1;
-    uint8_t flip = 0;
+    uint8_t count      = 0;
+    uint8_t dir        = 1;
+    uint8_t flip       = 0;
     uint8_t generation = 0;
 
 public:
-
-    PatternMunch() : EffectWithId<PatternMunch>("Munch") {}
-    PatternMunch(const JsonObjectConst& jsonObject) : EffectWithId<PatternMunch>(jsonObject) {}
+    PatternMunch() : EffectWithId<PatternMunch>("Munch")
+    {
+    }
+    PatternMunch(const JsonObjectConst &jsonObject) :
+        EffectWithId<PatternMunch>(jsonObject)
+    {
+    }
 
     virtual size_t DesiredFramesPerSecond() const override
     {
@@ -268,22 +293,25 @@ public:
         {
             for (uint16_t y = 0; y < MATRIX_HEIGHT; y++)
             {
-                g()->leds[XY(x, y)] = (x ^ y ^ flip) < count
-                    ? g()->ColorFromCurrentPalette(((x ^ y) << 2) + generation)
-                    : CRGB::Black;
+                g()->leds[XY(x, y)] =
+                    (x ^ y ^ flip) < count
+                        ? g()->ColorFromCurrentPalette(((x ^ y) << 2) +
+                                                       generation)
+                        : CRGB::Black;
             }
         }
 
         count += dir;
 
-        if (count <= 0 || count >= MATRIX_WIDTH) {
+        if (count <= 0 || count >= MATRIX_WIDTH)
+        {
             dir = -dir;
         }
 
         if (count <= 0)
         {
             if (flip == 0)
-                flip = MATRIX_WIDTH-1;
+                flip = MATRIX_WIDTH - 1;
             else
                 flip = 0;
         }

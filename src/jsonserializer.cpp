@@ -2,7 +2,8 @@
 //
 // File:        jsonserializer.cpp
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -22,24 +23,25 @@
 //
 // Description:
 //
-//   Implementations for some of the functions declared in jsonserializer.h
+//   Implementations for some of the functions declared in
+//   jsonserializer.h
 //
 // History:     Apr-18-2023         Rbergen     Created
 //---------------------------------------------------------------------------
-
-#include <FS.h>
-#include <SPIFFS.h>
 
 #include "globals.h"
 #include "systemcontainer.h"
 #include "taskmgr.h"
 
-bool BoolFromText(const String& text)
+#include <FS.h>
+#include <SPIFFS.h>
+
+bool BoolFromText(const String &text)
 {
     return text == "true" || strtol(text.c_str(), nullptr, 10);
 }
 
-bool LoadJSONFile(const String & fileName, JsonDocument& jsonDoc)
+bool LoadJSONFile(const String &fileName, JsonDocument &jsonDoc)
 {
     bool jsonReadSuccessful = false;
 
@@ -55,7 +57,8 @@ bool LoadJSONFile(const String & fileName, JsonDocument& jsonDoc)
 
             if (error == DeserializationError::NoMemory)
             {
-                debugW("Out of memory reading JSON from file %s", fileName.c_str());
+                debugW("Out of memory reading JSON from file %s",
+                       fileName.c_str());
             }
             else if (error == DeserializationError::Ok)
             {
@@ -63,7 +66,9 @@ bool LoadJSONFile(const String & fileName, JsonDocument& jsonDoc)
             }
             else
             {
-                debugW("Error with code %d occurred while deserializing JSON from file %s", to_value(error.code()), fileName.c_str());
+                debugW("Error with code %d occurred while deserializing "
+                       "JSON from file %s",
+                       to_value(error.code()), fileName.c_str());
             }
         }
 
@@ -73,14 +78,16 @@ bool LoadJSONFile(const String & fileName, JsonDocument& jsonDoc)
     return jsonReadSuccessful;
 }
 
-bool SaveToJSONFile(const String & fileName, IJSONSerializable& object)
+bool SaveToJSONFile(const String &fileName, IJSONSerializable &object)
 {
-    auto jsonDoc = CreateJsonDocument();
+    auto jsonDoc    = CreateJsonDocument();
     auto jsonObject = jsonDoc.to<JsonObject>();
 
     if (!object.SerializeToJSON(jsonObject))
     {
-        debugE("Could not serialize object to JSON, skipping write to %s!", fileName.c_str());
+        debugE(
+            "Could not serialize object to JSON, skipping write to %s!",
+            fileName.c_str());
         return false;
     }
 
@@ -95,7 +102,8 @@ bool SaveToJSONFile(const String & fileName, IJSONSerializable& object)
     }
 
     size_t bytesWritten = serializeJson(jsonDoc, file);
-    debugI("Number of bytes written to JSON file %s: %zu", fileName.c_str(), bytesWritten);
+    debugI("Number of bytes written to JSON file %s: %zu",
+           fileName.c_str(), bytesWritten);
 
     file.flush();
     file.close();
@@ -110,12 +118,12 @@ bool SaveToJSONFile(const String & fileName, IJSONSerializable& object)
     return true;
 }
 
-bool RemoveJSONFile(const String & fileName)
+bool RemoveJSONFile(const String &fileName)
 {
     return SPIFFS.remove(fileName);
 }
 
-size_t JSONWriter::RegisterWriter(const std::function<void()>& writer)
+size_t JSONWriter::RegisterWriter(const std::function<void()> &writer)
 {
     // Add the writer with its flag unset
     writers.emplace_back(writer);
@@ -144,22 +152,24 @@ void JSONWriter::FlushWrites(bool halt)
 
 // JSONWriterTaskEntry
 //
-// Invoke functions that write serialized JSON objects to SPIFFS at request, with some delay
+// Invoke functions that write serialized JSON objects to SPIFFS at
+// request, with some delay
 void IRAM_ATTR JSONWriterTaskEntry(void *)
 {
-    for(;;)
+    for (;;)
     {
         TickType_t notifyWait = portMAX_DELAY;
 
         for (;;)
         {
-            // Wait until we're woken up by a writer being flagged, or until we've reached the hold point
+            // Wait until we're woken up by a writer being flagged, or
+            // until we've reached the hold point
             ulTaskNotifyTake(pdTRUE, notifyWait);
 
             if (!g_ptrSystem->HasJSONWriter())
                 continue;
 
-            auto& jsonWriter = g_ptrSystem->JSONWriter();
+            auto &jsonWriter = g_ptrSystem->JSONWriter();
 
             // If a flush was requested then we execute pending writes now
             if (jsonWriter.flushRequested.load())
@@ -172,7 +182,8 @@ void IRAM_ATTR JSONWriterTaskEntry(void *)
             if (jsonWriter.haltWrites.load())
                 continue;
 
-            unsigned long holdUntil = jsonWriter.latestFlagMs.load() + JSON_WRITER_DELAY;
+            unsigned long holdUntil =
+                jsonWriter.latestFlagMs.load() + JSON_WRITER_DELAY;
             unsigned long now = millis();
             if (now >= holdUntil)
                 break;
@@ -182,14 +193,16 @@ void IRAM_ATTR JSONWriterTaskEntry(void *)
 
         for (auto &entry : g_ptrSystem->JSONWriter().writers)
         {
-            // Unset flag before we do the actual write. This makes that we don't miss another flag raise if it happens while writing
+            // Unset flag before we do the actual write. This makes that
+            // we don't miss another flag raise if it happens while
+            // writing
             if (entry.flag.exchange(false))
                 entry.writer();
         }
     }
 }
 
-uint32_t toUint32(const CRGB& color)
+uint32_t toUint32(const CRGB &color)
 {
     return (uint32_t)((color.r << 16) | (color.g << 8) | color.b);
 }

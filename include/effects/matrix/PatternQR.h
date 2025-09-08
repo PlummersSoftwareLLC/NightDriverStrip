@@ -2,7 +2,8 @@
 //
 // File:        PatternQR.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -38,25 +39,25 @@ class PatternQR : public EffectWithId<PatternQR>
 {
     void construct()
     {
-        qrcodeData = (uint8_t *) PreferPSRAMAlloc(qrcode_getBufferSize(qrVersion));
+        qrcodeData =
+            (uint8_t *)PreferPSRAMAlloc(qrcode_getBufferSize(qrVersion));
         lastData = "";
     }
 
 protected:
-
     String lastData;
     QRCode qrcode;
-    uint8_t * qrcodeData = nullptr;
+    uint8_t *qrcodeData = nullptr;
     const int qrVersion = 2;
 
 public:
-
     PatternQR() : EffectWithId<PatternQR>("QR")
     {
         construct();
     }
 
-    PatternQR(const JsonObjectConst& jsonObject) : EffectWithId<PatternQR>(jsonObject)
+    PatternQR(const JsonObjectConst &jsonObject) :
+        EffectWithId<PatternQR>(jsonObject)
     {
         construct();
     }
@@ -77,32 +78,40 @@ public:
 
     void Draw() override
     {
-        String sIP = WiFi.isConnected() ? "http://" + WiFi.localIP().toString() : "No Wifi";
+        String sIP = WiFi.isConnected()
+                         ? "http://" + WiFi.localIP().toString()
+                         : "No Wifi";
         if (sIP != lastData)
         {
             lastData = sIP;
-            qrcode_initText(&qrcode, qrcodeData, qrVersion, ECC_LOW, sIP.c_str());
+            qrcode_initText(&qrcode, qrcodeData, qrVersion, ECC_LOW,
+                            sIP.c_str());
         }
         g()->fillScreen(g()->to16bit(CRGB::DarkBlue));
         const int leftMargin = MATRIX_CENTER_X - qrcode.size / 2;
-        const int topMargin = 4;
+        const int topMargin  = 4;
         const int borderSize = 2;
         const uint16_t foregroundColor = WHITE16;
-        const uint16_t borderColor = BLUE16;
+        const uint16_t borderColor     = BLUE16;
         if (qrcode.size + topMargin + borderSize > MATRIX_HEIGHT - 1)
-        throw std::runtime_error("Matrix can't hold the QR code height");
+            throw std::runtime_error(
+                "Matrix can't hold the QR code height");
 
         int w = qrcode.size + borderSize * 2;
         int h = w;
 
-        g()->fillRect(leftMargin - borderSize, topMargin - borderSize, w, h, BLACK16);
-        g()->drawRect(leftMargin - borderSize, topMargin - borderSize, w, h, borderColor);
+        g()->fillRect(leftMargin - borderSize, topMargin - borderSize, w,
+                      h, BLACK16);
+        g()->drawRect(leftMargin - borderSize, topMargin - borderSize, w,
+                      h, borderColor);
 
         for (uint8_t y = 0; y < qrcode.size; y++)
             for (uint8_t x = 0; x < qrcode.size; x++)
-                g()->setPixel(leftMargin + x, topMargin + y, (qrcode_getModule(&qrcode, x, y) ? foregroundColor : BLACK16));
+                g()->setPixel(leftMargin + x, topMargin + y,
+                              qrcode_getModule(&qrcode, x, y)
+                                  ? foregroundColor
+                                  : BLACK16);
     }
 };
 
 #endif
-

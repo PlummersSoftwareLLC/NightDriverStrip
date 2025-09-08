@@ -2,7 +2,8 @@
 //
 // File:        BouncingBallEffect.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -30,15 +31,15 @@
 
 #pragma once
 
-#include "ledstripeffect.h"
 #include "effects.h"
+#include "ledstripeffect.h"
 
 // BouncingBallEffect
 //
-// Draws a set of N bouncing balls using a simple little kinematics formula.  Clears the section first.
+// Draws a set of N bouncing balls using a simple little kinematics
+// formula.  Clears the section first.
 
-static constexpr auto ballColors = to_array(
-{
+static constexpr auto ballColors = to_array({
     CRGB::Green,
     CRGB::Red,
     CRGB::Blue,
@@ -50,61 +51,63 @@ static constexpr auto ballColors = to_array(
 
 class BouncingBallEffect : public EffectWithId<BouncingBallEffect>
 {
-  private:
-
-    size_t  _iOffset;
-    size_t  _cLength;
-    size_t  _cBalls;
-    size_t  _cBallSize;
-    bool    _bMirrored;
+private:
+    size_t _iOffset;
+    size_t _cLength;
+    size_t _cBalls;
+    size_t _cBallSize;
+    bool _bMirrored;
 
     const bool _bErase;
 
-    static constexpr float Gravity = -9.81f;
+    static constexpr float Gravity     = -9.81f;
     static constexpr float StartHeight = 1.0f;
-    // Note: VSCode flags sqrt() for calling a non-constexpr builtin function, but it compiles and runs
-    static constexpr float ImpactVelocityStart = sqrt(-2.0f * Gravity * StartHeight);
+    // Note: VSCode flags sqrt() for calling a non-constexpr builtin
+    // function, but it compiles and runs
+    static constexpr float ImpactVelocityStart =
+        sqrt(-2.0f * Gravity * StartHeight);
 
     std::vector<double> ClockTimeSinceLastBounce;
     std::vector<double> TimeSinceLastBounce;
-    std::vector<float>  Height;
-    std::vector<float>  ImpactVelocity;
-    std::vector<float>  Dampening;
-    std::vector<CRGB>   Colors;
+    std::vector<float> Height;
+    std::vector<float> ImpactVelocity;
+    std::vector<float> Dampening;
+    std::vector<CRGB> Colors;
 
-  public:
-
-    BouncingBallEffect(size_t ballCount = 3, bool bMirrored = true, bool bErase = false, int ballSize = 5)
-        : EffectWithId<BouncingBallEffect>("Bouncing Balls"),
-          _cBalls(ballCount),
-          _cBallSize(ballSize),
-          _bMirrored(bMirrored),
-          _bErase(bErase)
+public:
+    BouncingBallEffect(size_t ballCount = 3, bool bMirrored = true,
+                       bool bErase = false, int ballSize = 5) :
+        EffectWithId<BouncingBallEffect>("Bouncing Balls"),
+        _cBalls(ballCount),
+        _cBallSize(ballSize),
+        _bMirrored(bMirrored),
+        _bErase(bErase)
     {
     }
 
-    BouncingBallEffect(const JsonObjectConst&  jsonObject)
-        : EffectWithId<BouncingBallEffect>(jsonObject),
-          _cBalls(jsonObject["blc"]),
-          _cBallSize(jsonObject["bls"]),
-          _bMirrored(jsonObject[PTY_MIRORRED]),
-          _bErase(jsonObject[PTY_ERASE])
+    BouncingBallEffect(const JsonObjectConst &jsonObject) :
+        EffectWithId<BouncingBallEffect>(jsonObject),
+        _cBalls(jsonObject["blc"]),
+        _cBallSize(jsonObject["bls"]),
+        _bMirrored(jsonObject[PTY_MIRORRED]),
+        _bErase(jsonObject[PTY_ERASE])
     {
     }
 
-    bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject &jsonObject) override
     {
         auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
-        jsonDoc["blc"] = _cBalls;
-        jsonDoc["bls"] = _cBallSize;
+        jsonDoc["blc"]        = _cBalls;
+        jsonDoc["bls"]        = _cBallSize;
         jsonDoc[PTY_MIRORRED] = _bMirrored;
-        jsonDoc[PTY_ERASE] = _bErase;
+        jsonDoc[PTY_ERASE]    = _bErase;
 
-        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
+        return SetIfNotOverflowed(jsonDoc, jsonObject,
+                                  __PRETTY_FUNCTION__);
     }
 
     virtual size_t DesiredFramesPerSecond() const override
@@ -112,7 +115,7 @@ class BouncingBallEffect : public EffectWithId<BouncingBallEffect>
         return 61;
     }
 
-    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>> &gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
@@ -128,54 +131,69 @@ class BouncingBallEffect : public EffectWithId<BouncingBallEffect>
 
         for (size_t i = 0; i < _cBalls; i++)
         {
-            Height[i]                   = StartHeight;
-            ImpactVelocity[i]           = ImpactVelocityStart;
-            ClockTimeSinceLastBounce[i] = g_Values.AppTime.FrameStartTime();
-            Dampening[i]                = 1.0f - i / powf(_cBalls, 2);               // Was 0.9
-            TimeSinceLastBounce[i]      = 0;
-            Colors[i]                   = ballColors[i % std::size(ballColors)];
+            Height[i]         = StartHeight;
+            ImpactVelocity[i] = ImpactVelocityStart;
+            ClockTimeSinceLastBounce[i] =
+                g_Values.AppTime.FrameStartTime();
+            Dampening[i] = 1.0f - i / powf(_cBalls, 2); // Was 0.9
+            TimeSinceLastBounce[i] = 0;
+            Colors[i] = ballColors[i % std::size(ballColors)];
         }
         return true;
     }
 
     // Draw
     //
-    // Draw each of the balls.  When any ball gets too little energy it would just sit at the base so it is re-kicked with new energy.#pragma endregion
+    // Draw each of the balls.  When any ball gets too little energy it
+    // would just sit at the base so it is re-kicked with new
+    // energy.#pragma endregion
 
     void Draw() override
     {
         // Erase the drawing area
         if (_bErase)
         {
-            setAllOnAllChannels(0,0,0);
+            setAllOnAllChannels(0, 0, 0);
         }
         else
         {
-            for (int j = 0; j<_cLength; j++)                            // fade brightness all LEDs one step
-                if (random_range(0, 10)>5)
+            for (int j = 0; j < _cLength;
+                 j++) // fade brightness all LEDs one step
+                if (random_range(0, 10) > 5)
                     fadePixelToBlackOnAllChannelsBy(j, 50);
         }
 
         // Draw each of the the balls
         for (size_t i = 0; i < _cBalls; i++)
         {
-            TimeSinceLastBounce[i] = (g_Values.AppTime.FrameStartTime() - ClockTimeSinceLastBounce[i]) / 10.0;        // BUGBUG hardcoded was 3 but was too fast
-            Height[i] = 0.5f * Gravity * powf(TimeSinceLastBounce[i], 2.0f) + ImpactVelocity[i] * TimeSinceLastBounce[i];
+            TimeSinceLastBounce[i] =
+                (g_Values.AppTime.FrameStartTime() -
+                 ClockTimeSinceLastBounce[i]) /
+                10.0; // BUGBUG hardcoded was 3 but was too fast
+            Height[i] =
+                0.5f * Gravity * powf(TimeSinceLastBounce[i], 2.0f) +
+                ImpactVelocity[i] * TimeSinceLastBounce[i];
 
             if (Height[i] < 0)
             {
-                Height[i] = 0;
+                Height[i]         = 0;
                 ImpactVelocity[i] = Dampening[i] * ImpactVelocity[i];
-                ClockTimeSinceLastBounce[i] = g_Values.AppTime.FrameStartTime();
+                ClockTimeSinceLastBounce[i] =
+                    g_Values.AppTime.FrameStartTime();
 
-                if (ImpactVelocity[i] < 0.5f * ImpactVelocityStart)                                    // Was .01 and not multiplied by anything
+                if (ImpactVelocity[i] <
+                    0.5f * ImpactVelocityStart) // Was .01 and not
+                                                // multiplied by anything
                     ImpactVelocity[i] = ImpactVelocityStart;
             }
 
             float position = Height[i] * (_cLength - 1) / StartHeight;
-            setPixelsOnAllChannels(position, _cBallSize, Colors[i % std::size(ballColors)]);
+            setPixelsOnAllChannels(position, _cBallSize,
+                                   Colors[i % std::size(ballColors)]);
             if (_bMirrored)
-                setPixelsOnAllChannels(_cLength-1-position, _cBallSize, Colors[i % std::size(ballColors)], true);
+                setPixelsOnAllChannels(
+                    _cLength - 1 - position, _cBallSize,
+                    Colors[i % std::size(ballColors)], true);
         }
     }
 };

@@ -2,7 +2,8 @@
 //
 // File:        NTPTimeClient.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -30,39 +31,33 @@
 
 #pragma once
 
-#include <sys/cdefs.h>
-#include <sys/time.h>
-#include <ctime>
 #include <WiFi.h>
 #include <WiFiUdp.h>
+#include <ctime>
 #include <mutex>
+#include <sys/cdefs.h>
+#include <sys/time.h>
 
 // NTPTimeClient
 //
-// Basically, I took some really ancient NTP code that I had on hand that I knew
-// worked and wrapped it in a class.  As expected, it works, but it could likely
-// benefit from cleanup or even wholesale replacement.
+// Basically, I took some really ancient NTP code that I had on hand that
+// I knew worked and wrapped it in a class.  As expected, it works, but it
+// could likely benefit from cleanup or even wholesale replacement.
 
 class NTPTimeClient
 {
-    static bool        _bClockSet;
-    static std::mutex  _clockMutex;
+    static bool _bClockSet;
+    static std::mutex _clockMutex;
 
-  public:
-
-    NTPTimeClient()
-    = default;
+public:
+    NTPTimeClient() = default;
 
     static inline bool HasClockBeenSet()
     {
         return _bClockSet;
     }
 
-    static bool UpdateClockFromWeb(WiFiUDP * pUDP);
+    static bool UpdateClockFromWeb(WiFiUDP *pUDP);
 
     static void ShowUptime();
 };
-
-
-
-

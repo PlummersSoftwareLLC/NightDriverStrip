@@ -2,32 +2,40 @@
 
 #include "effectmanager.h"
 
-// Inspired by https://editor.soulmatelights.com/gallery/1479-2dd-pr-centering
-// Looks best on a square display, but OK on rectangles.
-// I'll admit this math may as well be magic, but it's pretty.
+// Inspired by
+// https://editor.soulmatelights.com/gallery/1479-2dd-pr-centering Looks
+// best on a square display, but OK on rectangles. I'll admit this math
+// may as well be magic, but it's pretty.
 
-class PatternSM2DDPR : public EffectWithId<PatternSM2DDPR> {
-  private:
-
+class PatternSM2DDPR : public EffectWithId<PatternSM2DDPR>
+{
+private:
     uint8_t ZVoffset = 0;
 
     const int Scale = 127;
     const int Speed = 215;
     uint32_t effTimer;
 
-    const float HALF_WIDTH = MATRIX_WIDTH * .5;
+    const float HALF_WIDTH  = MATRIX_WIDTH * .5;
     const float HALF_HEIGHT = MATRIX_HEIGHT * .5;
-    const float radius = HALF_WIDTH;
+    const float radius      = HALF_WIDTH;
     //   byte effect = 1;
 
-  public:
+public:
+    PatternSM2DDPR() : EffectWithId<PatternSM2DDPR>("Crystallize")
+    {
+    }
+    PatternSM2DDPR(const JsonObjectConst &jsonObject) :
+        EffectWithId<PatternSM2DDPR>(jsonObject)
+    {
+    }
 
-    PatternSM2DDPR() : EffectWithId<PatternSM2DDPR>("Crystallize") {}
-    PatternSM2DDPR(const JsonObjectConst &jsonObject) : EffectWithId<PatternSM2DDPR>(jsonObject) {}
+    void Start() override
+    {
+    }
 
-    void Start() override {}
-
-    // Use integer-only Pythagorean to compute the radius from x^2 and y^2.
+    // Use integer-only Pythagorean to compute the radius from x^2 and
+    // y^2.
     int16_t ZVcalcRadius(int16_t x, int16_t y)
     {
         x *= x;
@@ -37,10 +45,11 @@ class PatternSM2DDPR : public EffectWithId<PatternSM2DDPR> {
     }
 
     // From point X,Y, find is the distance to center(X,Y)
-    int16_t ZVcalcDist(uint8_t x, uint8_t y, float center_x, float center_y)
+    int16_t ZVcalcDist(uint8_t x, uint8_t y, float center_x,
+                       float center_y)
     {
-        int16_t a = (center_y - y - .5);
-        int16_t b = (center_x - x - .5);
+        int16_t a    = (center_y - y - .5);
+        int16_t b    = (center_x - x - .5);
         int16_t dist = ZVcalcRadius(a, b);
         return dist;
     }
@@ -69,7 +78,7 @@ class PatternSM2DDPR : public EffectWithId<PatternSM2DDPR> {
                     brightness = sin8(brightness);
                 }
 
-                int hue = ::map(dist, radius, -3, 125, 255);
+                int hue             = ::map(dist, radius, -3, 125, 255);
                 g()->leds[XY(x, y)] = CHSV(hue, 255, brightness);
             }
         }

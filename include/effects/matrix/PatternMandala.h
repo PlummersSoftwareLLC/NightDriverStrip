@@ -2,7 +2,8 @@
 //
 // File:        PatternMandala.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -34,50 +35,57 @@
  * Aurora: https://github.com/pixelmatix/aurora
  * Copyright (c) 2014 Jason Coon
  *
- * Portions of this code are adapted from "Funky Noise" by Stefan Petrick: https://github.com/StefanPetrick/FunkyNoise
- * Copyright (c) 2014 Stefan Petrick
- * http://www.stefan-petrick.de/wordpress_beta
+ * Portions of this code are adapted from "Funky Noise" by Stefan Petrick:
+ * https://github.com/StefanPetrick/FunkyNoise Copyright (c) 2014 Stefan
+ * Petrick http://www.stefan-petrick.de/wordpress_beta
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
- * the Software, and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #ifndef PatternMandala_H
 #define PatternMandala_H
-#if     USE_HUB75
+#if USE_HUB75
 
 // Introduction:
 // -------------
-// This file contains the implementation of the `PatternMandala` class, a sophisticated
-// effect for LED strip displays. It utilizes a noise-based algorithm to create
-// intricate, continuously evolving mandala patterns. This effect is part of a larger
-// system that drives LED strip animations.
+// This file contains the implementation of the `PatternMandala` class, a
+// sophisticated effect for LED strip displays. It utilizes a noise-based
+// algorithm to create intricate, continuously evolving mandala patterns.
+// This effect is part of a larger system that drives LED strip
+// animations.
 //
 // Class Overview:
 // ---------------
-// `PatternMandala` is derived from `LEDStripEffect`, indicating its purpose as a specific
-// visual effect for LED strips. It is designed to generate mandala-like patterns using
-// noise and random number generation to achieve a dynamic, ever-changing display.
+// `PatternMandala` is derived from `LEDStripEffect`, indicating its
+// purpose as a specific visual effect for LED strips. It is designed to
+// generate mandala-like patterns using noise and random number generation
+// to achieve a dynamic, ever-changing display.
 //
 // Key Variables:
 // --------------
-// - `dx`, `dy`, `dz`, `dsx`, `dsy`: These integers store the delta values for noise
-//   coordinates and scaling, controlling the movement and zoom level of the noise pattern.
-// - `NUM_LAYERS`: A macro defining the number of noise layers used in the pattern.
+// - `dx`, `dy`, `dz`, `dsx`, `dsy`: These integers store the delta values
+// for noise
+//   coordinates and scaling, controlling the movement and zoom level of
+//   the noise pattern.
+// - `NUM_LAYERS`: A macro defining the number of noise layers used in the
+// pattern.
 
 class PatternMandala : public EffectWithId<PatternMandala>
 {
@@ -93,9 +101,13 @@ private:
     int16_t dsy;
 
 public:
-
-    PatternMandala() : EffectWithId<PatternMandala>("MRI") {}
-    PatternMandala(const JsonObjectConst& jsonObject) : EffectWithId<PatternMandala>(jsonObject) {}
+    PatternMandala() : EffectWithId<PatternMandala>("MRI")
+    {
+    }
+    PatternMandala(const JsonObjectConst &jsonObject) :
+        EffectWithId<PatternMandala>(jsonObject)
+    {
+    }
 
     virtual size_t DesiredFramesPerSecond() const override
     {
@@ -117,16 +129,16 @@ public:
 
         // fill coordinates with random values
         // set zoom levels
-        g()->GetNoise().noise_x = random16();
-        g()->GetNoise().noise_y = random16();
-        g()->GetNoise().noise_z = random16();
+        g()->GetNoise().noise_x       = random16();
+        g()->GetNoise().noise_y       = random16();
+        g()->GetNoise().noise_z       = random16();
         g()->GetNoise().noise_scale_x = 6000;
         g()->GetNoise().noise_scale_y = 6000;
 
         // for the random movement
-        dx = random8();
-        dy = random8();
-        dz = random8();
+        dx  = random8();
+        dy  = random8();
+        dz  = random8();
         dsx = random8();
         dsy = random8();
     }
@@ -137,9 +149,10 @@ public:
         EVERY_N_SECONDS(30)
         {
             // SetupRandomPalette3();
-            dy = random16(500) - 250; // random16(2000) - 1000 is pretty fast but works fine, too
-            dx = random16(500) - 250;
-            dz = random16(500) - 250;
+            dy = random16(500) - 250; // random16(2000) - 1000 is pretty
+                                      // fast but works fine, too
+            dx                            = random16(500) - 250;
+            dz                            = random16(500) - 250;
             g()->GetNoise().noise_scale_x = random16(10000) + 2000;
             g()->GetNoise().noise_scale_y = random16(10000) + 2000;
         }
@@ -157,7 +170,8 @@ public:
     }
 
     // show just one layer
-    void ShowNoiseLayer(uint8_t layer, uint8_t colorrepeat, uint8_t colorshift)
+    void ShowNoiseLayer(uint8_t layer, uint8_t colorrepeat,
+                        uint8_t colorshift)
     {
         for (uint16_t i = 0; i < MATRIX_WIDTH; i++)
         {
@@ -169,7 +183,9 @@ public:
                 uint8_t bri = color;
 
                 // assign a color depending on the actual palette
-                CRGB pixel = ColorFromPalette(g()->GetCurrentPalette(), colorrepeat * (color + colorshift), bri);
+                CRGB pixel = ColorFromPalette(
+                    g()->GetCurrentPalette(),
+                    colorrepeat * (color + colorshift), bri);
 
                 g()->leds[XY(i, j)] = pixel;
             }

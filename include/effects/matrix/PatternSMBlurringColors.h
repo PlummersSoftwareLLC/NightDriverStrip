@@ -5,30 +5,33 @@
 #include "effects/matrix/Vector.h"
 #include "gfxbase.h"
 
-// Derived from https://editor.soulmatelights.com/gallery/2128-bluringcolors
+// Derived from
+// https://editor.soulmatelights.com/gallery/2128-bluringcolors
 
-class PatternSMBlurringColors : public EffectWithId<PatternSMBlurringColors>
+class PatternSMBlurringColors :
+    public EffectWithId<PatternSMBlurringColors>
 {
-  private:
+private:
     // A more cache-friendly version of the 7 independent arrays that were
     // used. This allows better locality per member, especially since we
     // access them sequentially.
     // Nothing special here; just a default-zero initialized struct.
     class PowderItem
     {
-      public:
-
-        PowderItem() {}
+    public:
+        PowderItem()
+        {
+        }
 
         void Clear()
         {
             _position_x = 0.0f;
             _position_y = 0.0f;
-            _speed_x = 0.0f;
-            _speed_y = 0.0f;
-            _state = 0;
-            _hue = 0;
-            _is_shift = false;
+            _speed_x    = 0.0f;
+            _speed_y    = 0.0f;
+            _state      = 0;
+            _hue        = 0;
+            _is_shift   = false;
         }
 
         float _position_x;
@@ -41,47 +44,59 @@ class PatternSMBlurringColors : public EffectWithId<PatternSMBlurringColors>
     };
 
     uint8_t Scale = 10; // 1-100 # of Boids. Should be a Setting
-    uint8_t Speed = 95; // 1-100. Odd or even only. Should be a bool Setting
+    uint8_t Speed =
+        95; // 1-100. Odd or even only. Should be a bool Setting
 
-    const int WIDTH = MATRIX_WIDTH;
+    const int WIDTH  = MATRIX_WIDTH;
     const int HEIGHT = MATRIX_HEIGHT;
 
     static constexpr int powder_item_max_count = (100U);
     std::array<PowderItem, powder_item_max_count> _powder_items;
 
-    // matrix size constants are calculated only here and do not change in effects
+    // matrix size constants are calculated only here and do not change in
+    // effects
     const uint8_t CENTER_X_MINOR =
-        (MATRIX_WIDTH / 2) - ((MATRIX_WIDTH - 1) & 0x01); // the center of the matrix according to ICSU, shifted to the
-                                                          // smaller side, if the width is even
+        (MATRIX_WIDTH / 2) -
+        ((MATRIX_WIDTH - 1) &
+         0x01); // the center of the matrix according to ICSU, shifted to
+                // the smaller side, if the width is even
     const uint8_t CENTER_Y_MINOR =
         (MATRIX_HEIGHT / 2) -
-        ((MATRIX_HEIGHT - 1) & 0x01); // center of the YGREK matrix, shifted down if the height is even
+        ((MATRIX_HEIGHT - 1) &
+         0x01); // center of the YGREK matrix, shifted down if the height
+                // is even
     const uint8_t CENTER_X_MAJOR =
-        MATRIX_WIDTH / 2 + (MATRIX_WIDTH % 2); // the center of the matrix according to IKSU,
-                                               // shifted to a larger side, if the width is even
+        MATRIX_WIDTH / 2 +
+        (MATRIX_WIDTH %
+         2); // the center of the matrix according to IKSU,
+             // shifted to a larger side, if the width is even
     const uint8_t CENTER_Y_MAJOR =
-        MATRIX_HEIGHT / 2 + (MATRIX_HEIGHT % 2); // center of the YGREK matrix, shifted up if the height is even
+        MATRIX_HEIGHT / 2 +
+        (MATRIX_HEIGHT % 2); // center of the YGREK matrix, shifted up if
+                             // the height is even
 
     uint8_t enlargedObjectNUM; // number of objects used in the effect
 
-    uint8_t hue, hue2;  // gradual shift in hue or some other cyclic counter
+    uint8_t hue,
+        hue2; // gradual shift in hue or some other cyclic counter
     uint8_t deltaValue; // just a reusable variable
     uint8_t step;       // some kind of frame or sequence counter
 
     static const uint8_t AVAILABLE_BOID_COUNT = 7U;
     Boid boids[AVAILABLE_BOID_COUNT];
 
-    bool inline ParticlesUpdate(PowderItem& powder_item)
+    bool inline ParticlesUpdate(PowderItem &powder_item)
     {
-        powder_item._state--; // ttl // You also need to add speedfactor here.
-                                  // good luck there!
+        powder_item._state--; // ttl // You also need to add speedfactor
+                              // here. good luck there!
 
         // Apply velocity.
         powder_item._position_x += powder_item._speed_x;
         powder_item._position_y += powder_item._speed_y;
-        if (powder_item._state == 0 ||
-            powder_item._position_x <= -1 || powder_item._position_x >= WIDTH ||
-            powder_item._position_y <= -1 || powder_item._position_y >= HEIGHT)
+        if (powder_item._state == 0 || powder_item._position_x <= -1 ||
+            powder_item._position_x >= WIDTH ||
+            powder_item._position_y <= -1 ||
+            powder_item._position_y >= HEIGHT)
             powder_item._is_shift = false;
 
         return powder_item._is_shift;
@@ -93,7 +108,7 @@ class PatternSMBlurringColors : public EffectWithId<PatternSMBlurringColors>
 
     void FountainsDrift(uint8_t j)
     {
-        Boid&boid = boids[j];
+        Boid &boid = boids[j];
         boid.location.x += boid.velocity.x;
         boid.location.y += boid.velocity.y;
         if (boid.location.x + boid.velocity.x < 0)
@@ -122,7 +137,7 @@ class PatternSMBlurringColors : public EffectWithId<PatternSMBlurringColors>
         }
     }
 
-    void FountainsEmit(PowderItem& powder_item)
+    void FountainsEmit(PowderItem &powder_item)
     {
         if (hue++ & 0x01)
             hue2 += 4;
@@ -153,30 +168,39 @@ class PatternSMBlurringColors : public EffectWithId<PatternSMBlurringColors>
         powder_item._is_shift = true; // particle->isAlive
     }
 
-  public:
-
-    PatternSMBlurringColors() : EffectWithId<PatternSMBlurringColors>("Powder") {}
-    PatternSMBlurringColors(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMBlurringColors>(jsonObject) {}
+public:
+    PatternSMBlurringColors() :
+        EffectWithId<PatternSMBlurringColors>("Powder")
+    {
+    }
+    PatternSMBlurringColors(const JsonObjectConst &jsonObject) :
+        EffectWithId<PatternSMBlurringColors>(jsonObject)
+    {
+    }
 
     void Start() override
     {
         g()->Clear();
 
-        enlargedObjectNUM = (Scale + 5U); // / 99.0 * (AVAILABLE_BOID_COUNT) ;
+        enlargedObjectNUM =
+            (Scale + 5U); // / 99.0 * (AVAILABLE_BOID_COUNT) ;
         if (enlargedObjectNUM > AVAILABLE_BOID_COUNT)
             enlargedObjectNUM = AVAILABLE_BOID_COUNT;
 
         deltaValue = powder_item_max_count /
-            (sqrt(CENTER_X_MAJOR * CENTER_X_MAJOR + CENTER_Y_MAJOR * CENTER_Y_MAJOR) * 4U) + 1U;
-            // 4 - this is because in 1 cycle the particle flies exactly a
-            // quarter the distance between 2 neighboring pixels
+                         (sqrt(CENTER_X_MAJOR * CENTER_X_MAJOR +
+                               CENTER_Y_MAJOR * CENTER_Y_MAJOR) *
+                          4U) +
+                     1U;
+        // 4 - this is because in 1 cycle the particle flies exactly a
+        // quarter the distance between 2 neighboring pixels
 
-        for (auto& powder_item : _powder_items)
+        for (auto &powder_item : _powder_items)
             powder_item.Clear();
 
         for (int j = 0; j < enlargedObjectNUM; j++)
         {
-            auto boid = Boid(random8(WIDTH), random8(HEIGHT));
+            auto boid       = Boid(random8(WIDTH), random8(HEIGHT));
             boid.velocity.x = 1;
             boid.velocity.y = 1;
 
@@ -191,7 +215,7 @@ class PatternSMBlurringColors : public EffectWithId<PatternSMBlurringColors>
         g()->blur2d(g()->leds, MATRIX_WIDTH, 0, MATRIX_HEIGHT, 0, 27);
 
         // go over particles and update matrix cells on the way
-        for (auto& powder_item : _powder_items)
+        for (auto &powder_item : _powder_items)
         {
             if (!powder_item._is_shift && step)
             {
@@ -199,13 +223,16 @@ class PatternSMBlurringColors : public EffectWithId<PatternSMBlurringColors>
                 step--;
             }
 
-            if (powder_item._is_shift && ParticlesUpdate(powder_item)) {
+            if (powder_item._is_shift && ParticlesUpdate(powder_item))
+            {
 
                 // generate RGB values for particle
                 CRGB baseRGB = CHSV(powder_item._hue, 255, 255);
 
                 baseRGB.nscale8(powder_item._state); // equivalent
-                g()->drawPixelXYF_Wu(powder_item._position_x, MATRIX_HEIGHT - 1 - powder_item._position_y, baseRGB);
+                g()->drawPixelXYF_Wu(
+                    powder_item._position_x,
+                    MATRIX_HEIGHT - 1 - powder_item._position_y, baseRGB);
             }
         }
     }

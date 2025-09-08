@@ -2,7 +2,8 @@
 //
 // File:        improvserial.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -32,70 +33,73 @@
 
 #pragma once
 
-#include <improv.h>
-#include "network.h"
-#include "hexdump.h"
 #include "globals.h"
+#include "hexdump.h"
+#include "network.h"
+
+#include <improv.h>
 #include <numeric>
 
-#define IMPROV_LOG_FILE             "/improv.log"
+#define IMPROV_LOG_FILE "/improv.log"
 
-// Define as 1 to enable Improv logging to SPIFFS, and add a URI to the on-board
-// webserver to be able to retrieve it. The URL to retrieve the log will be
-// http://<device_IP><IMPROV_LOG_FILE>, the latter being as defined just above.
-// Note that any log file that has been written to SPIFFS will be deleted as soon
-// as the board is booted with ENABLE_IMPROV_LOGGING set to 0!
+// Define as 1 to enable Improv logging to SPIFFS, and add a URI to the
+// on-board webserver to be able to retrieve it. The URL to retrieve the
+// log will be http://<device_IP><IMPROV_LOG_FILE>, the latter being as
+// defined just above. Note that any log file that has been written to
+// SPIFFS will be deleted as soon as the board is booted with
+// ENABLE_IMPROV_LOGGING set to 0!
 #ifndef ENABLE_IMPROV_LOGGING
-    #define ENABLE_IMPROV_LOGGING   0
+#define ENABLE_IMPROV_LOGGING 0
 #endif
 
 enum ImprovSerialType : uint8_t
 {
     TYPE_CURRENT_STATE = 0x01,
-    TYPE_ERROR_STATE = 0x02,
-    TYPE_RPC = 0x03,
-    TYPE_RPC_RESPONSE = 0x04
+    TYPE_ERROR_STATE   = 0x02,
+    TYPE_RPC           = 0x03,
+    TYPE_RPC_RESPONSE  = 0x04
 };
 
 static const uint8_t IMPROV_SERIAL_VERSION = 1;
 
-template <typename SERIALTYPE>
-class ImprovSerial
+template <typename SERIALTYPE> class ImprovSerial
 {
-    #if !(ENABLE_IMPROV_LOGGING)
-        #define log_write(...) do {} while(0)
-    #endif
+#if !(ENABLE_IMPROV_LOGGING)
+#define log_write(...)                                                   \
+    do                                                                   \
+    {                                                                    \
+    } while (0)
+#endif
 
 public:
-
-    void setup(const String &firmware,
-                             const String &version,
-                             const String &variant,
-                             const String &name,
-                             SERIALTYPE *serial)
+    void setup(const String &firmware, const String &version,
+               const String &variant, const String &name,
+               SERIALTYPE *serial)
     {
-        this->hw_serial_ = serial;
-        this->firmware_name_ = firmware;
+        this->hw_serial_        = serial;
+        this->firmware_name_    = firmware;
         this->firmware_version_ = version;
         this->hardware_variant_ = variant;
-        this->device_name_ = name;
+        this->device_name_      = name;
 
-        #if !(ENABLE_IMPROV_LOGGING)
-            SPIFFS.remove(IMPROV_LOG_FILE);
-        #endif
+#if !(ENABLE_IMPROV_LOGGING)
+        SPIFFS.remove(IMPROV_LOG_FILE);
+#endif
 
         log_write("Finished Improv setup");
     }
 
-    // Main ImprovSerial loop.  Pulls available characters from the serial port, and tries to have them parsed
-    // into IMPROV commands.  Periodically checks the provisioning state, and if in process, checks to see if
-    // the WiFi is now connected.  If so, it updates the state to PROVISIONED and returns a WIFI_SETTINGS response.
+    // Main ImprovSerial loop.  Pulls available characters from the serial
+    // port, and tries to have them parsed into IMPROV commands.
+    // Periodically checks the provisioning state, and if in process,
+    // checks to see if the WiFi is now connected.  If so, it updates the
+    // state to PROVISIONED and returns a WIFI_SETTINGS response.
 
     void loop()
     {
-        static bool announcedPresence = [&]
-        {
-            debugI("Sending Improv packet to declare we're up. Ignore any IMPROV lines that follow this one.");
+        static bool announcedPresence = [&] {
+            debugI("Sending Improv packet to declare we're up. Ignore "
+                   "any IMPROV lines that follow this one.");
             this->set_state_(improv::STATE_AUTHORIZED);
             return true;
         }();
@@ -118,16 +122,23 @@ public:
 
         if (this->state_ != improv::STATE_PROVISIONED)
         {
-            if (WiFi.getMode() == WIFI_AP || (WiFi.getMode() == WIFI_STA && WiFi.isConnected()))
+            if (WiFi.getMode() == WIFI_AP ||
+                (WiFi.getMode() == WIFI_STA && WiFi.isConnected()))
             {
                 log_write("Responding that wiFi is connected.");
-                debugI("Sending Improv packets to indicate WiFi is connected. Ignore any IMPROV lines that follow this one.");
+                debugI(
+                    "Sending Improv packets to indicate WiFi is "
+                    "connected. Ignore any IMPROV lines that follow this "
+                    "one.");
                 this->set_state_(improv::STATE_PROVISIONED);
 
-                // Only send the URL to connect to if there's a webserver listening to the resulting requests
+                // Only send the URL to connect to if there's a webserver
+                // listening to the resulting requests
                 if constexpr (ENABLE_WEBSERVER)
                 {
-                    std::vector<uint8_t> url = this->build_rpc_settings_response_(improv::WIFI_SETTINGS);
+                    std::vector<uint8_t> url =
+                        this->build_rpc_settings_response_(
+                            improv::WIFI_SETTINGS);
                     this->send_response_(url);
                 }
             }
@@ -150,47 +161,48 @@ public:
     }
 
 protected:
+#if ENABLE_IMPROV_LOGGING
 
-    #if ENABLE_IMPROV_LOGGING
+    // Tell the compiler the arguments to this overload should be checked
+    // like printf's
+    __attribute__((format(printf, 2, 3))) void log_write(
+        const char *format, ...)
+    {
+        constexpr int bufferSize = 256;
+        char lineBuffer[bufferSize];
 
-        // Tell the compiler the arguments to this overload should be checked like printf's
-        __attribute__((format(printf, 2, 3)))
-        void log_write(const char* format, ...)
-        {
-            constexpr int bufferSize = 256;
-            char lineBuffer[bufferSize];
+        auto file = SPIFFS.open(IMPROV_LOG_FILE, FILE_APPEND);
+        va_list args;
 
-            auto file = SPIFFS.open(IMPROV_LOG_FILE, FILE_APPEND);
-            va_list args;
+        va_start(args, format);
+        vsnprintf(lineBuffer, bufferSize, format, args);
+        va_end(args);
 
-            va_start(args, format);
-            vsnprintf(lineBuffer, bufferSize, format, args);
-            va_end(args);
+        lineBuffer[bufferSize - 1] = 0;
+        file.println(lineBuffer);
 
-            lineBuffer[bufferSize - 1] = 0;
-            file.println(lineBuffer);
+        file.close();
+    }
 
-            file.close();
-        }
+    void log_write(std::vector<uint8_t> &data)
+    {
+        auto file = SPIFFS.open(IMPROV_LOG_FILE, FILE_APPEND);
 
-        void log_write(std::vector<uint8_t>& data)
-        {
-            auto file = SPIFFS.open(IMPROV_LOG_FILE, FILE_APPEND);
+        HexDump(file, data.data(), data.size());
 
-            HexDump(file, data.data(), data.size());
+        file.close();
+    }
 
-            file.close();
-        }
-
-    #endif // ENABLE_IMPROV_LOGGING
+#endif // ENABLE_IMPROV_LOGGING
 
     bool parse_improv_serial_byte_(uint8_t byte)
     {
         size_t at = this->rx_buffer_.size();
         this->rx_buffer_.push_back(byte);
 
-        // Checks the bytestream to see if we're still seeing what looks like the IMPROV header
-        // There are many more elegant and less readable ways to do this, but... let's keep it simple.
+        // Checks the bytestream to see if we're still seeing what looks
+        // like the IMPROV header There are many more elegant and less
+        // readable ways to do this, but... let's keep it simple.
 
         const uint8_t *raw = &this->rx_buffer_[0];
         if (at == 0)
@@ -222,26 +234,34 @@ protected:
         if (at <= 8 + data_len)
             return true;
 
-        // THe last byte of the packet needs to be a checksum, so compute it and stuff it in
+        // THe last byte of the packet needs to be a checksum, so compute
+        // it and stuff it in
 
         if (at == 8 + data_len + 1)
         {
-            uint8_t checksum = std::accumulate(raw, raw + at, static_cast<uint8_t>(0));
+            uint8_t checksum =
+                std::accumulate(raw, raw + at, static_cast<uint8_t>(0));
 
             if (checksum != byte)
             {
-                log_write("Checksum mismatch in Improv payload. Expected 0x%02hhX. Got 0x%02hhX", checksum, byte);
+                log_write("Checksum mismatch in Improv payload. Expected "
+                          "0x%02hhX. Got 0x%02hhX",
+                          checksum, byte);
                 this->set_error_(improv::ERROR_INVALID_RPC);
                 return false;
             }
 
-            log_write("Received valid Improv packet of type 0x%02hhX with data length %hhu", type, data_len);
+            log_write("Received valid Improv packet of type 0x%02hhX "
+                      "with data length %hhu",
+                      type, data_len);
 
             if (type == TYPE_RPC)
             {
-                log_write("Received RPC command, trying to parse and process...");
+                log_write("Received RPC command, trying to parse and "
+                          "process...");
                 this->set_error_(improv::ERROR_NONE);
-                auto command = improv::parse_improv_data(&raw[9], data_len, false);
+                auto command =
+                    improv::parse_improv_data(&raw[9], data_len, false);
                 return this->parse_improv_payload_(command);
             }
             else
@@ -258,99 +278,118 @@ protected:
     {
         switch (command.command)
         {
-            // When a "Set the WiFi" RPC call comes in we save the credentials to
-            //   NVS, then disconnect and reconnect the WiFi using whatever creds
-            //   were supplied.  Returns before the connection is complete, as it
-            //   sets the state to PROVISIONING so the remote caller can check
-            //   back on the status to see progress
+            // When a "Set the WiFi" RPC call comes in we save the
+            // credentials to
+            //   NVS, then disconnect and reconnect the WiFi using
+            //   whatever creds were supplied.  Returns before the
+            //   connection is complete, as it sets the state to
+            //   PROVISIONING so the remote caller can check back on the
+            //   status to see progress
 
-            case improv::WIFI_SETTINGS:
+        case improv::WIFI_SETTINGS: {
+            String WiFi_ssid     = command.ssid.c_str();
+            String WiFi_password = command.password.c_str();
+
+// These lines actually require WiFi to be enabled in the project
+#if ENABLE_WIFI
+            if (!WriteWiFiConfig(WifiCredSource::ImprovCreds, WiFi_ssid,
+                                 WiFi_password))
+                debugI("Failed writing Improv WiFi config to NVS");
+
+            log_write(
+                ".Received wifi settings ssid=\"%s\", password=******",
+                command.ssid.c_str());
+
+            ConnectToWiFi(WiFi_ssid, WiFi_password);
+#endif
+
+            this->set_state_(improv::STATE_PROVISIONING);
+
+            this->command_.command  = command.command;
+            this->command_.ssid     = command.ssid;
+            this->command_.password = command.password;
+
+            return true;
+        }
+
+            // Return the current state of the WiFi setup:  authorized,
+            // provisioning, or provisioned
+
+        case improv::GET_CURRENT_STATE: {
+            log_write(".Received request for current state");
+            this->set_state_(WiFi.isConnected()
+                                 ? improv::STATE_PROVISIONED
+                                 : this->state_);
+
+            if (this->state_ == improv::STATE_PROVISIONED &&
+                ENABLE_WEBSERVER)
             {
-                String WiFi_ssid = command.ssid.c_str();
-                String WiFi_password = command.password.c_str();
-
-                // These lines actually require WiFi to be enabled in the project
-                #if ENABLE_WIFI
-                    if (!WriteWiFiConfig(WifiCredSource::ImprovCreds, WiFi_ssid, WiFi_password))
-                        debugI("Failed writing Improv WiFi config to NVS");
-
-                    log_write(".Received wifi settings ssid=\"%s\", password=******", command.ssid.c_str());
-
-                    ConnectToWiFi(WiFi_ssid, WiFi_password);
-                #endif
-
-                this->set_state_(improv::STATE_PROVISIONING);
-
-                this->command_.command  = command.command;
-                this->command_.ssid     = command.ssid;
-                this->command_.password = command.password;
-
-                return true;
+                log_write(".Sending response with device URL");
+                std::vector<uint8_t> url =
+                    this->build_rpc_settings_response_(
+                        improv::GET_CURRENT_STATE);
+                this->send_response_(url);
             }
+            else
+                log_write(".Not connected or web server not enabled, so "
+                          "not sending device URL");
 
-            // Return the current state of the WiFi setup:  authorized, provisioning, or provisioned
-
-            case improv::GET_CURRENT_STATE:
-            {
-                log_write(".Received request for current state");
-                this->set_state_(WiFi.isConnected() ? improv::STATE_PROVISIONED : this->state_);
-
-                if (this->state_ == improv::STATE_PROVISIONED && ENABLE_WEBSERVER)
-                {
-                    log_write(".Sending response with device URL");
-                    std::vector<uint8_t> url = this->build_rpc_settings_response_(improv::GET_CURRENT_STATE);
-                    this->send_response_(url);
-                }
-                else
-                    log_write(".Not connected or web server not enabled, so not sending device URL");
-
-                return true;
-            }
+            return true;
+        }
             // Return info about the ESP32 itself
 
-            case improv::GET_DEVICE_INFO:
-            {
-                log_write(".Received request for device info, sending response");
-                std::vector<uint8_t> info = this->build_version_info_();
-                this->send_response_(info);
-                return true;
-            }
+        case improv::GET_DEVICE_INFO: {
+            log_write(
+                ".Received request for device info, sending response");
+            std::vector<uint8_t> info = this->build_version_info_();
+            this->send_response_(info);
+            return true;
+        }
 
-            case improv::GET_WIFI_NETWORKS:
+        case improv::GET_WIFI_NETWORKS: {
+            log_write(".Received request for WiFi networks");
+            auto numSsid = WiFi.scanNetworks();
+            if (numSsid > 0)
             {
-                log_write(".Received request for WiFi networks");
-                auto numSsid = WiFi.scanNetworks();
-                if (numSsid > 0)
+                for (int i = 0; i < numSsid; i++)
                 {
-                    for (int i = 0; i < numSsid; i++)
-                    {
-                        log_write(".Sending details for SSID %s", WiFi.SSID(i).c_str());
-                        // Send each ssid separately to avoid overflowing the buffer
-                        std::vector<uint8_t> data = improv::build_rpc_response(
-                            improv::GET_WIFI_NETWORKS, {WiFi.SSID(i), str_sprintf("%d", WiFi.RSSI(i)), WiFi.encryptionType(i) != WIFI_AUTH_OPEN ? "YES" : "NO"}, false);
-                        this->send_response_(data);
-                    }
+                    log_write(".Sending details for SSID %s",
+                              WiFi.SSID(i).c_str());
+                    // Send each ssid separately to avoid overflowing the
+                    // buffer
+                    std::vector<uint8_t> data =
+                        improv::build_rpc_response(
+                            improv::GET_WIFI_NETWORKS,
+                            {WiFi.SSID(i),
+                             str_sprintf("%d", WiFi.RSSI(i)),
+                             WiFi.encryptionType(i) != WIFI_AUTH_OPEN
+                                 ? "YES"
+                                 : "NO"},
+                            false);
+                    this->send_response_(data);
                 }
-                else
-                    log_write(".No WiFi networks found");
-
-                // Send empty response to signify the end of the list.
-
-                log_write(".Sending empty response to signal end of list");
-                std::vector<uint8_t> data = improv::build_rpc_response(improv::GET_WIFI_NETWORKS, std::vector<String>{}, false);
-                this->send_response_(data);
-                return true;
             }
+            else
+                log_write(".No WiFi networks found");
 
-            default:
-            {
-                log_write(".Received unknown RPC command 0x%02hhX, responding we're OK ignoring it", command.command);
-                this->set_error_(improv::ERROR_UNKNOWN_RPC);
-                return true;
-            }
+            // Send empty response to signify the end of the list.
+
+            log_write(".Sending empty response to signal end of list");
+            std::vector<uint8_t> data = improv::build_rpc_response(
+                improv::GET_WIFI_NETWORKS, std::vector<String>{}, false);
+            this->send_response_(data);
+            return true;
+        }
+
+        default: {
+            log_write(".Received unknown RPC command 0x%02hhX, "
+                      "responding we're OK ignoring it",
+                      command.command);
+            this->set_error_(improv::ERROR_UNKNOWN_RPC);
+            return true;
+        }
         }
     }
-
 
     // Allows the remote caller to set the provisioning state
 
@@ -365,10 +404,12 @@ protected:
         data[8] = 1;
         data[9] = state;
 
-        log_write("..Sending current state response for state: 0x%02hhX", state);
+        log_write("..Sending current state response for state: 0x%02hhX",
+                  state);
 
-        uint8_t checksum = std::accumulate(data.begin(), data.end(), static_cast<uint8_t>(0));
-        data[10] = checksum;
+        uint8_t checksum = std::accumulate(data.begin(), data.end(),
+                                           static_cast<uint8_t>(0));
+        data[10]         = checksum;
 
         this->write_data_(data);
     }
@@ -386,8 +427,9 @@ protected:
 
         log_write("..Sending error response for error: 0x%02hhX", error);
 
-        uint8_t checksum = std::accumulate(data.begin(), data.end(), static_cast<uint8_t>(0));
-        data[10] = checksum;
+        uint8_t checksum = std::accumulate(data.begin(), data.end(),
+                                           static_cast<uint8_t>(0));
+        data[10]         = checksum;
         this->write_data_(data);
     }
 
@@ -400,9 +442,11 @@ protected:
         data[8] = response.size();
         data.insert(data.end(), response.begin(), response.end());
 
-        log_write("..Sending RPC response with %zu bytes of data", response.size());
+        log_write("..Sending RPC response with %zu bytes of data",
+                  response.size());
 
-        uint8_t checksum = std::accumulate(data.begin(), data.end(), static_cast<uint8_t>(0));
+        uint8_t checksum = std::accumulate(data.begin(), data.end(),
+                                           static_cast<uint8_t>(0));
         data.push_back(checksum);
 
         this->write_data_(data);
@@ -416,23 +460,29 @@ protected:
         WiFi.disconnect();
     }
 
-    std::vector<uint8_t> build_rpc_settings_response_(improv::Command command)
+    std::vector<uint8_t> build_rpc_settings_response_(
+        improv::Command command)
     {
         std::vector<String> urls;
 
-        String webserver_url = String("http://") + WiFi.localIP().toString();
+        String webserver_url =
+            String("http://") + WiFi.localIP().toString();
         urls.push_back(webserver_url);
-        std::vector<uint8_t> data = improv::build_rpc_response(command, urls, false);
+        std::vector<uint8_t> data =
+            improv::build_rpc_response(command, urls, false);
 
         return data;
     }
 
     std::vector<uint8_t> build_version_info_()
     {
-        std::vector<String> infos = {this->firmware_name_, this->firmware_version_, this->hardware_variant_, this->device_name_};
-        std::vector<uint8_t> data = improv::build_rpc_response(improv::GET_DEVICE_INFO, infos, false);
+        std::vector<String> infos = {
+            this->firmware_name_, this->firmware_version_,
+            this->hardware_variant_, this->device_name_};
+        std::vector<uint8_t> data = improv::build_rpc_response(
+            improv::GET_DEVICE_INFO, infos, false);
         return data;
-    };
+    }
 
     int available_()
     {
@@ -469,9 +519,9 @@ protected:
     String hardware_variant_;
     String device_name_;
 
-    #if !(ENABLE_IMPROV_LOGGING)
-        #undef log_write
-    #endif
+#if !(ENABLE_IMPROV_LOGGING)
+#undef log_write
+#endif
 };
 
 extern std::unique_ptr<ImprovSerial<typeof(Serial)>> g_pImprovSerial;

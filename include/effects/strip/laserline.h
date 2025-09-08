@@ -2,7 +2,8 @@
 //
 // File:        LaserLine.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -34,15 +35,13 @@
 
 class LaserShot
 {
-  private:
+private:
+    float _position = 0.0;
+    float _speed    = 10.0;
+    float _size     = 10.0;
+    uint8_t _hue    = 0;
 
-    float         _position = 0.0;
-    float         _speed    = 10.0;
-    float         _size     = 10.0;
-    uint8_t       _hue      = 0;
-
-  public:
-
+public:
     LaserShot(float position, float speed, float size, uint8_t hue)
     {
         _position = position;
@@ -63,51 +62,53 @@ class LaserShot
     virtual void Draw(std::shared_ptr<GFXBase> pGFX)
     {
         for (float d = 0; d < _size && d + _position < NUM_LEDS; d++)
-            pGFX->setPixelsF(_position + d, 1.0, CHSV(_hue + d, 255, 255), true);
+            pGFX->setPixelsF(_position + d, 1.0, CHSV(_hue + d, 255, 255),
+                             true);
     }
 };
 
-class LaserLineEffect : public BeatEffectBase, public EffectWithId<LaserLineEffect>
+class LaserLineEffect :
+    public BeatEffectBase,
+    public EffectWithId<LaserLineEffect>
 {
-  private:
+private:
+    std::vector<LaserShot> _shots;
+    std::shared_ptr<GFXBase> _gfx;
+    float _defaultSize;
+    float _defaultSpeed;
 
-    std::vector<LaserShot>      _shots;
-    std::shared_ptr<GFXBase>    _gfx;
-    float                      _defaultSize;
-    float                      _defaultSpeed;
-
-  public:
-
-    LaserLineEffect(float speed, float size)
-        : BeatEffectBase(1.50, 0.00),
-          EffectWithId<LaserLineEffect>("LaserLine"),
-          _defaultSize(size),
-          _defaultSpeed(speed)
+public:
+    LaserLineEffect(float speed, float size) :
+        BeatEffectBase(1.50, 0.00),
+        EffectWithId<LaserLineEffect>("LaserLine"),
+        _defaultSize(size),
+        _defaultSpeed(speed)
     {
     }
 
-    LaserLineEffect(const JsonObjectConst& jsonObject)
-        : BeatEffectBase(1.50, 0.00),
-          EffectWithId<LaserLineEffect>(jsonObject),
-          _defaultSize(jsonObject[PTY_SIZE]),
-          _defaultSpeed(jsonObject[PTY_SPEED])
+    LaserLineEffect(const JsonObjectConst &jsonObject) :
+        BeatEffectBase(1.50, 0.00),
+        EffectWithId<LaserLineEffect>(jsonObject),
+        _defaultSize(jsonObject[PTY_SIZE]),
+        _defaultSpeed(jsonObject[PTY_SPEED])
     {
     }
 
-    bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject &jsonObject) override
     {
         auto jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
 
-        jsonDoc[PTY_SIZE] = _defaultSize;
+        jsonDoc[PTY_SIZE]  = _defaultSize;
         jsonDoc[PTY_SPEED] = _defaultSpeed;
 
-        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
+        return SetIfNotOverflowed(jsonDoc, jsonObject,
+                                  __PRETTY_FUNCTION__);
     }
 
-    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
+    bool Init(std::vector<std::shared_ptr<GFXBase>> &gfx) override
     {
         debugW("Initialized LaserLine Effect");
         _gfx = gfx[0];
@@ -123,7 +124,7 @@ class LaserLineEffect : public BeatEffectBase, public EffectWithId<LaserLineEffe
         fadeAllChannelsToBlackBy(200);
 
         auto it = _shots.begin();
-        while(it != _shots.end())
+        while (it != _shots.end())
         {
             it->Draw(_gfx);
             if (!it->Update(g_Values.AppTime.LastFrameTime()))
@@ -133,10 +134,12 @@ class LaserLineEffect : public BeatEffectBase, public EffectWithId<LaserLineEffe
         }
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
+    virtual void HandleBeat(bool bMajor, float elapsed,
+                            float span) override
     {
-        _shots.push_back(LaserShot(0.0, _defaultSpeed, _defaultSize, random8()));
-    };
+        _shots.push_back(
+            LaserShot(0.0, _defaultSpeed, _defaultSize, random8()));
+    }
 };
 
 #endif

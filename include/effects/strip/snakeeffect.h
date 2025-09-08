@@ -2,7 +2,8 @@
 //
 // File:        SnakeEffect.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -36,54 +37,52 @@
 
 class SnakeEffect : public EffectWithId<SnakeEffect>
 {
-  private:
-
+private:
     void construct()
     {
         lastLEDIndex = LEDCount - 1;
         Reset();
     }
 
-  protected:
+protected:
+    int LEDCount;     // Number of LEDs total
+    int SnakeSpeed;   // Max duration between iterations.
 
-    int     LEDCount;             // Number of LEDs total
-    int     SnakeSpeed;           // Max duration between iterations.
+    int snakeSize;    // Length of snake.
+    int snakeHead;    // Pointer to head of snake.
+    int lastEaten;    // Increase the snake-speed as since eaten grows.
+    int direction;    // forward|reverse
+    int apple;        // Spawn location of Apple
 
-    int     snakeSize;            // Length of snake.
-    int     snakeHead;            // Pointer to head of snake.
-    int     lastEaten;            // Increase the snake-speed as since eaten grows.
-    int     direction;            // forward|reverse
-    int     apple;                // Spawn location of Apple
+    int winMode;      // End of Game Indicator
 
-    int     winMode;              // End of Game Indicator
+    int lastLEDIndex; // One-time init for cleaner code.
 
-    int     lastLEDIndex;         // One-time init for cleaner code.
+    static const int dSnakeSize  = 3;  // Default start snake size.
+    static const int dSnakeSpeed = 25; // Default snake speed.
 
-    static const int dSnakeSize = 3;    // Default start snake size.
-    static const int dSnakeSpeed = 25;  // Default snake speed.
-
-    static const int dForward = 1;      // ENUM for direction forward.
+    static const int dForward  = 1;    // ENUM for direction forward.
     static const int dBackward = -1;
 
-  public:
-
-    SnakeEffect(const char * strName, int ledCount = NUM_LEDS, int snakeSpeed = dSnakeSpeed)
-        : EffectWithId<SnakeEffect>(strName),
-          LEDCount(ledCount),
-          SnakeSpeed(snakeSpeed)
+public:
+    SnakeEffect(const char *strName, int ledCount = NUM_LEDS,
+                int snakeSpeed = dSnakeSpeed) :
+        EffectWithId<SnakeEffect>(strName),
+        LEDCount(ledCount),
+        SnakeSpeed(snakeSpeed)
     {
         construct();
     }
 
-    SnakeEffect(const JsonObjectConst& jsonObject)
-        : EffectWithId<SnakeEffect>(jsonObject),
-          LEDCount(jsonObject[PTY_LEDCOUNT]),
-          SnakeSpeed(jsonObject[PTY_SPEED])
+    SnakeEffect(const JsonObjectConst &jsonObject) :
+        EffectWithId<SnakeEffect>(jsonObject),
+        LEDCount(jsonObject[PTY_LEDCOUNT]),
+        SnakeSpeed(jsonObject[PTY_SPEED])
     {
         construct();
     }
 
-    bool SerializeToJSON(JsonObject& jsonObject) override
+    bool SerializeToJSON(JsonObject &jsonObject) override
     {
         auto jsonDoc = CreateJsonDocument();
 
@@ -91,9 +90,10 @@ class SnakeEffect : public EffectWithId<SnakeEffect>
         LEDStripEffect::SerializeToJSON(root);
 
         jsonDoc[PTY_LEDCOUNT] = LEDCount;
-        jsonDoc[PTY_SPEED] = SnakeSpeed;
+        jsonDoc[PTY_SPEED]    = SnakeSpeed;
 
-        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
+        return SetIfNotOverflowed(jsonDoc, jsonObject,
+                                  __PRETTY_FUNCTION__);
     }
 
     virtual ~SnakeEffect()
@@ -106,21 +106,22 @@ class SnakeEffect : public EffectWithId<SnakeEffect>
         snakeHead = snakeSize;
         lastEaten = 0;
         direction = dForward;
-        apple = getNextApple();
-        winMode = 0;
+        apple     = getNextApple();
+        winMode   = 0;
     }
 
     void Draw() override
     {
-        setAllOnAllChannels(0,0,0); // Clear
+        setAllOnAllChannels(0, 0, 0); // Clear
 
         // Game Loop
-        EVERY_N_MILLISECONDS(std::max(SnakeSpeed - (lastEaten * 2), 5)) // 5ms faster cap.
+        EVERY_N_MILLISECONDS(
+            std::max(SnakeSpeed - (lastEaten * 2), 5)) // 5ms faster cap.
         {
             // Win Reset
-            if(snakeSize >= LEDCount)
+            if (snakeSize >= LEDCount)
             {
-                if(winMode < 90)
+                if (winMode < 90)
                 {
                     winMode++;
                 }
@@ -145,7 +146,7 @@ class SnakeEffect : public EffectWithId<SnakeEffect>
             if (snakeHead == apple)
             {
                 lastEaten = 0;
-                apple = getNextApple();
+                apple     = getNextApple();
                 snakeSize++;
             }
 
@@ -156,11 +157,11 @@ class SnakeEffect : public EffectWithId<SnakeEffect>
         for (int i = 0; i < LEDCount; i++)
         {
             // Win Reset
-            if(winMode != 0 && winMode % 2 == 0)
+            if (winMode != 0 && winMode % 2 == 0)
             {
                 setPixelOnAllChannels(i, CRGB::Green);
             }
-            else if(winMode != 0 && winMode % 2 == 1)
+            else if (winMode != 0 && winMode % 2 == 1)
             {
                 setPixelOnAllChannels(i, CRGB::Black);
             }
@@ -175,17 +176,28 @@ class SnakeEffect : public EffectWithId<SnakeEffect>
                 {
                     setPixelOnAllChannels(i, CRGB(0x9CB071));
                 }
-                else if (direction == dForward && (
-                    ((snakeHead-snakeSize) < 0 && (i < snakeHead || i <= 0 - (snakeHead-snakeSize))) || // Wrap-around
-                    ((snakeHead-snakeSize) >= 0 && i <= snakeHead && i >= (snakeHead-snakeSize))
-                ))
+                else if (direction == dForward &&
+                         (((snakeHead - snakeSize) < 0 &&
+                           (i < snakeHead ||
+                            i <= 0 - (snakeHead -
+                                      snakeSize))) || // Wrap-around
+                          ((snakeHead - snakeSize) >= 0 &&
+                           i <= snakeHead &&
+                           i >= (snakeHead - snakeSize))))
                 {
                     setPixelOnAllChannels(i, CRGB::Green);
                 }
-                else if (direction == dBackward && ( // Cleaner to keep seperate
-                    ((snakeHead+snakeSize) >= lastLEDIndex && (i > snakeHead || i > lastLEDIndex + (lastLEDIndex - (snakeHead+snakeSize)))) || // Wrap-around
-                    ((snakeHead+snakeSize) < lastLEDIndex && i >= snakeHead && i <= (snakeHead+snakeSize))
-                ))
+                else if (direction == dBackward &&
+                         ( // Cleaner to keep seperate
+                             ((snakeHead + snakeSize) >= lastLEDIndex &&
+                              (i > snakeHead ||
+                               i > lastLEDIndex +
+                                       (lastLEDIndex -
+                                        (snakeHead +
+                                         snakeSize)))) || // Wrap-around
+                             ((snakeHead + snakeSize) < lastLEDIndex &&
+                              i >= snakeHead &&
+                              i <= (snakeHead + snakeSize))))
                 {
                     setPixelOnAllChannels(i, CRGB::Green);
                 }
@@ -194,22 +206,24 @@ class SnakeEffect : public EffectWithId<SnakeEffect>
                     setPixelOnAllChannels(i, CRGB::Black);
                 }
             }
-
-
         }
     }
 
     int ifWrapAroundReturnTailIndex()
     {
-        if (direction == dForward) {
-            if ((snakeHead-snakeSize) < 0)
+        if (direction == dForward)
+        {
+            if ((snakeHead - snakeSize) < 0)
             {
-                return 0 - (snakeHead-snakeSize);
+                return 0 - (snakeHead - snakeSize);
             }
-        } else {
-            if ((snakeHead+snakeSize) > lastLEDIndex)
+        }
+        else
+        {
+            if ((snakeHead + snakeSize) > lastLEDIndex)
             {
-                return (lastLEDIndex) + ((lastLEDIndex) - (snakeHead+snakeSize));
+                return (lastLEDIndex) +
+                       ((lastLEDIndex) - (snakeHead + snakeSize));
             }
         }
 
@@ -219,11 +233,12 @@ class SnakeEffect : public EffectWithId<SnakeEffect>
     int getNextApple()
     {
         int wrapIndex = ifWrapAroundReturnTailIndex();
-        if(wrapIndex != -1)
-        {   // Only 1 range in non-wrap-around.
+        if (wrapIndex != -1)
+        { // Only 1 range in non-wrap-around.
             if (direction == dForward)
             {
-                return random_range(std::max(snakeHead, wrapIndex), lastLEDIndex);
+                return random_range(std::max(snakeHead, wrapIndex),
+                                    lastLEDIndex);
             }
             else
             {
@@ -234,17 +249,19 @@ class SnakeEffect : public EffectWithId<SnakeEffect>
         {
             if (direction == dForward)
             {
-                return findRandomInRanges(0, snakeHead-snakeSize, snakeHead, lastLEDIndex);
+                return findRandomInRanges(0, snakeHead - snakeSize,
+                                          snakeHead, lastLEDIndex);
             }
             else
             {
-                return findRandomInRanges(0, snakeHead, snakeHead+snakeSize, lastLEDIndex);
+                return findRandomInRanges(
+                    0, snakeHead, snakeHead + snakeSize, lastLEDIndex);
             }
-
         }
     }
 
-    int findRandomInRanges(int r1s, int r1e, int r2s, int r2e) // Easily extended for more ranges.
+    int findRandomInRanges(int r1s, int r1e, int r2s,
+                           int r2e) // Easily extended for more ranges.
     {
         // Assume ranges are in bounds.
         // Assume r1s < r1e && r2s < r2e

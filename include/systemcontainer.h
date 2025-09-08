@@ -2,7 +2,8 @@
 //
 // File:        systemcontainer.h
 //
-// NightDriverStrip - (c) 2023 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2023 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -30,109 +31,127 @@
 
 #pragma once
 
+#include "deviceconfig.h"
 #include "effectmanager.h"
-#include "taskmgr.h"
 #include "jsonserializer.h"
 #include "network.h"
-#include "deviceconfig.h"
+#include "remotecontrol.h"
 #include "screen.h"
 #include "socketserver.h"
-#include "websocketserver.h"
-#include "remotecontrol.h"
-#include "webserver.h"
+#include "taskmgr.h"
 #include "types.h"
+#include "webserver.h"
+#include "websocketserver.h"
 
 // SystemContainer
 //
-// Holds a number of system-wide objects that take care of core/supportive functions on the chip.
-// The objects are added to this class in an "enriched property" style. This means that for each object, the class
+// Holds a number of system-wide objects that take care of core/supportive
+// functions on the chip. The objects are added to this class in an
+// "enriched property" style. This means that for each object, the class
 // contains:
 // - A declaration of the member variable (using SC_DECLARE)
-// - A Setup method that creates and returns the object in question (mostly through SC_SIMPLE_SETUP_FOR or
+// - A Setup method that creates and returns the object in question
+// (mostly through SC_SIMPLE_SETUP_FOR or
 //   SC_FORWARDING_SETUP_FOR)
-// - A Has method that returns true if the object has been Setup, and a property getter that returns a reference to
+// - A Has method that returns true if the object has been Setup, and a
+// property getter that returns a reference to
 //   the actual object (both using SC_GETTERS_FOR)
 //
-// The difference between SC_SIMPLE_SETUP_FOR and SC_FORWARDING_SETUP_FOR is that the former invokes a parameterless
-// constructor when creating the object, and the latter forwards any arguments passed to it on to the constructor.
+// The difference between SC_SIMPLE_SETUP_FOR and SC_FORWARDING_SETUP_FOR
+// is that the former invokes a parameterless constructor when creating
+// the object, and the latter forwards any arguments passed to it on to
+// the constructor.
 //
-// SC_SIMPLE_PROPERTY and SC_FORWARDING_PROPERTY are provided for convenience; they combine a declaration, simple or
-// forwarding Setup method, and the Has and getter methods.
+// SC_SIMPLE_PROPERTY and SC_FORWARDING_PROPERTY are provided for
+// convenience; they combine a declaration, simple or forwarding Setup
+// method, and the Has and getter methods.
 //
 // Most macros accept two parameters:
-// - The name of the property, as used in the Setup, Has and getter methods
+// - The name of the property, as used in the Setup, Has and getter
+// methods
 // - The type of the property, as held/returned by this class
 //
-// The actual composition of this class is largely driven by the macros mentioned, only irregular Setup methods are
-// coded manually.
+// The actual composition of this class is largely driven by the macros
+// mentioned, only irregular Setup methods are coded manually.
 
 // Name of the unique_ptr member for a specific property name
-#define SC_MEMBER(name) _ptr ## name
+#define SC_MEMBER(name) _ptr##name
 
-// Declares the member variable for a property with indicated type and name
-#define SC_DECLARE(name, ...) \
-  private: \
+// Declares the member variable for a property with indicated type and
+// name
+#define SC_DECLARE(name, ...)                                            \
+private:                                                                 \
     std::unique_ptr<::__VA_ARGS__> SC_MEMBER(name) = nullptr;
 
-// Creates a Setup method for a property (with indicated type and name) that invokes a parameterless constructor
-#define SC_SIMPLE_SETUP_FOR(name, ...) \
-  public: \
-    ::__VA_ARGS__& Setup ## name() \
-    { \
-        if (!SC_MEMBER(name)) \
-            SC_MEMBER(name).reset(new ::__VA_ARGS__()); \
-        return *SC_MEMBER(name); \
+// Creates a Setup method for a property (with indicated type and name)
+// that invokes a parameterless constructor
+#define SC_SIMPLE_SETUP_FOR(name, ...)                                   \
+public:                                                                  \
+    ::__VA_ARGS__ &Setup##name()                                         \
+    {                                                                    \
+        if (!SC_MEMBER(name))                                            \
+            SC_MEMBER(name).reset(new ::__VA_ARGS__());                  \
+        return *SC_MEMBER(name);                                         \
     }
 
-// Creates a Setup method for a property (with indicated type and name) that forwards any arguments to the constructor
-#define SC_FORWARDING_SETUP_FOR(name, ...) \
-  public: \
-    template<typename... Args> \
-    ::__VA_ARGS__& Setup ## name(Args&&... args) \
-    { \
-        if (!SC_MEMBER(name)) \
-            SC_MEMBER(name).reset(new ::__VA_ARGS__(std::forward<Args>(args)...)); \
-        return *SC_MEMBER(name); \
+// Creates a Setup method for a property (with indicated type and name)
+// that forwards any arguments to the constructor
+#define SC_FORWARDING_SETUP_FOR(name, ...)                               \
+public:                                                                  \
+    template <typename... Args>                                          \
+    ::__VA_ARGS__ &Setup##name(Args &&...args)                           \
+    {                                                                    \
+        if (!SC_MEMBER(name))                                            \
+            SC_MEMBER(name).reset(                                       \
+                new ::__VA_ARGS__(std::forward<Args>(args)...));         \
+        return *SC_MEMBER(name);                                         \
     }
 
-// Creates the Has and getter methods for a property with indicated type and name
-#define SC_GETTERS_FOR(name, ...) \
-  public: \
-    bool Has ## name() const \
-    { \
-        return !!SC_MEMBER(name); \
-    } \
-    \
-    ::__VA_ARGS__& name() const \
-    { \
-        CheckPointer(SC_MEMBER(name), #name); \
-        return *SC_MEMBER(name); \
+// Creates the Has and getter methods for a property with indicated type
+// and name
+#define SC_GETTERS_FOR(name, ...)                                        \
+public:                                                                  \
+    bool Has##name() const                                               \
+    {                                                                    \
+        return !!SC_MEMBER(name);                                        \
+    }                                                                    \
+                                                                         \
+    ::__VA_ARGS__ &name() const                                          \
+    {                                                                    \
+        CheckPointer(SC_MEMBER(name), #name);                            \
+        return *SC_MEMBER(name);                                         \
     }
 
-// Creates a full property with the type and name indicated, having a simple Setup method
-#define SC_SIMPLE_PROPERTY(name, ...) \
-    SC_DECLARE(name, __VA_ARGS__) \
-    SC_SIMPLE_SETUP_FOR(name, __VA_ARGS__) \
+// Creates a full property with the type and name indicated, having a
+// simple Setup method
+#define SC_SIMPLE_PROPERTY(name, ...)                                    \
+    SC_DECLARE(name, __VA_ARGS__)                                        \
+    SC_SIMPLE_SETUP_FOR(name, __VA_ARGS__)                               \
     SC_GETTERS_FOR(name, __VA_ARGS__)
 
-// Creates a full property with the type and name indicated, having a forwarding Setup method
-#define SC_FORWARDING_PROPERTY(name, ...) \
-    SC_DECLARE(name, __VA_ARGS__) \
-    SC_FORWARDING_SETUP_FOR(name, __VA_ARGS__) \
+// Creates a full property with the type and name indicated, having a
+// forwarding Setup method
+#define SC_FORWARDING_PROPERTY(name, ...)                                \
+    SC_DECLARE(name, __VA_ARGS__)                                        \
+    SC_FORWARDING_SETUP_FOR(name, __VA_ARGS__)                           \
     SC_GETTERS_FOR(name, __VA_ARGS__)
 
 class SystemContainer
 {
-  private:
-    // Helper method that checks if a pointer is initialized. Throws a runtime error if not.
-    template<typename Tp>
-    inline void CheckPointer(const std::unique_ptr<Tp>& pointer, const String& name) const
+private:
+    // Helper method that checks if a pointer is initialized. Throws a
+    // runtime error if not.
+    template <typename Tp>
+    inline void CheckPointer(const std::unique_ptr<Tp> &pointer,
+                             const String &name) const
     {
         if (!pointer)
         {
-            debugE("Calling getter for %s with pointer uninitialized!", name.c_str());
+            debugE("Calling getter for %s with pointer uninitialized!",
+                   name.c_str());
             delay(1000);
-            throw std::runtime_error("Calling SystemContainer getter with uninitialized pointer!");
+            throw std::runtime_error("Calling SystemContainer getter "
+                                     "with uninitialized pointer!");
         }
     }
 
@@ -144,9 +163,13 @@ class SystemContainer
     // -------------------------------------------------------------
     // BufferManagers
 
-    SC_DECLARE(BufferManagers, std::vector<LEDBufferManager, psram_allocator<LEDBufferManager>>)
+    SC_DECLARE(
+        BufferManagers,
+        std::vector<LEDBufferManager, psram_allocator<LEDBufferManager>>)
 
-    public: std::vector<LEDBufferManager, psram_allocator<LEDBufferManager>>& SetupBufferManagers()
+public:
+    std::vector<LEDBufferManager, psram_allocator<LEDBufferManager>> &
+    SetupBufferManagers()
     {
         if (!!SC_MEMBER(BufferManagers))
             return *SC_MEMBER(BufferManagers);
@@ -155,40 +178,50 @@ class SystemContainer
         {
             debugE("Can't setup BufferManagers without Devices!");
             delay(1000);
-            throw std::runtime_error("Attempt to setup BufferManagers without Devices");
+            throw std::runtime_error(
+                "Attempt to setup BufferManagers without Devices");
         }
 
-        #if USE_PSRAM
-            uint32_t memtouse = ESP.getFreePsram() - RESERVE_MEMORY;
-        #else
-            uint32_t memtouse = ESP.getFreeHeap() - RESERVE_MEMORY;
-        #endif
+#if USE_PSRAM
+        uint32_t memtouse = ESP.getFreePsram() - RESERVE_MEMORY;
+#else
+        uint32_t memtouse = ESP.getFreeHeap() - RESERVE_MEMORY;
+#endif
 
-        uint32_t memtoalloc = (SC_MEMBER(Devices)->size() * (sizeof(LEDBuffer) + NUM_LEDS * sizeof(CRGB)));
+        uint32_t memtoalloc =
+            (SC_MEMBER(Devices)->size() *
+             (sizeof(LEDBuffer) + NUM_LEDS * sizeof(CRGB)));
         uint32_t cBuffers = memtouse / memtoalloc;
 
         if (cBuffers < MIN_BUFFERS)
         {
-            debugI("Not enough memory, could only allocate %d buffers and need %d\n", cBuffers, MIN_BUFFERS);
+            debugI("Not enough memory, could only allocate %d buffers "
+                   "and need %d\n",
+                   cBuffers, MIN_BUFFERS);
             throw std::runtime_error("Could not allocate all buffers");
         }
         if (cBuffers > MAX_BUFFERS)
         {
-            debugI("Could allocate %d buffers but limiting it to %d\n", cBuffers, MAX_BUFFERS);
+            debugI("Could allocate %d buffers but limiting it to %d\n",
+                   cBuffers, MAX_BUFFERS);
             cBuffers = MAX_BUFFERS;
         }
 
-        debugW("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
+        debugW("Reserving %d LED buffers for a total of %d bytes...",
+               cBuffers, memtoalloc * cBuffers);
 
-        SC_MEMBER(BufferManagers) = make_unique_psram<std::vector<LEDBufferManager, psram_allocator<LEDBufferManager>>>();
+        SC_MEMBER(BufferManagers) = make_unique_psram<std::vector<
+            LEDBufferManager, psram_allocator<LEDBufferManager>>>();
 
-        for (auto& device : *SC_MEMBER(Devices))
+        for (auto &device : *SC_MEMBER(Devices))
             SC_MEMBER(BufferManagers)->emplace_back(cBuffers, device);
 
         return *SC_MEMBER(BufferManagers);
     }
 
-    SC_GETTERS_FOR(BufferManagers, std::vector<LEDBufferManager, psram_allocator<LEDBufferManager>>)
+    SC_GETTERS_FOR(
+        BufferManagers,
+        std::vector<LEDBufferManager, psram_allocator<LEDBufferManager>>)
 
     // -------------------------------------------------------------
     // EffectManager
@@ -201,11 +234,13 @@ class SystemContainer
     SC_DECLARE(TaskManager, NightDriverTaskManager)
 
     // Creates, begins and returns the TaskManager
-    public: ::NightDriverTaskManager& SetupTaskManager()
+public:
+    ::NightDriverTaskManager &SetupTaskManager()
     {
         if (!SC_MEMBER(TaskManager))
         {
-            SC_MEMBER(TaskManager) = make_unique_psram<::NightDriverTaskManager>();
+            SC_MEMBER(TaskManager) =
+                make_unique_psram<::NightDriverTaskManager>();
             SC_MEMBER(TaskManager)->begin();
         }
 
@@ -220,14 +255,17 @@ class SystemContainer
     SC_DECLARE(DeviceConfig, DeviceConfig)
     SC_DECLARE(JSONWriter, JSONWriter)
 
-    // Creates and returns the config objects. Requires TaskManager to have already been setup.
-    public: void SetupConfig()
+    // Creates and returns the config objects. Requires TaskManager to
+    // have already been setup.
+public:
+    void SetupConfig()
     {
         if (!SC_MEMBER(TaskManager))
         {
             debugE("Can't setup config objects without TaskManager!");
             delay(1000);
-            throw std::runtime_error("Attempt to setup config objects without TaskManager");
+            throw std::runtime_error(
+                "Attempt to setup config objects without TaskManager");
         }
 
         // Create the JSON writer and start its background thread
@@ -248,56 +286,58 @@ class SystemContainer
     // -------------------------------------------------------------
     // NetworkReader
 
-    #if ENABLE_WIFI
-        SC_SIMPLE_PROPERTY(NetworkReader, NetworkReader)
-    #endif
+#if ENABLE_WIFI
+    SC_SIMPLE_PROPERTY(NetworkReader, NetworkReader)
+#endif
 
     // -------------------------------------------------------------
     // WebServer
 
-    #if ENABLE_WIFI && ENABLE_WEBSERVER
-        SC_SIMPLE_PROPERTY(WebServer, CWebServer)
-    #endif
+#if ENABLE_WIFI && ENABLE_WEBSERVER
+    SC_SIMPLE_PROPERTY(WebServer, CWebServer)
+#endif
 
     // -------------------------------------------------------------
     // SocketServer
 
-    #if INCOMING_WIFI_ENABLED
-        SC_FORWARDING_PROPERTY(SocketServer, SocketServer)
-    #endif
+#if INCOMING_WIFI_ENABLED
+    SC_FORWARDING_PROPERTY(SocketServer, SocketServer)
+#endif
 
     // -------------------------------------------------------------
     // WebSocketServer
 
-    #if WEB_SOCKETS_ANY_ENABLED
-        SC_FORWARDING_PROPERTY(WebSocketServer, WebSocketServer)
-    #endif
-
+#if WEB_SOCKETS_ANY_ENABLED
+    SC_FORWARDING_PROPERTY(WebSocketServer, WebSocketServer)
+#endif
 
     // -------------------------------------------------------------
     // RemoteControl
 
-    #if ENABLE_REMOTE
-        SC_SIMPLE_PROPERTY(RemoteControl, RemoteControl)
-    #endif
+#if ENABLE_REMOTE
+    SC_SIMPLE_PROPERTY(RemoteControl, RemoteControl)
+#endif
 
     // -------------------------------------------------------------
     // Display
 
-    #if USE_SCREEN
-        SC_DECLARE(Display, Screen)
+#if USE_SCREEN
+    SC_DECLARE(Display, Screen)
 
-        // Creates and returns the display. The exact screen type is a template argument.
-        public: template<typename Ts, typename... Args>
-        ::Screen& SetupDisplay(Args&&... args)
-        {
-            SC_MEMBER(Display) = make_unique_psram<Ts>(std::forward<Args>(args)...);
+    // Creates and returns the display. The exact screen type is a
+    // template argument.
+public:
+    template <typename Ts, typename... Args>
+    ::Screen &SetupDisplay(Args &&...args)
+    {
+        SC_MEMBER(Display) =
+            make_unique_psram<Ts>(std::forward<Args>(args)...);
 
-            return *SC_MEMBER(Display);
-        }
+        return *SC_MEMBER(Display);
+    }
 
-        SC_GETTERS_FOR(Display, Screen)
-    #endif
+    SC_GETTERS_FOR(Display, Screen)
+#endif
 };
 
 extern DRAM_ATTR std::unique_ptr<SystemContainer> g_ptrSystem;

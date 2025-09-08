@@ -2,7 +2,8 @@
 //
 // File:        colordata.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -23,7 +24,8 @@
 //
 // Description:
 //
-//    Palettes and other color table definitions.  CPP daa in colordata.cpp
+//    Palettes and other color table definitions.  CPP daa in
+//    colordata.cpp
 //
 // History:     May-11-2021         Davepl      Commented
 //
@@ -38,4 +40,3 @@ extern const TProgmemRGBGradientPalette_byte vu_gpGreen[];
 extern const TProgmemRGBPalette16 BlueHeatColors_p;
 extern const TProgmemRGBPalette16 HeatColors2_p;
 extern const TProgmemRGBPalette16 GreenHeatColors_p;
-

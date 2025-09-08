@@ -2,7 +2,8 @@
 //
 // File:        improvserial.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -25,87 +26,96 @@
 //
 //   Wraps ImprovSerial to manage its state and provide an interface to it
 //
-// History:     Feb-13-2023         Davepl Based on Apache 2.0 licensed code:
+// History:     Feb-13-2023         Davepl Based on Apache 2.0 licensed
+// code:
 //                                  https://github.com/improv-wifi/sdk-cpp
 //
 //---------------------------------------------------------------------------
 
 #include "improv.h"
+
 #include <numeric>
 
 namespace improv
 {
 
-    ImprovCommand parse_improv_data(const std::vector<uint8_t> &data, bool check_checksum)
+ImprovCommand parse_improv_data(const std::vector<uint8_t> &data,
+                                bool check_checksum)
+{
+    return parse_improv_data(data.data(), data.size(), check_checksum);
+}
+
+ImprovCommand parse_improv_data(const uint8_t *data, size_t length,
+                                bool check_checksum)
+{
+    ImprovCommand improv_command;
+    Command command     = (Command)data[0];
+    uint8_t data_length = data[1];
+
+    if (data_length != length - 2 - check_checksum)
     {
-        return parse_improv_data(data.data(), data.size(), check_checksum);
-    }
-
-    ImprovCommand parse_improv_data(const uint8_t *data, size_t length, bool check_checksum)
-    {
-        ImprovCommand improv_command;
-        Command command = (Command)data[0];
-        uint8_t data_length = data[1];
-
-        if (data_length != length - 2 - check_checksum)
-        {
-            improv_command.command = UNKNOWN;
-            return improv_command;
-        }
-
-        if (check_checksum)
-        {
-            uint8_t checksum = data[length - 1];
-
-            uint32_t calculated_checksum = std::accumulate(data, data + (length - 1), 0u);
-
-            if ((uint8_t)calculated_checksum != checksum)
-            {
-                improv_command.command = BAD_CHECKSUM;
-                return improv_command;
-            }
-        }
-
-        if (command == WIFI_SETTINGS)
-        {
-            uint8_t ssid_length = data[2];
-            uint8_t ssid_start = 3;
-            size_t ssid_end = ssid_start + ssid_length;
-
-            uint8_t pass_length = data[ssid_end];
-            size_t pass_start = ssid_end + 1;
-            size_t pass_end = pass_start + pass_length;
-
-            std::string ssid(data + ssid_start, data + ssid_end);
-            std::string password(data + pass_start, data + pass_end);
-            return {.command = command, .ssid = ssid, .password = password};
-        }
-
-        improv_command.command = command;
+        improv_command.command = UNKNOWN;
         return improv_command;
     }
 
-    // Combines the command, a list of strings, and an optional checksum into a vector of bytes (uses String)
-
-    std::vector<uint8_t> build_rpc_response(Command command, const std::vector<String> &datum, bool add_checksum)
+    if (check_checksum)
     {
-        std::vector<uint8_t> out;
-        uint32_t length = 0;
-        out.push_back(command);
-        for (const auto &str : datum)
-        {
-            uint8_t len = str.length();
-            length += len;
-            out.push_back(len);
-            out.insert(out.end(), str.begin(), str.end());
-        }
-        out.insert(out.begin() + 1, length);
+        uint8_t checksum = data[length - 1];
 
-        if (add_checksum)
+        uint32_t calculated_checksum =
+            std::accumulate(data, data + (length - 1), 0u);
+
+        if ((uint8_t)calculated_checksum != checksum)
         {
-            uint32_t calculated_checksum = std::accumulate(out.begin(), out.end(), 0u);
-            out.push_back(calculated_checksum);
+            improv_command.command = BAD_CHECKSUM;
+            return improv_command;
         }
-        return out;
     }
+
+    if (command == WIFI_SETTINGS)
+    {
+        uint8_t ssid_length = data[2];
+        uint8_t ssid_start  = 3;
+        size_t ssid_end     = ssid_start + ssid_length;
+
+        uint8_t pass_length = data[ssid_end];
+        size_t pass_start   = ssid_end + 1;
+        size_t pass_end     = pass_start + pass_length;
+
+        std::string ssid(data + ssid_start, data + ssid_end);
+        std::string password(data + pass_start, data + pass_end);
+        return {.command = command, .ssid = ssid, .password = password};
+    }
+
+    improv_command.command = command;
+    return improv_command;
+}
+
+// Combines the command, a list of strings, and an optional checksum into
+// a vector of bytes (uses String)
+
+std::vector<uint8_t> build_rpc_response(Command command,
+                                        const std::vector<String> &datum,
+                                        bool add_checksum)
+{
+    std::vector<uint8_t> out;
+    uint32_t length = 0;
+    out.push_back(command);
+    for (const auto &str : datum)
+    {
+        uint8_t len = str.length();
+        length += len;
+        out.push_back(len);
+        out.insert(out.end(), str.begin(), str.end());
+    }
+    out.insert(out.begin() + 1, length);
+
+    if (add_checksum)
+    {
+        uint32_t calculated_checksum =
+            std::accumulate(out.begin(), out.end(), 0u);
+        out.push_back(calculated_checksum);
+    }
+    return out;
+}
 } // namespace improv

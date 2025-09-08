@@ -2,7 +2,8 @@
 //
 // File:        network.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -31,166 +32,191 @@
 // Retire this test once Arduino3 fully lands.
 #include <esp_arduino_version.h>
 #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
-   #include_next <Network.h> // For wl_status_t, etc. (case matters)
+#include_next <Network.h> // For wl_status_t, etc. (case matters)
 #endif
 #include "esp_mac.h"
-
 #include "types.h"
 
 #if INCOMING_WIFI_ENABLED
-    #include "socketserver.h"
+#include "socketserver.h"
 #endif
 
-    // For now, just a centralized location for the port numbers for our
-    // various services. Someday these might be configurable.
-    // This could be an enum class, but the static_cast<int> at the
-    // callers is ugly.
-    enum NetworkPort
-    {
-      ColorServer  = 12000,
-      IncomingWiFi  = 49152,
-      VICESocketServer = 25232,
-      Webserver  = 80
-    };
+// For now, just a centralized location for the port numbers for our
+// various services. Someday these might be configurable.
+// This could be an enum class, but the static_cast<int> at the
+// callers is ugly.
+enum NetworkPort
+{
+    ColorServer      = 12000,
+    IncomingWiFi     = 49152,
+    VICESocketServer = 25232,
+    Webserver        = 80
+};
 
 #if ENABLE_WIFI
-    enum class WiFiConnectResult
+enum class WiFiConnectResult
+{
+    Connected,
+    Disconnected,
+    NoCredentials
+};
+
+enum WifiCredSource
+{
+    ImprovCreds      = 0,
+    CompileTimeCreds = 1
+};
+
+void processRemoteDebugCmd();
+
+WiFiConnectResult ConnectToWiFi(const String &ssid,
+                                const String &password);
+WiFiConnectResult ConnectToWiFi(const String *ssid,
+                                const String *password);
+void UpdateNTPTime();
+void SetupOTA(const String &strHostname);
+bool ReadWiFiConfig(WifiCredSource source, String &WiFi_ssid,
+                    String &WiFi_password);
+bool WriteWiFiConfig(WifiCredSource source, const String &WiFi_ssid,
+                     const String &WiFi_password);
+bool ClearWiFiConfig(WifiCredSource source);
+
+// Static Helpers
+//
+// Simple utility functions
+
+#define WL_NO_SHIELD       "WL_NO_SHIELD"
+#define WL_IDLE_STATUS     "WL_IDLE_STATUS"
+#define WL_NO_SSID_AVAIL   "WL_NO_SSID_AVAIL"
+#define WL_SCAN_COMPLETED  "WL_SCAN_COMPLETED"
+#define WL_CONNECTED       "WL_CONNECTED"
+#define WL_CONNECT_FAILED  "WL_CONNECT_FAILED"
+#define WL_CONNECTION_LOST "WL_CONNECTION_LOST"
+#define WL_DISCONNECTED    "WL_DISCONNECTED"
+#define WL_UNKNOWN_STATUS  "WL_UNKNOWN_STATUS"
+
+inline static const char *WLtoString(wl_status_t status)
+{
+    switch (status)
     {
-      Connected,
-      Disconnected,
-      NoCredentials
+    case 255:
+        return WL_NO_SHIELD;
+    case 0:
+        return WL_IDLE_STATUS;
+    case 1:
+        return WL_NO_SSID_AVAIL;
+    case 2:
+        return WL_SCAN_COMPLETED;
+    case 3:
+        return WL_CONNECTED;
+    case 4:
+        return WL_CONNECT_FAILED;
+    case 5:
+        return WL_CONNECTION_LOST;
+    case 6:
+        return WL_DISCONNECTED;
+    default:
+        return WL_UNKNOWN_STATUS;
+    }
+}
+
+// get_mac_address_raw
+//
+// Reads the raw MAC
+
+inline void get_mac_address_raw(uint8_t *mac)
+{
+    esp_efuse_mac_get_default(mac);
+}
+
+// get_mac_address
+//
+// Returns a packed (non-pretty, without colons) version of the MAC id
+
+inline String get_mac_address()
+{
+    uint8_t mac[6];
+    WiFi.macAddress(mac);
+    return str_sprintf("%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2],
+                       mac[3], mac[4], mac[5]);
+}
+
+// get_mac_address_pretty()
+//
+// Returns a packed (non-pretty, without colons) version of the MAC id
+
+inline String get_mac_address_pretty()
+{
+    uint8_t mac[6];
+    WiFi.macAddress(mac);
+    return str_sprintf("%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1],
+                       mac[2], mac[3], mac[4], mac[5]);
+}
+
+// NetworkReader
+//
+// Allows functions to be registered that are called at regular intervals
+// and/or on request, in the background. As the name of the class implies,
+// this is intended to be used to execute network requests, like for
+// effects that require data from RESTful APIs.
+
+class NetworkReader
+{
+    // We allow the main network task entry point function to access
+    // private members
+    friend void IRAM_ATTR NetworkHandlingLoopEntry(void *);
+
+private:
+    // Writer function and flag combo
+    struct ReaderEntry
+    {
+        std::function<void()> reader;
+        std::atomic_ulong readInterval;
+        std::atomic_ulong lastReadMs;
+        std::atomic_bool flag     = false;
+        std::atomic_bool canceled = false;
+
+        ReaderEntry(std::function<void()> reader,
+                    unsigned long interval) :
+            reader(std::move(reader)),
+            lastReadMs(0),
+            readInterval(interval)
+        {
+        }
+
+        ReaderEntry(std::function<void()> reader, unsigned long interval,
+                    unsigned long lastReadMs, bool flag, bool canceled) :
+            reader(std::move(reader)),
+            readInterval(interval),
+            lastReadMs(lastReadMs),
+            flag(flag),
+            canceled(canceled)
+        {
+        }
+
+        ReaderEntry(ReaderEntry &&entry) noexcept :
+            ReaderEntry(entry.reader, entry.readInterval,
+                        entry.lastReadMs, entry.flag, entry.canceled)
+        {
+        }
     };
 
-    enum WifiCredSource
-    {
-      ImprovCreds = 0,
-      CompileTimeCreds = 1
-    };
+    std::vector<ReaderEntry, psram_allocator<ReaderEntry>> readers;
 
-    void processRemoteDebugCmd();
+public:
+    // Add a reader to the collection. Returns the index of the added
+    // reader, for use with FlagReader().
+    //   Note that if an interval (in ms) is specified, the reader will
+    //   run for the first time after the interval has passed, unless
+    //   "true" is passed to the last parameter.
+    size_t RegisterReader(const std::function<void()> &reader,
+                          unsigned long interval = 0, bool flag = false);
 
-    WiFiConnectResult ConnectToWiFi(const String& ssid, const String& password);
-    WiFiConnectResult ConnectToWiFi(const String* ssid, const String* password);
-    void UpdateNTPTime();
-    void SetupOTA(const String & strHostname);
-    bool ReadWiFiConfig(WifiCredSource source, String& WiFi_ssid, String& WiFi_password);
-    bool WriteWiFiConfig(WifiCredSource source, const String& WiFi_ssid, const String& WiFi_password);
-    bool ClearWiFiConfig(WifiCredSource source);
+    // Flag a reader for invocation and wake up the task that calls them
+    void FlagReader(size_t index);
 
-    // Static Helpers
-    //
-    // Simple utility functions
-
-    #define WL_NO_SHIELD        "WL_NO_SHIELD"
-    #define WL_IDLE_STATUS      "WL_IDLE_STATUS"
-    #define WL_NO_SSID_AVAIL    "WL_NO_SSID_AVAIL"
-    #define WL_SCAN_COMPLETED   "WL_SCAN_COMPLETED"
-    #define WL_CONNECTED        "WL_CONNECTED"
-    #define WL_CONNECT_FAILED   "WL_CONNECT_FAILED"
-    #define WL_CONNECTION_LOST  "WL_CONNECTION_LOST"
-    #define WL_DISCONNECTED     "WL_DISCONNECTED"
-    #define WL_UNKNOWN_STATUS   "WL_UNKNOWN_STATUS"
-
-    inline static const char* WLtoString(wl_status_t status)
-    {
-      switch (status) {
-        case 255: return WL_NO_SHIELD;
-        case 0: return   WL_IDLE_STATUS;
-        case 1: return   WL_NO_SSID_AVAIL;
-        case 2: return   WL_SCAN_COMPLETED;
-        case 3: return   WL_CONNECTED;
-        case 4: return   WL_CONNECT_FAILED;
-        case 5: return   WL_CONNECTION_LOST;
-        case 6: return   WL_DISCONNECTED;
-        default: return  WL_UNKNOWN_STATUS;
-      }
-    }
-
-    // get_mac_address_raw
-    //
-    // Reads the raw MAC
-
-    inline void get_mac_address_raw(uint8_t *mac)
-    {
-        esp_efuse_mac_get_default(mac);
-    }
-
-    // get_mac_address
-    //
-    // Returns a packed (non-pretty, without colons) version of the MAC id
-
-    inline String get_mac_address()
-    {
-      uint8_t mac[6];
-      WiFi.macAddress(mac);
-      return str_sprintf("%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-    }
-
-    // get_mac_address_pretty()
-    //
-    // Returns a packed (non-pretty, without colons) version of the MAC id
-
-    inline String get_mac_address_pretty()
-    {
-      uint8_t mac[6];
-      WiFi.macAddress(mac);
-      return str_sprintf("%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-    }
-
-    // NetworkReader
-    //
-    // Allows functions to be registered that are called at regular intervals and/or on request, in the
-    // background. As the name of the class implies, this is intended to be used to execute network
-    // requests, like for effects that require data from RESTful APIs.
-
-    class NetworkReader
-    {
-      // We allow the main network task entry point function to access private members
-      friend void IRAM_ATTR NetworkHandlingLoopEntry(void *);
-
-    private:
-
-      // Writer function and flag combo
-      struct ReaderEntry
-      {
-          std::function<void()> reader;
-          std::atomic_ulong readInterval;
-          std::atomic_ulong lastReadMs;
-          std::atomic_bool flag = false;
-          std::atomic_bool canceled = false;
-
-          ReaderEntry(std::function<void()> reader, unsigned long interval) :
-              reader(std::move(reader)),
-              lastReadMs(0),
-              readInterval(interval)
-          {}
-
-          ReaderEntry(std::function<void()> reader, unsigned long interval, unsigned long lastReadMs, bool flag, bool canceled) :
-              reader(std::move(reader)),
-              readInterval(interval),
-              lastReadMs(lastReadMs),
-              flag(flag),
-              canceled(canceled)
-          {}
-
-          ReaderEntry(ReaderEntry&& entry)  noexcept : ReaderEntry(entry.reader, entry.readInterval, entry.lastReadMs, entry.flag, entry.canceled)
-          {}
-      };
-
-      std::vector<ReaderEntry, psram_allocator<ReaderEntry>> readers;
-
-    public:
-
-      // Add a reader to the collection. Returns the index of the added reader, for use with FlagReader().
-      //   Note that if an interval (in ms) is specified, the reader will run for the first time after
-      //   the interval has passed, unless "true" is passed to the last parameter.
-      size_t RegisterReader(const std::function<void()>& reader, unsigned long interval = 0, bool flag = false);
-
-      // Flag a reader for invocation and wake up the task that calls them
-      void FlagReader(size_t index);
-
-      // Cancel a reader. After this, it will no longer be invoked.
-      void CancelReader(size_t index);
-  };
+    // Cancel a reader. After this, it will no longer be invoked.
+    void CancelReader(size_t index);
+};
 
 #endif

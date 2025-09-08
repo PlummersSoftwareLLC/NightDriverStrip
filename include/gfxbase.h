@@ -2,7 +2,8 @@
 //
 // File:        gfxbase.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights
+// Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -28,7 +29,8 @@
 //   the Effects class from Aurora (see below) so it's available as well.
 //
 // History:     Oct-9-2018         Davepl      Created from other projects
-//              May-26-2022        Davepl      Refactor and add Effects features
+//              May-26-2022        Davepl      Refactor and add Effects
+//              features
 //
 //---------------------------------------------------------------------------
 
@@ -36,42 +38,45 @@
  * Aurora: https://github.com/pixelmatix/aurora
  * Copyright (c) 2014 Jason Coon
  *
- * Portions of this code are adapted from "Funky Clouds" by Stefan Petrick:
- *   https://gist.github.com/anonymous/876f908333cd95315c35
- * Portions of this code are adapted from "NoiseSmearing" by Stefan Petrick:
- *   https://gist.github.com/StefanPetrick/9ee2f677dbff64e3ba7a
+ * Portions of this code are adapted from "Funky Clouds" by Stefan
+ * Petrick: https://gist.github.com/anonymous/876f908333cd95315c35
+ * Portions of this code are adapted from "NoiseSmearing" by Stefan
+ * Petrick: https://gist.github.com/StefanPetrick/9ee2f677dbff64e3ba7a
  *
  * Copyright (c) 2014 Stefan Petrick
  * http://www.stefan-petrick.de/wordpress_beta
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
- * the Software, and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #pragma once
 
-#include <stdexcept>
-#include "globals.h"            // Defines FASTLED, MATRIX_* macros used by subsequent includes
-#include <algorithm>
 #include "Adafruit_GFX.h"
-#include "pixeltypes.h"         // Depends on FastLED namespace/macros from globals.h
 #include "effects/matrix/Boid.h" // Depends on MATRIX_WIDTH/HEIGHT from globals.h
 #include "effects/matrix/Vector.h"
+#include "globals.h" // Defines FASTLED, MATRIX_* macros used by subsequent includes
+#include "pixeltypes.h" // Depends on FastLED namespace/macros from globals.h
+
+#include <algorithm>
 #include <memory>
+#include <stdexcept>
 
 // Calculates a weight for anti-aliasing in Wu's algorithm.
 constexpr static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
@@ -80,37 +85,39 @@ constexpr static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
 }
 
 #if USE_HUB75 || USE_MATRIX
-    #define USE_NOISE 1
+#define USE_NOISE 1
 #endif
 
 #if USE_NOISE
-    typedef struct
-    {
-        uint32_t noise_x;
-        uint32_t noise_y;
-        uint32_t noise_z;
-        uint32_t noise_scale_x;
-        uint32_t noise_scale_y;
-        uint8_t  noise[MATRIX_WIDTH][MATRIX_HEIGHT];
-        uint8_t  noisesmoothing;
-    } Noise;
+typedef struct
+{
+    uint32_t noise_x;
+    uint32_t noise_y;
+    uint32_t noise_z;
+    uint32_t noise_scale_x;
+    uint32_t noise_scale_y;
+    uint8_t noise[MATRIX_WIDTH][MATRIX_HEIGHT];
+    uint8_t noisesmoothing;
+} Noise;
 
-    // Enum type for the different noise approaches that are available. If anybody
-    // has ideas for more descriptive names for these, don't hesitate to suggest them. :)
-    enum class NoiseApproach
-    {
-        One,
-        Two
-    };
+// Enum type for the different noise approaches that are available. If
+// anybody has ideas for more descriptive names for these, don't hesitate
+// to suggest them. :)
+enum class NoiseApproach
+{
+    One,
+    Two
+};
 #endif
 
 class GFXBase : public Adafruit_GFX
 {
 #if USE_NOISE
 private:
-    // The standard noise approach used for noise function templates, if none is specified
-    // at the point of invocation.
-    static constexpr NoiseApproach _defaultNoiseApproach = NoiseApproach::Two;
+    // The standard noise approach used for noise function templates, if
+    // none is specified at the point of invocation.
+    static constexpr NoiseApproach _defaultNoiseApproach =
+        NoiseApproach::Two;
 #endif
 
 protected:
@@ -119,65 +126,60 @@ protected:
     size_t _ledcount;
 
     // 32 Entries in the 5-bit gamma table
-    static constexpr auto gamma5 = to_array<uint8_t, 32>
-    ({
-        0x00, 0x01, 0x02, 0x03, 0x05, 0x07, 0x09, 0x0b,
-        0x0e, 0x11, 0x14, 0x18, 0x1d, 0x22, 0x28, 0x2e,
-        0x36, 0x3d, 0x46, 0x4f, 0x59, 0x64, 0x6f, 0x7c,
-        0x89, 0x97, 0xa6, 0xb6, 0xc7, 0xd9, 0xeb, 0xff
-    });
+    static constexpr auto gamma5 = to_array<uint8_t, 32>(
+        {0x00, 0x01, 0x02, 0x03, 0x05, 0x07, 0x09, 0x0b, 0x0e, 0x11, 0x14,
+         0x18, 0x1d, 0x22, 0x28, 0x2e, 0x36, 0x3d, 0x46, 0x4f, 0x59, 0x64,
+         0x6f, 0x7c, 0x89, 0x97, 0xa6, 0xb6, 0xc7, 0xd9, 0xeb, 0xff});
 
     // 64 Entries in the 6-bit gamma table
-    static constexpr auto gamma6 = to_array<uint8_t, 64>
-    ({
-        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x08,
-        0x09, 0x0a, 0x0b, 0x0d, 0x0e, 0x10, 0x12, 0x13,
-        0x15, 0x17, 0x19, 0x1b, 0x1d, 0x20, 0x22, 0x25,
-        0x27, 0x2a, 0x2d, 0x30, 0x33, 0x37, 0x3a, 0x3e,
-        0x41, 0x45, 0x49, 0x4d, 0x52, 0x56, 0x5b, 0x5f,
-        0x64, 0x69, 0x6e, 0x74, 0x79, 0x7f, 0x85, 0x8b,
-        0x91, 0x97, 0x9d, 0xa4, 0xab, 0xb2, 0xb9, 0xc0,
-        0xc7, 0xcf, 0xd6, 0xde, 0xe6, 0xee, 0xf7, 0xff
-    });
+    static constexpr auto gamma6 = to_array<uint8_t, 64>(
+        {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x08, 0x09, 0x0a, 0x0b,
+         0x0d, 0x0e, 0x10, 0x12, 0x13, 0x15, 0x17, 0x19, 0x1b, 0x1d, 0x20,
+         0x22, 0x25, 0x27, 0x2a, 0x2d, 0x30, 0x33, 0x37, 0x3a, 0x3e, 0x41,
+         0x45, 0x49, 0x4d, 0x52, 0x56, 0x5b, 0x5f, 0x64, 0x69, 0x6e, 0x74,
+         0x79, 0x7f, 0x85, 0x8b, 0x91, 0x97, 0x9d, 0xa4, 0xab, 0xb2, 0xb9,
+         0xc0, 0xc7, 0xcf, 0xd6, 0xde, 0xe6, 0xee, 0xf7, 0xff});
 
     static constexpr int _paletteCount = 10;
-    int _paletteIndex = -1;
-    uint _lastSecond = 99;
-    bool _palettePaused = false;
+    int _paletteIndex                  = -1;
+    uint _lastSecond                   = 99;
+    bool _palettePaused                = false;
 
     TBlendType _currentBlendType = LINEARBLEND;
     CRGBPalette16 _currentPalette;
     CRGBPalette16 _targetPalette;
     String _currentPaletteName;
 
-    #if USE_NOISE
-        std::unique_ptr<Noise> _ptrNoise;
-    #endif
+#if USE_NOISE
+    std::unique_ptr<Noise> _ptrNoise;
+#endif
 
     static constexpr int _heatColorsPaletteIndex = 6;
-    static constexpr int _randomPaletteIndex = 9;
+    static constexpr int _randomPaletteIndex     = 9;
 
 public:
-    // Many of the Aurora effects need direct access to these from external classes
+    // Many of the Aurora effects need direct access to these from
+    // external classes
 
     CRGB *leds = nullptr;
-    #if MATRIX_HEIGHT > 1
-        std::unique_ptr<Boid[]> _boids;
-    #endif
+#if MATRIX_HEIGHT > 1
+    std::unique_ptr<Boid[]> _boids;
+#endif
 
-    // Definition moved to GFXBase.cpp because it uses the FillGetNoise() function template
+    // Definition moved to GFXBase.cpp because it uses the FillGetNoise()
+    // function template
     GFXBase(int w, int h);
 
     ~GFXBase() override
     {
     }
 
-    #if USE_NOISE
+#if USE_NOISE
     Noise &GetNoise() const
     {
         return *_ptrNoise;
     }
-    #endif
+#endif
 
     const CRGBPalette16 &GetCurrentPalette() const
     {
@@ -189,35 +191,41 @@ public:
         return _ledcount;
     }
 
-    static uint8_t beatcos8(accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highest = 255, uint32_t timebase = 0, uint8_t phase_offset = 0)
+    static uint8_t beatcos8(accum88 beats_per_minute, uint8_t lowest = 0,
+                            uint8_t highest = 255, uint32_t timebase = 0,
+                            uint8_t phase_offset = 0)
     {
-        uint8_t beat = beat8(beats_per_minute, timebase);
-        uint8_t beatCos = cos8(beat + phase_offset);
+        uint8_t beat       = beat8(beats_per_minute, timebase);
+        uint8_t beatCos    = cos8(beat + phase_offset);
         uint8_t rangeWidth = highest - lowest;
         uint8_t scaledBeat = scale8(beatCos, rangeWidth);
-        uint8_t result = lowest + scaledBeat;
+        uint8_t result     = lowest + scaledBeat;
         return result;
     }
 
-    static uint8_t mapsin8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255)
+    static uint8_t mapsin8(uint8_t theta, uint8_t lowest = 0,
+                           uint8_t highest = 255)
     {
-        uint8_t beatSin = sin8(theta);
+        uint8_t beatSin    = sin8(theta);
         uint8_t rangeWidth = highest - lowest;
         uint8_t scaledBeat = scale8(beatSin, rangeWidth);
-        uint8_t result = lowest + scaledBeat;
+        uint8_t result     = lowest + scaledBeat;
         return result;
     }
 
-    static uint8_t mapcos8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255)
+    static uint8_t mapcos8(uint8_t theta, uint8_t lowest = 0,
+                           uint8_t highest = 255)
     {
-        uint8_t beatCos = cos8(theta);
+        uint8_t beatCos    = cos8(theta);
         uint8_t rangeWidth = highest - lowest;
         uint8_t scaledBeat = scale8(beatCos, rangeWidth);
-        uint8_t result = lowest + scaledBeat;
+        uint8_t result     = lowest + scaledBeat;
         return result;
     }
 
-    static CRGB from16Bit(uint16_t color) // Convert 16bit 5:6:5 to 24bit color using lookup table for gamma
+    static CRGB from16Bit(
+        uint16_t color) // Convert 16bit 5:6:5 to 24bit color using lookup
+                        // table for gamma
     {
         uint8_t r = gamma5[color >> 11];
         uint8_t g = gamma6[(color >> 5) & 0x3F];
@@ -226,17 +234,20 @@ public:
         return CRGB(r, g, b);
     }
 
-    static uint16_t to16bit(uint8_t r, uint8_t g, uint8_t b) // Convert RGB -> 16bit 5:6:5
+    static uint16_t to16bit(uint8_t r, uint8_t g,
+                            uint8_t b) // Convert RGB -> 16bit 5:6:5
     {
         return ((r / 8) << 11) | ((g / 4) << 5) | (b / 8);
     }
 
-    static uint16_t to16bit(const CRGB rgb) // Convert CRGB -> 16 bit 5:6:5
+    static uint16_t to16bit(
+        const CRGB rgb) // Convert CRGB -> 16 bit 5:6:5
     {
         return ((rgb.r / 8) << 11) | ((rgb.g / 4) << 5) | (rgb.b / 8);
     }
 
-    static uint16_t to16bit(CRGB::HTMLColorCode code) // Convert HtmlColorCode -> 16 bit 5:6:5
+    static uint16_t to16bit(
+        CRGB::HTMLColorCode code) // Convert HtmlColorCode -> 16 bit 5:6:5
     {
         return to16bit(CRGB(code));
     }
@@ -249,22 +260,22 @@ public:
             fill_solid(leds, _width * _height, color);
     }
 
-    __attribute__((always_inline))
-    virtual bool isValidPixel(uint x, uint y) const noexcept
+    __attribute__((always_inline)) virtual bool isValidPixel(
+        uint x, uint y) const noexcept
     {
         // Check that the pixel location is within the matrix's bounds
         return x < _width && y < _height;
     }
 
-    __attribute__((always_inline))
-    virtual bool isValidPixel(uint n) const noexcept
+    __attribute__((always_inline)) virtual bool isValidPixel(
+        uint n) const noexcept
     {
         // Check that the pixel location is within the matrix's bounds
         return n < _ledcount;
     }
 
-    // Matrices that are built from individually addressable strips like WS2812b generally
-    // follow a boustrophedon layout as follows:
+    // Matrices that are built from individually addressable strips like
+    // WS2812b generally follow a boustrophedon layout as follows:
     //
     //     0 >  1 >  2 >  3 >  4
     //                         |
@@ -276,11 +287,11 @@ public:
     //     |
     //    (etc.)
     //
-    // If your matrix uses a different approach, you can override this function and implement it
-    // in the XY() function of your class
+    // If your matrix uses a different approach, you can override this
+    // function and implement it in the XY() function of your class
 
-    __attribute__((always_inline))
-    inline virtual uint16_t xy(uint16_t x, uint16_t y) const noexcept
+    __attribute__((always_inline)) inline virtual uint16_t xy(
+        uint16_t x, uint16_t y) const noexcept
     {
         if (x & 0x01)
         {
@@ -295,25 +306,38 @@ public:
         }
     }
 
-    // This is an optimization that allows us to use direct math for the XY lookup when using the matrix, where
-    // it's a very simple layout.  Others may need to override this function.  Using a #define here allows
-    // us to avoid an extra virtual function call in the inner loop of the effects.
+    // This is an optimization that allows us to use direct math for the
+    // XY lookup when using the matrix, where it's a very simple layout.
+    // Others may need to override this function.  Using a #define here
+    // allows us to avoid an extra virtual function call in the inner loop
+    // of the effects.
 
-    #if USE_HUB75
-        #define XY(x, y) ((y) * MATRIX_WIDTH + (x))
-    #elif HELMET
-        #define XY(x, y) xy(x, MATRIX_HEIGHT - 1 - y)           // Invert the Y axis for the helmet display
-    #else
-        #define XY(x, y) (((x) & 0x01) ? (((x) * MATRIX_HEIGHT) + ((MATRIX_HEIGHT - 1) - (y))) : (((x) * MATRIX_HEIGHT) + (y)))
-    #endif
+#if USE_HUB75
+#define XY(x, y) ((y) * MATRIX_WIDTH + (x))
+#elif HELMET
+#define XY(x, y)                                                         \
+    xy(x, MATRIX_HEIGHT - 1 -                                            \
+              y) // Invert the Y axis for the helmet display
+#else
+#define XY(x, y)                                                         \
+    (((x) & 0x01)                                                        \
+         ? (((x) * MATRIX_HEIGHT) + ((MATRIX_HEIGHT - 1) - (y)))         \
+         : (((x) * MATRIX_HEIGHT) + (y)))
+#endif
 
-    // Retrieves the color of a pixel at the specified X and Y coordinates.
-    __attribute__((always_inline)) virtual CRGB getPixel(int16_t x, int16_t y) const
+    // Retrieves the color of a pixel at the specified X and Y
+    // coordinates.
+    __attribute__((always_inline)) virtual CRGB getPixel(int16_t x,
+                                                         int16_t y) const
     {
         if (isValidPixel(x, y))
             return leds[XY(x, y)];
         else
-            throw std::runtime_error(str_sprintf("Invalid index in getPixel: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS).c_str());
+            throw std::runtime_error(
+                str_sprintf(
+                    "Invalid index in getPixel: x=%d, y=%d, NUM_LEDS=%d",
+                    x, y, NUM_LEDS)
+                    .c_str());
     }
 
     // Retrieves the color of a pixel at the specified linear index.
@@ -322,74 +346,93 @@ public:
         if (isValidPixel(i))
             return leds[i];
         else
-            throw std::runtime_error(str_sprintf("Invalid index in getPixel: i=%d, NUM_LEDS=%d", i, NUM_LEDS).c_str());
+            throw std::runtime_error(
+                str_sprintf(
+                    "Invalid index in getPixel: i=%d, NUM_LEDS=%d", i,
+                    NUM_LEDS)
+                    .c_str());
     }
 
-    __attribute__((always_inline)) virtual void addColor(int16_t i, CRGB c)
+    __attribute__((always_inline)) virtual void addColor(int16_t i,
+                                                         CRGB c)
     {
         if (isValidPixel(i))
             leds[i] += c;
     }
 
-    __attribute__((always_inline)) virtual void drawPixel(int16_t x, int16_t y, CRGB color)
+    __attribute__((always_inline)) virtual void drawPixel(int16_t x,
+                                                          int16_t y,
+                                                          CRGB color)
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = color;
     }
 
-    __attribute__((always_inline)) void drawPixel(int16_t x, int16_t y, uint16_t color) override
+    __attribute__((always_inline)) void drawPixel(int16_t x, int16_t y,
+                                                  uint16_t color) override
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = from16Bit(color);
     }
 
     // Blends a color with the existing pixel color.
-    void drawPixelXY_Blend(uint8_t x, uint8_t y, CRGB color, uint8_t blend_amount)
+    void drawPixelXY_Blend(uint8_t x, uint8_t y, CRGB color,
+                           uint8_t blend_amount)
     {
-        if (isValidPixel(x, y)) {
-            nblend(leds[XY(x,y)], color, blend_amount);
+        if (isValidPixel(x, y))
+        {
+            nblend(leds[XY(x, y)], color, blend_amount);
         }
     }
 
-    // Draws an anti-aliased pixel using Wu's algorithm, blending with the background.
+    // Draws an anti-aliased pixel using Wu's algorithm, blending with the
+    // background.
     void drawPixelXYF_Wu(float x, float y, CRGB color)
     {
         // Extracts the fractional parts and derives their inverses.
-        uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
+        uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255,
+                ix = 255 - xx, iy = 255 - yy;
         // Calculates the intensities for each affected pixel.
-        uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy), WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
-        // Applies calculated intensities to color components and saturating-adds them to pixel components.
+        uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
+                         WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
+        // Applies calculated intensities to color components and
+        // saturating-adds them to pixel components.
         for (uint8_t i = 0; i < 4; i++)
         {
             int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
-            if (isValidPixel(xn, yn)) {
-                CRGB clr = leds[XY(xn, yn)];
-                clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-                clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-                clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
+            if (isValidPixel(xn, yn))
+            {
+                CRGB clr         = leds[XY(xn, yn)];
+                clr.r            = qadd8(clr.r, (color.r * wu[i]) >> 8);
+                clr.g            = qadd8(clr.g, (color.g * wu[i]) >> 8);
+                clr.b            = qadd8(clr.b, (color.b * wu[i]) >> 8);
                 leds[XY(xn, yn)] = clr;
             }
         }
     }
 
-    // Draws a gradient line using floating point coordinates (DDA algorithm).
-    void drawLineF(float x1, float y1, float x2, float y2, const CRGB &col1, const CRGB &col2 = CRGB::Black)
+    // Draws a gradient line using floating point coordinates (DDA
+    // algorithm).
+    void drawLineF(float x1, float y1, float x2, float y2,
+                   const CRGB &col1, const CRGB &col2 = CRGB::Black)
     {
-        CRGB c2 = (col2 == CRGB::Black) ? col1 : col2;
-        float dx = x2 - x1;
-        float dy = y2 - y1;
+        CRGB c2     = (col2 == CRGB::Black) ? col1 : col2;
+        float dx    = x2 - x1;
+        float dy    = y2 - y1;
         float steps = fmax(fabs(dx), fabs(dy));
-        if (steps == 0) {
+        if (steps == 0)
+        {
             drawPixelXYF_Wu(x1, y1, col1);
             return;
         }
         float xinc = dx / steps;
         float yinc = dy / steps;
-        float x = x1;
-        float y = y1;
-        for (int i = 0; i <= steps; i++) {
+        float x    = x1;
+        float y    = y1;
+        for (int i = 0; i <= steps; i++)
+        {
             uint8_t blend_amount = (uint8_t)((i / steps) * 255);
-            CRGB color = blend(col1, c2, blend_amount);
+            CRGB color           = blend(col1, c2, blend_amount);
             drawPixelXYF_Wu(x, y, color);
             x += xinc;
             y += yinc;
@@ -414,45 +457,54 @@ public:
 
     virtual void fillLeds(std::unique_ptr<CRGB[]> &pLEDs)
     {
-        // A mesmerizer panel has the same layout as in memory, so we can memcpy.  Others may require transposition,
-        // so we do it the "slow" way for other matrices in the default implementation
+        // A mesmerizer panel has the same layout as in memory, so we can
+        // memcpy.  Others may require transposition, so we do it the
+        // "slow" way for other matrices in the default implementation
 
         for (int x = 0; x < _width; x++)
             for (int y = 0; y < _height; y++)
                 setPixel(x, y, pLEDs[y * _width + x]);
     }
 
-    __attribute__((always_inline)) virtual void setPixel(int16_t x, int16_t y, uint16_t color)
+    __attribute__((always_inline)) virtual void setPixel(int16_t x,
+                                                         int16_t y,
+                                                         uint16_t color)
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = from16Bit(color);
         else
-            debugE("Invalid setPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
+            debugE("Invalid setPixel request: x=%d, y=%d, NUM_LEDS=%d", x,
+                   y, NUM_LEDS);
     }
 
-    __attribute__((always_inline)) virtual void setPixel(int16_t x, int16_t y, CRGB color)
+    __attribute__((always_inline)) virtual void setPixel(int16_t x,
+                                                         int16_t y,
+                                                         CRGB color)
     {
         if (isValidPixel(x, y))
             leds[XY(x, y)] = color;
         else
-            debugE("Invalid setPixel request: x=%d, y=%d, NUM_LEDS=%d", x, y, NUM_LEDS);
+            debugE("Invalid setPixel request: x=%d, y=%d, NUM_LEDS=%d", x,
+                   y, NUM_LEDS);
     }
 
-    __attribute__((always_inline)) virtual void setPixel(int16_t x, int r, int g, int b)
+    __attribute__((always_inline)) virtual void setPixel(int16_t x, int r,
+                                                         int g, int b)
     {
         if (isValidPixel(x))
             setPixel(x, CRGB(r, g, b));
         else
-            debugE("Invalid setPixel request: x=%d, NUM_LEDS=%d", x, NUM_LEDS);
-
+            debugE("Invalid setPixel request: x=%d, NUM_LEDS=%d", x,
+                   NUM_LEDS);
     }
 
     // Fast per-pixel fade toward black by 'fadeValue' (0..255).
     // Applies scale = 255 - fadeValue to the pixel's RGB in-place.
-    __attribute__((always_inline)) void fadePixelToBlackBy(int16_t x, int16_t y, uint8_t fadeValue) noexcept
+    __attribute__((always_inline)) void fadePixelToBlackBy(
+        int16_t x, int16_t y, uint8_t fadeValue) noexcept
     {
-        CRGB &px = leds[XY(x, y)];
-        const uint8_t scale = 255 - fadeValue;
+        CRGB &px                   = leds[XY(x, y)];
+        const uint8_t scale        = 255 - fadeValue;
         const uint16_t scale_fixed = (uint16_t)scale + 1;
         px.r = (uint8_t)((((uint16_t)px.r) * scale_fixed) >> 8);
         px.g = (uint8_t)((((uint16_t)px.g) * scale_fixed) >> 8);
@@ -460,67 +512,81 @@ public:
     }
 
     // Linear-index overload
-    __attribute__((always_inline)) void fadePixelToBlackBy(int16_t i, uint8_t fadeValue) noexcept
+    __attribute__((always_inline)) void fadePixelToBlackBy(
+        int16_t i, uint8_t fadeValue) noexcept
     {
-        CRGB &px = leds[i];
-        const uint8_t scale = 255 - fadeValue;
+        CRGB &px                   = leds[i];
+        const uint8_t scale        = 255 - fadeValue;
         const uint16_t scale_fixed = (uint16_t)scale + 1;
         px.r = (uint8_t)((((uint16_t)px.r) * scale_fixed) >> 8);
         px.g = (uint8_t)((((uint16_t)px.g) * scale_fixed) >> 8);
         px.b = (uint8_t)((((uint16_t)px.b) * scale_fixed) >> 8);
     }
 
-    __attribute__((always_inline)) virtual void setPixel(int x, CRGB color) noexcept
+    __attribute__((always_inline)) virtual void setPixel(
+        int x, CRGB color) noexcept
     {
         if (isValidPixel(x))
             leds[x] = color;
         else
-            debugE("Invalid setPixel request: x=%d, NUM_LEDS=%d", x, NUM_LEDS);
+            debugE("Invalid setPixel request: x=%d, NUM_LEDS=%d", x,
+                   NUM_LEDS);
     }
 
     // DrawSafeCircle
     //
-    // Draws a circle, but does not draw pixels that are out of bounds.  This is useful
-    // for drawing circles that are larger than the matrix, or for drawing circles that
-    // are partially off the matrix.  This is important for the pulsar effect.   Note that
-    // the Adafruit versions do no bounds checking
+    // Draws a circle, but does not draw pixels that are out of bounds.
+    // This is useful for drawing circles that are larger than the matrix,
+    // or for drawing circles that are partially off the matrix.  This is
+    // important for the pulsar effect.   Note that the Adafruit versions
+    // do no bounds checking
 
-    virtual void DrawSafeCircle(int centerX, int centerY, int radius, CRGB color) noexcept
+    virtual void DrawSafeCircle(int centerX, int centerY, int radius,
+                                CRGB color) noexcept
     {
-        int x = radius;
-        int y = 0;
+        int x   = radius;
+        int y   = 0;
         int err = 0;
 
         while (x >= y)
         {
             // Only set the points on the circle's circumference
-            if (isValidPixel(centerX+x, centerY+y)) setPixel(centerX+x, centerY+y, color);
-            if (isValidPixel(centerX+y, centerY+x)) setPixel(centerX+y, centerY+x, color);
-            if (isValidPixel(centerX-y, centerY+x)) setPixel(centerX-y, centerY+x, color);
-            if (isValidPixel(centerX-x, centerY+y)) setPixel(centerX-x, centerY+y, color);
-            if (isValidPixel(centerX-x, centerY-y)) setPixel(centerX-x, centerY-y, color);
-            if (isValidPixel(centerX-y, centerY-x)) setPixel(centerX-y, centerY-x, color);
-            if (isValidPixel(centerX+y, centerY-x)) setPixel(centerX+y, centerY-x, color);
-            if (isValidPixel(centerX+x, centerY-y)) setPixel(centerX+x, centerY-y, color);
+            if (isValidPixel(centerX + x, centerY + y))
+                setPixel(centerX + x, centerY + y, color);
+            if (isValidPixel(centerX + y, centerY + x))
+                setPixel(centerX + y, centerY + x, color);
+            if (isValidPixel(centerX - y, centerY + x))
+                setPixel(centerX - y, centerY + x, color);
+            if (isValidPixel(centerX - x, centerY + y))
+                setPixel(centerX - x, centerY + y, color);
+            if (isValidPixel(centerX - x, centerY - y))
+                setPixel(centerX - x, centerY - y, color);
+            if (isValidPixel(centerX - y, centerY - x))
+                setPixel(centerX - y, centerY - x, color);
+            if (isValidPixel(centerX + y, centerY - x))
+                setPixel(centerX + y, centerY - x, color);
+            if (isValidPixel(centerX + x, centerY - y))
+                setPixel(centerX + x, centerY - y, color);
 
             if (err <= 0)
             {
                 y += 1;
-                err += 2*y + 1;
+                err += 2 * y + 1;
             }
             if (err > 0)
             {
                 x -= 1;
-                err -= 2*x + 1;
+                err -= 2 * x + 1;
             }
         }
     }
 
     // setPixelsF - Floating point variant
     //
-    // This variant of setPixels includes a few important features:  it can merge its color
-    // into the existing pixels or replace it entirely.  It can also draw fractionally, so
-    // you can draw from 1.5 to 4.25, including when merging.
+    // This variant of setPixels includes a few important features:  it
+    // can merge its color into the existing pixels or replace it
+    // entirely.  It can also draw fractionally, so you can draw from 1.5
+    // to 4.25, including when merging.
     //
     //   Example:
     //
@@ -533,10 +599,15 @@ public:
     //   We are now at pixel 5, frac2 = .75
     //   We fill pixel with .75 worth of color
 
-    void setPixelsF(float fPos, float count, CRGB c, bool bMerge = false) const
+    void setPixelsF(float fPos, float count, CRGB c,
+                    bool bMerge = false) const
     {
-        float frac1 = fPos - floor(fPos);                 // eg:   3.25 becomes 0.25
-        float frac2 = fPos + count - floor(fPos + count); // eg:   3.25 + 1.5 yields 4.75 which becomes 0.75
+        float frac1 = fPos - floor(fPos); // eg:   3.25 becomes 0.25
+        float frac2 =
+            fPos + count -
+            floor(
+                fPos +
+                count); // eg:   3.25 + 1.5 yields 4.75 which becomes 0.75
 
         /* Example:
 
@@ -551,16 +622,24 @@ public:
           We fill pixel with .75 worth of color
         */
 
-        uint8_t fade1 = (uint8_t) ((std::max(frac1, 1.0f - count)) * 255); // Fraction is how far past pixel boundary we are (up to our total size) so larger fraction is more dimming
-        uint8_t fade2 = (uint8_t) ((1.0f - frac2) * 255);                   // Fraction is how far we are poking into this pixel, so larger fraction is less dimming
+        uint8_t fade1 =
+            (uint8_t)((std::max(frac1, 1.0f - count)) *
+                      255); // Fraction is how far past pixel boundary we
+                            // are (up to our total size) so larger
+                            // fraction is more dimming
+        uint8_t fade2 =
+            (uint8_t)((1.0f - frac2) *
+                      255); // Fraction is how far we are poking into this
+                            // pixel, so larger fraction is less dimming
         CRGB c1 = c;
         CRGB c2 = c;
-        c1 = c1.fadeToBlackBy(fade1);
-        c2 = c2.fadeToBlackBy(fade2);
+        c1      = c1.fadeToBlackBy(fade1);
+        c2      = c2.fadeToBlackBy(fade2);
 
-        // These assignments use the + operator of CRGB to merge the colors when requested, and it's pretty
-        // naive, just saturating each color element at 255, so the operator could be improved or replaced
-        // if needed...
+        // These assignments use the + operator of CRGB to merge the
+        // colors when requested, and it's pretty naive, just saturating
+        // each color element at 255, so the operator could be improved or
+        // replaced if needed...
 
         float p = fPos;
         if (p >= 0 && isValidPixel(p))
@@ -585,7 +664,8 @@ public:
                 leds[(int)p] = bMerge ? leds[(int)p] + c2 : c2;
     }
 
-    void blurRows(CRGB *leds, uint16_t width, uint16_t height, uint16_t first, fract8 blur_amount)
+    void blurRows(CRGB *leds, uint16_t width, uint16_t height,
+                  uint16_t first, fract8 blur_amount)
     {
         // blur rows same as columns, for irregular matrix
         uint8_t keep = 255 - blur_amount;
@@ -595,7 +675,7 @@ public:
             CRGB carryover = CRGB::Black;
             for (uint16_t i = first; i < width; i++)
             {
-                CRGB cur = leds[XY(i, row)];
+                CRGB cur  = leds[XY(i, row)];
                 CRGB part = cur;
                 part.nscale8(seep);
                 cur.nscale8(keep);
@@ -603,13 +683,15 @@ public:
                 if (i)
                     leds[XY(i - 1, row)] += part;
                 leds[XY(i, row)] = cur;
-                carryover = part;
+                carryover        = part;
             }
         }
     }
 
-    // blurColumns: perform a blur1d on each column of a rectangular matrix
-    void blurColumns(CRGB *leds, uint16_t width, uint16_t height, uint16_t first, fract8 blur_amount)
+    // blurColumns: perform a blur1d on each column of a rectangular
+    // matrix
+    void blurColumns(CRGB *leds, uint16_t width, uint16_t height,
+                     uint16_t first, fract8 blur_amount)
     {
         // blur columns
         uint8_t keep = 255 - blur_amount;
@@ -619,7 +701,7 @@ public:
             CRGB carryover = CRGB::Black;
             for (uint16_t i = first; i < height; ++i)
             {
-                CRGB cur = leds[XY(col, i)];
+                CRGB cur  = leds[XY(col, i)];
                 CRGB part = cur;
                 part.nscale8(seep);
                 cur.nscale8(keep);
@@ -627,12 +709,13 @@ public:
                 if (i)
                     leds[XY(col, i - 1)] += part;
                 leds[XY(col, i)] = cur;
-                carryover = part;
+                carryover        = part;
             }
         }
     }
 
-    void blur2d(CRGB *leds, uint16_t width, uint16_t firstColumn, uint16_t height, uint16_t firstRow, fract8 blur_amount)
+    void blur2d(CRGB *leds, uint16_t width, uint16_t firstColumn,
+                uint16_t height, uint16_t firstRow, fract8 blur_amount)
     {
         blurRows(leds, width, height, firstColumn, blur_amount);
         blurColumns(leds, width, height, firstRow, blur_amount);
@@ -640,7 +723,8 @@ public:
 
     void BlurFrame(int amount)
     {
-        // BUGBUG (davepl) Needs to call isVuVisible on the effects manager to find out if it starts at row 1 or 0
+        // BUGBUG (davepl) Needs to call isVuVisible on the effects
+        // manager to find out if it starts at row 1 or 0
         blur2d(leds, _width, 0, _height, 1, amount);
     }
 
@@ -655,7 +739,8 @@ public:
             return;
 
         const int minutesPerPaletteCycle = 2;
-        uint8_t secondHand = ((millis() / minutesPerPaletteCycle) / 1000) % 60;
+        uint8_t secondHand =
+            ((millis() / minutesPerPaletteCycle) / 1000) % 60;
 
         if (_lastSecond != secondHand)
         {
@@ -690,8 +775,9 @@ public:
     // Cross-fade current palette slowly toward the target palette
     //
     // Each time that nblendPaletteTowardPalette is called, small changes
-    // are made to currentPalette to bring it closer to matching targetPalette.
-    // You can control how many changes are made in each call:
+    // are made to currentPalette to bring it closer to matching
+    // targetPalette. You can control how many changes are made in each
+    // call:
     //   - the default of 24 is a good balance
     //   - meaningful values are 1-48.  1=very very slow, 48=quickest
     //   - "0" means do not change the currentPalette at all; freeze
@@ -711,7 +797,8 @@ public:
 
         ChangePalettePeriodically();
         uint8_t maxChanges = 24;
-        nblendPaletteTowardPalette(_currentPalette, _targetPalette, maxChanges);
+        nblendPaletteTowardPalette(_currentPalette, _targetPalette,
+                                   maxChanges);
     }
 
     void RandomPalette()
@@ -726,10 +813,10 @@ public:
                 drawPixel(x, y, color);
     }
 
-    void setPalette(const CRGBPalette16& palette)
+    void setPalette(const CRGBPalette16 &palette)
     {
-        _currentPalette = palette;
-        _targetPalette = palette;
+        _currentPalette     = palette;
+        _targetPalette      = palette;
         _currentPaletteName = "Custom";
     }
 
@@ -747,7 +834,7 @@ public:
         switch (_paletteIndex)
         {
         case 0:
-            _targetPalette = RainbowColors_p;
+            _targetPalette      = RainbowColors_p;
             _currentPaletteName = "Rainbow";
             break;
             // case 1:
@@ -755,19 +842,19 @@ public:
             //   currentPaletteName = "RainbowStripe";
             //   break;
         case 1:
-            _targetPalette = OceanColors_p;
+            _targetPalette      = OceanColors_p;
             _currentPaletteName = "Ocean";
             break;
         case 2:
-            _targetPalette = CloudColors_p;
+            _targetPalette      = CloudColors_p;
             _currentPaletteName = "Cloud";
             break;
         case 3:
-            _targetPalette = ForestColors_p;
+            _targetPalette      = ForestColors_p;
             _currentPaletteName = "Forest";
             break;
         case 4:
-            _targetPalette = PartyColors_p;
+            _targetPalette      = PartyColors_p;
             _currentPaletteName = "Party";
             break;
         case 5:
@@ -775,11 +862,11 @@ public:
             _currentPaletteName = "Grey";
             break;
         case _heatColorsPaletteIndex:
-            _targetPalette = HeatColors_p;
+            _targetPalette      = HeatColors_p;
             _currentPaletteName = "Heat";
             break;
         case 7:
-            _targetPalette = LavaColors_p;
+            _targetPalette      = LavaColors_p;
             _currentPaletteName = "Lava";
             break;
         case 8:
@@ -788,32 +875,35 @@ public:
             break;
         case _randomPaletteIndex:
             loadPalette(random(0, _paletteCount - 1));
-            _paletteIndex = _randomPaletteIndex;
+            _paletteIndex       = _randomPaletteIndex;
             _currentPaletteName = "Random";
             break;
         }
         _currentPalette = _targetPalette;
     }
 
-    void setPalette(const String& paletteName)
+    void setPalette(const String &paletteName)
     {
-        static const std::unordered_map<const char*, int> paletteMap = {
-            {"Rainbow", 0},
-            {"Ocean", 1},
-            {"Cloud", 2},
-            {"Forest", 3},
-            {"Party", 4},
+        static const std::unordered_map<const char *, int> paletteMap = {
+            {  "Rainbow", 0},
+            {    "Ocean", 1},
+            {    "Cloud", 2},
+            {   "Forest", 3},
+            {    "Party", 4},
             {"Grayscale", 5},
-            {"Heat", 6},
-            {"Lava", 7},
-            {"Ice", 8}
+            {     "Heat", 6},
+            {     "Lava", 7},
+            {      "Ice", 8}
         };
 
         auto it = paletteMap.find(paletteName.c_str());
-        if (it != paletteMap.end()) {
-            loadPalette(it->second);  // Found a matching palette, load it
-        } else if (paletteName == "Random") {
-            RandomPalette();  // Special case for "Random"
+        if (it != paletteMap.end())
+        {
+            loadPalette(it->second); // Found a matching palette, load it
+        }
+        else if (paletteName == "Random")
+        {
+            RandomPalette(); // Special case for "Random"
         }
     }
 
@@ -825,19 +915,9 @@ public:
         Serial.println(",");
         Serial.println(F("  \"results\": ["));
 
-        static constexpr auto paletteNames = to_array(
-        {
-            "Rainbow",
-            "Ocean",
-            "Cloud",
-            "Forest",
-            "Party",
-            "Grayscale",
-            "Heat",
-            "Lava",
-            "Ice",
-            "Random"
-        });
+        static constexpr auto paletteNames =
+            to_array({"Rainbow", "Ocean", "Cloud", "Forest", "Party",
+                      "Grayscale", "Heat", "Lava", "Ice", "Random"});
 
         for (int i = 0; i < _paletteCount; i++)
         {
@@ -860,7 +940,8 @@ public:
 
     void setupIcePalette()
     {
-        _targetPalette = CRGBPalette16(CRGB::Black, CRGB::Blue, CRGB::Aqua, CRGB::White);
+        _targetPalette = CRGBPalette16(CRGB::Black, CRGB::Blue,
+                                       CRGB::Aqua, CRGB::White);
     }
 
     // Oscillators and Emitters
@@ -884,7 +965,11 @@ public:
             osci[5] = osci[5] + 1; // .5
         for (int i = 0; i < 4; i++)
         {
-            p[i] = map8(sin8(osci[i]), 0, std::min(255U, _width - 1)); // why? to keep the result in the range of 0-_width (matrix size)
+            p[i] = map8(
+                sin8(osci[i]), 0,
+                std::min(255U,
+                         _width - 1)); // why? to keep the result in the
+                                       // range of 0-_width (matrix size)
         }
     }
 
@@ -894,10 +979,12 @@ public:
         std::fill_n(p, 6, 0);
     }
 
-    // All the Caleidoscope functions work directly within the screenbuffer (leds array).
-    // Draw whatever you like in the area x(0-15) and y (0-15) and then copy it around.
+    // All the Caleidoscope functions work directly within the
+    // screenbuffer (leds array). Draw whatever you like in the area
+    // x(0-15) and y (0-15) and then copy it around.
 
-    // rotates the first 16x16 quadrant 3 times onto a 32x32 (+90 degrees rotation for each one)
+    // rotates the first 16x16 quadrant 3 times onto a 32x32 (+90 degrees
+    // rotation for each one)
 
     void Caleidoscope1() const
     {
@@ -906,7 +993,8 @@ public:
             for (int y = 0; y < ((_height + 1) / 2); y++)
             {
                 leds[XY(_width - 1 - x, y)] = leds[XY(x, y)];
-                leds[XY(_width - 1 - x, _height - 1 - y)] = leds[XY(x, y)];
+                leds[XY(_width - 1 - x, _height - 1 - y)] =
+                    leds[XY(x, y)];
                 leds[XY(x, _height - 1 - y)] = leds[XY(x, y)];
             }
         }
@@ -919,9 +1007,10 @@ public:
         {
             for (int y = 0; y < ((_height + 1) / 2); y++)
             {
-                leds[XY(_width - 1 - x, y)] = leds[XY(y, x)];
+                leds[XY(_width - 1 - x, y)]  = leds[XY(y, x)];
                 leds[XY(x, _height - 1 - y)] = leds[XY(y, x)];
-                leds[XY(_width - 1 - x, _height - 1 - y)] = leds[XY(x, y)];
+                leds[XY(_width - 1 - x, _height - 1 - y)] =
+                    leds[XY(x, y)];
             }
         }
     }
@@ -938,14 +1027,16 @@ public:
         }
     }
 
-    // copy one diagonal triangle into the other one within a 16x16 (90 degrees rotated compared to Caleidoscope3)
+    // copy one diagonal triangle into the other one within a 16x16 (90
+    // degrees rotated compared to Caleidoscope3)
     void Caleidoscope4() const
     {
         for (int x = 0; x < ((_width + 1) / 2); x++)
         {
             for (int y = 0; y <= ((_height + 1) / 2) - x; y++)
             {
-                leds[XY(((_height + 1) / 2) - y, ((_width + 1) / 2) - x)] = leds[XY(x, y)];
+                leds[XY(((_height + 1) / 2) - y,
+                        ((_width + 1) / 2) - x)] = leds[XY(x, y)];
             }
         }
     }
@@ -1013,22 +1104,26 @@ public:
         { // from the outside to the inside
             for (int i = x - d; i <= x + d; i++)
             {
-                leds[XY(i, y - d)] += leds[XY(i + 1, y - d)]; // lowest row to the right
+                leds[XY(i, y - d)] +=
+                    leds[XY(i + 1, y - d)]; // lowest row to the right
                 leds[XY(i, y - d)].nscale8(dimm);
             }
             for (int i = y - d; i <= y + d; i++)
             {
-                leds[XY(x + d, i)] += leds[XY(x + d, i + 1)]; // right colum up
+                leds[XY(x + d, i)] +=
+                    leds[XY(x + d, i + 1)]; // right colum up
                 leds[XY(x + d, i)].nscale8(dimm);
             }
             for (int i = x + d; i >= x - d; i--)
             {
-                leds[XY(i, y + d)] += leds[XY(i - 1, y + d)]; // upper row to the left
+                leds[XY(i, y + d)] +=
+                    leds[XY(i - 1, y + d)]; // upper row to the left
                 leds[XY(i, y + d)].nscale8(dimm);
             }
             for (int i = y + d; i >= y - d; i--)
             {
-                leds[XY(x - d, i)] += leds[XY(x - d, i - 1)]; // left colum down
+                leds[XY(x - d, i)] +=
+                    leds[XY(x - d, i - 1)]; // left colum down
                 leds[XY(x - d, i)].nscale8(dimm);
             }
         }
@@ -1054,14 +1149,22 @@ public:
             while (a >= b)
             {
                 // move them out one pixel on the radius
-                leds[XY(a + centerX, b + centerY)]   = leds[XY(nextA + centerX, nextB + centerY)];
-                leds[XY(b + centerX, a + centerY)]   = leds[XY(nextB + centerX, nextA + centerY)];
-                leds[XY(-a + centerX, b + centerY)]  = leds[XY(-nextA + centerX, nextB + centerY)];
-                leds[XY(-b + centerX, a + centerY)]  = leds[XY(-nextB + centerX, nextA + centerY)];
-                leds[XY(-a + centerX, -b + centerY)] = leds[XY(-nextA + centerX, -nextB + centerY)];
-                leds[XY(-b + centerX, -a + centerY)] = leds[XY(-nextB + centerX, -nextA + centerY)];
-                leds[XY(a + centerX, -b + centerY)]  = leds[XY(nextA + centerX, -nextB + centerY)];
-                leds[XY(b + centerX, -a + centerY)]  = leds[XY(nextB + centerX, -nextA + centerY)];
+                leds[XY(a + centerX, b + centerY)] =
+                    leds[XY(nextA + centerX, nextB + centerY)];
+                leds[XY(b + centerX, a + centerY)] =
+                    leds[XY(nextB + centerX, nextA + centerY)];
+                leds[XY(-a + centerX, b + centerY)] =
+                    leds[XY(-nextA + centerX, nextB + centerY)];
+                leds[XY(-b + centerX, a + centerY)] =
+                    leds[XY(-nextB + centerX, nextA + centerY)];
+                leds[XY(-a + centerX, -b + centerY)] =
+                    leds[XY(-nextA + centerX, -nextB + centerY)];
+                leds[XY(-b + centerX, -a + centerY)] =
+                    leds[XY(-nextB + centerX, -nextA + centerY)];
+                leds[XY(a + centerX, -b + centerY)] =
+                    leds[XY(nextA + centerX, -nextB + centerY)];
+                leds[XY(b + centerX, -a + centerY)] =
+                    leds[XY(nextB + centerX, -nextA + centerY)];
 
                 // dim them
                 leds[XY(a + centerX, b + centerY)].nscale8(dimm);
@@ -1097,7 +1200,8 @@ public:
     }
 
     // give it a linear tail to the right
-    void StreamRight(uint8_t scale, int fromX = 0, int toX = MATRIX_WIDTH, int fromY = 0, int toY = MATRIX_HEIGHT)
+    void StreamRight(uint8_t scale, int fromX = 0, int toX = MATRIX_WIDTH,
+                     int fromY = 0, int toY = MATRIX_HEIGHT)
     {
         for (int x = fromX + 1; x < toX; x++)
         {
@@ -1112,7 +1216,8 @@ public:
     }
 
     // give it a linear tail to the left
-    void StreamLeft(uint8_t scale, int fromX = MATRIX_WIDTH, int toX = 0, int fromY = 0, int toY = MATRIX_HEIGHT)
+    void StreamLeft(uint8_t scale, int fromX = MATRIX_WIDTH, int toX = 0,
+                    int fromY = 0, int toY = MATRIX_HEIGHT)
     {
         for (int x = toX; x < fromX; x++)
         {
@@ -1194,7 +1299,8 @@ public:
             leds[XY(_width - 1, y)].nscale8(scale);
     }
 
-    // just move everything one line down - BUGBUG (DAVEPL) Redundant with MoveX?
+    // just move everything one line down - BUGBUG (DAVEPL) Redundant with
+    // MoveX?
 
     void MoveDown()
     {
@@ -1207,7 +1313,8 @@ public:
         }
     }
 
-    // just move everything one line down - BUGBUG (davepl) Redundant with MoveY?
+    // just move everything one line down - BUGBUG (davepl) Redundant with
+    // MoveY?
 
     void VerticalMoveFrom(int start, int end)
     {
@@ -1223,7 +1330,8 @@ public:
     // copy the rectangle defined with 2 points x0, y0, x1, y1
     // to the rectangle beginning at x2, x3
 
-    void Copy(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
+    void Copy(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint8_t x2,
+              uint8_t y2)
     {
         for (int y = y0; y < y1 + 1; y++)
         {
@@ -1234,29 +1342,32 @@ public:
         }
     }
 
-    void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color, bool bMerge = false)
+    void BresenhamLine(int x0, int y0, int x1, int y1, CRGB color,
+                       bool bMerge = false)
     {
-        int dx = abs(x1 - x0); // Delta in x direction
-        int dy = abs(y1 - y0); // Delta in y direction
+        int dx = abs(x1 - x0);       // Delta in x direction
+        int dy = abs(y1 - y0);       // Delta in y direction
         int sx = (x0 < x1) ? 1 : -1; // Step in x direction
         int sy = (y0 < y1) ? 1 : -1; // Step in y direction
 
-        int err = dx - dy; // Initial error term
+        int err = dx - dy;           // Initial error term
 
         while (true)
         {
             int index = XY(x0, y0);
             if (isValidPixel(index))
             {
-                // Optimization opportunity: unswtitch bMerge into another function
+                // Optimization opportunity: unswtitch bMerge into another
+                // function
                 leds[index] = bMerge ? leds[index] + color : color;
             }
 
             if (x0 == x1 && y0 == y1)
                 break; // Exit the loop once we've reached the destination
 
-            int e2 = 2 * err; // Error term multiplied by 2 for efficiency. Saves second test for Y.
-            if (e2 > -dy) // Move in the x direction if needed
+            int e2 = 2 * err; // Error term multiplied by 2 for
+                              // efficiency. Saves second test for Y.
+            if (e2 > -dy)     // Move in the x direction if needed
             {
                 err -= dy;
                 x0 += sx;
@@ -1270,9 +1381,11 @@ public:
         }
     }
 
-    void BresenhamLine(int x0, int y0, int x1, int y1, uint8_t colorIndex, bool bMerge = false)
+    void BresenhamLine(int x0, int y0, int x1, int y1, uint8_t colorIndex,
+                       bool bMerge = false)
     {
-        BresenhamLine(x0, y0, x1, y1, ColorFromCurrentPalette(colorIndex), bMerge);
+        BresenhamLine(x0, y0, x1, y1, ColorFromCurrentPalette(colorIndex),
+                      bMerge);
     }
 
     virtual void drawLine(int x0, int y0, int x1, int y1, CRGB color)
@@ -1286,9 +1399,12 @@ public:
             fadePixelToBlackBy(i, 255 - value);
     }
 
-    CRGB ColorFromCurrentPalette(uint8_t index = 0, uint8_t brightness = 255, TBlendType blendType = LINEARBLEND) const
+    CRGB ColorFromCurrentPalette(uint8_t index        = 0,
+                                 uint8_t brightness   = 255,
+                                 TBlendType blendType = LINEARBLEND) const
     {
-        return ColorFromPalette(_currentPalette, index, brightness, _currentBlendType);
+        return ColorFromPalette(_currentPalette, index, brightness,
+                                _currentBlendType);
     }
 
     static CRGB HsvToRgb(uint8_t h, uint8_t s, uint8_t v)
@@ -1299,54 +1415,61 @@ public:
         return rgb;
     }
 
-    #if USE_NOISE
-        void NoiseVariablesSetup()
-        {
-            _ptrNoise->noisesmoothing = 200;
+#if USE_NOISE
+    void NoiseVariablesSetup()
+    {
+        _ptrNoise->noisesmoothing = 200;
 
-            _ptrNoise->noise_x = random16();
-            _ptrNoise->noise_y = random16();
-            _ptrNoise->noise_z = random16();
-            _ptrNoise->noise_scale_x = 6000;
-            _ptrNoise->noise_scale_y = 6000;
-        }
+        _ptrNoise->noise_x       = random16();
+        _ptrNoise->noise_y       = random16();
+        _ptrNoise->noise_z       = random16();
+        _ptrNoise->noise_scale_x = 6000;
+        _ptrNoise->noise_scale_y = 6000;
+    }
 
-        void SetNoise(uint32_t nx, uint32_t ny, uint32_t nz, uint32_t sx, uint32_t sy)
-        {
-            _ptrNoise->noise_x += nx;
-            _ptrNoise->noise_y += ny;
-            _ptrNoise->noise_z += nx;
-            _ptrNoise->noise_scale_x = sx;
-            _ptrNoise->noise_scale_y = sy;
-        }
+    void SetNoise(uint32_t nx, uint32_t ny, uint32_t nz, uint32_t sx,
+                  uint32_t sy)
+    {
+        _ptrNoise->noise_x += nx;
+        _ptrNoise->noise_y += ny;
+        _ptrNoise->noise_z += nx;
+        _ptrNoise->noise_scale_x = sx;
+        _ptrNoise->noise_scale_y = sy;
+    }
 
-        static constexpr uint8_t CENTER_X_MINOR = (MATRIX_WIDTH / 2) - ((MATRIX_WIDTH - 1) & 0x01);
-        static constexpr uint8_t CENTER_Y_MINOR = (MATRIX_HEIGHT / 2) - ((MATRIX_HEIGHT - 1) & 0x01);
-        static constexpr uint8_t CENTER_X_MAJOR = MATRIX_WIDTH / 2 + (MATRIX_WIDTH % 2);
-        static constexpr uint8_t CENTER_Y_MAJOR = MATRIX_HEIGHT / 2 +(MATRIX_HEIGHT % 2);
+    static constexpr uint8_t CENTER_X_MINOR =
+        (MATRIX_WIDTH / 2) - ((MATRIX_WIDTH - 1) & 0x01);
+    static constexpr uint8_t CENTER_Y_MINOR =
+        (MATRIX_HEIGHT / 2) - ((MATRIX_HEIGHT - 1) & 0x01);
+    static constexpr uint8_t CENTER_X_MAJOR =
+        MATRIX_WIDTH / 2 + (MATRIX_WIDTH % 2);
+    static constexpr uint8_t CENTER_Y_MAJOR =
+        MATRIX_HEIGHT / 2 + (MATRIX_HEIGHT % 2);
 
-        // The next three two-liners define function templates for the different noise approaches
-        // that are implemented in the project. The desired noise approach for a particular use case
-        // can be chosen by passing one of the NoiseApproach enum's values as a template parameter.
-        // For instance, using FillGetNoise() with the "One" noise approach can be achieved by calling
-        // gfxbase.FillGetNoise<NoiseApproach::One>()
-        //
-        // The actual implementations for the noise functions (in the shape of specializations of the
-        // function templates) are included in gfxbase.cpp, because of the way C++ demands things to be
-        // structured.
-        //
-        // The default approach for all functions is determined by the value of _defaultNoiseApproach,
-        // which is defined earlier in this class.
-        template<NoiseApproach = _defaultNoiseApproach>
-        void FillGetNoise();
+    // The next three two-liners define function templates for the
+    // different noise approaches that are implemented in the project. The
+    // desired noise approach for a particular use case can be chosen by
+    // passing one of the NoiseApproach enum's values as a template
+    // parameter. For instance, using FillGetNoise() with the "One" noise
+    // approach can be achieved by calling
+    // gfxbase.FillGetNoise<NoiseApproach::One>()
+    //
+    // The actual implementations for the noise functions (in the shape of
+    // specializations of the function templates) are included in
+    // gfxbase.cpp, because of the way C++ demands things to be
+    // structured.
+    //
+    // The default approach for all functions is determined by the value
+    // of _defaultNoiseApproach, which is defined earlier in this class.
+    template <NoiseApproach = _defaultNoiseApproach> void FillGetNoise();
 
-        template<NoiseApproach = _defaultNoiseApproach>
-        void MoveFractionalNoiseX(uint8_t amt, uint8_t shift = 0);
+    template <NoiseApproach = _defaultNoiseApproach>
+    void MoveFractionalNoiseX(uint8_t amt, uint8_t shift = 0);
 
-        template<NoiseApproach = _defaultNoiseApproach>
-        void MoveFractionalNoiseY(uint8_t amt, uint8_t shift = 0);
+    template <NoiseApproach = _defaultNoiseApproach>
+    void MoveFractionalNoiseY(uint8_t amt, uint8_t shift = 0);
 
-    #endif
+#endif
 
     virtual void MoveInwardX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
     {
@@ -1360,13 +1483,14 @@ public:
         }
     }
 
-    virtual void MoveOutwardsX(int startY = 0, int endY = MATRIX_HEIGHT - 1)
+    virtual void MoveOutwardsX(int startY = 0,
+                               int endY   = MATRIX_HEIGHT - 1)
     {
         for (int y = startY; y <= endY; y++)
         {
             for (int x = 0; x < _width / 2 - 1; x++)
             {
-                leds[XY(x, y)] = leds[XY(x + 1, y)];
+                leds[XY(x, y)]              = leds[XY(x + 1, y)];
                 leds[XY(_width - x - 1, y)] = leds[XY(_width - x - 2, y)];
             }
         }
@@ -1397,14 +1521,15 @@ public:
             tmp = leds[XY(x, 0)];
             for (int m = 0; m < delta; m++) // moves
             {
-                // Do this delta time for each row... computationally expensive potentially.
+                // Do this delta time for each row... computationally
+                // expensive potentially.
                 for (int y = 0; y < _height - 1; y++)
                     leds[XY(x, y)] = leds[XY(x, y + 1)];
 
                 leds[XY(x, _height - 1)] = tmp;
             }
         } // end column loop
-    }     /// MoveY
+    } /// MoveY
 
     virtual void PrepareFrame()
     {
