@@ -20,6 +20,73 @@ BreakInheritanceList: AfterColon
 
 # Misc maintains project feel, avoids surprising reflows
 AlignAfterOpenBracket: Align
-IndentCaseLabels: true
+# RJL "two please" rule - IndentCaseLabels: true
+IndentCaseLabels: false
 NamespaceIndentation: None
-AllowShortFunctionsOnASingleLine: Empty
+# RJL AllowShortFunctionsOnASingleLine: Empty
+
+
+# RJL's tweaks to that
+ColumnLimit: 74
+ReflowComments: Always
+
+# Group and sort imports
+IncludeBlocks : Regroup
+SortIncludes: true
+
+# The current hodgepodge makes me crazy. if you're going to commit to
+# curlies on a line, make sure they're consistently on their own line.
+# (Yes, I'm overriding a "surprising reflow" above)
+AllowShortBlocksOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+
+# This is probably about the bottom of "I hate that" things to argue
+# about. Below this, it's mostly just fixing editor mishaps.
+
+
+# These drive GitHub crazy. let's just fix them.
+InsertNewlineAtEOF: true
+RemoveEmptyLinesInUnwrappedLines: true
+
+# Visual clutter
+RemoveParentheses: MultipleParentheses
+RemoveSemicolon: true
+
+# Existing code often tries to do this.
+# I found at least two occurrences in our tree of
+#  code trying to manually do each of these.
+#  (Some may already default on)
+
+AlignArrayOfStructures: Right
+AlignConsecutiveAssignments: true
+AlignConsecutiveMacros: true
+AlignConsecutiveShortCaseStatements:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+  AlignCaseColons: false
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 2
+
+# Below this is things I'd like
+# I like this, but Dave just undid a bunch of these, so I think he likes
+#if FOO
+#if BAR
+#endif
+#endif
+#over
+#if FOO
+    #if BAR
+    #endif
+#endif
+# IndentPPDirectives: BeforeHash
+#
+# I like this for consistency:
+# InsertBraces : true
+#
+# KeepEmptyLines:
+#  AtEndOfFile: false
+#  AtStartOfBlock: false
+#  AtStartOfFile: false
