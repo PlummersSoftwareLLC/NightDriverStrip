@@ -1,0 +1,8 @@
+#!env bash
+
+EXCLUSIONS="(src|include)/amoled/|src/uzlib"
+
+find src include \
+  -name \*.cpp -o -name \*.h | \
+  egrep -v $EXCLUSIONS  |
+  xargs clang-format -i --style=file:.clang-format-rjl
