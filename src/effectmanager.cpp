@@ -74,10 +74,10 @@ void InitEffectsManager()
     LoadEffectFactories();
 
     l_EffectsManagerJSONWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter([]()
-            {
-                if(!SaveToJSONFile(EFFECTS_CONFIG_FILE, g_ptrSystem->EffectManager()) && EFFECT_PERSISTENCE_CRITICAL)
-                    throw std::runtime_error("Effects serialization failed");
-            });
+        {
+            if(!SaveToJSONFile(EFFECTS_CONFIG_FILE, g_ptrSystem->EffectManager()) && EFFECT_PERSISTENCE_CRITICAL)
+                throw std::runtime_error("Effects serialization failed");
+        });
     l_CurrentEffectWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter(WriteCurrentEffectIndexFile);
 
     auto jsonDoc    = CreateJsonDocument();

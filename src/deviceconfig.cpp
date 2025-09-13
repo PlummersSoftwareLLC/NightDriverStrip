@@ -42,11 +42,10 @@ void DeviceConfig::SaveToJSON() const
 
 DeviceConfig::DeviceConfig()
 {
-    writerIndex = g_ptrSystem->JSONWriter().RegisterWriter(
-            [this]
-            {
-                assert(SaveToJSONFile(DEVICE_CONFIG_FILE, *this));
-            }   );
+    writerIndex = g_ptrSystem->JSONWriter().RegisterWriter([this]
+        {
+            assert(SaveToJSONFile(DEVICE_CONFIG_FILE, *this));
+        });
 
     auto jsonDoc = CreateJsonDocument();
 
