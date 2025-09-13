@@ -70,6 +70,7 @@ uint16_t WiFiDraw()
             if(NTPTimeClient::HasClockBeenSet() == false)
                 pBuffer = bufferManager.GetOldestBuffer();
             else
+            {
                 // Using a 'while' rather than an 'if' causes it to pull frames until it's caught up
                 // written as 'while' it will pull frames until it gets one that is current.
                 // Chew through ALL frames older than now, ignoring all but the last of them
@@ -78,7 +79,7 @@ uint16_t WiFiDraw()
                 {
                     pBuffer = bufferManager.GetOldestBuffer();
                 }
-
+            }
 
             if(pBuffer)
             {
@@ -126,7 +127,7 @@ uint16_t LocalDraw()
                         static auto spectrum = std::static_pointer_cast<SpectrumAnalyzerEffect>(GetSpectrumAnalyzer(0));
                         if(effectManager.IsVUVisible())
                             spectrum->DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0, g_Analyzer.IsRemoteAudioActive() ? &vuPaletteBlue : &
-                                    vuPaletteGreen);
+                                vuPaletteGreen);
 
                     #endif
                 #endif
