@@ -9,8 +9,10 @@ class PatternSMGamma : public EffectWithId<PatternSMGamma>
 {
   public:
 
-    PatternSMGamma() : EffectWithId<PatternSMGamma>("Gamma") {}
-    PatternSMGamma(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMGamma>(jsonObject) {}
+    PatternSMGamma() : EffectWithId<PatternSMGamma>("Gamma") {
+    }
+    PatternSMGamma(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMGamma>(jsonObject) {
+    }
 
   private:
 

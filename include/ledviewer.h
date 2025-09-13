@@ -41,10 +41,10 @@
 
 typedef struct
 {
-    uint32_t  header;
-    uint32_t  width;
-    uint32_t  height;
-    CRGB      colors[NUM_LEDS];  // Array of LED_COUNT CRGB values
+    uint32_t header;
+    uint32_t width;
+    uint32_t height;
+    CRGB colors[NUM_LEDS];       // Array of LED_COUNT CRGB values
 } ColorDataPacket;
 
 // LEDViewer
@@ -55,15 +55,15 @@ typedef struct
 
 class LEDViewer
 {
-private:
+  private:
 
-    int                         _port;
-    int                         _server_fd;
-    struct sockaddr_in          _address;
+    int _port;
+    int _server_fd;
+    struct sockaddr_in _address;
 
     const int BUFFER_SIZE = 1024;
 
-public:
+  public:
 
     explicit LEDViewer(int port) :
         _port(port),
@@ -132,9 +132,9 @@ public:
 
     int CheckForConnection()
     {
-        int new_socket = -1;
+        int            new_socket = -1;
         // Accept a new incoming connection
-        int addrlen = sizeof(_address);
+        int            addrlen = sizeof(_address);
         struct timeval to;
         to.tv_sec = 1;
         to.tv_usec = 0;
@@ -164,7 +164,7 @@ public:
 
         const byte * pb = (byte *)pData;
         debugV("Sending Packet:  %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X,...",
-                                pb[0], pb[1], pb[2], pb[3], pb[4], pb[5], pb[6], pb[7], pb[8], pb[9], pb[10], pb[11]);
+                pb[0], pb[1], pb[2], pb[3], pb[4], pb[5], pb[6], pb[7], pb[8], pb[9], pb[10], pb[11]);
 
         if (cbSize != write(socket, pData, cbSize))
         {

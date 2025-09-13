@@ -1,4 +1,4 @@
-//+--------------------------------------------------------------------------
+// +--------------------------------------------------------------------------
 //
 // File:        deviceconfig.cpp
 //
@@ -6,34 +6,34 @@
 //
 // This file is part of the NightDriver software project.
 //
-//    NightDriver is free software: you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation, either version 3 of the License, or
-//    (at your option) any later version.
+// NightDriver is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
-//    NightDriver is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
+// NightDriver is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-//    You should have received a copy of the GNU General Public License
-//    along with Nightdriver.  It is normally found in copying.txt
-//    If not, see <https://www.gnu.org/licenses/>.
+// You should have received a copy of the GNU General Public License
+// along with Nightdriver.  It is normally found in copying.txt
+// If not, see <https://www.gnu.org/licenses/>.
 //
 // Description:
 //
-//    Implementation of DeviceConfig class methods
+// Implementation of DeviceConfig class methods
 //
 // History:     Apr-18-2023         Rbergen      Created
 //
-//---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 #include <HTTPClient.h>
 #include <UrlEncode.h>
 #include "globals.h"
 #include "systemcontainer.h"
 
-extern const char timezones_start[] asm("_binary_config_timezones_json_start");
+extern const char timezones_start[] asm ("_binary_config_timezones_json_start");
 
 void DeviceConfig::SaveToJSON() const
 {
@@ -43,12 +43,14 @@ void DeviceConfig::SaveToJSON() const
 DeviceConfig::DeviceConfig()
 {
     writerIndex = g_ptrSystem->JSONWriter().RegisterWriter(
-        [this] { assert(SaveToJSONFile(DEVICE_CONFIG_FILE, *this)); }
-    );
+            [this]
+            {
+                assert(SaveToJSONFile(DEVICE_CONFIG_FILE, *this));
+            }   );
 
     auto jsonDoc = CreateJsonDocument();
 
-    if (LoadJSONFile(DEVICE_CONFIG_FILE, jsonDoc))
+    if(LoadJSONFile(DEVICE_CONFIG_FILE, jsonDoc))
     {
         debugI("Loading DeviceConfig from JSON");
 
@@ -65,31 +67,31 @@ DeviceConfig::DeviceConfig()
 }
 
 // The timezone JSON file used by this logic is generated using tools/gen-tz-json.py
-bool DeviceConfig::SetTimeZone(const String& newTimeZone, bool skipWrite)
+bool DeviceConfig::SetTimeZone(const String&newTimeZone, bool skipWrite)
 {
     String quotedTZ = "\n\"" + newTimeZone + '"';
 
-    const char *start = strstr(timezones_start, quotedTZ.c_str());
+    const char *start   = strstr(timezones_start, quotedTZ.c_str());
 
     // If we can't find the new timezone as a timezone name, assume it's a literal value
-    if (start == nullptr)
+    if(start == nullptr)
         setenv("TZ", newTimeZone.c_str(), 1);
     // We received a timezone name, so we extract and use its timezone value
     else
     {
         start += quotedTZ.length();
-        start = strchr(start, '"');
-        if (start == nullptr)      // Can't actually happen unless timezone file is malformed
+        start  = strchr(start, '"');
+        if(start == nullptr)       // Can't actually happen unless timezone file is malformed
             return false;
 
         start++;
         const char *end = strchr(start, '"');
-        if (end == nullptr)        // Can't actually happen unless timezone file is malformed
+        if(end == nullptr)         // Can't actually happen unless timezone file is malformed
             return false;
 
         size_t length = end - start;
 
-        std::unique_ptr<char[]> value = make_unique_psram<char[]>(length + 1);
+        std::unique_ptr<char[]> value  = make_unique_psram<char[]>(length + 1);
         strncpy(value.get(), start, length);
         value[length] = 0;
 
@@ -99,13 +101,13 @@ bool DeviceConfig::SetTimeZone(const String& newTimeZone, bool skipWrite)
     tzset();
 
     timeZone = newTimeZone;
-    if (!skipWrite)
+    if(!skipWrite)
         SaveToJSON();
 
     return true;
 }
 
-DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const String &newOpenWeatherAPIKey)
+DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const String&newOpenWeatherAPIKey)
 {
     HTTPClient http;
 
@@ -113,11 +115,12 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const Str
 
     http.begin(url);
 
-    switch (http.GET())
+    switch(http.GET())
     {
         case HTTP_CODE_OK:
         {
             http.end();
+
             return { true, "" };
         }
 
@@ -127,10 +130,11 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const Str
             deserializeJson(jsonDoc, http.getString());
 
             String message = "";
-            if (jsonDoc["message"].is<String>())
+            if(jsonDoc["message"].is<String>())
                 message = jsonDoc["message"].as<String>();
 
             http.end();
+
             return { false, message };
         }
 
@@ -138,15 +142,16 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const Str
         default:
         {
             http.end();
+
             return { false, "Unable to validate" };
         }
     }
 }
 
-void DeviceConfig::SetColorSettings(const CRGB& newGlobalColor, const CRGB& newSecondColor)
+void DeviceConfig::SetColorSettings(const CRGB&newGlobalColor, const CRGB&newSecondColor)
 {
-    globalColor = newGlobalColor;
-    secondColor = newSecondColor;
+    globalColor       = newGlobalColor;
+    secondColor       = newSecondColor;
     applyGlobalColors = true;
 
     SaveToJSON();
@@ -157,14 +162,16 @@ void DeviceConfig::SetColorSettings(const CRGB& newGlobalColor, const CRGB& newS
 // global color is set or (re)applied, but also allows the secondary global palette color to be specified directly.
 // The code in this function figures out how to prioritize and combine the values of (optional) settings; the actual
 // logic for applying the correct color(s) and palette is contained in a number of EffectManager member functions.
-void DeviceConfig::ApplyColorSettings(std::optional<CRGB> newGlobalColor, std::optional<CRGB> newSecondColor, bool clearGlobalColor, bool forceApplyGlobalColor)
+void DeviceConfig::ApplyColorSettings(std::optional<CRGB> newGlobalColor, std::optional<CRGB> newSecondColor, bool clearGlobalColor,
+                                      bool forceApplyGlobalColor)
 {
     // If we're asked to clear the global color, we'll remember any colors we were passed, but won't do anything with them
-    if (clearGlobalColor)
+    if(clearGlobalColor)
     {
-        if (newGlobalColor.has_value())
+        if(newGlobalColor.has_value())
             globalColor = newGlobalColor.value();
-        if (newSecondColor.has_value())
+
+        if(newSecondColor.has_value())
             secondColor = newSecondColor.value();
 
         g_ptrSystem->EffectManager().ClearRemoteColor();
@@ -180,12 +187,12 @@ void DeviceConfig::ApplyColorSettings(std::optional<CRGB> newGlobalColor, std::o
     forceApplyGlobalColor = forceApplyGlobalColor || newGlobalColor.has_value();
 
     // If we were given a second color, set it and the global one if necessary. Then have EffectManager do its thing...
-    if (newSecondColor.has_value())
+    if(newSecondColor.has_value())
     {
-        if (forceApplyGlobalColor)
+        if(forceApplyGlobalColor)
         {
             applyGlobalColors = true;
-            globalColor = finalGlobalColor;
+            globalColor       = finalGlobalColor;
         }
 
         secondColor = newSecondColor.value();
@@ -194,9 +201,7 @@ void DeviceConfig::ApplyColorSettings(std::optional<CRGB> newGlobalColor, std::o
 
         SaveToJSON();
     }
-    else if (forceApplyGlobalColor)
-    {
+    else if(forceApplyGlobalColor)
         // ...otherwise, apply the "set global color" logic if we were asked to do so
         g_ptrSystem->EffectManager().ApplyGlobalColor(finalGlobalColor);
-    }
 }

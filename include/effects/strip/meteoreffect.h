@@ -41,21 +41,22 @@ class MeteorChannel
 
     std::vector<float> hue;
     std::vector<float> iPos;
-    std::vector<bool>  bLeft;
+    std::vector<bool> bLeft;
     std::vector<float> speed;
     std::vector<float> lastBeat;
 
   public:
 
-    size_t        meteorCount;
-    uint8_t       meteorSize;
-    uint8_t       meteorTrailDecay;
-    float        meteorSpeedMin;
-    float        meteorSpeedMax;
-    bool          meteorRandomDecay = true;
-    const float  minTimeBetweenBeats = 0.6;
+    size_t meteorCount;
+    uint8_t meteorSize;
+    uint8_t meteorTrailDecay;
+    float meteorSpeedMin;
+    float meteorSpeedMax;
+    bool meteorRandomDecay = true;
+    const float minTimeBetweenBeats = 0.6;
 
-    MeteorChannel() {}
+    MeteorChannel() {
+    }
 
     virtual void Init(std::shared_ptr<GFXBase> pGFX, size_t meteors = 4, int size = 4, int decay = 3, float minSpeed = 0.5, float maxSpeed = 0.5)
     {
@@ -103,7 +104,7 @@ class MeteorChannel
 
     virtual void Draw(LEDStripEffect* owner)
     {
-        auto pGFX = owner->g(0);
+        auto        pGFX = owner->g(0);
         static CHSV hsv;
         hsv.val = 255;
         hsv.sat = 255;
@@ -167,39 +168,39 @@ class MeteorEffect : public EffectWithId<MeteorEffect>
 
     std::vector<MeteorChannel> _Meteors;
 
-    int                        _cMeteors;
-    uint8_t                    _meteorSize;
-    uint8_t                    _meteorTrailDecay;
-    float                      _meteorSpeedMin;
-    float                      _meteorSpeedMax;
+    int _cMeteors;
+    uint8_t _meteorSize;
+    uint8_t _meteorTrailDecay;
+    float _meteorSpeedMin;
+    float _meteorSpeedMax;
 
   public:
 
     MeteorEffect(int cMeteors = 4, uint size = 4, uint decay = 3, float minSpeed = 0.2, float maxSpeed = 0.2)
         : EffectWithId<MeteorEffect>("Color Meteors"),
-          _Meteors(),
-          _cMeteors(cMeteors),
-          _meteorSize(size),
-          _meteorTrailDecay(decay),
-          _meteorSpeedMin(minSpeed),
-          _meteorSpeedMax(maxSpeed)
+        _Meteors(),
+        _cMeteors(cMeteors),
+        _meteorSize(size),
+        _meteorTrailDecay(decay),
+        _meteorSpeedMin(minSpeed),
+        _meteorSpeedMax(maxSpeed)
     {
     }
 
     MeteorEffect(const JsonObjectConst& jsonObject)
         : EffectWithId<MeteorEffect>(jsonObject),
-          _Meteors(),
-          _cMeteors(jsonObject["mto"]),
-          _meteorSize(jsonObject[PTY_SIZE]),
-          _meteorTrailDecay(jsonObject["dcy"]),
-          _meteorSpeedMin(jsonObject[PTY_MINSPEED]),
-          _meteorSpeedMax(jsonObject[PTY_MAXSPEED])
+        _Meteors(),
+        _cMeteors(jsonObject["mto"]),
+        _meteorSize(jsonObject[PTY_SIZE]),
+        _meteorTrailDecay(jsonObject["dcy"]),
+        _meteorSpeedMin(jsonObject[PTY_MINSPEED]),
+        _meteorSpeedMax(jsonObject[PTY_MAXSPEED])
     {
     }
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        auto jsonDoc = CreateJsonDocument();
+        auto       jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -213,7 +214,7 @@ class MeteorEffect : public EffectWithId<MeteorEffect>
         return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
 
-    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
+    bool Init(std::vector<std::shared_ptr<GFXBase> >& gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;

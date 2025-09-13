@@ -46,18 +46,18 @@ class SnakeEffect : public EffectWithId<SnakeEffect>
 
   protected:
 
-    int     LEDCount;             // Number of LEDs total
-    int     SnakeSpeed;           // Max duration between iterations.
+    int LEDCount;                 // Number of LEDs total
+    int SnakeSpeed;               // Max duration between iterations.
 
-    int     snakeSize;            // Length of snake.
-    int     snakeHead;            // Pointer to head of snake.
-    int     lastEaten;            // Increase the snake-speed as since eaten grows.
-    int     direction;            // forward|reverse
-    int     apple;                // Spawn location of Apple
+    int snakeSize;                // Length of snake.
+    int snakeHead;                // Pointer to head of snake.
+    int lastEaten;                // Increase the snake-speed as since eaten grows.
+    int direction;                // forward|reverse
+    int apple;                    // Spawn location of Apple
 
-    int     winMode;              // End of Game Indicator
+    int winMode;                  // End of Game Indicator
 
-    int     lastLEDIndex;         // One-time init for cleaner code.
+    int lastLEDIndex;             // One-time init for cleaner code.
 
     static const int dSnakeSize = 3;    // Default start snake size.
     static const int dSnakeSpeed = 25;  // Default snake speed.
@@ -69,23 +69,23 @@ class SnakeEffect : public EffectWithId<SnakeEffect>
 
     SnakeEffect(const char * strName, int ledCount = NUM_LEDS, int snakeSpeed = dSnakeSpeed)
         : EffectWithId<SnakeEffect>(strName),
-          LEDCount(ledCount),
-          SnakeSpeed(snakeSpeed)
+        LEDCount(ledCount),
+        SnakeSpeed(snakeSpeed)
     {
         construct();
     }
 
     SnakeEffect(const JsonObjectConst& jsonObject)
         : EffectWithId<SnakeEffect>(jsonObject),
-          LEDCount(jsonObject[PTY_LEDCOUNT]),
-          SnakeSpeed(jsonObject[PTY_SPEED])
+        LEDCount(jsonObject[PTY_LEDCOUNT]),
+        SnakeSpeed(jsonObject[PTY_SPEED])
     {
         construct();
     }
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        auto jsonDoc = CreateJsonDocument();
+        auto       jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -176,16 +176,16 @@ class SnakeEffect : public EffectWithId<SnakeEffect>
                     setPixelOnAllChannels(i, CRGB(0x9CB071));
                 }
                 else if (direction == dForward && (
-                    ((snakeHead-snakeSize) < 0 && (i < snakeHead || i <= 0 - (snakeHead-snakeSize))) || // Wrap-around
-                    ((snakeHead-snakeSize) >= 0 && i <= snakeHead && i >= (snakeHead-snakeSize))
-                ))
+                             ((snakeHead-snakeSize) < 0 && (i < snakeHead || i <= 0 - (snakeHead-snakeSize))) || // Wrap-around
+                             ((snakeHead-snakeSize) >= 0 && i <= snakeHead && i >= (snakeHead-snakeSize))
+                             ))
                 {
                     setPixelOnAllChannels(i, CRGB::Green);
                 }
                 else if (direction == dBackward && ( // Cleaner to keep seperate
-                    ((snakeHead+snakeSize) >= lastLEDIndex && (i > snakeHead || i > lastLEDIndex + (lastLEDIndex - (snakeHead+snakeSize)))) || // Wrap-around
-                    ((snakeHead+snakeSize) < lastLEDIndex && i >= snakeHead && i <= (snakeHead+snakeSize))
-                ))
+                             ((snakeHead+snakeSize) >= lastLEDIndex && (i > snakeHead || i > lastLEDIndex + (lastLEDIndex - (snakeHead+snakeSize)))) || // Wrap-around
+                             ((snakeHead+snakeSize) < lastLEDIndex && i >= snakeHead && i <= (snakeHead+snakeSize))
+                             ))
                 {
                     setPixelOnAllChannels(i, CRGB::Green);
                 }

@@ -34,7 +34,7 @@
 #include <deque>
 
 #if USE_MATRIX
-#include "TJpg_Decoder.h"
+    #include "TJpg_Decoder.h"
 #endif
 #include "effects.h"
 #include "systemcontainer.h"
@@ -47,30 +47,30 @@ class SimpleRainbowTestEffect : public EffectWithId<SimpleRainbowTestEffect>
 {
   private:
 
-    uint8_t     _EveryNth;
-    uint8_t     _SpeedDivisor;
+    uint8_t _EveryNth;
+    uint8_t _SpeedDivisor;
 
   public:
 
     SimpleRainbowTestEffect(uint8_t speedDivisor = 8, uint8_t everyNthPixel = 12)
         : EffectWithId<SimpleRainbowTestEffect>("Simple Rainbow"),
-          _EveryNth(everyNthPixel),
-          _SpeedDivisor(speedDivisor)
+        _EveryNth(everyNthPixel),
+        _SpeedDivisor(speedDivisor)
     {
         debugV("SimpleRainbowTestEffect constructor");
     }
 
     SimpleRainbowTestEffect(const JsonObjectConst& jsonObject)
         : EffectWithId<SimpleRainbowTestEffect>(jsonObject),
-          _EveryNth(jsonObject[PTY_EVERYNTH]),
-          _SpeedDivisor(jsonObject[PTY_SPEEDDIVISOR])
+        _EveryNth(jsonObject[PTY_EVERYNTH]),
+        _SpeedDivisor(jsonObject[PTY_SPEEDDIVISOR])
     {
         debugV("SimpleRainbowTestEffect JSON constructor");
     }
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        auto jsonDoc = CreateJsonDocument();
+        auto       jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -97,12 +97,12 @@ class RainbowTwinkleEffect : public EffectWithId<RainbowTwinkleEffect>
   private:
 
     float _speedDivisor;
-    int   _deltaHue;
+    int _deltaHue;
 
   public:
 
     RainbowTwinkleEffect(float speedDivisor = 12.0f, int deltaHue = 14)
-      : EffectWithId<RainbowTwinkleEffect>("Rainbow Twinkle"),
+        : EffectWithId<RainbowTwinkleEffect>("Rainbow Twinkle"),
         _speedDivisor(speedDivisor),
         _deltaHue(deltaHue)
     {
@@ -110,7 +110,7 @@ class RainbowTwinkleEffect : public EffectWithId<RainbowTwinkleEffect>
     }
 
     RainbowTwinkleEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId<RainbowTwinkleEffect>(jsonObject),
+        : EffectWithId<RainbowTwinkleEffect>(jsonObject),
         _speedDivisor(jsonObject[PTY_SPEEDDIVISOR]),
         _deltaHue(jsonObject[PTY_DELTAHUE])
     {
@@ -119,7 +119,7 @@ class RainbowTwinkleEffect : public EffectWithId<RainbowTwinkleEffect>
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        auto jsonDoc = CreateJsonDocument();
+        auto       jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -132,10 +132,10 @@ class RainbowTwinkleEffect : public EffectWithId<RainbowTwinkleEffect>
 
     void Draw() override
     {
-        static float hue = 0.0f;
+        static float         hue = 0.0f;
         static unsigned long lastms = millis();
 
-        unsigned long msElapsed = millis() - lastms;
+        unsigned long        msElapsed = millis() - lastms;
         lastms = millis();
 
         hue += (float) msElapsed / _speedDivisor;
@@ -158,13 +158,13 @@ class RainbowFillEffect : public EffectWithId<RainbowFillEffect>
   protected:
 
     float _speedDivisor;
-    int   _deltaHue;
-    bool  _mirrored;
+    int _deltaHue;
+    bool _mirrored;
 
   public:
 
     RainbowFillEffect(float speedDivisor = 12.0f, int deltaHue = 14, bool mirrored = false)
-  : EffectWithId<RainbowFillEffect>("RainbowFill Rainbow"),
+        : EffectWithId<RainbowFillEffect>("RainbowFill Rainbow"),
         _speedDivisor(speedDivisor),
         _deltaHue(deltaHue),
         _mirrored(mirrored)
@@ -173,7 +173,7 @@ class RainbowFillEffect : public EffectWithId<RainbowFillEffect>
     }
 
     RainbowFillEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId<RainbowFillEffect>(jsonObject),
+        : EffectWithId<RainbowFillEffect>(jsonObject),
         _speedDivisor(jsonObject[PTY_SPEEDDIVISOR]),
         _deltaHue(jsonObject[PTY_DELTAHUE]),
         _mirrored(jsonObject[PTY_MIRRORED])
@@ -183,7 +183,7 @@ class RainbowFillEffect : public EffectWithId<RainbowFillEffect>
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        auto jsonDoc = CreateJsonDocument();
+        auto       jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -197,10 +197,10 @@ class RainbowFillEffect : public EffectWithId<RainbowFillEffect>
 
     void Draw() override
     {
-        static float hue = 0.0f;
+        static float         hue = 0.0f;
         static unsigned long lastms = millis();
 
-        unsigned long msElapsed = millis() - lastms;
+        unsigned long        msElapsed = millis() - lastms;
         lastms = millis();
 
         hue += (float) msElapsed / _speedDivisor;
@@ -228,7 +228,7 @@ class ColorFillEffect : public EffectWithId<ColorFillEffect>
   public:
 
     ColorFillEffect(const String &name, CRGB color = CRGB(246,200,160), int everyNth = 10, bool ignoreGlobalColor = false)
-  : EffectWithId<ColorFillEffect>(name),
+        : EffectWithId<ColorFillEffect>(name),
         _everyNth(everyNth),
         _color(color),
         _ignoreGlobalColor(ignoreGlobalColor)
@@ -237,7 +237,7 @@ class ColorFillEffect : public EffectWithId<ColorFillEffect>
     }
 
     ColorFillEffect(CRGB color = CRGB(246,200,160), int everyNth = 10, bool ignoreGlobalColor = false)
-  : EffectWithId<ColorFillEffect>("Color Fill"),
+        : EffectWithId<ColorFillEffect>("Color Fill"),
         _everyNth(everyNth),
         _color(color),
         _ignoreGlobalColor(ignoreGlobalColor)
@@ -246,7 +246,7 @@ class ColorFillEffect : public EffectWithId<ColorFillEffect>
     }
 
     ColorFillEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId<ColorFillEffect>(jsonObject),
+        : EffectWithId<ColorFillEffect>(jsonObject),
         _everyNth(jsonObject[PTY_EVERYNTH]),
         _color(jsonObject[PTY_COLOR].as<CRGB>()),
         _ignoreGlobalColor(jsonObject[PTY_IGNOREGLOBALCOLOR])
@@ -256,7 +256,7 @@ class ColorFillEffect : public EffectWithId<ColorFillEffect>
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        auto jsonDoc = CreateJsonDocument();
+        auto       jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -271,11 +271,11 @@ class ColorFillEffect : public EffectWithId<ColorFillEffect>
     void Draw() override
     {
         if (_everyNth != 1)
-          fillSolidOnAllChannels(CRGB::Black);
+            fillSolidOnAllChannels(CRGB::Black);
         if (!_ignoreGlobalColor && g_ptrSystem->DeviceConfig().ApplyGlobalColors())
-          fillSolidOnAllChannels(g_ptrSystem->DeviceConfig().GlobalColor(), 0, NUM_LEDS, _everyNth);
+            fillSolidOnAllChannels(g_ptrSystem->DeviceConfig().GlobalColor(), 0, NUM_LEDS, _everyNth);
         else
-          fillSolidOnAllChannels(_color, 0, NUM_LEDS, _everyNth);
+            fillSolidOnAllChannels(_color, 0, NUM_LEDS, _everyNth);
     }
 };
 
@@ -285,48 +285,48 @@ class ColorFillEffect : public EffectWithId<ColorFillEffect>
 //
 // Displays the NightDriver logo on the screen
 
-extern const uint8_t logo_start[] asm("_binary_assets_bmp_lowreslogo_jpg_start");
-extern const uint8_t logo_end[]   asm("_binary_assets_bmp_lowreslogo_jpg_end");
+    extern const uint8_t logo_start[] asm ("_binary_assets_bmp_lowreslogo_jpg_start");
+    extern const uint8_t logo_end[]   asm ("_binary_assets_bmp_lowreslogo_jpg_end");
 
-class SplashLogoEffect : public EffectWithId<SplashLogoEffect>
-{
-  private:
-
-    EmbeddedFile logo;
-
-  public:
-
-    SplashLogoEffect()
-      : EffectWithId<SplashLogoEffect>("Mesmerizer"),
-        logo(logo_start, logo_end)
+    class SplashLogoEffect : public EffectWithId<SplashLogoEffect>
     {
-        debugV("Splash logo constructor");
-    }
+      private:
 
-    SplashLogoEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId<SplashLogoEffect>(jsonObject),
-        logo(logo_start, logo_end)
-    {
-        debugV("Splash logo JSON constructor");
-    }
+        EmbeddedFile logo;
 
-    virtual size_t MaximumEffectTime() const override
-    {
-        return 5.0 * MILLIS_PER_SECOND;
-    }
+      public:
 
-    bool CanDisplayVUMeter() const override
-    {
-        return false;
-    }
+        SplashLogoEffect()
+            : EffectWithId<SplashLogoEffect>("Mesmerizer"),
+            logo(logo_start, logo_end)
+        {
+            debugV("Splash logo constructor");
+        }
 
-    void Draw() override
-    {
-        fillSolidOnAllChannels(CRGB::Black);
-        if (JDR_OK != TJpgDec.drawJpg(0, 0, logo.contents, logo.length))        // Draw the image
-            debugW("Could not display logo");
-    }
-};
+        SplashLogoEffect(const JsonObjectConst& jsonObject)
+            : EffectWithId<SplashLogoEffect>(jsonObject),
+            logo(logo_start, logo_end)
+        {
+            debugV("Splash logo JSON constructor");
+        }
+
+        virtual size_t MaximumEffectTime() const override
+        {
+            return 5.0 * MILLIS_PER_SECOND;
+        }
+
+        bool CanDisplayVUMeter() const override
+        {
+            return false;
+        }
+
+        void Draw() override
+        {
+            fillSolidOnAllChannels(CRGB::Black);
+            if (JDR_OK != TJpgDec.drawJpg(0, 0, logo.contents, logo.length))    // Draw the image
+                debugW("Could not display logo");
+        }
+    };
 
 #endif // USE_HUB75
 
@@ -345,13 +345,13 @@ class StatusEffect : public EffectWithId<StatusEffect>
 {
   protected:
 
-    int  _everyNth;
+    int _everyNth;
     CRGB _color;
 
   public:
 
     StatusEffect(CRGB color = CRGB(255,255,255), int everyNth = 10)     // Warmer: CRGB(246,200,160)
-      : EffectWithId<StatusEffect>("Status Fill"),
+        : EffectWithId<StatusEffect>("Status Fill"),
         _everyNth(everyNth),
         _color(color)
     {
@@ -359,7 +359,7 @@ class StatusEffect : public EffectWithId<StatusEffect>
     }
 
     StatusEffect(const JsonObjectConst& jsonObject)     // Warmer: CRGB(246,200,160)
-      : EffectWithId<StatusEffect>(jsonObject),
+        : EffectWithId<StatusEffect>(jsonObject),
         _everyNth(jsonObject[PTY_EVERYNTH]),
         _color(jsonObject[PTY_COLOR].as<CRGB>())
     {
@@ -368,7 +368,7 @@ class StatusEffect : public EffectWithId<StatusEffect>
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        auto jsonDoc = CreateJsonDocument();
+        auto       jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -384,20 +384,20 @@ class StatusEffect : public EffectWithId<StatusEffect>
         CRGB color = _color;
 
         if (g_Values.UpdateStarted)
-          color = CRGB::Purple;
+            color = CRGB::Purple;
         else if (!WiFi.isConnected())
-          color = CRGB::Red;
+            color = CRGB::Red;
         else if (!NTPTimeClient::HasClockBeenSet())
-          color = CRGB::Green;
+            color = CRGB::Green;
 
         if (_everyNth != 1)
-          fillSolidOnAllChannels(CRGB::Black);
+            fillSolidOnAllChannels(CRGB::Black);
         fillSolidOnAllChannels(color, 0, 0, _everyNth);
     }
 };
 
 #if CLASSIC_GE_C9
-static constexpr auto TwinkleColors =  to_array(
+    static constexpr auto TwinkleColors =  to_array(
 {
     CRGB(238, 51, 39),      // Red
     CRGB(0, 172, 87),       // Green
@@ -405,7 +405,7 @@ static constexpr auto TwinkleColors =  to_array(
     CRGB(0, 131, 203)       // Blue
 });
 #else
-static constexpr auto TwinkleColors =  to_array(
+    static constexpr auto TwinkleColors =  to_array(
 {
     CRGB::Red,
     CRGB::Green,
@@ -420,14 +420,14 @@ class TwinkleEffect : public EffectWithId<TwinkleEffect>
 {
   protected:
 
-    int  _countToDraw;
-    int  _fadeFactor;
-    int  _updateSpeed;
+    int _countToDraw;
+    int _fadeFactor;
+    int _updateSpeed;
 
   public:
 
     TwinkleEffect(int countToDraw = NUM_LEDS / 2, uint8_t fadeFactor = 10, int updateSpeed = 10)
-      : EffectWithId<TwinkleEffect>("Twinkle"),
+        : EffectWithId<TwinkleEffect>("Twinkle"),
         _countToDraw(countToDraw),
         _fadeFactor(fadeFactor),
         _updateSpeed(updateSpeed)
@@ -435,7 +435,7 @@ class TwinkleEffect : public EffectWithId<TwinkleEffect>
     }
 
     TwinkleEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId<TwinkleEffect>(jsonObject),
+        : EffectWithId<TwinkleEffect>(jsonObject),
         _countToDraw(jsonObject["ctd"]),
         _fadeFactor(jsonObject[PTY_FADE]),
         _updateSpeed(jsonObject[PTY_SPEED])
@@ -444,7 +444,7 @@ class TwinkleEffect : public EffectWithId<TwinkleEffect>
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        auto jsonDoc = CreateJsonDocument();
+        auto       jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -475,26 +475,26 @@ class TwinkleEffect : public EffectWithId<TwinkleEffect>
             // Pick a random pixel and put it in the TOP slot
             for (int iLoop = 0; iLoop < 2; iLoop++)
             {
-              int iNew = -1;
-              for (int iPass = 0; iPass < NUM_LEDS * 20; iPass++)
-              {
-                  size_t i = random(0, NUM_LEDS);
-                  if (_GFX[0]->getPixel(i) != CRGB::Black)
-                      continue;
-                  if (litPixels.end() != find(litPixels.begin(), litPixels.end(), i))
-                      continue;
-                  iNew = i;
-                  break;
-              }
-              if (iNew == -1)             // No empty slot could be found!
-              {
-                  litPixels.clear();
-                  setAllOnAllChannels(0,0,0);
-                  return;
-              }
-              assert(litPixels.end() == find(litPixels.begin(), litPixels.end(), iNew));
-              setPixelOnAllChannels(iNew, TwinkleColors[random(0, std::size(TwinkleColors))]);
-              litPixels.push_front(iNew);
+                int iNew = -1;
+                for (int iPass = 0; iPass < NUM_LEDS * 20; iPass++)
+                {
+                    size_t i = random(0, NUM_LEDS);
+                    if (_GFX[0]->getPixel(i) != CRGB::Black)
+                        continue;
+                    if (litPixels.end() != find(litPixels.begin(), litPixels.end(), i))
+                        continue;
+                    iNew = i;
+                    break;
+                }
+                if (iNew == -1)           // No empty slot could be found!
+                {
+                    litPixels.clear();
+                    setAllOnAllChannels(0,0,0);
+                    return;
+                }
+                assert(litPixels.end() == find(litPixels.begin(), litPixels.end(), iNew));
+                setPixelOnAllChannels(iNew, TwinkleColors[random(0, std::size(TwinkleColors))]);
+                litPixels.push_front(iNew);
             }
         }
 
@@ -518,8 +518,10 @@ class SilonEffect : public EffectWithId<SilonEffect>
 
   public:
 
-    SilonEffect() : EffectWithId<SilonEffect>("SilonEffect") {}
-    SilonEffect(const JsonObjectConst& jsonObject) : EffectWithId<SilonEffect>(jsonObject) {}
+    SilonEffect() : EffectWithId<SilonEffect>("SilonEffect") {
+    }
+    SilonEffect(const JsonObjectConst& jsonObject) : EffectWithId<SilonEffect>(jsonObject) {
+    }
 
     virtual size_t DesiredFramesPerSecond() const
     {
@@ -562,8 +564,10 @@ class PDPGridEffect : public EffectWithId<PDPGridEffect>
 
   public:
 
-    PDPGridEffect() : EffectWithId<PDPGridEffect>("PDPGridEffect") {}
-    PDPGridEffect(const JsonObjectConst& jsonObject) : EffectWithId<PDPGridEffect>(jsonObject) {}
+    PDPGridEffect() : EffectWithId<PDPGridEffect>("PDPGridEffect") {
+    }
+    PDPGridEffect(const JsonObjectConst& jsonObject) : EffectWithId<PDPGridEffect>(jsonObject) {
+    }
 
     virtual size_t DesiredFramesPerSecond() const
     {
@@ -649,8 +653,10 @@ class PDPCMXEffect : public EffectWithId<PDPCMXEffect>
 
   public:
 
-    PDPCMXEffect() : EffectWithId<PDPCMXEffect>("PDPCMXEffect") {}
-    PDPCMXEffect(const JsonObjectConst& jsonObject) : EffectWithId<PDPCMXEffect>(jsonObject) {}
+    PDPCMXEffect() : EffectWithId<PDPCMXEffect>("PDPCMXEffect") {
+    }
+    PDPCMXEffect(const JsonObjectConst& jsonObject) : EffectWithId<PDPCMXEffect>(jsonObject) {
+    }
 
     virtual size_t DesiredFramesPerSecond() const
     {
@@ -675,13 +681,13 @@ class PDPCMXEffect : public EffectWithId<PDPCMXEffect>
         fadeAllChannelsToBlackBy(5);
         EVERY_N_MILLISECONDS(200)
         {
-          for (int group = 0; group < numGroups; group++)
-          {
-              int groupStartY = group * GROUP_HEIGHT;
-              bool scrollLeft = (group % 2 == 0); // Alternate direction: even groups scroll left, odd scroll right
+            for (int group = 0; group < numGroups; group++)
+            {
+                int  groupStartY = group * GROUP_HEIGHT;
+                bool scrollLeft = (group % 2 == 0); // Alternate direction: even groups scroll left, odd scroll right
 
-              scrollGroup(groupStartY, scrollLeft);
-          }
+                scrollGroup(groupStartY, scrollLeft);
+            }
         }
     }
 };
@@ -691,29 +697,31 @@ class PDPCMXEffect : public EffectWithId<PDPCMXEffect>
 // Hexagon Effects
 ////////////////////////////////////////////////
 
-class OuterHexRingEffect : public EffectWithId<OuterHexRingEffect>
-{
-  public:
-
-    OuterHexRingEffect() : EffectWithId<OuterHexRingEffect>("OuterRingHexEffect") {}
-    OuterHexRingEffect(const JsonObjectConst& jsonObject) : EffectWithId<OuterHexRingEffect>(jsonObject) {}
-
-    virtual void Draw() override
+    class OuterHexRingEffect : public EffectWithId<OuterHexRingEffect>
     {
-        static int colorOffset = HUE_BLUE;
-        static int indent = 0;
+      public:
 
-        EVERY_N_MILLIS(20)
-          colorOffset += 4;
+        OuterHexRingEffect() : EffectWithId<OuterHexRingEffect>("OuterRingHexEffect") {
+        }
+        OuterHexRingEffect(const JsonObjectConst& jsonObject) : EffectWithId<OuterHexRingEffect>(jsonObject) {
+        }
 
-        EVERY_N_MILLIS(100)
-          indent = (indent + 1) % 9;
+        virtual void Draw() override
+        {
+            static int colorOffset = HUE_BLUE;
+            static int indent = 0;
 
-        fadeAllChannelsToBlackBy(75);
+            EVERY_N_MILLIS(20)
+            colorOffset += 4;
 
-        CRGB color = ColorFromPalette(RainbowColors_p, indent*32 + colorOffset);
-        hg()->fillHexRing(indent, color);
-    }
-};
+            EVERY_N_MILLIS(100)
+            indent = (indent + 1) % 9;
+
+            fadeAllChannelsToBlackBy(75);
+
+            CRGB color = ColorFromPalette(RainbowColors_p, indent*32 + colorOffset);
+            hg()->fillHexRing(indent, color);
+        }
+    };
 #endif // HEXAGON
 

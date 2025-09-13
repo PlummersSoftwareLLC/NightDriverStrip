@@ -49,87 +49,88 @@ DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                
 
 #if ENABLE_ESPNOW
 
-// ESPNOW Support
-//
-// We accept ESPNOW commands to change effects and so on.  This is a simple structure that we'll receive over ESPNOW.
-enum class ESPNowCommand : uint8_t
-{
-    ESPNOW_NEXTEFFECT = 1,
-    ESPNOW_PREVEFFECT,
-    ESPNOW_SETEFFECT,
-    ESPNOW_INVALID = 255    // Followed by a uint32_t argument
-};
-
-// Message class
-//
-// Encapsulates an ESPNOW message, which is a command and an optional argument
-class Message
-{
-public:
-    constexpr Message(ESPNowCommand cmd, uint32_t argument)
-        : cbSize(sizeof(Message)), command(cmd), arg1(argument)
+    // ESPNOW Support
+    //
+    // We accept ESPNOW commands to change effects and so on.  This is a simple structure that we'll receive over ESPNOW.
+    enum class ESPNowCommand : uint8_t
     {
-    }
+        ESPNOW_NEXTEFFECT = 1,
+        ESPNOW_PREVEFFECT,
+        ESPNOW_SETEFFECT,
+        ESPNOW_INVALID = 255 // Followed by a uint32_t argument
+    };
 
-    constexpr Message()
-        : cbSize(sizeof(Message)), command(ESPNowCommand::ESPNOW_INVALID), arg1(0)
+    // Message class
+    //
+    // Encapsulates an ESPNOW message, which is a command and an optional argument
+    class Message
     {
-    }
+      public:
+        constexpr Message(ESPNowCommand cmd, uint32_t argument)
+            : cbSize(sizeof(Message)), command(cmd), arg1(argument)
+        {
+        }
 
-    const uint8_t* data() const
+        constexpr Message()
+            : cbSize(sizeof(Message)), command(ESPNowCommand::ESPNOW_INVALID), arg1(0)
+        {
+        }
+
+        const uint8_t* data() const
+        {
+            return reinterpret_cast<const uint8_t*>(this);
+        }
+
+        constexpr size_t byte_size() const
+        {
+            return sizeof(Message);
+        }
+
+        uint8_t cbSize;
+        ESPNowCommand command;
+        uint32_t arg1;
+    } __attribute__((packed));
+
+    // onReceiveESPNOW
+    //
+    // Callback function for ESPNOW that is called when a data packet is received
+
+    void onReceiveESPNOW(const uint8_t*macAddr, const uint8_t*data, int dataLen)
     {
-        return reinterpret_cast<const uint8_t*>(this);
+        Message message;
+
+        memcpy(&message, data, sizeof(message));
+        debugI("ESPNOW Message received.");
+
+        if(message.cbSize != sizeof(message))
+        {
+            debugE("ESPNOW Message received with wrong structure size: %d but should be %d", message.cbSize, sizeof(message));
+
+            return;
+        }
+
+        switch(message.command)
+        {
+            case ESPNowCommand::ESPNOW_NEXTEFFECT:
+                debugI("ESPNOW Next effect");
+                g_ptrSystem->EffectManager().NextEffect();
+                break;
+
+            case ESPNowCommand::ESPNOW_PREVEFFECT:
+                debugI("ESPNOW Previous effect");
+                g_ptrSystem->EffectManager().PreviousEffect();
+                break;
+
+            case ESPNowCommand::ESPNOW_SETEFFECT:
+                debugI("ESPNOW Setting effect index to %d", message.arg1);
+                g_ptrSystem->EffectManager().SetCurrentEffectIndex(message.arg1);
+                break;
+
+            default:
+                debugE("ESPNOW Message received with unknown command: %d", (byte) message.command);
+                break;
+        }
     }
-
-    constexpr size_t byte_size() const
-    {
-        return sizeof(Message);
-    }
-
-    uint8_t       cbSize;
-    ESPNowCommand command;
-    uint32_t      arg1;
-} __attribute__((packed));
-
-// onReceiveESPNOW
-//
-// Callback function for ESPNOW that is called when a data packet is received
-
-void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
-{
-    Message message;
-
-    memcpy(&message, data, sizeof(message));
-    debugI("ESPNOW Message received.");
-
-    if (message.cbSize != sizeof(message))
-    {
-        debugE("ESPNOW Message received with wrong structure size: %d but should be %d", message.cbSize, sizeof(message));
-        return;
-    }
-
-    switch(message.command)
-    {
-        case ESPNowCommand::ESPNOW_NEXTEFFECT:
-            debugI("ESPNOW Next effect");
-            g_ptrSystem->EffectManager().NextEffect();
-            break;
-
-        case ESPNowCommand::ESPNOW_PREVEFFECT:
-            debugI("ESPNOW Previous effect");
-            g_ptrSystem->EffectManager().PreviousEffect();
-            break;
-
-        case ESPNowCommand::ESPNOW_SETEFFECT:
-            debugI("ESPNOW Setting effect index to %d", message.arg1);
-            g_ptrSystem->EffectManager().SetCurrentEffectIndex(message.arg1);
-            break;
-
-        default:
-            debugE("ESPNOW Message received with unknown command: %d", (byte) message.command);
-            break;
-    }
-}
 
 #endif
 
@@ -142,39 +143,38 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
     void processRemoteDebugCmd()
     {
         String str = Debug.getLastCommand();
-        if (str.equalsIgnoreCase("clock"))
+        if(str.equalsIgnoreCase("clock"))
         {
             debugA("Refreshing Time from Server...");
             NTPTimeClient::UpdateClockFromWeb(&l_Udp);
         }
-        else if (str.equalsIgnoreCase("stats"))
+        else if(str.equalsIgnoreCase("stats"))
         {
-            auto& bufferManager = g_ptrSystem->BufferManagers()[0];
+            auto&bufferManager = g_ptrSystem->BufferManagers()[0];
 
             debugA("Displaying statistics....");
             debugA("%s:%zux%d %uK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS, ESP.getFreeHeap() / 1024);
-            debugA("%sdB:%s",String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
+            debugA("%sdB:%s", String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
             debugA("BUFR:%02zu/%02zu [%dfps]", bufferManager.Depth(), bufferManager.BufferCount(), g_Values.FPS);
             debugA("DATA:%+04.2lf-%+04.2lf", bufferManager.AgeOfOldestBuffer(), bufferManager.AgeOfNewestBuffer());
 
             #if ENABLE_AUDIO
-                debugA("g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer.VU(), g_Analyzer.MinVU(), g_Analyzer.PeakVU(), g_Analyzer.VURatio());
+                debugA("g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer.VU(),
+                    g_Analyzer.MinVU(), g_Analyzer.PeakVU(), g_Analyzer.VURatio());
             #endif
 
             #if INCOMING_WIFI_ENABLED
                 debugA("Socket Buffer _cbReceived: %zu", g_ptrSystem->SocketServer()._cbReceived);
             #endif
         }
-        else if (str.equalsIgnoreCase("clearsettings"))
+        else if(str.equalsIgnoreCase("clearsettings"))
         {
             debugA("Removing persisted settings....");
             g_ptrSystem->DeviceConfig().RemovePersisted();
             RemoveEffectManagerConfig();
         }
-        else if (str.equalsIgnoreCase("uptime"))
-        {
-             NTPTimeClient::ShowUptime();
-        }
+        else if(str.equalsIgnoreCase("uptime"))
+            NTPTimeClient::ShowUptime();
         else
         {
             debugA("Unknown Command.  Extended Commands:");
@@ -190,89 +190,78 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
 //
 // Set up the over-the-air programming info so that we can be flashed over WiFi
 
-void SetupOTA(const String & strHostname)
+void SetupOTA(const String&strHostname)
 {
-#if ENABLE_OTA
-    ArduinoOTA.setRebootOnSuccess(true);
+    #if ENABLE_OTA
+        ArduinoOTA.setRebootOnSuccess(true);
 
-    if (strHostname.isEmpty())
-        ArduinoOTA.setMdnsEnabled(false);
-    else
-        ArduinoOTA.setHostname(strHostname.c_str());
+        if(strHostname.isEmpty())
+            ArduinoOTA.setMdnsEnabled(false);
+        else
+            ArduinoOTA.setHostname(strHostname.c_str());
 
-    ArduinoOTA
+        ArduinoOTA
         .onStart([]()
-        {
-            g_Values.UpdateStarted = true;
-
-            String type;
-            if (ArduinoOTA.getCommand() == U_FLASH)
-                type = "sketch";
-            else // U_SPIFFS
-                type = "filesystem";
-
-            debugI("Stopping IR remote");
-            #if ENABLE_REMOTE
-            g_ptrSystem->RemoteControl().end();
-            #endif
-
-            debugI("Start updating from OTA ");
-            debugI("%s", type.c_str());
-        })
-        .onEnd([]()
-        {
-            debugI("\nEnd OTA");
-            g_Values.UpdateStarted = false;
-        })
-        .onProgress([](unsigned int progress, unsigned int total)
-        {
-            static uint last_time = millis();
-            if (millis() - last_time > 1000)
             {
-                last_time = millis();
-                auto p = (progress / (total / 100));
-                debugI("OTA Progress: %u%%\r", p);
+                g_Values.UpdateStarted = true;
 
-                #if USE_HUB75
-                    auto pMatrix = std::static_pointer_cast<HUB75GFX>(g_ptrSystem->EffectManager().GetBaseGraphics()[0]);
-                    pMatrix->SetCaption(str_sprintf("Update:%d%%", p), CAPTION_TIME);
+                String type;
+                if(ArduinoOTA.getCommand() == U_FLASH)
+                    type = "sketch";
+                else // U_SPIFFS
+                    type = "filesystem";
+
+                debugI("Stopping IR remote");
+                #if ENABLE_REMOTE
+                    g_ptrSystem->RemoteControl().end();
                 #endif
-            }
-            else
-            {
-                debugV("OTA Progress: %u%%\r", (progress / (total / 100)));
-            }
 
-        })
+                debugI("Start updating from OTA ");
+                debugI("%s", type.c_str());
+            })
+        .onEnd([]()
+            {
+                debugI("\nEnd OTA");
+                g_Values.UpdateStarted = false;
+            })
+        .onProgress([](unsigned int progress, unsigned int total)
+            {
+                static uint last_time = millis();
+                if(millis() - last_time > 1000)
+                {
+                    last_time = millis();
+                    auto p    = (progress / (total / 100));
+                    debugI("OTA Progress: %u%%\r", p);
+
+                    #if USE_HUB75
+                        auto pMatrix = std::static_pointer_cast<HUB75GFX>(g_ptrSystem->EffectManager().GetBaseGraphics()[0]);
+                        pMatrix->SetCaption(str_sprintf("Update:%d%%", p), CAPTION_TIME);
+                    #endif
+                }
+                else
+                    debugV("OTA Progress: %u%%\r", (progress / (total / 100)));
+
+            })
         .onError([](ota_error_t error)
-        {
-            g_Values.UpdateStarted = false;
-            debugW("Error[%u]: ", error);
-            if (error == OTA_AUTH_ERROR)
             {
-                debugW("Auth Failed");
-            }
-            else if (error == OTA_BEGIN_ERROR)
-            {
-                debugW("Begin Failed");
-            }
-            else if (error == OTA_CONNECT_ERROR)
-            {
-                debugW("Connect Failed");
-            }
-            else if (error == OTA_RECEIVE_ERROR)
-            {
-                debugW("Receive Failed");
-            }
-            else if (error == OTA_END_ERROR)
-            {
-                debugW("End Failed");
-            }
-            throw std::runtime_error("OTA Flash update failed.");
-        });
+                g_Values.UpdateStarted = false;
+                debugW("Error[%u]: ", error);
+                if(error == OTA_AUTH_ERROR)
+                    debugW("Auth Failed");
+                else if(error == OTA_BEGIN_ERROR)
+                    debugW("Begin Failed");
+                else if(error == OTA_CONNECT_ERROR)
+                    debugW("Connect Failed");
+                else if(error == OTA_RECEIVE_ERROR)
+                    debugW("Receive Failed");
+                else if(error == OTA_END_ERROR)
+                    debugW("End Failed");
 
-    ArduinoOTA.begin();
-#endif
+                throw std::runtime_error("OTA Flash update failed.");
+            });
+
+        ArduinoOTA.begin();
+    #endif
 }
 
 // RemoteLoopEntry
@@ -283,33 +272,33 @@ void SetupOTA(const String & strHostname)
 
 #if ENABLE_REMOTE
 
-void IRAM_ATTR RemoteLoopEntry(void *)
-{
-    //debugW(">> RemoteLoopEntry\n");
-
-    auto& remoteControl = g_ptrSystem->RemoteControl();
-
-    remoteControl.begin();
-    while (true)
+    void IRAM_ATTR RemoteLoopEntry(void*)
     {
-        remoteControl.handle();
-        delay(20);
+        //debugW(">> RemoteLoopEntry\n");
+
+        auto&remoteControl = g_ptrSystem->RemoteControl();
+
+        remoteControl.begin();
+        while(true)
+        {
+            remoteControl.handle();
+            delay(20);
+        }
     }
-}
 #endif
 
 #if ENABLE_WIFI
 
-    #define WIFI_WAIT_BASE      4000    // Initial time to wait for WiFi to come up, in ms
-    #define WIFI_WAIT_INCREASE  1000    // Increase of WiFi waiting time per cycle, in ms
-    #define WIFI_WAIT_MAX       60000   // Maximum gap between retries, in ms
+    #define WIFI_WAIT_BASE     4000     // Initial time to wait for WiFi to come up, in ms
+    #define WIFI_WAIT_INCREASE 1000     // Increase of WiFi waiting time per cycle, in ms
+    #define WIFI_WAIT_MAX      60000    // Maximum gap between retries, in ms
 
-    #define WIFI_WAIT_INIT      (WIFI_WAIT_BASE - WIFI_WAIT_INCREASE)
+    #define WIFI_WAIT_INIT     (WIFI_WAIT_BASE - WIFI_WAIT_INCREASE)
 
     // ConnectToWiFi
     //
     // Try to connect to WiFi using the SSID and password passed as arguments
-    WiFiConnectResult ConnectToWiFi(const String& ssid, const String& password)
+    WiFiConnectResult ConnectToWiFi(const String&ssid, const String&password)
     {
         return ConnectToWiFi(&ssid, &password);
     }
@@ -318,49 +307,47 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     //
     // Try to connect to WiFi using either the SSID and password pointed to by arguments, or the credentials
     // that were saved from an earlier call if no/nullptr arguments are passed.
-    WiFiConnectResult ConnectToWiFi(const String* ssid = nullptr, const String* password = nullptr)
+    WiFiConnectResult ConnectToWiFi(const String*ssid = nullptr, const String*password = nullptr)
     {
         static bool bPreviousConnection = false;
         static unsigned long millisAtLastAttempt = 0;
-        static unsigned long retryDelay = WIFI_WAIT_INIT;
+        static unsigned long retryDelay          = WIFI_WAIT_INIT;
         static String WiFi_ssid;
         static String WiFi_password;
 
         bool haveNewCredentials = (ssid != nullptr && password != nullptr && (WiFi_ssid != *ssid || WiFi_password != *password));
 
         // If we have new credentials then always reconnect using them
-        if (haveNewCredentials)
+        if(haveNewCredentials)
         {
-            WiFi_ssid = *ssid;
+            WiFi_ssid     = *ssid;
             WiFi_password = *password;
-            retryDelay = WIFI_WAIT_INIT;
+            retryDelay    = WIFI_WAIT_INIT;
             debugI("WiFi credentials passed for SSID \"%s\"", WiFi_ssid.c_str());
         }
         // If we're already connected and services are running then go no further
-        else if (bPreviousConnection && WiFi.isConnected())
-        {
+        else if(bPreviousConnection && WiFi.isConnected())
             return WiFiConnectResult::Connected;
-        }
+
 
         // (Re)connect if credentials have changed, or our last attempt was long enough ago
-        if (haveNewCredentials || millisAtLastAttempt == 0 || millis() - millisAtLastAttempt >= retryDelay)
+        if(haveNewCredentials || millisAtLastAttempt == 0 || millis() - millisAtLastAttempt >= retryDelay)
         {
             millisAtLastAttempt = millis();
-            retryDelay = std::min<unsigned long>(retryDelay + WIFI_WAIT_INCREASE, WIFI_WAIT_MAX);
+            retryDelay          = std::min<unsigned long>(retryDelay + WIFI_WAIT_INCREASE, WIFI_WAIT_MAX);
 
-            if (WiFi_ssid.length() == 0)
+            if(WiFi_ssid.length() == 0)
             {
                 debugW("WiFi credentials not set, cannot connect.");
+
                 return WiFiConnectResult::NoCredentials;
             }
             else
             {
                 auto hostname = g_ptrSystem->DeviceConfig().GetHostname().c_str();
 
-                if (hostname[0] == '\0')
-                {
+                if(hostname[0] == '\0')
                     debugI("No hostname configured, so skipping setting it.");
-                }
                 else
                 {
                     debugI("Setting host name to %s...", hostname);
@@ -372,7 +359,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                 debugV("Wifi.mode");
                 WiFi.mode(WIFI_STA);
                 debugW("Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
-                       WiFi_ssid.c_str(), ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
+                        WiFi_ssid.c_str(), ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
 
                 WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
 
@@ -380,30 +367,29 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             }
         }
 
-        if (WiFi.isConnected())
-        {
+        if(WiFi.isConnected())
             debugW("Connected to AP with BSSID: \"%s\", received IP: %s", WiFi.BSSIDstr().c_str(), WiFi.localIP().toString().c_str());
-        }
         else
         // Additional services onwards are reliant on network so return if WiFi is not up (yet)
         {
             debugW("Not yet connected to WiFi, waiting...");
+
             return WiFiConnectResult::Disconnected;
         }
 
         // If we were connected before, network-dependent services will have been started already
-        if (bPreviousConnection)
+        if(bPreviousConnection)
             return WiFiConnectResult::Connected;
 
         bPreviousConnection = true;
 
         #if INCOMING_WIFI_ENABLED
-            auto& socketServer = g_ptrSystem->SocketServer();
+            auto&socketServer = g_ptrSystem->SocketServer();
 
             // Start listening for incoming data
             debugI("Starting/restarting Socket Server...");
             socketServer.release();
-            if (false == socketServer.begin())
+            if(false == socketServer.begin())
                 throw std::runtime_error("Could not start socket server!");
 
             debugI("Socket server started.");
@@ -433,16 +419,14 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         {
             static unsigned long lastUpdate = 0;
 
-            if (WiFi.isConnected())
-            {
+            if(WiFi.isConnected())
                 // If we've already retrieved the time successfully, we'll only actually update every NTP_DELAY_SECONDS seconds
-                if (!NTPTimeClient::HasClockBeenSet() || (millis() - lastUpdate) > ((NTP_DELAY_SECONDS) * 1000))
+                if(!NTPTimeClient::HasClockBeenSet() || (millis() - lastUpdate) > ((NTP_DELAY_SECONDS) * 1000))
                 {
                     debugV("Refreshing Time from Server...");
-                    if (NTPTimeClient::UpdateClockFromWeb(&l_Udp))
+                    if(NTPTimeClient::UpdateClockFromWeb(&l_Udp))
                         lastUpdate = millis();
                 }
-            }
         }
     #endif
 
@@ -452,117 +436,126 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     // as this code does not validate!  This is where the commands and pixel data are received
     // from the server.
 
-    bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength)
+    bool ProcessIncomingData(std::unique_ptr<uint8_t []>&payloadData, size_t payloadLength)
     {
         #if !INCOMING_WIFI_ENABLED
+
             return false;
+
         #else
 
-        uint16_t command16 = payloadData[1] << 8 | payloadData[0];
+            uint16_t command16 = payloadData[1] << 8 | payloadData[0];
 
-        debugV("payloadLength: %zu, command16: %d", payloadLength, command16);
+            debugV("payloadLength: %zu, command16: %d", payloadLength, command16);
 
-        switch (command16)
-        {
-            // WIFI_COMMAND_PEAKDATA has a header plus NUM_BANDS floats that will be used to set the audio peaks
-
-            case WIFI_COMMAND_PEAKDATA:
+            switch(command16)
             {
-                #if ENABLE_AUDIO
-                    uint16_t numbands  = WORDFromMemory(&payloadData[2]);
+                // WIFI_COMMAND_PEAKDATA has a header plus NUM_BANDS floats that will be used to set the audio peaks
+
+                case WIFI_COMMAND_PEAKDATA:
+                {
+                    #if ENABLE_AUDIO
+                        uint16_t numbands = WORDFromMemory(&payloadData[2]);
+                        uint32_t length32 = DWORDFromMemory(&payloadData[4]);
+                        uint64_t seconds  = ULONGFromMemory(&payloadData[8]);
+                        uint64_t micros   = ULONGFromMemory(&payloadData[16]);
+
+                        debugV("ProcessIncomingData -- Bands: %u, Length: %u, Seconds: %llu, Micros: %llu ... ",
+                            numbands,
+                            length32,
+                            seconds,
+                            micros);
+
+                        // Data is transmitted as NUM_BANDS floats following the standard header
+                        const uint8_t*dataStart       = payloadData.get() + STANDARD_DATA_HEADER_SIZE;
+                        const size_t availableFloats = (payloadLength > STANDARD_DATA_HEADER_SIZE)
+                                                ? (payloadLength - STANDARD_DATA_HEADER_SIZE) / sizeof(float)
+                                                : 0;
+                        const size_t copyCount = std::min<size_t>(NUM_BANDS, std::min<size_t>(numbands, availableFloats));
+
+                        PeakData peaks{}; // zero-initialized for any bands not provided
+                        if(copyCount > 0)
+                        {
+                            const float*pFloats = reinterpret_cast<const float*>(dataStart);
+                            std::copy_n(pFloats, copyCount, peaks.begin());
+                        }
+
+                        g_Analyzer.SetPeakDataFromRemote(peaks);
+                    #endif
+
+                    return true;
+                }
+
+                // WIFI_COMMAND_PIXELDATA64 has a header plus length32 CRGBs
+
+                case WIFI_COMMAND_PIXELDATA64:
+                {
+                    uint16_t channel16 = WORDFromMemory(&payloadData[2]);
                     uint32_t length32  = DWORDFromMemory(&payloadData[4]);
                     uint64_t seconds   = ULONGFromMemory(&payloadData[8]);
                     uint64_t micros    = ULONGFromMemory(&payloadData[16]);
 
-                debugV("ProcessIncomingData -- Bands: %u, Length: %u, Seconds: %llu, Micros: %llu ... ",
-                       numbands,
-                       length32,
-                       seconds,
-                       micros);
+                    debugV("ProcessIncomingData -- Channel: %u, Length: %u, Seconds: %llu, Micros: %llu ... ",
+                            channel16,
+                            length32,
+                            seconds,
+                            micros);
 
-                // Data is transmitted as NUM_BANDS floats following the standard header
-                const uint8_t* dataStart = payloadData.get() + STANDARD_DATA_HEADER_SIZE;
-                const size_t availableFloats = (payloadLength > STANDARD_DATA_HEADER_SIZE)
-                                                ? (payloadLength - STANDARD_DATA_HEADER_SIZE) / sizeof(float)
-                                                : 0;
-                const size_t copyCount = std::min<size_t>(NUM_BANDS, std::min<size_t>(numbands, availableFloats));
+                    // The very old original implementation used channel numbers, not a mask, and only channel 0 was supported at that time, so
+                    // if
+                    // we see a Channel 0 asked for, it must be very old, and we massage it into the mask for Channel0 instead
+                    // Another option here would be to draw on all channels (0xff) instead of just one (0x01) if 0 is specified
 
-                PeakData peaks{}; // zero-initialized for any bands not provided
-                if (copyCount > 0)
-                {
-                    const float* pFloats = reinterpret_cast<const float*>(dataStart);
-                    std::copy_n(pFloats, copyCount, peaks.begin());
-                }
-                g_Analyzer.SetPeakDataFromRemote(peaks);
-            #endif
-            return true;
-        }
+                    if(channel16 == 0)
+                        channel16 = 1;
 
-            // WIFI_COMMAND_PIXELDATA64 has a header plus length32 CRGBs
+                    // Go through the channel mask to see which bits are set in the channel16 specifier, and send the data to each and every
+                    // channel that matches the mask.  So if the send channel 7, that means the lowest 3 channels will be set.
 
-            case WIFI_COMMAND_PIXELDATA64:
-            {
-                uint16_t channel16 = WORDFromMemory(&payloadData[2]);
-                uint32_t length32  = DWORDFromMemory(&payloadData[4]);
-                uint64_t seconds   = ULONGFromMemory(&payloadData[8]);
-                uint64_t micros    = ULONGFromMemory(&payloadData[16]);
+                    std::lock_guard<std::mutex> guard(g_buffer_mutex);
 
-                debugV("ProcessIncomingData -- Channel: %u, Length: %u, Seconds: %llu, Micros: %llu ... ",
-                    channel16,
-                    length32,
-                    seconds,
-                    micros);
-
-                // The very old original implementation used channel numbers, not a mask, and only channel 0 was supported at that time, so if
-                // we see a Channel 0 asked for, it must be very old, and we massage it into the mask for Channel0 instead
-                // Another option here would be to draw on all channels (0xff) instead of just one (0x01) if 0 is specified
-
-                if (channel16 == 0)
-                    channel16 = 1;
-
-                // Go through the channel mask to see which bits are set in the channel16 specifier, and send the data to each and every
-                // channel that matches the mask.  So if the send channel 7, that means the lowest 3 channels will be set.
-
-                std::lock_guard<std::mutex> guard(g_buffer_mutex);
-
-                for (int iChannel = 0, channelMask = 1; iChannel < g_ptrSystem->BufferManagers().size(); iChannel++, channelMask <<= 1)
-                {
-                    if ((channelMask & channel16) != 0)
+                    for(int iChannel = 0, channelMask = 1; iChannel < g_ptrSystem->BufferManagers().size(); iChannel++, channelMask <<= 1)
                     {
-                        debugV("Processing for Channel %d", iChannel);
-
-                        bool bDone = false;
-                        auto& bufferManager = g_ptrSystem->BufferManagers()[iChannel];
-
-                        if (!bufferManager.IsEmpty())
+                        if((channelMask & channel16) != 0)
                         {
-                            auto pNewestBuffer = bufferManager.PeekNewestBuffer();
-                            if (micros != 0 && pNewestBuffer->MicroSeconds() == micros && pNewestBuffer->Seconds() == seconds)
+                            debugV("Processing for Channel %d", iChannel);
+
+                            bool bDone         = false;
+                            auto&bufferManager = g_ptrSystem->BufferManagers()[iChannel];
+
+                            if(!bufferManager.IsEmpty())
                             {
-                                debugV("Updating existing buffer");
-                                if (!pNewestBuffer->UpdateFromWire(payloadData, payloadLength))
+                                auto pNewestBuffer = bufferManager.PeekNewestBuffer();
+                                if(micros != 0 && pNewestBuffer->MicroSeconds() == micros && pNewestBuffer->Seconds() == seconds)
+                                {
+                                    debugV("Updating existing buffer");
+                                    if(!pNewestBuffer->UpdateFromWire(payloadData, payloadLength))
+                                        return false;
+
+                                    bDone = true;
+                                }
+                            }
+
+                            if(!bDone)
+                            {
+                                debugV("No match so adding new buffer");
+                                auto pNewBuffer = bufferManager.GetNewBuffer();
+                                if(!pNewBuffer->UpdateFromWire(payloadData, payloadLength))
                                     return false;
-                                bDone = true;
                             }
                         }
-                        if (!bDone)
-                        {
-                            debugV("No match so adding new buffer");
-                            auto pNewBuffer = bufferManager.GetNewBuffer();
-                            if (!pNewBuffer->UpdateFromWire(payloadData, payloadLength))
-                                return false;
-                        }
                     }
-                }
-                return true;
-            }
 
-            default:
-            {
-                debugV("ProcessIncomingData -- Unknown command: 0x%x", command16);
-                return false;
+                    return true;
+                }
+
+                default:
+                {
+                    debugV("ProcessIncomingData -- Unknown command: 0x%x", command16);
+
+                    return false;
+                }
             }
-        }
         #endif
     }
 
@@ -577,7 +570,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     // credential source, ensuring different credential sets don't overwrite
     // each other.
 
-    inline String GetWiFiConfigKey(WifiCredSource source, const String& key)
+    inline String GetWiFiConfigKey(WifiCredSource source, const String&key)
     {
         return String(key + "_" + source);
     }
@@ -588,15 +581,16 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     // for those name-value pairs are made from the variable names (WiFi_ssid, WiFi_Password)
     // directly.  Limited to 63 characters in both cases, which is the WPA2 ssid limit.
 
-    bool ReadWiFiConfig(WifiCredSource source, String& WiFi_ssid, String& WiFi_password)
+    bool ReadWiFiConfig(WifiCredSource source, String&WiFi_ssid, String&WiFi_password)
     {
-        char szBuffer[MAX_PASSWORD_LEN+1];
+        char szBuffer[MAX_PASSWORD_LEN + 1];
 
         nvs_handle_t nvsROHandle;
         esp_err_t err = nvs_open("storage", NVS_READONLY, &nvsROHandle);
-        if (err != ESP_OK)
+        if(err != ESP_OK)
         {
             debugW("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+
             return false;
         }
         else
@@ -605,28 +599,33 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
             auto len = std::size(szBuffer);
             err = nvs_get_str(nvsROHandle, GetWiFiConfigKey(source, NAME_OF(WiFi_ssid)).c_str(), szBuffer, &len);
-            if (ESP_OK != err)
+            if(ESP_OK != err)
             {
                 debugE("Could not read WiFi_ssid for source %d from NVS", source);
                 nvs_close(nvsROHandle);
+
                 return false;
             }
+
             WiFi_ssid = szBuffer;
 
-            len = std::size(szBuffer);
-            err = nvs_get_str(nvsROHandle, GetWiFiConfigKey(source, NAME_OF(WiFi_password)).c_str(), szBuffer, &len);
-            if (ESP_OK != err)
+            len       = std::size(szBuffer);
+            err       = nvs_get_str(nvsROHandle, GetWiFiConfigKey(source, NAME_OF(WiFi_password)).c_str(), szBuffer, &len);
+            if(ESP_OK != err)
             {
                 debugE("Could not read WiFi_password for SSID \"%s\" and source %d from NVS", WiFi_ssid.c_str(), source);
                 nvs_close(nvsROHandle);
+
                 return false;
             }
+
             WiFi_password = szBuffer;
 
             // Don't check in changes that would display the password in logs, etc.
             debugI("Retrieved SSID and Password for source %d from NVS: \"%s\", \"********\"", source, WiFi_ssid.c_str());
 
             nvs_close(nvsROHandle);
+
             return true;
         }
     }
@@ -640,36 +639,37 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     // enforce length limits on values given, so conceivable you could write longer
     // pairs than you could read, but they wouldn't work on WiFi anyway.
 
-    bool WriteWiFiConfig(WifiCredSource source, const String& WiFi_ssid, const String& WiFi_password)
+    bool WriteWiFiConfig(WifiCredSource source, const String&WiFi_ssid, const String&WiFi_password)
     {
         nvs_handle_t nvsRWHandle;
 
         // The "storage" string must match NVS partition name in partition table
 
         esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvsRWHandle);
-        if (err != ESP_OK)
+        if(err != ESP_OK)
         {
             debugW("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+
             return false;
         }
 
         bool success = true;
 
         err = nvs_set_str(nvsRWHandle, GetWiFiConfigKey(source, NAME_OF(WiFi_ssid)).c_str(), WiFi_ssid.c_str());
-        if (ESP_OK != err)
+        if(ESP_OK != err)
         {
             debugW("Error (%s) storing ssid for source %d!\n", esp_err_to_name(err), source);
             success = false;
         }
 
         err = nvs_set_str(nvsRWHandle, GetWiFiConfigKey(source, NAME_OF(WiFi_password)).c_str(), WiFi_password.c_str());
-        if (ESP_OK != err)
+        if(ESP_OK != err)
         {
             debugW("Error (%s) storing password for source %d!\n", esp_err_to_name(err), source);
             success = false;
         }
 
-        if (success)
+        if(success)
             // Do not check in code that displays the password in logs, etc.
             debugI("Stored SSID and Password for source %d to NVS: %s, *******", source, WiFi_ssid.c_str());
 
@@ -693,29 +693,30 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         // The "storage" string must match NVS partition name in partition table
 
         esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvsRWHandle);
-        if (err != ESP_OK)
+        if(err != ESP_OK)
         {
             debugW("Error (%s) opening NVS handle!\n", esp_err_to_name(err));
+
             return false;
         }
 
         bool success = true;
 
         err = nvs_erase_key(nvsRWHandle, GetWiFiConfigKey(source, NAME_OF(WiFi_ssid)).c_str());
-        if (ESP_OK != err && err != ESP_ERR_NVS_NOT_FOUND)
+        if(ESP_OK != err && err != ESP_ERR_NVS_NOT_FOUND)
         {
             debugW("Error (%s) erasing ssid for source %d!\n", esp_err_to_name(err), source);
             success = false;
         }
 
         err = nvs_erase_key(nvsRWHandle, GetWiFiConfigKey(source, NAME_OF(WiFi_password)).c_str());
-        if (ESP_OK != err && err != ESP_ERR_NVS_NOT_FOUND)
+        if(ESP_OK != err && err != ESP_ERR_NVS_NOT_FOUND)
         {
             debugW("Error (%s) erasing password for source %d!\n", esp_err_to_name(err), source);
             success = false;
         }
 
-        if (success)
+        if(success)
             debugI("Erased SSID and Password for source %d from NVS", source);
 
         nvs_commit(nvsRWHandle);
@@ -728,11 +729,11 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     //
     // Entry point for the Debug task, pumps the Debug handler
 
-    void IRAM_ATTR DebugLoopTaskEntry(void *)
+    void IRAM_ATTR DebugLoopTaskEntry(void*)
     {
         //debugI(">> DebugLoopTaskEntry\n");
 
-    // Initialize RemoteDebug
+        // Initialize RemoteDebug
 
         debugV("Starting RemoteDebug server...\n");
 
@@ -741,123 +742,128 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         Debug.showColors(false);                                // Colors
         Debug.setCallBackProjectCmds(&processRemoteDebugCmd);   // Func called to handle any debug extensions we add
 
-        while (!WiFi.isConnected())                             // Wait for wifi, no point otherwise
+        while(!WiFi.isConnected())                              // Wait for wifi, no point otherwise
+        {
             delay(100);
+        }
 
         Debug.begin(WiFi.getHostname(), RemoteDebug::INFO);     // Initialize the WiFi debug server
 
-        for (;;)                                                // Call Debug.handle() 20 times a second
+        for(;;)                                                 // Call Debug.handle() 20 times a second
         {
             Debug.handle();
             delay(MILLIS_PER_SECOND / 20);
         }
     }
 
-#if INCOMING_WIFI_ENABLED
+    #if INCOMING_WIFI_ENABLED
 
-    // SocketServerTaskEntry
-    //
-    // Repeatedly calls the code to open up a socket and receive new connections
+        // SocketServerTaskEntry
+        //
+        // Repeatedly calls the code to open up a socket and receive new connections
 
-    void IRAM_ATTR SocketServerTaskEntry(void *)
-    {
-        for (;;)
+        void IRAM_ATTR SocketServerTaskEntry(void*)
         {
-            if (WiFi.isConnected())
+            for(;;)
             {
-                auto& socketServer = g_ptrSystem->SocketServer();
-
-                socketServer.release();
-                socketServer.begin();
-                socketServer.ProcessIncomingConnectionsLoop();
-                debugW("Socket connection closed.  Retrying...\n");
-            }
-            delay(500);
-        }
-    }
-#endif
-
-#if COLORDATA_SERVER_ENABLED
-    // ColorDataTaskEntry
-    //
-    // The thread which serves requests for color data.
-
-    void IRAM_ATTR ColorDataTaskEntry(void *)
-    {
-        LEDViewer _viewer(NetworkPort::ColorServer);
-        int socket = -1;
-        bool wsListenersPresent = false;
-        BaseFrameEventListener frameEventListener;
-
-        auto& effectManager = g_ptrSystem->EffectManager();
-        #if COLORDATA_WEB_SOCKET_ENABLED
-            auto& webSocketServer = g_ptrSystem->WebSocketServer();
-        #endif
-
-        effectManager.AddFrameEventListener(frameEventListener);
-
-        for(;;)
-        {
-            while (!WiFi.isConnected())
-                delay(250);
-
-            if (!_viewer.begin())
-            {
-                debugE("Unable to start color data server!");
-                delay(1000);
-                continue;
-            }
-            else
-            {
-                debugW("Started color data server!");
-                break;
-            }
-        }
-
-        for (;;)
-        {
-            if (socket < 0)
-                socket = _viewer.CheckForConnection();
-
-            auto leds = effectManager.g()->leds;
-
-            if (frameEventListener.CheckAndClearNewFrameAvailable() && leds != nullptr)
-            {
-                if (socket >= 0)
+                if(WiFi.isConnected())
                 {
-                    debugV("Sending color data packet");
-                    // Potentially too large for the stack, so we allocate it on the heap instead
-                    std::unique_ptr<ColorDataPacket> pPacket = std::make_unique<ColorDataPacket>();
-                    pPacket->header = COLOR_DATA_PACKET_HEADER;
-                    pPacket->width  = effectManager.g()->width();
-                    pPacket->height = effectManager.g()->height();
-                    memcpy(pPacket->colors, leds, sizeof(CRGB) * NUM_LEDS);
+                    auto&socketServer = g_ptrSystem->SocketServer();
 
-                    if (!_viewer.SendPacket(socket, pPacket.get(), sizeof(ColorDataPacket)))
+                    socketServer.release();
+                    socketServer.begin();
+                    socketServer.ProcessIncomingConnectionsLoop();
+                    debugW("Socket connection closed.  Retrying...\n");
+                }
+
+                delay(500);
+            }
+        }
+    #endif
+
+    #if COLORDATA_SERVER_ENABLED
+        // ColorDataTaskEntry
+        //
+        // The thread which serves requests for color data.
+
+        void IRAM_ATTR ColorDataTaskEntry(void*)
+        {
+            LEDViewer _viewer(NetworkPort::ColorServer);
+            int socket             = -1;
+            bool wsListenersPresent = false;
+            BaseFrameEventListener frameEventListener;
+
+            auto&                  effectManager   = g_ptrSystem->EffectManager();
+            #if COLORDATA_WEB_SOCKET_ENABLED
+                auto&              webSocketServer = g_ptrSystem->WebSocketServer();
+            #endif
+
+            effectManager.AddFrameEventListener(frameEventListener);
+
+            for(;;)
+            {
+                while(!WiFi.isConnected())
+                {
+                    delay(250);
+                }
+
+                if(!_viewer.begin())
+                {
+                    debugE("Unable to start color data server!");
+                    delay(1000);
+                    continue;
+                }
+                else
+                {
+                    debugW("Started color data server!");
+                    break;
+                }
+            }
+
+            for(;;)
+            {
+                if(socket < 0)
+                    socket = _viewer.CheckForConnection();
+
+                auto leds = effectManager.g()->leds;
+
+                if(frameEventListener.CheckAndClearNewFrameAvailable() && leds != nullptr)
+                {
+                    if(socket >= 0)
                     {
-                        // If anything goes wrong, we close the socket so it can accept new incoming attempts
-                        debugW("Error on color data socket, so closing");
-                        close(socket);
-                        socket = -1;
+                        debugV("Sending color data packet");
+                        // Potentially too large for the stack, so we allocate it on the heap instead
+                        std::unique_ptr<ColorDataPacket> pPacket = std::make_unique<ColorDataPacket>();
+                        pPacket->header = COLOR_DATA_PACKET_HEADER;
+                        pPacket->width  = effectManager.g()->width();
+                        pPacket->height = effectManager.g()->height();
+                        memcpy(pPacket->colors, leds, sizeof(CRGB) * NUM_LEDS);
+
+                        if(!_viewer.SendPacket(socket, pPacket.get(), sizeof(ColorDataPacket)))
+                        {
+                            // If anything goes wrong, we close the socket so it can accept new incoming attempts
+                            debugW("Error on color data socket, so closing");
+                            close(socket);
+                            socket = -1;
+                        }
                     }
+
+                    #if COLORDATA_WEB_SOCKET_ENABLED
+                        webSocketServer.SendColorData(leds, NUM_LEDS);
+                    #endif
                 }
 
                 #if COLORDATA_WEB_SOCKET_ENABLED
-                    webSocketServer.SendColorData(leds, NUM_LEDS);
+                    wsListenersPresent = webSocketServer.HaveColorDataClients();
                 #endif
+
+                if(socket >= 0 || wsListenersPresent)
+                    delay(10);
+                else
+                    delay(1000);
             }
-
-            #if COLORDATA_WEB_SOCKET_ENABLED
-                wsListenersPresent = webSocketServer.HaveColorDataClients();
-            #endif
-
-            if (socket >= 0 || wsListenersPresent)
-                delay(10);
-            else
-                delay(1000);
         }
-    }
-#endif // COLORDATA_SERVER_ENABLED
+    #endif // COLORDATA_SERVER_ENABLED
 
     // NetworkHandlingLoopEntry
     //
@@ -865,18 +871,17 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     // Pumps the various network loops and sets the time periodically, as well as reconnecting
     // to WiFi if the connection drops.  Also pumps the OTA (Over the air updates) loop.
 
-    void IRAM_ATTR NetworkHandlingLoopEntry(void *)
+    void IRAM_ATTR NetworkHandlingLoopEntry(void*)
     {
         static unsigned long millisAtLastConnected = millis();
 
         //debugI(">> NetworkHandlingLoopEntry\n");
-        if(!MDNS.begin("esp32")) {
+        if(!MDNS.begin("esp32"))
             Serial.println("Error starting mDNS");
-        }
 
         TickType_t notifyWait = 0;
 
-        for (;;)
+        for(;;)
         {
             // Wait until we're woken up by a reader being flagged, or until we've reached the hold point
             ulTaskNotifyTake(pdTRUE, notifyWait);
@@ -888,7 +893,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             {
                 auto connectResult = ConnectToWiFi();
 
-                if (connectResult == WiFiConnectResult::Connected)
+                if(connectResult == WiFiConnectResult::Connected)
                 {
                     millisAtLastConnected = millis();
 
@@ -903,30 +908,31 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                     #if WAIT_FOR_WIFI
                         // Reboot if we've been waiting for a connection for more than the maximum delay between
                         // connection retries and we _do_ have credentials
-                        if (connectResult != WiFiConnectResult::NoCredentials && millis() - millisAtLastConnected > WIFI_WAIT_MAX)
+                        if(connectResult != WiFiConnectResult::NoCredentials && millis() - millisAtLastConnected > WIFI_WAIT_MAX)
                         {
                             debugE("Rebooting in 5 seconds due to no Wifi available.");
                             delay(5000);
                             throw new std::runtime_error("Rebooting due to no Wifi available.");
                         }
+
                     #endif
                 }
             }
 
             // If the reader container isn't available yet or WiFi isn't up yet, we'll sleep for a second before we check again
-            if (!g_ptrSystem->HasNetworkReader() || !WiFi.isConnected())
+            if(!g_ptrSystem->HasNetworkReader() || !WiFi.isConnected())
             {
                 notifyWait = pdMS_TO_TICKS(1000);
                 continue;
             }
 
-            auto& networkReader = g_ptrSystem->NetworkReader();
-            unsigned long now = millis();
+            auto&         networkReader = g_ptrSystem->NetworkReader();
+            unsigned long now           = millis();
 
             // Flag entries of which the read interval has passed
-            for (auto& entry : networkReader.readers)
+            for(auto&entry : networkReader.readers)
             {
-                if (entry.canceled.load())
+                if(entry.canceled.load())
                     continue;
 
                 auto interval = entry.readInterval.load();
@@ -934,11 +940,11 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
                 // The last check captures cases where millis() returns bogus data; if the delta between now and lastReadMs is greater
                 //   than the interval then something's up with our timekeeping, so we trigger the reader just to be sure
-                if (interval && (targetMs <= now || (std::max(now, targetMs) - std::min(now, targetMs)) > interval))
+                if(interval && (targetMs <= now || (std::max(now, targetMs) - std::min(now, targetMs)) > interval))
                     entry.flag.store(true);
 
                 // Unset flag before we do the actual read. This makes that we don't miss another flag raise if it happens while reading
-                if (entry.flag.exchange(false))
+                if(entry.flag.exchange(false))
                 {
                     entry.reader();
                     entry.lastReadMs.store(millis());
@@ -950,19 +956,19 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             now = millis();
 
             // Calculate how long we can sleep. This is determined by the reader that is closest to its interval passing.
-            for (auto& entry : networkReader.readers)
+            for(auto&entry : networkReader.readers)
             {
-                if (entry.canceled.load())
+                if(entry.canceled.load())
                     continue;
 
-                auto interval = entry.readInterval.load();
+                auto interval   = entry.readInterval.load();
                 auto lastReadMs = entry.lastReadMs.load();
 
-                if (!interval)
+                if(!interval)
                     continue;
 
                 // If one of the reader intervals passed then we're up for another read cycle right away, so we can stop looking further
-                if (lastReadMs + interval <= now)
+                if(lastReadMs + interval <= now)
                 {
                     holdMs = 0;
                     break;
@@ -970,7 +976,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                 else
                 {
                     unsigned long entryHoldMs = std::min(interval, interval - (now - lastReadMs));
-                    if (entryHoldMs < holdMs)
+                    if(entryHoldMs < holdMs)
                         holdMs = entryHoldMs;
                 }
             }
@@ -979,18 +985,18 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         }
     }
 
-    size_t NetworkReader::RegisterReader(const std::function<void()>& reader, unsigned long interval, bool flag)
+    size_t NetworkReader::RegisterReader(const std::function<void()>&reader, unsigned long interval, bool flag)
     {
         // Add the reader with its flag unset
-        auto& readerEntry = readers.emplace_back(reader, interval);
+        auto&readerEntry = readers.emplace_back(reader, interval);
 
         // If an interval is specified, start the interval timer now.
-        if (interval)
+        if(interval)
             readerEntry.lastReadMs.store(millis());
 
         size_t index = readers.size() - 1;
 
-        if (flag)
+        if(flag)
             FlagReader(index);
 
         return index;
@@ -999,7 +1005,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     void NetworkReader::FlagReader(size_t index)
     {
         // Check if we received a valid reader index
-        if (index >= readers.size())
+        if(index >= readers.size())
             return;
 
         readers[index].flag.store(true);
@@ -1010,10 +1016,10 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     void NetworkReader::CancelReader(size_t index)
     {
         // Check if we received a valid reader index
-        if (index >= readers.size())
+        if(index >= readers.size())
             return;
 
-        auto& entry = readers[index];
+        auto&entry = readers[index];
         entry.canceled.store(true);
         entry.readInterval.store(0);
         entry.reader = nullptr;

@@ -37,36 +37,39 @@ void WS281xGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsD
     auto pixelsDrawn = wifiPixelsDrawn > 0 ? wifiPixelsDrawn : localPixelsDrawn;
 
     // If we drew no pixels, there's nothing to post process
-    if (pixelsDrawn == 0)
+    if(pixelsDrawn == 0)
     {
         debugV("Frame draw ended without any pixels drawn.");
+
         return;
     }
 
     // If there are no LEDs to show, we can just return now
 
-    if (FastLED.count() == 0)
+    if(FastLED.count() == 0)
     {
         static auto lastDrawTime = millis();
         g_Values.FPS = 1000.0 / max(1UL, millis() - lastDrawTime);
         lastDrawTime = millis();
+
         return;
     }
 
-    auto& effectManager = g_ptrSystem->EffectManager();
+    auto&effectManager = g_ptrSystem->EffectManager();
 
-    for (int i = 0; i < NUM_CHANNELS; i++)
+    for(int i = 0; i < NUM_CHANNELS; i++)
     {
         FastLED[i].setLeds(effectManager.g(i)->leds, pixelsDrawn);
         fadeLightBy(FastLED[i].leds(), FastLED[i].size(), 255 - g_ptrSystem->DeviceConfig().GetBrightness());
     }
+
     FastLED.show(g_Values.Fader); //Shows the pixels
 
-    g_Values.FPS = FastLED.getFPS();
+    g_Values.FPS       = FastLED.getFPS();
     #ifdef POWER_LIMIT_MW
         g_Values.Brite = 100.0 * calculate_max_brightness_for_power_mW(g_ptrSystem->DeviceConfig().GetBrightness(), POWER_LIMIT_MW) / 255;
     #else
         g_Values.Brite = 100.0 * g_ptrSystem->DeviceConfig().GetBrightness() / 255;
     #endif
-    g_Values.Watts = calculate_unscaled_power_mW(effectManager.g()->leds, pixelsDrawn) / 1000; // 1000 for mw->W
+    g_Values.Watts     = calculate_unscaled_power_mW(effectManager.g()->leds, pixelsDrawn) / 1000; // 1000 for mw->W
 }

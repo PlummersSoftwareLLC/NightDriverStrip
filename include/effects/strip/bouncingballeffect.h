@@ -52,11 +52,11 @@ class BouncingBallEffect : public EffectWithId<BouncingBallEffect>
 {
   private:
 
-    size_t  _iOffset;
-    size_t  _cLength;
-    size_t  _cBalls;
-    size_t  _cBallSize;
-    bool    _bMirrored;
+    size_t _iOffset;
+    size_t _cLength;
+    size_t _cBalls;
+    size_t _cBallSize;
+    bool _bMirrored;
 
     const bool _bErase;
 
@@ -67,34 +67,34 @@ class BouncingBallEffect : public EffectWithId<BouncingBallEffect>
 
     std::vector<double> ClockTimeSinceLastBounce;
     std::vector<double> TimeSinceLastBounce;
-    std::vector<float>  Height;
-    std::vector<float>  ImpactVelocity;
-    std::vector<float>  Dampening;
-    std::vector<CRGB>   Colors;
+    std::vector<float> Height;
+    std::vector<float> ImpactVelocity;
+    std::vector<float> Dampening;
+    std::vector<CRGB> Colors;
 
   public:
 
     BouncingBallEffect(size_t ballCount = 3, bool bMirrored = true, bool bErase = false, int ballSize = 5)
         : EffectWithId<BouncingBallEffect>("Bouncing Balls"),
-          _cBalls(ballCount),
-          _cBallSize(ballSize),
-          _bMirrored(bMirrored),
-          _bErase(bErase)
+        _cBalls(ballCount),
+        _cBallSize(ballSize),
+        _bMirrored(bMirrored),
+        _bErase(bErase)
     {
     }
 
     BouncingBallEffect(const JsonObjectConst&  jsonObject)
         : EffectWithId<BouncingBallEffect>(jsonObject),
-          _cBalls(jsonObject["blc"]),
-          _cBallSize(jsonObject["bls"]),
-          _bMirrored(jsonObject[PTY_MIRORRED]),
-          _bErase(jsonObject[PTY_ERASE])
+        _cBalls(jsonObject["blc"]),
+        _cBallSize(jsonObject["bls"]),
+        _bMirrored(jsonObject[PTY_MIRORRED]),
+        _bErase(jsonObject[PTY_ERASE])
     {
     }
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        auto jsonDoc = CreateJsonDocument();
+        auto       jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -112,7 +112,7 @@ class BouncingBallEffect : public EffectWithId<BouncingBallEffect>
         return 61;
     }
 
-    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
+    bool Init(std::vector<std::shared_ptr<GFXBase> >& gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;

@@ -22,10 +22,13 @@ class PatternSM2DDPR : public EffectWithId<PatternSM2DDPR> {
 
   public:
 
-    PatternSM2DDPR() : EffectWithId<PatternSM2DDPR>("Crystallize") {}
-    PatternSM2DDPR(const JsonObjectConst &jsonObject) : EffectWithId<PatternSM2DDPR>(jsonObject) {}
+    PatternSM2DDPR() : EffectWithId<PatternSM2DDPR>("Crystallize") {
+    }
+    PatternSM2DDPR(const JsonObjectConst &jsonObject) : EffectWithId<PatternSM2DDPR>(jsonObject) {
+    }
 
-    void Start() override {}
+    void Start() override {
+    }
 
     // Use integer-only Pythagorean to compute the radius from x^2 and y^2.
     int16_t ZVcalcRadius(int16_t x, int16_t y)

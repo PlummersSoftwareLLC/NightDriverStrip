@@ -38,51 +38,51 @@
 #if ENABLE_WIFI
 // Make sure we have a secrets.h and that it contains everything we need.
 
-#if !__has_include("secrets.h")
-#error Copy include/secrets.example.h to include/secrets.h, edit to taste, and retry. Please see README.md.
-#endif
+    #if !__has_include("secrets.h")
+        #error Copy include/secrets.example.h to include/secrets.h, edit to taste, and retry. Please see README.md.
+    #endif
 
-#include "secrets.h"
+    #include "secrets.h"
 
-#if !defined(cszSSID)
-#error A definition for cszSSID is missing from secrets.h
-#endif
+    #if !defined(cszSSID)
+        #error A definition for cszSSID is missing from secrets.h
+    #endif
 
-#if !defined(cszPassword)
-#error A definition for cszPassword is missing from secrets.h
-#endif
+    #if !defined(cszPassword)
+        #error A definition for cszPassword is missing from secrets.h
+    #endif
 
-#if !defined(cszHostname)
-#error A definition for cszHostname is missing from secrets.h
-#endif
+    #if !defined(cszHostname)
+        #error A definition for cszHostname is missing from secrets.h
+    #endif
 
-#if !defined(cszOpenWeatherAPIKey)
-#error A definition for cszOpenWeatherAPIKey is missing from secrets.h
-#endif
+    #if !defined(cszOpenWeatherAPIKey)
+        #error A definition for cszOpenWeatherAPIKey is missing from secrets.h
+    #endif
 
-#if !defined(cszLocation)
-#error A definition for cszLocation is missing from secrets.h
-#endif
+    #if !defined(cszLocation)
+        #error A definition for cszLocation is missing from secrets.h
+    #endif
 
-#if !defined(bLocationIsZip)
-#error A definition for bLocationIsZip is missing from secrets.h
-#endif
+    #if !defined(bLocationIsZip)
+        #error A definition for bLocationIsZip is missing from secrets.h
+    #endif
 
-#if !defined(cszCountryCode)
-#error A definition for cszCountryCode is missing from secrets.h
-#endif
+    #if !defined(cszCountryCode)
+        #error A definition for cszCountryCode is missing from secrets.h
+    #endif
 
-#if !defined(cszTimeZone)
-#error A definition for cszTimeZone is missing from secrets.h
-#endif
+    #if !defined(cszTimeZone)
+        #error A definition for cszTimeZone is missing from secrets.h
+    #endif
 #else
-#define cszHostname ""
-#define cszLocation ""
-#define bLocationIsZip false
-#define cszCountryCode ""
-#define cszTimeZone ""
-#define cszOpenWeatherAPIKey ""
-#define cszSSID ""
+    #define cszHostname ""
+    #define cszLocation ""
+    #define bLocationIsZip false
+    #define cszCountryCode ""
+    #define cszTimeZone ""
+    #define cszOpenWeatherAPIKey ""
+    #define cszSSID ""
 #endif // ENABLE_WIFI
 
 // Define this to true to make the DeviceConfig ignore any JSON-persisted config that may be on the device.
@@ -121,26 +121,25 @@
 class DeviceConfig : public IJSONSerializable
 {
     // Add variables for additional settings to this list
-    String  hostname = cszHostname;
-    String  location = cszLocation;
-    bool    locationIsZip = bLocationIsZip;
-    String  countryCode = cszCountryCode;
-    String  timeZone = cszTimeZone;
-    String  openWeatherApiKey = cszOpenWeatherAPIKey;
-    bool    use24HourClock = false;
-    bool    useCelsius = false;
-    String  ntpServer = NTP_SERVER_DEFAULT;
-    bool    rememberCurrentEffect = true;
-    int     powerLimit = POWER_LIMIT_DEFAULT;
-    bool    showVUMeter = true;
-    uint8_t brightness = BRIGHTNESS_MAX;
-    CRGB    globalColor = CRGB::Red;
-    bool    applyGlobalColors = false;
-    CRGB    secondColor = CRGB::Red;
-
-    std::vector<SettingSpec, psram_allocator<SettingSpec>> settingSpecs;
-    std::vector<std::reference_wrapper<SettingSpec>> settingSpecReferences;
-    size_t writerIndex;
+    std::vector<SettingSpec, psram_allocator<SettingSpec> > settingSpecs;
+    std::vector<std::reference_wrapper<SettingSpec> >       settingSpecReferences;
+    String                                                  hostname = cszHostname;
+    String                                                  location = cszLocation;
+    bool                                                    locationIsZip = bLocationIsZip;
+    String                                                  countryCode = cszCountryCode;
+    String                                                  timeZone = cszTimeZone;
+    String                                                  openWeatherApiKey = cszOpenWeatherAPIKey;
+    bool                                                    use24HourClock = false;
+    bool                                                    useCelsius = false;
+    String                                                  ntpServer = NTP_SERVER_DEFAULT;
+    bool                                                    rememberCurrentEffect = true;
+    int                                                     powerLimit = POWER_LIMIT_DEFAULT;
+    bool                                                    showVUMeter = true;
+    uint8_t                                                 brightness = BRIGHTNESS_MAX;
+    CRGB                                                    globalColor = CRGB::Red;
+    bool                                                    applyGlobalColors = false;
+    CRGB                                                    secondColor = CRGB::Red;
+    size_t                                                  writerIndex;
 
     void SaveToJSON() const;
 
@@ -167,26 +166,26 @@ class DeviceConfig : public IJSONSerializable
     using ValidateResponse = std::pair<bool, String>;
 
     // Add additional setting Tags to this list
-    static constexpr const char * HostnameTag = NAME_OF(hostname);
-    static constexpr const char * LocationTag = NAME_OF(location);
-    static constexpr const char * LocationIsZipTag = NAME_OF(locationIsZip);
-    static constexpr const char * CountryCodeTag = NAME_OF(countryCode);
-    static constexpr const char * OpenWeatherApiKeyTag = NAME_OF(openWeatherApiKey);
-    static constexpr const char * TimeZoneTag = NAME_OF(timeZone);
-    static constexpr const char * Use24HourClockTag = NAME_OF(use24HourClock);
-    static constexpr const char * UseCelsiusTag = NAME_OF(useCelsius);
-    static constexpr const char * NTPServerTag = NAME_OF(ntpServer);
-    static constexpr const char * RememberCurrentEffectTag = NAME_OF(rememberCurrentEffect);
-    static constexpr const char * PowerLimitTag = NAME_OF(powerLimit);
-    static constexpr const char * BrightnessTag = NAME_OF(brightness);
+    static constexpr const char     * HostnameTag = NAME_OF(hostname);
+    static constexpr const char     * LocationTag = NAME_OF(location);
+    static constexpr const char     * LocationIsZipTag = NAME_OF(locationIsZip);
+    static constexpr const char     * CountryCodeTag = NAME_OF(countryCode);
+    static constexpr const char     * OpenWeatherApiKeyTag = NAME_OF(openWeatherApiKey);
+    static constexpr const char     * TimeZoneTag = NAME_OF(timeZone);
+    static constexpr const char     * Use24HourClockTag = NAME_OF(use24HourClock);
+    static constexpr const char     * UseCelsiusTag = NAME_OF(useCelsius);
+    static constexpr const char     * NTPServerTag = NAME_OF(ntpServer);
+    static constexpr const char     * RememberCurrentEffectTag = NAME_OF(rememberCurrentEffect);
+    static constexpr const char     * PowerLimitTag = NAME_OF(powerLimit);
+    static constexpr const char     * BrightnessTag = NAME_OF(brightness);
     // No need to publish the show VU meter tag unless we're also publishing the setting
     #if SHOW_VU_METER
-    static constexpr const char * ShowVUMeterTag = NAME_OF(showVUMeter);
+        static constexpr const char * ShowVUMeterTag = NAME_OF(showVUMeter);
     #endif
-    static constexpr const char * ClearGlobalColorTag = "clearGlobalColor";
-    static constexpr const char * GlobalColorTag = NAME_OF(globalColor);
-    static constexpr const char * ApplyGlobalColorsTag = NAME_OF(applyGlobalColors);
-    static constexpr const char * SecondColorTag = NAME_OF(secondColor);
+    static constexpr const char     * ClearGlobalColorTag = "clearGlobalColor";
+    static constexpr const char     * GlobalColorTag = NAME_OF(globalColor);
+    static constexpr const char     * ApplyGlobalColorsTag = NAME_OF(applyGlobalColors);
+    static constexpr const char     * SecondColorTag = NAME_OF(secondColor);
 
     DeviceConfig();
 
@@ -212,7 +211,7 @@ class DeviceConfig : public IJSONSerializable
         jsonDoc[PowerLimitTag] = powerLimit;
         // Only serialize showVUMeter if the VU meter is enabled in the build
         #if SHOW_VU_METER
-        jsonDoc[ShowVUMeterTag] = showVUMeter;
+            jsonDoc[ShowVUMeterTag] = showVUMeter;
         #endif
         jsonDoc[BrightnessTag] = brightness;
         jsonDoc[GlobalColorTag] = globalColor;
@@ -250,7 +249,7 @@ class DeviceConfig : public IJSONSerializable
         SetIfPresentIn(jsonObject, brightness, BrightnessTag);
         // Only deserialize showVUMeter if the VU meter is enabled in the build
         #if SHOW_VU_METER
-        SetIfPresentIn(jsonObject, showVUMeter, ShowVUMeterTag);
+            SetIfPresentIn(jsonObject, showVUMeter, ShowVUMeterTag);
         #endif
         SetIfPresentIn(jsonObject, globalColor, GlobalColorTag);
         SetIfPresentIn(jsonObject, applyGlobalColors, ApplyGlobalColorsTag);
@@ -273,134 +272,134 @@ class DeviceConfig : public IJSONSerializable
         RemoveJSONFile(DEVICE_CONFIG_FILE);
     }
 
-    virtual const std::vector<std::reference_wrapper<SettingSpec>>& GetSettingSpecs()
+    virtual const std::vector<std::reference_wrapper<SettingSpec> >& GetSettingSpecs()
     {
         if (settingSpecs.empty())
         {
             // Add SettingSpec for additional settings to this list
             settingSpecs.emplace_back(
-                HostnameTag,
-                "Hostname",
-                "The hostname of the device. A reboot is required after changing this.",
-                SettingSpec::SettingType::String
-            ).EmptyAllowed = true;
+                    HostnameTag,
+                    "Hostname",
+                    "The hostname of the device. A reboot is required after changing this.",
+                    SettingSpec::SettingType::String
+                    ).EmptyAllowed = true;
             settingSpecs.emplace_back(
-                LocationTag,
-                "Location",
-                "The location (city or postal code) where the device is located.",
-                SettingSpec::SettingType::String
-            );
+                    LocationTag,
+                    "Location",
+                    "The location (city or postal code) where the device is located.",
+                    SettingSpec::SettingType::String
+                    );
             settingSpecs.emplace_back(
-                LocationIsZipTag,
-                "Location is postal code",
-                "Indicates if the value for the \"Location\" setting is a postal code (yes if checked) or not.",
-                SettingSpec::SettingType::Boolean
-            );
+                    LocationIsZipTag,
+                    "Location is postal code",
+                    "Indicates if the value for the \"Location\" setting is a postal code (yes if checked) or not.",
+                    SettingSpec::SettingType::Boolean
+                    );
             settingSpecs.emplace_back(
-                CountryCodeTag,
-                "Country code",
-                "The <a href=\"https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2\">ISO 3166-1 alpha-2</a> country "
-                "code for the country that the device is located in.",
-                SettingSpec::SettingType::String
-            );
+                    CountryCodeTag,
+                    "Country code",
+                    "The <a href=\"https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2\">ISO 3166-1 alpha-2</a> country "
+                    "code for the country that the device is located in.",
+                    SettingSpec::SettingType::String
+                    );
 
             auto weatherKeySpec = settingSpecs.emplace_back(
-                OpenWeatherApiKeyTag,
-                "Open Weather API key",
-                "The API key for the <a href=\"https://openweathermap.org/api\">Weather API provided by Open Weather Map</a>.",
-                SettingSpec::SettingType::String
-            );
+                    OpenWeatherApiKeyTag,
+                    "Open Weather API key",
+                    "The API key for the <a href=\"https://openweathermap.org/api\">Weather API provided by Open Weather Map</a>.",
+                    SettingSpec::SettingType::String
+                    );
             weatherKeySpec.HasValidation = true;
             weatherKeySpec.Access = SettingSpec::SettingAccess::WriteOnly;
             weatherKeySpec.EmptyAllowed.reset();        // Silently ignore empty value at the front-end
 
             settingSpecs.emplace_back(
-                TimeZoneTag,
-                "Time zone",
-                "The timezone the device resides in, in <a href=\"https://en.wikipedia.org/wiki/Tz_database\">tz database</a> format. "
-                "The list of available timezone identifiers can be found in the <a href=\"/timezones.json\">timezones.json</a> file.",
-                SettingSpec::SettingType::String
-            );
+                    TimeZoneTag,
+                    "Time zone",
+                    "The timezone the device resides in, in <a href=\"https://en.wikipedia.org/wiki/Tz_database\">tz database</a> format. "
+                    "The list of available timezone identifiers can be found in the <a href=\"/timezones.json\">timezones.json</a> file.",
+                    SettingSpec::SettingType::String
+                    );
             settingSpecs.emplace_back(
-                Use24HourClockTag,
-                "Use 24 hour clock",
-                "Indicates if time should be shown in 24-hour format (yes if checked) or 12-hour AM/PM format.",
-                SettingSpec::SettingType::Boolean
-            );
+                    Use24HourClockTag,
+                    "Use 24 hour clock",
+                    "Indicates if time should be shown in 24-hour format (yes if checked) or 12-hour AM/PM format.",
+                    SettingSpec::SettingType::Boolean
+                    );
             settingSpecs.emplace_back(
-                UseCelsiusTag,
-                "Use degrees Celsius",
-                "Indicates if temperatures should be shown in degrees Celsius (yes if checked) or degrees Fahrenheit.",
-                SettingSpec::SettingType::Boolean
-            );
+                    UseCelsiusTag,
+                    "Use degrees Celsius",
+                    "Indicates if temperatures should be shown in degrees Celsius (yes if checked) or degrees Fahrenheit.",
+                    SettingSpec::SettingType::Boolean
+                    );
             settingSpecs.emplace_back(
-                NTPServerTag,
-                "NTP server address",
-                "The hostname or IP address of the NTP server to be used for time synchronization.",
-                SettingSpec::SettingType::String
-            );
+                    NTPServerTag,
+                    "NTP server address",
+                    "The hostname or IP address of the NTP server to be used for time synchronization.",
+                    SettingSpec::SettingType::String
+                    );
             settingSpecs.emplace_back(
-                RememberCurrentEffectTag,
-                "Remember current effect",
-                "Indicates if the current effect index should be saved after an effect transition, so the device resumes "
-                "from the same effect when restarted. Enabling this will lead to more wear on the flash chip of your device.",
-                SettingSpec::SettingType::Boolean
-            );
+                    RememberCurrentEffectTag,
+                    "Remember current effect",
+                    "Indicates if the current effect index should be saved after an effect transition, so the device resumes "
+                    "from the same effect when restarted. Enabling this will lead to more wear on the flash chip of your device.",
+                    SettingSpec::SettingType::Boolean
+                    );
             settingSpecs.emplace_back(
-                BrightnessTag,
-                "Brightness",
-                "Overall brightness the connected LEDs or matrix should be run at.",
-                SettingSpec::SettingType::Slider,
-                BRIGHTNESS_MIN,
-                BRIGHTNESS_MAX
-            ).HasValidation = true;
+                    BrightnessTag,
+                    "Brightness",
+                    "Overall brightness the connected LEDs or matrix should be run at.",
+                    SettingSpec::SettingType::Slider,
+                    BRIGHTNESS_MIN,
+                    BRIGHTNESS_MAX
+                    ).HasValidation = true;
 
             // Only publish the VU meter setting if the VU meter is enabled in the build
             #if SHOW_VU_METER
-            settingSpecs.emplace_back(
-                ShowVUMeterTag,
-                "Show VU meter",
-                "Used to show (checked) or hide the VU meter at the top of the matrix.",
-                SettingSpec::SettingType::Boolean
-            );
+                settingSpecs.emplace_back(
+                    ShowVUMeterTag,
+                    "Show VU meter",
+                    "Used to show (checked) or hide the VU meter at the top of the matrix.",
+                    SettingSpec::SettingType::Boolean
+                    );
             #endif
 
-            auto& powerLimitSpec = settingSpecs.emplace_back(
-                PowerLimitTag,
-                "Power limit",
-                "The maximum power in mW that the matrix attached to the board is allowed to use. As the previous sentence implies, this "
-                "setting only applies if a matrix is used.",
-                SettingSpec::SettingType::Integer
-            );
+            auto & powerLimitSpec = settingSpecs.emplace_back(
+                    PowerLimitTag,
+                    "Power limit",
+                    "The maximum power in mW that the matrix attached to the board is allowed to use. As the previous sentence implies, this "
+                    "setting only applies if a matrix is used.",
+                    SettingSpec::SettingType::Integer
+                    );
             powerLimitSpec.MinimumValue = POWER_LIMIT_MIN;
             powerLimitSpec.HasValidation = true;
 
             settingSpecs.emplace_back(
-                ClearGlobalColorTag,
-                "Clear global color",
-                "Stop applying the global color/derived palette. This takes precedence over the \"(Re)apply global color\" checkbox.",
-                SettingSpec::SettingType::Boolean
-            ).Access = SettingSpec::SettingAccess::WriteOnly;
+                    ClearGlobalColorTag,
+                    "Clear global color",
+                    "Stop applying the global color/derived palette. This takes precedence over the \"(Re)apply global color\" checkbox.",
+                    SettingSpec::SettingType::Boolean
+                    ).Access = SettingSpec::SettingAccess::WriteOnly;
             settingSpecs.emplace_back(
-                GlobalColorTag,
-                "Global color",
-                "Main color that is applied to all those effects that support using it.",
-                SettingSpec::SettingType::Color
-            );
+                    GlobalColorTag,
+                    "Global color",
+                    "Main color that is applied to all those effects that support using it.",
+                    SettingSpec::SettingType::Color
+                    );
             settingSpecs.emplace_back(
-                ApplyGlobalColorsTag,
-                "(Re)apply global color",
-                "You can use this to \"reselect\" and apply the current global color, to force the composition of the derived "
-                "global palette. This checkbox is ignored if the \"Clear global color\" checkbox is selected.",
-                SettingSpec::SettingType::Boolean
-            ).Access = SettingSpec::SettingAccess::WriteOnly;
+                    ApplyGlobalColorsTag,
+                    "(Re)apply global color",
+                    "You can use this to \"reselect\" and apply the current global color, to force the composition of the derived "
+                    "global palette. This checkbox is ignored if the \"Clear global color\" checkbox is selected.",
+                    SettingSpec::SettingType::Boolean
+                    ).Access = SettingSpec::SettingAccess::WriteOnly;
             settingSpecs.emplace_back(
-                SecondColorTag,
-                "Second color",
-                "Second color that is used to create a global palette in combination with the current global color. That palette is used "
-                "by some effects. Defaults to the <em>previous</em> global color if not explicitly set.",
-                SettingSpec::SettingType::Color
-            );
+                    SecondColorTag,
+                    "Second color",
+                    "Second color that is used to create a global palette in combination with the current global color. That palette is used "
+                    "by some effects. Defaults to the <em>previous</em> global color if not explicitly set.",
+                    SettingSpec::SettingType::Color
+                    );
 
             settingSpecReferences.insert(settingSpecReferences.end(), settingSpecs.begin(), settingSpecs.end());
         }
@@ -539,9 +538,9 @@ class DeviceConfig : public IJSONSerializable
     {
         // We only actually persist if the VU meter is enabled in the build
         #if SHOW_VU_METER
-        SetAndSave(showVUMeter, newShowVUMeter);
+            SetAndSave(showVUMeter, newShowVUMeter);
         #else
-        showVUMeter = newShowVUMeter;
+            showVUMeter = newShowVUMeter;
         #endif
     }
 

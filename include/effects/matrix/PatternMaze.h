@@ -86,7 +86,7 @@
 
 
 class PatternMaze : public EffectWithId<PatternMaze> {
-private:
+  private:
     enum Directions {
         None = 0,
         Up = 1,
@@ -95,7 +95,7 @@ private:
         Right = 8,
     };
 
-    struct Point{
+    struct Point {
         int x;
         int y;
 
@@ -211,9 +211,9 @@ private:
                 // choose random(Prim's)
                 return random(max);
 
-            //case 2:
+                //case 2:
                 // choose oldest (not good, so disabling)
-            //    return 0;
+                //    return 0;
         }
     }
 
@@ -273,10 +273,12 @@ private:
         }
     }
 
-public:
+  public:
 
-    PatternMaze() : EffectWithId<PatternMaze>("Maze") {}
-    PatternMaze(const JsonObjectConst& jsonObject) : EffectWithId<PatternMaze>(jsonObject) {}
+    PatternMaze() : EffectWithId<PatternMaze>("Maze") {
+    }
+    PatternMaze(const JsonObjectConst& jsonObject) : EffectWithId<PatternMaze>(jsonObject) {
+    }
 
     void Draw() override
     {
@@ -310,7 +312,7 @@ public:
         }
     }
 
-    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx)
+    virtual bool Init(std::vector<std::shared_ptr<GFXBase> >& gfx)
     {
         if (!LEDStripEffect::Init(gfx))
             return false;

@@ -98,7 +98,7 @@
 // heavily ESP/Arduino-accented probject) elide __attribute__ - but even
 // clang defines and supports this...
 #ifndef __GNUC__
-#  define  __attribute__(x)  /*NOTHING*/
+    #define  __attribute__(x)/*NOTHING*/
 #endif
 
 // The goal here is to get two variables, one numeric and one string, from the *same* version
@@ -158,7 +158,7 @@
 
 
 #if USE_M5
-#include "M5Unified.h"
+    #include "M5Unified.h"
 #endif
 #define EFFECT_CROSS_FADE_TIME 1200.0    // How long for an effect to ramp brightness fader down and back during effect change
 
@@ -282,20 +282,20 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef PROJECT_NAME
-#define PROJECT_NAME        "Mesmerizer"
+    #define PROJECT_NAME        "Mesmerizer"
 #endif
 
 #if USE_HUB75
-#include "MatrixHardware_ESP32_Custom.h"
-#define SM_INTERNAL     // Silence build messages from their header
-#include <SmartMatrix.h>
+    #include "MatrixHardware_ESP32_Custom.h"
+    #define SM_INTERNAL // Silence build messages from their header
+    #include <SmartMatrix.h>
 #endif
 
 #if ENABLE_AUDIOSERIAL
-#ifndef SERIAL_PINRX
-    #define SERIAL_PINRX    33
-    #define SERIAL_PINTX    32
-#endif
+    #ifndef SERIAL_PINRX
+        #define SERIAL_PINRX    33
+        #define SERIAL_PINTX    32
+    #endif
 #endif
 
 #define STACK_SIZE (ESP_TASK_MAIN_STACK) // Stack size for each new thread
@@ -308,7 +308,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 // Set rest of things to reasonable defaults that were not specified by the project config above.
 
 #ifndef MIN_BUFFERS
-#define MIN_BUFFERS 3               // How many copies of LED buffers this board will keep at a minimum per strand
+    #define MIN_BUFFERS 3           // How many copies of LED buffers this board will keep at a minimum per strand
 #endif
 
 #ifndef MAX_BUFFERS
@@ -320,34 +320,34 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef ENABLE_WEBSERVER
-#define ENABLE_WEBSERVER        0   // Chip provides a web server with controls to adjust effects
+    #define ENABLE_WEBSERVER        0// Chip provides a web server with controls to adjust effects
 #endif
 
 #if ENABLE_WEBSERVER
     #ifndef ENABLE_WEB_UI
-    #define ENABLE_WEB_UI           1   // Enable HTTP pathnames for the web UI
+        #define ENABLE_WEB_UI           1// Enable HTTP pathnames for the web UI
     #endif
 #endif
 
 #ifndef ENABLE_OTA
-#define ENABLE_OTA              1   // Listen for over the air update to the flash
+    #define ENABLE_OTA              1// Listen for over the air update to the flash
 #endif
 
 #ifndef ENABLE_ESPNOW
-#define ENABLE_ESPNOW           0   // Listen for ESPNOW packets
+    #define ENABLE_ESPNOW           0// Listen for ESPNOW packets
 #endif
 
 #ifndef ENABLE_NTP
-#define ENABLE_NTP              1   // Update the clock from NTP
+    #define ENABLE_NTP              1// Update the clock from NTP
 #endif
 
 #ifndef NUM_LEDS
-#define NUM_LEDS (MATRIX_HEIGHT * MATRIX_WIDTH)
+    #define NUM_LEDS (MATRIX_HEIGHT * MATRIX_WIDTH)
 #endif
 
 #ifndef FAN_SIZE                // How man LEDs around the circumference
-#define FAN_SIZE 1
-#define NUM_FANS NUM_LEDS
+    #define FAN_SIZE 1
+    #define NUM_FANS NUM_LEDS
 #endif
 
 #if ENABLE_AUDIO
@@ -372,89 +372,89 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef NUM_RINGS               // How many rings in each tree/insulator/etc
-#define NUM_RINGS 1
+    #define NUM_RINGS 1
 #endif
 
 #ifndef COLOR_ORDER
-#define COLOR_ORDER EOrder::GRB
+    #define COLOR_ORDER EOrder::GRB
 #endif
 
 // Define fan ordering for drawing into the fan directionally
 
 #ifndef LED_FAN_OFFSET_LR
-#define LED_FAN_OFFSET_LR  (LED_FAN_OFFSET_BU + (FAN_SIZE * 1 / 4))         // High level stuff right here!
+    #define LED_FAN_OFFSET_LR  (LED_FAN_OFFSET_BU + (FAN_SIZE * 1 / 4))     // High level stuff right here!
 #endif
 
 #ifndef LED_FAN_OFFSET_TD
-#define LED_FAN_OFFSET_TD  (LED_FAN_OFFSET_BU + (FAN_SIZE * 2 / 4))
+    #define LED_FAN_OFFSET_TD  (LED_FAN_OFFSET_BU + (FAN_SIZE * 2 / 4))
 #endif
 
 #ifndef LED_FAN_OFFSET_RL
-#define LED_FAN_OFFSET_RL  (LED_FAN_OFFSET_BU + (FAN_SIZE * 3 / 4))
+    #define LED_FAN_OFFSET_RL  (LED_FAN_OFFSET_BU + (FAN_SIZE * 3 / 4))
 #endif
 
 #ifndef NUM_FANS
-#define NUM_FANS 1
+    #define NUM_FANS 1
 #endif
 
 #ifndef RING_SIZE_0
-#define RING_SIZE_0 FAN_SIZE
+    #define RING_SIZE_0 FAN_SIZE
 #endif
 
 #ifndef RING_SIZE_1
-#define RING_SIZE_1 FAN_SIZE
+    #define RING_SIZE_1 FAN_SIZE
 #endif
 
 #ifndef RING_SIZE_2
-#define RING_SIZE_2 FAN_SIZE
+    #define RING_SIZE_2 FAN_SIZE
 #endif
 
 #ifndef RING_SIZE_3
-#define RING_SIZE_3 FAN_SIZE
+    #define RING_SIZE_3 FAN_SIZE
 #endif
 
 #ifndef RING_SIZE_4
-#define RING_SIZE_4 FAN_SIZE
+    #define RING_SIZE_4 FAN_SIZE
 #endif
 
 #ifndef DEFAULT_EFFECT_INTERVAL
-#define DEFAULT_EFFECT_INTERVAL 1000*60
+    #define DEFAULT_EFFECT_INTERVAL 1000*60
 #endif
 
 #ifndef MILLIS_PER_FRAME
-#define MILLIS_PER_FRAME 0
+    #define MILLIS_PER_FRAME 0
 #endif
 
 #ifndef LED_FAN_OFFSET_BU
-#define LED_FAN_OFFSET_BU 0
+    #define LED_FAN_OFFSET_BU 0
 #endif
 
 #ifndef RESERVE_MEMORY
-  #ifdef USE_PSRAM
-    #define RESERVE_MEMORY 1000000
-  #else
-    #define RESERVE_MEMORY 150000
-  #endif
+    #ifdef USE_PSRAM
+        #define RESERVE_MEMORY 1000000
+    #else
+        #define RESERVE_MEMORY 150000
+    #endif
 #endif
 
 #ifndef TIME_BEFORE_LOCAL
-#define TIME_BEFORE_LOCAL 5
+    #define TIME_BEFORE_LOCAL 5
 #endif
 
 #ifndef ENABLE_REMOTE
-#define ENABLE_REMOTE 0
+    #define ENABLE_REMOTE 0
 #endif
 
 #ifndef EFFECT_PERSISTENCE_CRITICAL
-#define EFFECT_PERSISTENCE_CRITICAL 0
+    #define EFFECT_PERSISTENCE_CRITICAL 0
 #endif
 
 #ifndef MATRIX_REFRESH_RATE
-#define MATRIX_REFRESH_RATE 180
+    #define MATRIX_REFRESH_RATE 180
 #endif
 
 #ifndef MATRIX_CALC_DIVIDER
-#define MATRIX_CALC_DIVIDER 3
+    #define MATRIX_CALC_DIVIDER 3
 #endif
 
 // Power Limit
@@ -468,7 +468,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 // not be limited at the software level.
 
 // #define POWER_LIMIT_MW 500*5                 // Define for your power draw limit. Example is a low 2500mA
-                                                // which may dim your LEDs quite a lot.
+// which may dim your LEDs quite a lot.
 
 // Display
 //
@@ -478,7 +478,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #if USE_SCREEN
 
     #if ARDUINO_HELTEC_WIFI_KIT_32
-                        // screen definations for heltec_wifi_kit_32 or heltec_wifi_kit_32_v2
+        // screen definations for heltec_wifi_kit_32 or heltec_wifi_kit_32_v2
 
         #define USE_OLED 1                                    // Enable the Heltec's monochrome OLED
         #if !(USE_SSD1306)
@@ -542,35 +542,35 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 
 #ifndef USE_OLED
-#define USE_OLED 0
+    #define USE_OLED 0
 #endif
 
 #ifndef USE_M5DISPLAY
-#define USE_M5DISPLAY 0
+    #define USE_M5DISPLAY 0
 #endif
 
 #ifndef USE_LCD
-#define USE_LCD 0
+    #define USE_LCD 0
 #endif
 
 #ifndef USE_TFTSPI
-#define USE_TFTSPI 0
+    #define USE_TFTSPI 0
 #endif
 
 #ifndef CAPTION_TIME
-#define CAPTION_TIME 3000
+    #define CAPTION_TIME 3000
 #endif
 
 #ifndef MATRIX_CENTER_X
-#define MATRIX_CENTER_X ((MATRIX_WIDTH + 1) / 2)
+    #define MATRIX_CENTER_X ((MATRIX_WIDTH + 1) / 2)
 #endif
 
 #ifndef MATRIX_CENTER_Y
-#define MATRIX_CENTER_Y ((MATRIX_HEIGHT + 1) / 2)
+    #define MATRIX_CENTER_Y ((MATRIX_HEIGHT + 1) / 2)
 #endif
 
 #ifndef NUM_INFO_PAGES
-#define NUM_INFO_PAGES 3
+    #define NUM_INFO_PAGES 3
 #endif
 
 // When you press a color button on the remote, the color is used to create a temporary fill effect, but
@@ -578,7 +578,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 // to actually use them.
 
 #ifndef FULL_COLOR_REMOTE_FILL
-#define FULL_COLOR_REMOTE_FILL 0
+    #define FULL_COLOR_REMOTE_FILL 0
 #endif
 
 // Convenience shortcut to avoid cluttering all the above with #if pretzels.
@@ -623,43 +623,43 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 #define MICROS_PER_MILLI    1000
 
 #ifndef M5STICKC
-#define M5STICKC 0
+    #define M5STICKC 0
 #endif
 
 #ifndef M5STICKCPLUS
-#define M5STICKCPLUS 0
+    #define M5STICKCPLUS 0
 #endif
 
 #ifndef M5STICKCPLUS2
-#define M5STICKCPLUS2 0
+    #define M5STICKCPLUS2 0
 #endif
 
 #ifndef M5STACKCORE2
-#define M5STACKCORE2 0
+    #define M5STACKCORE2 0
 #endif
 
 #ifndef COLORDATA_SERVER_ENABLED
-  #if ENABLE_WIFI
-    #define COLORDATA_SERVER_ENABLED 1
-  #else
-    #define COLORDATA_SERVER_ENABLED 0
-  #endif
+    #if ENABLE_WIFI
+        #define COLORDATA_SERVER_ENABLED 1
+    #else
+        #define COLORDATA_SERVER_ENABLED 0
+    #endif
 #endif
 
 #ifndef COLORDATA_WEB_SOCKET_ENABLED
-  #if ENABLE_WIFI && ENABLE_WEBSERVER && COLORDATA_SERVER_ENABLED
-    #define COLORDATA_WEB_SOCKET_ENABLED 1
-  #else
-    #define COLORDATA_WEB_SOCKET_ENABLED 0
-  #endif
+    #if ENABLE_WIFI && ENABLE_WEBSERVER && COLORDATA_SERVER_ENABLED
+        #define COLORDATA_WEB_SOCKET_ENABLED 1
+    #else
+        #define COLORDATA_WEB_SOCKET_ENABLED 0
+    #endif
 #endif
 
 #ifndef EFFECTS_WEB_SOCKET_ENABLED
-  #if ENABLE_WIFI && ENABLE_WEBSERVER
-    #define EFFECTS_WEB_SOCKET_ENABLED 1
-  #else
-    #define EFFECTS_WEB_SOCKET_ENABLED 0
-  #endif
+    #if ENABLE_WIFI && ENABLE_WEBSERVER
+        #define EFFECTS_WEB_SOCKET_ENABLED 1
+    #else
+        #define EFFECTS_WEB_SOCKET_ENABLED 0
+    #endif
 #endif
 
 // Microphone
@@ -684,24 +684,24 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 #endif
 
 #ifndef IR_REMOTE_PIN
-#define IR_REMOTE_PIN   25
+    #define IR_REMOTE_PIN   25
 #endif
 
 // Set and use for I2S input.
 #if USE_I2S_AUDIO_PINS || ELECROW
-  // Bit clock
-  #ifndef I2S_BCLK_PIN
-    #define I2S_BCLK_PIN   39
-  #endif
+    // Bit clock
+    #ifndef I2S_BCLK_PIN
+        #define I2S_BCLK_PIN   39
+    #endif
 
-  // Word select clock.
-  #ifndef I2S_WS_PIN
-    #define I2S_WS_PIN     38
-  #endif
+    // Word select clock.
+    #ifndef I2S_WS_PIN
+        #define I2S_WS_PIN     38
+    #endif
 
-  #ifndef I2S_DATA_PIN
-    #define I2S_DATA_PIN     INPUT_PIN
-  #endif
+    #ifndef I2S_DATA_PIN
+        #define I2S_DATA_PIN     INPUT_PIN
+    #endif
 #endif
 
 
@@ -731,7 +731,7 @@ inline int FPS(unsigned long duration, uint32_t perSecond = MILLIS_PER_SECOND)
         return 999;
 
     float fpsf = 1.0f / (duration / (float)perSecond);
-    int FPS = (int)fpsf;
+    int   FPS = (int)fpsf;
     if (FPS > 999)
         FPS = 999;
     return FPS;
@@ -788,56 +788,58 @@ inline String str_sprintf(const char *fmt, ...)
 template <typename T>
 inline static T random_range(T lower, T upper)
 {
-#if USE_STRONG_RAND
-    static_assert(std::is_arithmetic<T>::value, "Template argument must be numeric type");
+    #if USE_STRONG_RAND
+        static_assert(std::is_arithmetic<T>::value, "Template argument must be numeric type");
 
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
+        static std::random_device rd;
+        static std::mt19937       gen(rd());
 
-    if constexpr (std::is_integral<T>::value) {
-        std::uniform_int_distribution<T> distrib(lower, upper);
-        return distrib(gen);
-    } else if constexpr (std::is_floating_point<T>::value) {
-        std::uniform_real_distribution<T> distrib(lower, upper);
-        return distrib(gen);
-    }
-#else
-    static bool seeded = [&] { srand(time(nullptr)); return true; } ();
+        if constexpr (std::is_integral<T>::value) {
+            std::uniform_int_distribution<T> distrib(lower, upper);
+            return distrib(gen);
+        } else if constexpr (std::is_floating_point<T>::value) {
+            std::uniform_real_distribution<T> distrib(lower, upper);
+            return distrib(gen);
+        }
+    #else
+        static bool seeded = [&] {
+                                 srand(time(nullptr)); return true;
+                             }();
 
-    if constexpr (std::is_integral<T>::value) {
-        return std::rand() % (upper - lower + 1) + lower;
-    } else if constexpr (std::is_floating_point<T>::value) {
-        return std::rand() / (RAND_MAX / (upper - lower)) + lower;
-    } else {
-        static_assert(std::is_integral<T>::value || std::is_floating_point<T>::value, "Template argument must be numeric type");
-    }
-#endif
+        if constexpr (std::is_integral<T>::value) {
+            return std::rand() % (upper - lower + 1) + lower;
+        } else if constexpr (std::is_floating_point<T>::value) {
+            return std::rand() / (RAND_MAX / (upper - lower)) + lower;
+        } else {
+            static_assert(std::is_integral<T>::value || std::is_floating_point<T>::value, "Template argument must be numeric type");
+        }
+    #endif
 }
 
 inline uint64_t ULONGFromMemory(const uint8_t * payloadData)
 {
-    return  (uint64_t)payloadData[7] << 56  |
-            (uint64_t)payloadData[6] << 48  |
-            (uint64_t)payloadData[5] << 40  |
-            (uint64_t)payloadData[4] << 32  |
-            (uint64_t)payloadData[3] << 24  |
-            (uint64_t)payloadData[2] << 16  |
-            (uint64_t)payloadData[1] << 8   |
-            (uint64_t)payloadData[0];
+    return (uint64_t)payloadData[7] << 56  |
+           (uint64_t)payloadData[6] << 48  |
+           (uint64_t)payloadData[5] << 40  |
+           (uint64_t)payloadData[4] << 32  |
+           (uint64_t)payloadData[3] << 24  |
+           (uint64_t)payloadData[2] << 16  |
+           (uint64_t)payloadData[1] << 8   |
+           (uint64_t)payloadData[0];
 }
 
 inline uint32_t DWORDFromMemory(const uint8_t * payloadData)
 {
-    return  (uint32_t)payloadData[3] << 24  |
-            (uint32_t)payloadData[2] << 16  |
-            (uint32_t)payloadData[1] << 8   |
-            (uint32_t)payloadData[0];
+    return (uint32_t)payloadData[3] << 24  |
+           (uint32_t)payloadData[2] << 16  |
+           (uint32_t)payloadData[1] << 8   |
+           (uint32_t)payloadData[0];
 }
 
 inline uint16_t WORDFromMemory(const uint8_t * payloadData)
 {
-    return  (uint16_t)payloadData[1] << 8   |
-            (uint16_t)payloadData[0];
+    return (uint16_t)payloadData[1] << 8   |
+           (uint16_t)payloadData[0];
 }
 
 // SetSocketBlockingEnabled
@@ -846,16 +848,18 @@ inline uint16_t WORDFromMemory(const uint8_t * payloadData)
 // For example, a call to the send() function won't return until all data has been sent. This can lead to the application
 // hanging if the operation takes a long time.
 
-// In contrast, in non-blocking mode, socket API calls return immediately. If an operation cannot be completed immediately, the function returns an error (usually EWOULDBLOCK or EAGAIN). The application can then decide how to handle the situation, such as by retrying the operation later. This provides more control and can make the application more responsive. However, it also requires more sophisticated programming, as the application must be prepared to handle these error conditions.
+// In contrast, in non-blocking mode, socket API calls return immediately. If an operation cannot be completed immediately, the function returns an error (usually EWOULDBLOCK or EAGAIN). The
+// application can then decide how to handle the situation, such as by retrying the operation later. This provides more control and can make the application more responsive. However, it also requires
+// more sophisticated programming, as the application must be prepared to handle these error conditions.
 
 inline bool SetSocketBlockingEnabled(int fd, bool blocking)
 {
-   if (fd < 0) return false;
+    if (fd < 0) return false;
 
-   int flags = fcntl(fd, F_GETFL, 0);
-   if (flags == -1) return false;
-   flags = blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
-   return (fcntl(fd, F_SETFL, flags) == 0) ? true : false;
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags == -1) return false;
+    flags = blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
+    return (fcntl(fd, F_SETFL, flags) == 0) ? true : false;
 }
 
 // formatSize
@@ -867,11 +871,11 @@ inline bool SetSocketBlockingEnabled(int fd, bool blocking)
 inline String formatSize(size_t size, size_t threshold = 1000)
 {
     // If the size is above the threshold, we want a precision of 2 to show more accurate value
-    const int precision = size < threshold ? 0 : 2;
+    const int   precision = size < threshold ? 0 : 2;
 
     const char* suffixes[] = {"", "K", "M", "G", "T", "P", "E", "Z"};
-    size_t suffixIndex = 0;
-    double sizeDouble = static_cast<double>(size);
+    size_t      suffixIndex = 0;
+    double      sizeDouble = static_cast<double>(size);
 
     while (sizeDouble >= threshold && suffixIndex < (sizeof(suffixes) / sizeof(suffixes[0])) - 1)
     {
@@ -881,7 +885,7 @@ inline String formatSize(size_t size, size_t threshold = 1000)
 
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(precision) << sizeDouble << suffixes[suffixIndex];
-    std::string result = oss.str();  // Store the result to avoid dangling pointer
+    std::string        result = oss.str(); // Store the result to avoid dangling pointer
     return String(result.c_str());
 }
 
@@ -904,9 +908,9 @@ constexpr std::array<T, N> to_array(const T (&arr)[N]) {
 // This allows: auto total = std::accumulate(container);
 template <typename Range>
 inline auto accumulate(const Range& r)
-    -> std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(r))>>
+-> std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(r))> >
 {
-    using T = std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(r))>>;
+    using T = std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(r))> >;
     T total{};
     for (const auto& v : r) total += v;
     return total;

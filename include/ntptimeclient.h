@@ -45,8 +45,8 @@
 
 class NTPTimeClient
 {
-    static bool        _bClockSet;
-    static std::mutex  _clockMutex;
+    static bool _bClockSet;
+    static std::mutex _clockMutex;
 
   public:
 

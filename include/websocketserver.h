@@ -37,73 +37,73 @@
 
 #if WEB_SOCKETS_ANY_ENABLED
 
-#include "effectmanager.h"
-#include "webserver.h"
+    #include "effectmanager.h"
+    #include "webserver.h"
 
-class WebSocketServer : public IEffectEventListener
-{
-    AsyncWebSocket _colorDataSocket;
-    AsyncWebSocket _effectChangeSocket;
-    static constexpr size_t _maxColorNumberLen = sizeof(NAME_OF(16777215)) - 1; // (uint32_t)CRGB(255,255,255) == 16777215
-    static constexpr size_t _maxCountLen = sizeof(NAME_OF(4294967295)) - 1;     // SIZE_MAX == 4294967295
-
-public:
-
-    WebSocketServer(CWebServer& webServer) :
-        _colorDataSocket("/ws/frames"),
-        _effectChangeSocket("/ws/effects")
+    class WebSocketServer : public IEffectEventListener
     {
-        #if COLORDATA_WEB_SOCKET_ENABLED
-        webServer.AddWebSocket(_colorDataSocket);
-        #endif
+        AsyncWebSocket _colorDataSocket;
+        AsyncWebSocket _effectChangeSocket;
+        static constexpr size_t _maxColorNumberLen = sizeof(NAME_OF(16777215)) - 1; // (uint32_t)CRGB(255,255,255) == 16777215
+        static constexpr size_t _maxCountLen = sizeof(NAME_OF(4294967295)) - 1; // SIZE_MAX == 4294967295
 
-        #if EFFECTS_WEB_SOCKET_ENABLED
-        webServer.AddWebSocket(_effectChangeSocket);
-        #endif
-    }
+      public:
 
-    void CleanupClients()
-    {
-        _colorDataSocket.cleanupClients();
-        _effectChangeSocket.cleanupClients();
-    }
+        WebSocketServer(CWebServer& webServer) :
+            _colorDataSocket("/ws/frames"),
+            _effectChangeSocket("/ws/effects")
+        {
+            #if COLORDATA_WEB_SOCKET_ENABLED
+                webServer.AddWebSocket(_colorDataSocket);
+            #endif
 
-    bool HaveColorDataClients()
-    {
-        return _colorDataSocket.count() > 0;
-    }
+            #if EFFECTS_WEB_SOCKET_ENABLED
+                webServer.AddWebSocket(_effectChangeSocket);
+            #endif
+        }
 
-    // Send the color data for an array of leds of indicated length.
-    void SendColorData(CRGB* leds, size_t count)
-    {
-        if (!HaveColorDataClients() || leds == nullptr || count == 0 || !_colorDataSocket.availableForWriteAll())
-            return;
+        void CleanupClients()
+        {
+            _colorDataSocket.cleanupClients();
+            _effectChangeSocket.cleanupClients();
+        }
 
-        _colorDataSocket.binaryAll((uint8_t *)leds, count * sizeof(CRGB));
-    }
+        bool HaveColorDataClients()
+        {
+            return _colorDataSocket.count() > 0;
+        }
 
-    void OnCurrentEffectChanged(size_t currentEffectIndex) override
-    {
-        if (_effectChangeSocket.availableForWriteAll())
-            _effectChangeSocket.textAll(str_sprintf("{\"currentEffectIndex\":%zu}", currentEffectIndex));
-    }
+        // Send the color data for an array of leds of indicated length.
+        void SendColorData(CRGB* leds, size_t count)
+        {
+            if (!HaveColorDataClients() || leds == nullptr || count == 0 || !_colorDataSocket.availableForWriteAll())
+                return;
 
-    void OnEffectListDirty() override
-    {
-        if (_effectChangeSocket.availableForWriteAll())
-            _effectChangeSocket.textAll("{\"effectListDirty\":true}");
-    }
+            _colorDataSocket.binaryAll((uint8_t *)leds, count * sizeof(CRGB));
+        }
 
-    void OnEffectEnabledStateChanged(size_t effectIndex, bool newState) override
-    {
-        if (_effectChangeSocket.availableForWriteAll())
-            _effectChangeSocket.textAll(str_sprintf("{\"effectsEnabledState\":[{\"index\":%zu,\"enabled\":%s}]}", effectIndex, newState ? "true" : "false"));
-    }
+        void OnCurrentEffectChanged(size_t currentEffectIndex) override
+        {
+            if (_effectChangeSocket.availableForWriteAll())
+                _effectChangeSocket.textAll(str_sprintf("{\"currentEffectIndex\":%zu}", currentEffectIndex));
+        }
 
-    void OnIntervalChanged(uint interval) override
-    {
-        if (_effectChangeSocket.availableForWriteAll())
-            _effectChangeSocket.textAll(str_sprintf("{\"interval\":%u}", interval));
-    }
-};
+        void OnEffectListDirty() override
+        {
+            if (_effectChangeSocket.availableForWriteAll())
+                _effectChangeSocket.textAll("{\"effectListDirty\":true}");
+        }
+
+        void OnEffectEnabledStateChanged(size_t effectIndex, bool newState) override
+        {
+            if (_effectChangeSocket.availableForWriteAll())
+                _effectChangeSocket.textAll(str_sprintf("{\"effectsEnabledState\":[{\"index\":%zu,\"enabled\":%s}]}", effectIndex, newState ? "true" : "false"));
+        }
+
+        void OnIntervalChanged(uint interval) override
+        {
+            if (_effectChangeSocket.availableForWriteAll())
+                _effectChangeSocket.textAll(str_sprintf("{\"interval\":%u}", interval));
+        }
+    };
 #endif // WEB_SOCKETS_ANY_ENABLED

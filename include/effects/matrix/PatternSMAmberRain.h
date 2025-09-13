@@ -85,8 +85,10 @@ class PatternSMAmberRain : public EffectWithId<PatternSMAmberRain>
 
   public:
 
-    PatternSMAmberRain() : EffectWithId<PatternSMAmberRain>("Color Rain") {}
-    PatternSMAmberRain(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMAmberRain>(jsonObject) {}
+    PatternSMAmberRain() : EffectWithId<PatternSMAmberRain>("Color Rain") {
+    }
+    PatternSMAmberRain(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMAmberRain>(jsonObject) {
+    }
 
     void Start() override
     {

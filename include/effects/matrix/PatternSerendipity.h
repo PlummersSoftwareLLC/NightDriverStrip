@@ -96,10 +96,12 @@ class PatternSerendipity : public EffectWithId<PatternSerendipity>
 
   public:
 
-    PatternSerendipity() : EffectWithId<PatternSerendipity>("Serendipity") {}
-    PatternSerendipity(const JsonObjectConst& jsonObject) : EffectWithId<PatternSerendipity>(jsonObject) {}
+    PatternSerendipity() : EffectWithId<PatternSerendipity>("Serendipity") {
+    }
+    PatternSerendipity(const JsonObjectConst& jsonObject) : EffectWithId<PatternSerendipity>(jsonObject) {
+    }
 
-    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
+    bool Init(std::vector<std::shared_ptr<GFXBase> >& gfx) override
     {
         if (!LEDStripEffect::Init(gfx))
             return false;
@@ -155,11 +157,11 @@ class PatternSerendipity : public EffectWithId<PatternSerendipity>
         // draw just a line defined by 5 oszillators
 
         graphics->drawLine(
-            multiTimer[3].count, // x1
-            multiTimer[4].count, // y1
-            multiTimer[0].count, // x2
-            multiTimer[1].count, // y2
-            CRGB(CHSV(multiTimer[2].count, 255, 255)));
+                multiTimer[3].count, // x1
+                multiTimer[4].count, // y1
+                multiTimer[0].count, // x2
+                multiTimer[1].count, // y2
+                CRGB(CHSV(multiTimer[2].count, 255, 255)));
 
         graphics->BlurFrame(50);
 

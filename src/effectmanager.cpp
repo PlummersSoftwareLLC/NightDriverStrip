@@ -38,10 +38,10 @@
 // Variables we need further down
 
 extern DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories;
-extern std::map<int, JSONEffectFactory> g_JsonStarryNightEffectFactories;
-DRAM_ATTR size_t g_EffectsManagerJSONBufferSize = 0;
+extern std::map<int, JSONEffectFactory>           g_JsonStarryNightEffectFactories;
+DRAM_ATTR size_t g_EffectsManagerJSONBufferSize  = 0;
 static DRAM_ATTR size_t l_EffectsManagerJSONWriterIndex = SIZE_MAX;
-static DRAM_ATTR size_t l_CurrentEffectWriterIndex = SIZE_MAX;
+static DRAM_ATTR size_t l_CurrentEffectWriterIndex      = SIZE_MAX;
 
 //
 // EffectManager initialization functions
@@ -61,7 +61,7 @@ static DRAM_ATTR size_t l_CurrentEffectWriterIndex = SIZE_MAX;
 // Declare these here just so InitEffectsManager can refer to them. They're defined elsewhere or further down.
 
 void LoadEffectFactories();
-std::optional<JsonObjectConst> LoadEffectsJSONFile(JsonDocument& jsonDoc);
+std::optional<JsonObjectConst> LoadEffectsJSONFile(JsonDocument&jsonDoc);
 void WriteCurrentEffectIndexFile();
 
 // InitEffectsManager
@@ -74,20 +74,20 @@ void InitEffectsManager()
     LoadEffectFactories();
 
     l_EffectsManagerJSONWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter([]()
-    {
-        if (!SaveToJSONFile(EFFECTS_CONFIG_FILE, g_ptrSystem->EffectManager()) && EFFECT_PERSISTENCE_CRITICAL)
-            throw std::runtime_error("Effects serialization failed");
-    });
+            {
+                if(!SaveToJSONFile(EFFECTS_CONFIG_FILE, g_ptrSystem->EffectManager()) && EFFECT_PERSISTENCE_CRITICAL)
+                    throw std::runtime_error("Effects serialization failed");
+            });
     l_CurrentEffectWriterIndex = g_ptrSystem->JSONWriter().RegisterWriter(WriteCurrentEffectIndexFile);
 
-    auto jsonDoc = CreateJsonDocument();
+    auto jsonDoc    = CreateJsonDocument();
     auto jsonObject = LoadEffectsJSONFile(jsonDoc);
 
-    if (jsonObject)
+    if(jsonObject)
     {
         debugI("Creating EffectManager from JSON config");
 
-        if (g_ptrSystem->HasEffectManager())
+        if(g_ptrSystem->HasEffectManager())
             g_ptrSystem->EffectManager().DeserializeFromJSON(jsonObject.value());
         else
             g_ptrSystem->SetupEffectManager(jsonObject.value(), g_ptrSystem->Devices());
@@ -96,13 +96,13 @@ void InitEffectsManager()
     {
         debugI("Creating EffectManager using default effects");
 
-        if (g_ptrSystem->HasEffectManager())
+        if(g_ptrSystem->HasEffectManager())
             g_ptrSystem->EffectManager().LoadDefaultEffects();
         else
             g_ptrSystem->SetupEffectManager(g_ptrSystem->Devices());
     }
 
-    if (false == g_ptrSystem->EffectManager().Init())
+    if(false == g_ptrSystem->EffectManager().Init())
         throw std::runtime_error("Could not initialize effect manager");
 
     // We won't need the default factories anymore, so swipe them from memory
@@ -118,29 +118,26 @@ void InitEffectsManager()
 #endif
 
 // Load the effects JSON file and check if it's appropriate to use
-std::optional<JsonObjectConst> LoadEffectsJSONFile(JsonDocument& jsonDoc)
+std::optional<JsonObjectConst> LoadEffectsJSONFile(JsonDocument&jsonDoc)
 {
     // If ordered to do so, we ignore whatever is persisted
-    if (NO_EFFECT_PERSISTENCE || !LoadJSONFile(EFFECTS_CONFIG_FILE, jsonDoc))
+    if(NO_EFFECT_PERSISTENCE || !LoadJSONFile(EFFECTS_CONFIG_FILE, jsonDoc))
         return {};
 
     auto jsonObject = jsonDoc.as<JsonObjectConst>();
 
     // Ignore JSON if it was persisted for a different project
-    if (jsonObject[PTY_PROJECT].is<String>()
-        && jsonObject[PTY_PROJECT].as<String>() != PROJECT_NAME)
-    {
+    if(jsonObject[PTY_PROJECT].is<String>()
+       && jsonObject[PTY_PROJECT].as<String>() != PROJECT_NAME)
         return {};
-    }
+
 
     auto jsonVersion = jsonObject[PTY_EFFECTSETVER];
 
     // Only return the JSON object if the persistent version matches the current one
-    if (jsonVersion.is<String>()
-        && g_ptrEffectFactories->HashString() == jsonVersion.as<String>())
-    {
+    if(jsonVersion.is<String>()
+       && g_ptrEffectFactories->HashString() == jsonVersion.as<String>())
         return jsonObject;
-    }
 
     return {};
 }
@@ -153,67 +150,67 @@ void EffectManager::LoadDefaultEffects()
 {
     _effectSetHashString = g_ptrEffectFactories->HashString();
 
-    for (const auto &numberedFactory : g_ptrEffectFactories->GetDefaultFactories())
+    for(const auto&numberedFactory : g_ptrEffectFactories->GetDefaultFactories())
+    {
         ProduceAndLoadDefaultEffect(numberedFactory);
+    }
 
     SetInterval(DEFAULT_EFFECT_INTERVAL, true);
-
     construct(true);
 }
 
 
 void EffectManager::SaveCurrentEffectIndex()
 {
-    if (g_ptrSystem->DeviceConfig().RememberCurrentEffect())
+    if(g_ptrSystem->DeviceConfig().RememberCurrentEffect())
         // Default value for writer index is max value for size_t, so nothing will happen if writer has not yet been registered
         g_ptrSystem->JSONWriter().FlagWriter(l_CurrentEffectWriterIndex);
 }
 
-bool EffectManager::ReadCurrentEffectIndex(size_t& index)
+bool EffectManager::ReadCurrentEffectIndex(size_t&index)
 {
-    File file = SPIFFS.open(CURRENT_EFFECT_CONFIG_FILE);
+    File file      = SPIFFS.open(CURRENT_EFFECT_CONFIG_FILE);
     bool readIndex = false;
 
-    if (file)
+    if(file)
     {
-        if (file.size() > 0)
+        if(file.size() > 0)
         {
             debugI("Attempting to read file %s", CURRENT_EFFECT_CONFIG_FILE);
 
             auto valueString = file.readString();
 
-            if (!valueString.isEmpty())
+            if(!valueString.isEmpty())
             {
-                index = strtoul(valueString.c_str(), nullptr, 10);
+                index     = strtoul(valueString.c_str(), nullptr, 10);
                 readIndex = true;
             }
         }
-
         file.close();
     }
 
     return readIndex;
 }
 
-void EffectManager::LoadJSONEffects(const JsonArrayConst& effectsArray)
+void EffectManager::LoadJSONEffects(const JsonArrayConst&effectsArray)
 {
     std::set<int> loadedEffectNumbers;
 
     // Create effects from JSON objects, using the respective factories in g_EffectFactories
-    auto& jsonFactories = g_ptrEffectFactories->GetJSONFactories();
+    auto&jsonFactories = g_ptrEffectFactories->GetJSONFactories();
 
-    for (auto effectObject : effectsArray)
+    for(auto effectObject : effectsArray)
     {
         int effectNumber = effectObject[PTY_EFFECTNR];
         auto factoryEntry = jsonFactories.find(effectNumber);
 
-        if (factoryEntry == jsonFactories.end())
+        if(factoryEntry == jsonFactories.end())
             continue;
 
         auto pEffect = factoryEntry->second(effectObject);
-        if (pEffect)
+        if(pEffect)
         {
-            if (effectObject[PTY_COREEFFECT].as<int>())
+            if(effectObject[PTY_COREEFFECT].as<int>())
                 pEffect->MarkAsCoreEffect();
 
             _vEffects.push_back(pEffect);
@@ -224,32 +221,34 @@ void EffectManager::LoadJSONEffects(const JsonArrayConst& effectsArray)
 
 std::shared_ptr<LEDStripEffect> EffectManager::CopyEffect(size_t index)
 {
-    if (index >= _vEffects.size())
+    if(index >= _vEffects.size())
     {
         debugW("Invalid index for CopyEffect");
+
         return nullptr;
     }
 
-    auto& sourceEffect = _vEffects[index];
+    auto&sourceEffect        = _vEffects[index];
 
     auto jsonEffectFactories = g_ptrEffectFactories->GetJSONFactories();
-    auto factoryEntry = jsonEffectFactories.find(static_cast<int>(sourceEffect->effectId()));
+    auto factoryEntry        = jsonEffectFactories.find(static_cast<int>(sourceEffect->effectId()));
 
-    if (factoryEntry == jsonEffectFactories.end())
+    if(factoryEntry == jsonEffectFactories.end())
         return nullptr;
 
-    auto jsonDoc = CreateJsonDocument();
+    auto jsonDoc    = CreateJsonDocument();
     auto jsonObject = jsonDoc.to<JsonObject>();
 
-    if (!sourceEffect->SerializeToJSON(jsonObject))
+    if(!sourceEffect->SerializeToJSON(jsonObject))
     {
         debugE("Could not serialize effect %s to JSON", sourceEffect->FriendlyName().c_str());
+
         return nullptr;
     }
 
     auto copiedEffect = factoryEntry->second(jsonDoc.as<JsonObjectConst>());
 
-    if (!copiedEffect)
+    if(!copiedEffect)
         return nullptr;
 
     copiedEffect->SetEnabled(false);
@@ -281,9 +280,10 @@ void WriteCurrentEffectIndexFile()
 
     File file = SPIFFS.open(CURRENT_EFFECT_CONFIG_FILE, FILE_WRITE);
 
-    if (!file)
+    if(!file)
     {
         debugE("Unable to open file %s for writing!", CURRENT_EFFECT_CONFIG_FILE);
+
         return;
     }
 
@@ -293,7 +293,7 @@ void WriteCurrentEffectIndexFile()
     file.flush();
     file.close();
 
-    if (bytesWritten == 0)
+    if(bytesWritten == 0)
     {
         debugE("Unable to write to file %s!", CURRENT_EFFECT_CONFIG_FILE);
         SPIFFS.remove(CURRENT_EFFECT_CONFIG_FILE);
@@ -306,21 +306,22 @@ void WriteCurrentEffectIndexFile()
 
 #if ENABLE_AUDIO
 
-#include "effects/matrix/spectrumeffects.h"
+    #include "effects/matrix/spectrumeffects.h"
 
-// GetSpectrumAnalyzer
-//
-// A little factory that makes colored spectrum analyzers
+    // GetSpectrumAnalyzer
+    //
+    // A little factory that makes colored spectrum analyzers
 
-std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
-{
-    CHSV hueColor = rgb2hsv_approximate(color);
-    CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
-    auto object = make_shared_psram<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color, color2), true);
-    if (object->Init(g_ptrSystem->Devices()))
-        return object;
-    throw std::runtime_error("Could not initialize new spectrum analyzer, one color version!");
-}
+    std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
+    {
+        CHSV hueColor = rgb2hsv_approximate(color);
+        CRGB color2   = CRGB(CHSV(hueColor.hue + 64, 255, 255));
+        auto object   = make_shared_psram<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color, color2), true);
+        if(object->Init(g_ptrSystem->Devices()))
+            return object;
+
+        throw std::runtime_error("Could not initialize new spectrum analyzer, one color version!");
+    }
 
 #endif
 
@@ -328,19 +329,22 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 
 bool EffectManager::Init()
 {
-    for (const auto & _vEffect : _vEffects)
+    for(const auto&_vEffect : _vEffects)
     {
         debugV("About to init effect %s", _vEffect->FriendlyName().c_str());
-        if (false == _vEffect->Init(_gfx))
+        if(false == _vEffect->Init(_gfx))
         {
             debugW("Could not initialize effect: %s\n", _vEffect->FriendlyName().c_str());
+
             return false;
         }
+
         debugV("Loaded Effect: %s", _vEffect->FriendlyName().c_str());
     }
+
     debugV("First Effect: %s", GetCurrentEffectName().c_str());
 
-    if (g_ptrSystem->DeviceConfig().ApplyGlobalColors())
+    if(g_ptrSystem->DeviceConfig().ApplyGlobalColors())
         ApplyGlobalPaletteColors();
 
     return true;
@@ -348,13 +352,13 @@ bool EffectManager::Init()
 
 bool EffectManager::ShowVU(bool bShow)
 {
-    auto& deviceConfig = g_ptrSystem->DeviceConfig();
-    bool bResult = deviceConfig.ShowVUMeter();
+    auto&deviceConfig = g_ptrSystem->DeviceConfig();
+    bool bResult      = deviceConfig.ShowVUMeter();
     debugI("Setting ShowVU to %d\n", bShow);
     deviceConfig.SetShowVUMeter(bShow);
 
     // Erase any exising pixels since effects don't all clear each frame
-    if (!bShow)
+    if(!bShow)
         _gfx[0]->setPixelsF(0, MATRIX_WIDTH, CRGB::Black);
 
     return bResult;
@@ -368,7 +372,7 @@ bool EffectManager::IsVUVisible() const
 
 void EffectManager::ClearRemoteColor(bool retainRemoteEffect)
 {
-    if (!retainRemoteEffect)
+    if(!retainRemoteEffect)
         _tempEffect = nullptr;
 
     #if USE_HUB75
@@ -382,7 +386,7 @@ void EffectManager::ApplyGlobalColor(CRGB color) const
 {
     debugI("Setting Global Color: %08X\n", (uint32_t) color);
 
-    auto& deviceConfig = g_ptrSystem->DeviceConfig();
+    auto&deviceConfig = g_ptrSystem->DeviceConfig();
     deviceConfig.SetColorSettings(color, deviceConfig.GlobalColor());
 
     ApplyGlobalPaletteColors();
@@ -391,23 +395,21 @@ void EffectManager::ApplyGlobalColor(CRGB color) const
 void EffectManager::ApplyGlobalPaletteColors() const
 {
     #if USE_HUB75
-        auto  pMatrix = g();
-        auto& deviceConfig = g_ptrSystem->DeviceConfig();
-        auto& globalColor = deviceConfig.GlobalColor();
-        auto& secondColor = deviceConfig.SecondColor();
+        auto pMatrix      = g();
+        auto&deviceConfig = g_ptrSystem->DeviceConfig();
+        auto&globalColor  = deviceConfig.GlobalColor();
+        auto&secondColor  = deviceConfig.SecondColor();
 
         // If the two colors are the same, we just shift the palette by 64 degrees to create a palette
         // based from where those colors sit on the spectrum
-        if (secondColor == globalColor)
+        if(secondColor == globalColor)
         {
             CHSV hsv = rgb2hsv_approximate(globalColor);
             pMatrix->setPalette(CRGBPalette16(globalColor, CRGB(CHSV(hsv.hue + 64, 255, 255))));
         }
         else
-        {
             // But if we have two different colors, we create a palette spread between them
             pMatrix->setPalette(CRGBPalette16(secondColor, globalColor));
-        }
 
         pMatrix->PausePalette(true);
     #endif

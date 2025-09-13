@@ -66,7 +66,7 @@
 
 extern "C"
 {
-    #include "uzlib/src/uzlib.h"
+#include "uzlib/src/uzlib.h"
 }
 
 // Introduction:
@@ -116,11 +116,11 @@ extern "C"
 
 class Cell
 {
-public:
-  uint8_t alive : 1;
-  uint8_t prev  : 1;
-  uint8_t hue;
-  uint8_t brightness;
+  public:
+    uint8_t alive : 1;
+    uint8_t prev  : 1;
+    uint8_t hue;
+    uint8_t brightness;
 };
 
 // We check for loops by keeping a number of hashes of previous frames.  A walker that goes up and across
@@ -130,7 +130,7 @@ constexpr auto CRC_LENGTH = (std::max(MATRIX_HEIGHT, MATRIX_WIDTH) * 4 + 1);
 
 class PatternLife : public EffectWithId<PatternLife>
 {
-private:
+  private:
     std::unique_ptr<Cell [][MATRIX_HEIGHT]> world;
     std::unique_ptr<uint32_t []> checksums;
     int iChecksum = 0;
@@ -140,7 +140,7 @@ private:
     unsigned long seed;
 
 
-    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
+    bool Init(std::vector<std::shared_ptr<GFXBase> >& gfx) override
     {
         LEDStripEffect::Init(gfx);
 
@@ -224,19 +224,21 @@ private:
 
     int neighbours(int x, int y) {
         return (world[(x + 1) % MATRIX_WIDTH][y].prev) +
-            (world[x][(y + 1) % MATRIX_HEIGHT].prev) +
-            (world[(x + MATRIX_WIDTH - 1) % MATRIX_WIDTH][y].prev) +
-            (world[x][(y + MATRIX_HEIGHT - 1) % MATRIX_HEIGHT].prev) +
-            (world[(x + 1) % MATRIX_WIDTH][(y + 1) % MATRIX_HEIGHT].prev) +
-            (world[(x + MATRIX_WIDTH - 1) % MATRIX_WIDTH][(y + 1) % MATRIX_HEIGHT].prev) +
-            (world[(x + MATRIX_WIDTH - 1) % MATRIX_WIDTH][(y + MATRIX_HEIGHT - 1) % MATRIX_HEIGHT].prev) +
-            (world[(x + 1) % MATRIX_WIDTH][(y + MATRIX_HEIGHT - 1) % MATRIX_HEIGHT].prev);
+               (world[x][(y + 1) % MATRIX_HEIGHT].prev) +
+               (world[(x + MATRIX_WIDTH - 1) % MATRIX_WIDTH][y].prev) +
+               (world[x][(y + MATRIX_HEIGHT - 1) % MATRIX_HEIGHT].prev) +
+               (world[(x + 1) % MATRIX_WIDTH][(y + 1) % MATRIX_HEIGHT].prev) +
+               (world[(x + MATRIX_WIDTH - 1) % MATRIX_WIDTH][(y + 1) % MATRIX_HEIGHT].prev) +
+               (world[(x + MATRIX_WIDTH - 1) % MATRIX_WIDTH][(y + MATRIX_HEIGHT - 1) % MATRIX_HEIGHT].prev) +
+               (world[(x + 1) % MATRIX_WIDTH][(y + MATRIX_HEIGHT - 1) % MATRIX_HEIGHT].prev);
     }
 
-public:
+  public:
 
-    PatternLife() : EffectWithId<PatternLife>("Life") {}
-    PatternLife(const JsonObjectConst& jsonObject) : EffectWithId<PatternLife>(jsonObject) {}
+    PatternLife() : EffectWithId<PatternLife>("Life") {
+    }
+    PatternLife(const JsonObjectConst& jsonObject) : EffectWithId<PatternLife>(jsonObject) {
+    }
 
     void Reset()
     {
@@ -297,7 +299,7 @@ public:
 
             for (int x = 0; x < MATRIX_WIDTH; x++)
                 for (int y = 0; y < MATRIX_HEIGHT; y++)
-                        world[x][y].brightness *= 0.9;
+                    world[x][y].brightness *= 0.9;
             if (elapsed > resetTime)
                 Reset();
         }
@@ -320,7 +322,7 @@ public:
             for (int y = 0; y < MATRIX_HEIGHT; y++) {
                 // Default is for cell to stay the same
                 if (world[x][y].brightness > 0 && world[x][y].prev == 0)
-                  world[x][y].brightness *= 0.75;
+                    world[x][y].brightness *= 0.75;
 
                 int count = neighbours(x, y);
                 if (count == 3 && world[x][y].prev == 0) {

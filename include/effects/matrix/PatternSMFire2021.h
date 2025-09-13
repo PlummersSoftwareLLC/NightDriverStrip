@@ -13,15 +13,17 @@ class PatternSMFire2021 : public EffectWithId<PatternSMFire2021>
 
     uint8_t pcnt;              // какой-то счётчик какого-то прогресса
     uint8_t deltaValue;        // просто повторно используемая переменная
-    uint16_t ff_x {0} , ff_y {0} , ff_z {0} ; // большие счётчики
+    uint16_t ff_x {0}, ff_y {0}, ff_z {0};    // большие счётчики
     uint8_t step; // какой-нибудь счётчик кадров или последовательностей операций
 
     const TProgmemRGBPalette16 *curPalette;
 
   public:
 
-    PatternSMFire2021() : EffectWithId<PatternSMFire2021>("Fireplace") {}
-    PatternSMFire2021(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMFire2021>(jsonObject) {}
+    PatternSMFire2021() : EffectWithId<PatternSMFire2021>("Fireplace") {
+    }
+    PatternSMFire2021(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMFire2021>(jsonObject) {
+    }
 
     void Start() override
     {
@@ -32,7 +34,7 @@ class PatternSMFire2021 : public EffectWithId<PatternSMFire2021>
                                      // /sizeof(TProgmemRGBPalette16 *))-0.01F));
         deltaValue = (((Scale - 1U) % 11U + 1U));
         step = ::map(Speed * Speed, 1U, 65025U, (deltaValue - 1U) / 2U + 1U,
-                   deltaValue * 18U + 44); // корректируем скорость эффекта в наш диапазон допустимых
+                deltaValue * 18U + 44);    // корректируем скорость эффекта в наш диапазон допустимых
         // deltaValue = (((Scale - 1U) % 11U + 2U) << 4U); // ширина языков пламени
         // (масштаб шума Перлина)
         deltaValue = 0.7 * deltaValue * deltaValue + 31.3; // ширина языков пламени (масштаб шума Перлина)

@@ -72,8 +72,10 @@ class PatternPulse : public EffectWithId<PatternPulse>
 
   public:
 
-    PatternPulse() : EffectWithId<PatternPulse>("Pulse") {}
-    PatternPulse(const JsonObjectConst& jsonObject) : EffectWithId<PatternPulse>(jsonObject) {}
+    PatternPulse() : EffectWithId<PatternPulse>("Pulse") {
+    }
+    PatternPulse(const JsonObjectConst& jsonObject) : EffectWithId<PatternPulse>(jsonObject) {
+    }
 
     void Draw() override
     {
@@ -156,7 +158,7 @@ class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar> 
     {
         if (span > 1.5)
         {
-            for (int i = 0; i < random(2)+2; i ++)
+            for (int i = 0; i < random(2)+2; i++)
                 _pops.push_back( PulsePop() );
         }
         else

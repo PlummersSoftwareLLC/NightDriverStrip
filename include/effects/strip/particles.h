@@ -40,7 +40,7 @@
 
 #if ENABLE_AUDIO
 // Needed for BeatEffectBase and audio-driven particle effects
-#include "musiceffect.h"
+    #include "musiceffect.h"
 #endif
 
 // Lifespan
@@ -56,12 +56,13 @@ class Lifespan
 
   public:
 
-    Lifespan() :_birthTime(g_Values.AppTime.FrameStartTime())
+    Lifespan() : _birthTime(g_Values.AppTime.FrameStartTime())
     {
     }
 
     virtual ~Lifespan()
-    {}
+    {
+    }
 
     double Age() const
     {
@@ -79,14 +80,14 @@ class Lifespan
 
 class MovingObject
 {
-protected:
+  protected:
 
-    float                       _velocity;
-    float                       _maxSpeed;
+    float _velocity;
+    float _maxSpeed;
 
-public:
+  public:
 
-    float                       _iPos;
+    float _iPos;
 
     MovingObject(float maxSpeed = 0.25) : _maxSpeed(maxSpeed)
     {
@@ -96,7 +97,8 @@ public:
     }
 
     virtual ~MovingObject()
-    {}
+    {
+    }
 
     virtual void UpdatePosition()
     {
@@ -113,10 +115,18 @@ class FadingObject : public Lifespan
 {
   protected:
 
-    virtual float PreignitionTime() const         { return 0.0f;  }
-    virtual float IgnitionTime()    const         { return 0.5f;  }
-    virtual float HoldTime()        const         { return 1.00f; }
-    virtual float FadeTime()        const         { return 1.5f;  }
+    virtual float PreignitionTime() const {
+        return 0.0f;
+    }
+    virtual float IgnitionTime()    const {
+        return 0.5f;
+    }
+    virtual float HoldTime()        const {
+        return 1.00f;
+    }
+    virtual float FadeTime()        const {
+        return 1.5f;
+    }
 
   public:
 
@@ -142,7 +152,7 @@ class FadingObject : public Lifespan
         if (age > HoldTime() + FadeTime())
             return 1.0f;                                                // Black hole, all faded out
         age -= (HoldTime());
-            return (age / FadeTime());                                  // Fading star
+        return (age / FadeTime());                                      // Fading star
     }
 };
 
@@ -150,11 +160,12 @@ class FadingCountDownObject : public FadingObject
 {
   protected:
 
-    unsigned long               _maxValue;
+    unsigned long _maxValue;
 
   public:
 
-    FadingCountDownObject(unsigned long maxvalue) : _maxValue(maxvalue) {}
+    FadingCountDownObject(unsigned long maxvalue) : _maxValue(maxvalue) {
+    }
 
     virtual unsigned long CurrentCountdown()
     {
@@ -170,11 +181,12 @@ class FadingColoredObject : public FadingObject
 {
   protected:
 
-    CRGB                         _baseColor;
+    CRGB _baseColor;
 
   public:
 
-    FadingColoredObject(CRGB baseColor) : _baseColor(baseColor) {}
+    FadingColoredObject(CRGB baseColor) : _baseColor(baseColor) {
+    }
 
     virtual CRGB ObjectColor() const
     {
@@ -200,13 +212,13 @@ class FadingPaletteObject : public FadingObject
   protected:
 
     const CRGBPalette16 & _palette;
-    const TBlendType       _blendType = NOBLEND;
-    uint8_t                _colorIndex;
+    const TBlendType _blendType = NOBLEND;
+    uint8_t _colorIndex;
 
   public:
 
     FadingPaletteObject(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, uint8_t colorIndex =  0)
-      : _palette(palette),
+        : _palette(palette),
         _blendType(blendType),
         _colorIndex(colorIndex)
     {
@@ -247,12 +259,12 @@ class FadingPaletteObject : public FadingObject
 //
 // Moves, fades over it's lifetime, based on palette+index color
 
-class MovingFadingPaletteObject: public FadingPaletteObject, public MovingObject
+class MovingFadingPaletteObject : public FadingPaletteObject, public MovingObject
 {
   public:
 
     MovingFadingPaletteObject(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, float maxSpeed = 1.0, uint8_t colorIndex = random8())
-      : FadingPaletteObject(palette, blendType, colorIndex),
+        : FadingPaletteObject(palette, blendType, colorIndex),
         MovingObject(maxSpeed)
     {
     }
@@ -262,12 +274,12 @@ class MovingFadingPaletteObject: public FadingPaletteObject, public MovingObject
 //
 // Moves, fades over it's lifetime, based on CRGB color
 
-class MovingFadingColoredObject: public FadingColoredObject, public MovingObject
+class MovingFadingColoredObject : public FadingColoredObject, public MovingObject
 {
   public:
 
     MovingFadingColoredObject(CRGB baseColor, float maxSpeed = 1.0)
-      : FadingColoredObject(baseColor),
+        : FadingColoredObject(baseColor),
         MovingObject(maxSpeed)
     {
     }
@@ -279,13 +291,13 @@ class MovingFadingColoredObject: public FadingColoredObject, public MovingObject
 
 class ObjectSize
 {
-    public:
-      float _objectSize;
+  public:
+    float _objectSize;
 
-      ObjectSize(float size = 1.0)
-        :_objectSize(size)
-      {
-      }
+    ObjectSize(float size = 1.0)
+        : _objectSize(size)
+    {
+    }
 };
 
 class DrawableParticle : public Lifespan
@@ -293,7 +305,7 @@ class DrawableParticle : public Lifespan
   protected:
 
   public:
-     virtual void Render(const std::vector<std::shared_ptr<GFXBase>>& _GFX) = 0;
+    virtual void Render(const std::vector<std::shared_ptr<GFXBase> >& _GFX) = 0;
 };
 
 template <typename Type = DrawableParticle> class ParticleSystem
@@ -306,9 +318,10 @@ template <typename Type = DrawableParticle> class ParticleSystem
 
   public:
 
-    ParticleSystem() {}
+    ParticleSystem() {
+    }
 
-    virtual void Render(const std::vector<std::shared_ptr<GFXBase>>& _gfx)
+    virtual void Render(const std::vector<std::shared_ptr<GFXBase> >& _gfx)
     {
         debugV("ParticleSystemEffect::Draw for %d particles", _allParticles.size());
 
@@ -327,229 +340,237 @@ class RingParticle : public FadingColoredObject
 {
   protected:
 
-    int             _iInsulator;
-    int             _iRing;
-    float           _ignitionTime;
-    float           _fadeTime;
+    int _iInsulator;
+    int _iRing;
+    float _ignitionTime;
+    float _fadeTime;
 
   public:
 
     RingParticle(int iInsulator, int iRing, CRGB color, float ignitionTime = 0.0f, float fadeTime = 1.0f)
-      :  FadingColoredObject(color),
-         _iInsulator(iInsulator),
-         _iRing(iRing),
-         _ignitionTime(ignitionTime),
-         _fadeTime(fadeTime)
+        :  FadingColoredObject(color),
+        _iInsulator(iInsulator),
+        _iRing(iRing),
+        _ignitionTime(ignitionTime),
+        _fadeTime(fadeTime)
     {
         assert(iRing <= NUM_RINGS);
         assert(iInsulator < NUM_FANS);
         debugV("Creating particle at insulator %d", iInsulator);
     }
 
-    virtual void Render(const std::vector<std::shared_ptr<GFXBase>>& _GFX)
+    virtual void Render(const std::vector<std::shared_ptr<GFXBase> >& _GFX)
     {
         debugV("Particle Render at insulator %d", _iInsulator);
 
         if (_iInsulator < 0)    // -1 is a major beat, all insulators
         {
-          CRGB c = ObjectColor();
+            CRGB c = ObjectColor();
 
-          //c.fadeToBlackBy(192);
+            //c.fadeToBlackBy(192);
 
-          for (int i = 0; i < NUM_FANS; i++)
-          {
+            for (int i = 0; i < NUM_FANS; i++)
+            {
 
-            FillRingPixels(c, i, _iRing);
-          }
+                FillRingPixels(c, i, _iRing);
+            }
         }
         else    // Individual ring for a minor beat
         {
-          FillRingPixels(ObjectColor(), _iInsulator, _iRing);
+            FillRingPixels(ObjectColor(), _iInsulator, _iRing);
         }
     }
 
-    float PreignitionTime() const override         { return 0.0f;          }
-    float IgnitionTime()    const override         { return _ignitionTime; }
-    float HoldTime()        const override         { return 0.0f;          }
-    float FadeTime()        const override         { return _fadeTime;     }
+    float PreignitionTime() const override {
+        return 0.0f;
+    }
+    float IgnitionTime()    const override {
+        return _ignitionTime;
+    }
+    float HoldTime()        const override {
+        return 0.0f;
+    }
+    float FadeTime()        const override {
+        return _fadeTime;
+    }
 };
 
 
 #if ENABLE_AUDIO
-class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingParticle>, public EffectWithId<ColorBeatWithFlash>
-{
-  private:
-
-    int _iLastInsulator = 0;
-    CRGB _baseColor = CRGB::Black;
-
-  public:
-
-    ColorBeatWithFlash(const String & strName)
-      : BeatEffectBase(),
-        ParticleSystem<RingParticle>(),
-        EffectWithId<ColorBeatWithFlash>(strName)
+    class ColorBeatWithFlash : public BeatEffectBase, public ParticleSystem<RingParticle>, public EffectWithId<ColorBeatWithFlash>
     {
-    }
+      private:
 
-    ColorBeatWithFlash(const JsonObjectConst& jsonObject)
-      : BeatEffectBase(),
-        ParticleSystem<RingParticle>(),
-        EffectWithId<ColorBeatWithFlash>(jsonObject)
-    {
-    }
+        int _iLastInsulator = 0;
+        CRGB _baseColor = CRGB::Black;
 
-    virtual void LightInsulator(int iInsulator, int iRing, CRGB color, bool bMajor)
-    {
-      debugV("MusicalInsulatorEffect2 LightInsulator for Insulator %d", iInsulator);
+      public:
 
-      RingParticle newparticle(iInsulator, iRing, color, !bMajor ? 0.05 : 0.0, 0.75);
-      _allParticles.push_back(newparticle);
-    }
-
-    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
-    {
-      for (int pass = 0; pass < 1; pass++)
-      {
-        int iInsulator;
-        do
+        ColorBeatWithFlash(const String & strName)
+            : BeatEffectBase(),
+            ParticleSystem<RingParticle>(),
+            EffectWithId<ColorBeatWithFlash>(strName)
         {
-          iInsulator = random(0, NUM_FANS);
-        } while (NUM_FANS > 3 && iInsulator == _iLastInsulator);
-        _iLastInsulator = iInsulator;
+        }
 
-        CRGB c = CHSV(beatsin8(4), 255, 127.5*g_Analyzer.VURatio());
-        CRGB r = RandomSaturatedColor();
-        LightInsulator(bMajor ? - 1: iInsulator, 0, bMajor ? r : c, bMajor);
-      }
-    }
-
-    virtual void Draw() override
-    {
-      // We are inheriting from both the insulator music beat effect and a particle system effect, and both need
-      //
-      setAllOnAllChannels(0,0,0);
-
-      uint8_t v = 16  * g_Analyzer.VURatio();
-      _baseColor += CRGB(CHSV(beatsin8(24), 255, v));
-      _baseColor.fadeToBlackBy(8 * g_Analyzer.VURatio());
-      setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
-      BeatEffectBase::ProcessAudio();
-      ParticleSystem<RingParticle>::Render(_GFX);
-    }
-};
-
-class ColorBeatOverRed : public EffectWithId<ColorBeatOverRed>, public BeatEffectBase, public ParticleSystem<RingParticle>
-{
-  private:
-
-    int  _iLastInsulator = 0;
-    CRGB _baseColor = CRGB::Black;
-
-  public:
-
-    ColorBeatOverRed(const String & strName)
-      : EffectWithId<ColorBeatOverRed>(strName),
-        BeatEffectBase(1.75, 0.2),
-        ParticleSystem<RingParticle>()
-    {
-    }
-
-    ColorBeatOverRed(const JsonObjectConst& jsonObject)
-      : EffectWithId<ColorBeatOverRed>(jsonObject),
-        BeatEffectBase(1.75, 0.2),
-        ParticleSystem<RingParticle>()
-    {
-    }
-
-    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
-    {
-        int iInsulator;
-        do
+        ColorBeatWithFlash(const JsonObjectConst& jsonObject)
+            : BeatEffectBase(),
+            ParticleSystem<RingParticle>(),
+            EffectWithId<ColorBeatWithFlash>(jsonObject)
         {
-          iInsulator = random(0, NUM_FANS);
-        } while (NUM_FANS > 3 && iInsulator == _iLastInsulator);
-        _iLastInsulator = iInsulator;
+        }
 
-        if (bMajor && span >= 1.999)
-          iInsulator = -1;
+        virtual void LightInsulator(int iInsulator, int iRing, CRGB color, bool bMajor)
+        {
+            debugV("MusicalInsulatorEffect2 LightInsulator for Insulator %d", iInsulator);
 
-        float fadetime = min(5.0, elapsed * 1.5);   // Cap it at 5 seconds so we don't get ultra-long beats resulting from delays
-        float flashtime = 0;
+            RingParticle newparticle(iInsulator, iRing, color, !bMajor ? 0.05 : 0.0, 0.75);
+            _allParticles.push_back(newparticle);
+        }
 
-        _allParticles.push_back(RingParticle(iInsulator, 0, RandomSaturatedColor(), flashtime, fadetime));
-    }
+        virtual void HandleBeat(bool bMajor, float elapsed, float span) override
+        {
+            for (int pass = 0; pass < 1; pass++)
+            {
+                int iInsulator;
+                do
+                {
+                    iInsulator = random(0, NUM_FANS);
+                } while (NUM_FANS > 3 && iInsulator == _iLastInsulator);
+                _iLastInsulator = iInsulator;
 
-    virtual void Draw() override
+                CRGB c = CHSV(beatsin8(4), 255, 127.5*g_Analyzer.VURatio());
+                CRGB r = RandomSaturatedColor();
+                LightInsulator(bMajor ? -1: iInsulator, 0, bMajor ? r : c, bMajor);
+            }
+        }
+
+        virtual void Draw() override
+        {
+            // We are inheriting from both the insulator music beat effect and a particle system effect, and both need
+            //
+            setAllOnAllChannels(0,0,0);
+
+            uint8_t v = 16  * g_Analyzer.VURatio();
+            _baseColor += CRGB(CHSV(beatsin8(24), 255, v));
+            _baseColor.fadeToBlackBy(8 * g_Analyzer.VURatio());
+            setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
+            BeatEffectBase::ProcessAudio();
+            ParticleSystem<RingParticle>::Render(_GFX);
+        }
+    };
+
+    class ColorBeatOverRed : public EffectWithId<ColorBeatOverRed>, public BeatEffectBase, public ParticleSystem<RingParticle>
     {
-      ProcessAudio();
+      private:
 
-      // We are inheriting from both the insulator music beat effect and a particle system effect, and both need a chance
-      // to draw.  BeatEffectBase doesn't draw anything directly, but it does call us back at HandleBeat when needed.  We
-      // also have to update and render the particle system, which does the actual pixel drawing.  We clear the scene ever
-      // pass and rely on the fade effects of the particles to blend the
+        int _iLastInsulator = 0;
+        CRGB _baseColor = CRGB::Black;
 
-      float amount = g_Analyzer.VU() / 4096;
+      public:
 
-      _baseColor = CRGB(500 * amount, 0, 0);
-      setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
-      ParticleSystem<RingParticle>::Render(_GFX);
+        ColorBeatOverRed(const String & strName)
+            : EffectWithId<ColorBeatOverRed>(strName),
+            BeatEffectBase(1.75, 0.2),
+            ParticleSystem<RingParticle>()
+        {
+        }
 
-    }
-};
+        ColorBeatOverRed(const JsonObjectConst& jsonObject)
+            : EffectWithId<ColorBeatOverRed>(jsonObject),
+            BeatEffectBase(1.75, 0.2),
+            ParticleSystem<RingParticle>()
+        {
+        }
+
+        virtual void HandleBeat(bool bMajor, float elapsed, float span) override
+        {
+            int iInsulator;
+            do
+            {
+                iInsulator = random(0, NUM_FANS);
+            } while (NUM_FANS > 3 && iInsulator == _iLastInsulator);
+            _iLastInsulator = iInsulator;
+
+            if (bMajor && span >= 1.999)
+                iInsulator = -1;
+
+            float fadetime = min(5.0, elapsed * 1.5); // Cap it at 5 seconds so we don't get ultra-long beats resulting from delays
+            float flashtime = 0;
+
+            _allParticles.push_back(RingParticle(iInsulator, 0, RandomSaturatedColor(), flashtime, fadetime));
+        }
+
+        virtual void Draw() override
+        {
+            ProcessAudio();
+
+            // We are inheriting from both the insulator music beat effect and a particle system effect, and both need a chance
+            // to draw.  BeatEffectBase doesn't draw anything directly, but it does call us back at HandleBeat when needed.  We
+            // also have to update and render the particle system, which does the actual pixel drawing.  We clear the scene ever
+            // pass and rely on the fade effects of the particles to blend the
+
+            float amount = g_Analyzer.VU() / 4096;
+
+            _baseColor = CRGB(500 * amount, 0, 0);
+            setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
+            ParticleSystem<RingParticle>::Render(_GFX);
+
+        }
+    };
 #endif
 
 class SpinningPaletteRingParticle : public FadingObject
 {
   protected:
 
-          int             _iInsulator;
-          int             _iRing;
-    const CRGBPalette16  _palette;
-          int             _length;
-          int             _start;
-    const float           _density;
-    const float           _paletteSpeed;
-    const float           _LEDSPerSecond;
-    const float           _lightSize;
-    const float           _gapSize;
-    const TBlendType      _blend;
-    const bool            _bErase;
-          float           _startIndex;
-          float           _paletteIndex;
-    const float           _brightness;
-    const float           _ignitionTime;
+    int _iInsulator;
+    int _iRing;
+    const CRGBPalette16 _palette;
+    int _length;
+    int _start;
+    const float _density;
+    const float _paletteSpeed;
+    const float _LEDSPerSecond;
+    const float _lightSize;
+    const float _gapSize;
+    const TBlendType _blend;
+    const bool _bErase;
+    float _startIndex;
+    float _paletteIndex;
+    const float _brightness;
+    const float _ignitionTime;
 
 
   public:
 
     SpinningPaletteRingParticle(
-                  int                    iInsulator,
-                  int                    iRing,
-                  const CRGBPalette16 & palette,
-                  float                  density = 4.0,
-                  float                  paletteSpeed = 0.25,
-                  float                  ledsPerSecond = 0.1,
-                  float                  lightSize = 1,
-                  float                  gapSize = 0,
-                  TBlendType             blend = LINEARBLEND,
-                  bool                   bErase = true,
-                  float                  brightness = 1.0f,
-                  float                  ignitionTime = 0.0)
-      :  _iInsulator(iInsulator),
-         _iRing(iRing),
-         _palette(palette),
-         _density(density),
-         _paletteSpeed(paletteSpeed),
-         _LEDSPerSecond(ledsPerSecond),
-         _lightSize(lightSize),
-         _gapSize(gapSize),
-         _blend(blend),
-         _bErase(bErase),
-         _startIndex(0.0f),
-         _paletteIndex(0.0f),
-         _brightness(brightness),
-         _ignitionTime(ignitionTime)
+        int iInsulator,
+        int iRing,
+        const CRGBPalette16 & palette,
+        float density = 4.0,
+        float paletteSpeed = 0.25,
+        float ledsPerSecond = 0.1,
+        float lightSize = 1,
+        float gapSize = 0,
+        TBlendType blend = LINEARBLEND,
+        bool bErase = true,
+        float brightness = 1.0f,
+        float ignitionTime = 0.0)
+        :  _iInsulator(iInsulator),
+        _iRing(iRing),
+        _palette(palette),
+        _density(density),
+        _paletteSpeed(paletteSpeed),
+        _LEDSPerSecond(ledsPerSecond),
+        _lightSize(lightSize),
+        _gapSize(gapSize),
+        _blend(blend),
+        _bErase(bErase),
+        _startIndex(0.0f),
+        _paletteIndex(0.0f),
+        _brightness(brightness),
+        _ignitionTime(ignitionTime)
     {
         assert(iRing <= NUM_RINGS);
         assert(iInsulator < NUM_FANS);
@@ -562,20 +583,20 @@ class SpinningPaletteRingParticle : public FadingObject
 
         _start = iInsulator * FAN_SIZE;     // Move to correct insulator
         for (int i = 0; i < iRing; i++)     // Move to ring within the insulator
-          _start += g_aRingSizeTable[i];
+            _start += g_aRingSizeTable[i];
 
         _length = g_aRingSizeTable[iRing];    // Length is size of this particular ring
     }
 
-    virtual void Render(const std::vector<std::shared_ptr<GFXBase>>& _GFX)
+    virtual void Render(const std::vector<std::shared_ptr<GFXBase> >& _GFX)
     {
         debugV("Particle Render at insulator %d", _iInsulator);
 
         if (_bErase)
-          _GFX[0]->setPixelsF(_start, _length, CRGB::Black, false);
+            _GFX[0]->setPixelsF(_start, _length, CRGB::Black, false);
 
-        float deltaTime = g_Values.AppTime.LastFrameTime();
-        float increment = (deltaTime * _LEDSPerSecond);
+        float     deltaTime = g_Values.AppTime.LastFrameTime();
+        float     increment = (deltaTime * _LEDSPerSecond);
         const int totalSize = _gapSize + _lightSize + 1;
         _startIndex   = totalSize > 1 ? fmodf(_startIndex + increment, totalSize) : 0;
 
@@ -588,41 +609,49 @@ class SpinningPaletteRingParticle : public FadingObject
 
         if (_gapSize == 0)
         {
-          for (int i = _start; i < _start+_length; i+=_lightSize)
-          {
-            iColor = fmodf(iColor + _density, 256);
-            _GFX[0]->setPixelsF(i, _lightSize, ColorFromPalette(_palette, iColor, 255 - 255 * FadeoutAmount(), _blend), true);
-          }
+            for (int i = _start; i < _start+_length; i+=_lightSize)
+            {
+                iColor = fmodf(iColor + _density, 256);
+                _GFX[0]->setPixelsF(i, _lightSize, ColorFromPalette(_palette, iColor, 255 - 255 * FadeoutAmount(), _blend), true);
+            }
         }
         else
         {
-          // Start far enough "back" to have one off-strip light and gap, and then we need to draw at least as far as the last light.
-          // This prevents sticks of light from "appearing" or "disappearing" at the ends
+            // Start far enough "back" to have one off-strip light and gap, and then we need to draw at least as far as the last light.
+            // This prevents sticks of light from "appearing" or "disappearing" at the ends
 
-          for (float i = _start-totalSize; i < _start+_length+_lightSize; i++)
-          {
-              // We look for each pixel where we cross an even multiple of the light+gap size, which means it's time to start the drawing
-              // of the light here
+            for (float i = _start-totalSize; i < _start+_length+_lightSize; i++)
+            {
+                // We look for each pixel where we cross an even multiple of the light+gap size, which means it's time to start the drawing
+                // of the light here
 
-              iColor = fmodf(iColor + _density, 256);
-              int index = fmodf(i, totalSize);
-              if (index == 0)
-              {
-                  CRGB c = ColorFromPalette(_palette, iColor, 255 * _brightness * FadeoutAmount(), _blend);
-                  if (i + _startIndex > _start)
-                    _GFX[0]->setPixelsF(i+_startIndex, _lightSize, c, true);
-              }
-          }
+                iColor = fmodf(iColor + _density, 256);
+                int index = fmodf(i, totalSize);
+                if (index == 0)
+                {
+                    CRGB c = ColorFromPalette(_palette, iColor, 255 * _brightness * FadeoutAmount(), _blend);
+                    if (i + _startIndex > _start)
+                        _GFX[0]->setPixelsF(i+_startIndex, _lightSize, c, true);
+                }
+            }
         }
 
         if (Age() < IgnitionTime() + PreignitionTime() && Age() >= PreignitionTime())
-          _GFX[0]->setPixelsF(_start + random(0, _length), 1, CRGB::White, true);
+            _GFX[0]->setPixelsF(_start + random(0, _length), 1, CRGB::White, true);
     }
 
-    float PreignitionTime() const override         { return 0.0f;          }
-    float IgnitionTime() const override            { return _ignitionTime; }
-    float HoldTime() const override                { return 0.0f;          }
-    float FadeTime() const override                { return 1.00;          }
+    float PreignitionTime() const override {
+        return 0.0f;
+    }
+    float IgnitionTime() const override {
+        return _ignitionTime;
+    }
+    float HoldTime() const override {
+        return 0.0f;
+    }
+    float FadeTime() const override {
+        return 1.00;
+    }
 };
 
 
@@ -630,25 +659,25 @@ class HotWhiteRingParticle : public FadingObject
 {
   protected:
 
-    int             _iInsulator;
-    int             _iRing;
-    float           _ignitionTime;
-    float           _fadeTime;
+    int _iInsulator;
+    int _iRing;
+    float _ignitionTime;
+    float _fadeTime;
 
   public:
 
     HotWhiteRingParticle(int iInsulator, int iRing, float ignitionTime = 0.25f, float fadeTime = 1.0f)
-      :  _iInsulator(iInsulator),
-         _iRing(iRing),
-         _ignitionTime(ignitionTime),
-         _fadeTime(fadeTime)
+        :  _iInsulator(iInsulator),
+        _iRing(iRing),
+        _ignitionTime(ignitionTime),
+        _fadeTime(fadeTime)
     {
         assert(iRing <= NUM_RINGS);
         assert(iInsulator < NUM_FANS);
         debugV("Creating particle at insulator %d", iInsulator);
     }
 
-    virtual void Render(const std::vector<std::shared_ptr<GFXBase>>& _GFX)
+    virtual void Render(const std::vector<std::shared_ptr<GFXBase> >& _GFX)
     {
         debugV("Particle Render at insulator %d", _iInsulator);
 
@@ -661,336 +690,346 @@ class HotWhiteRingParticle : public FadingObject
         }
         else
         {
-          float age = Age() - PreignitionTime() - IgnitionTime();
+            float   age = Age() - PreignitionTime() - IgnitionTime();
 
-          uint8_t temperature = 255 * (1.0 - (age/FadeTime()));
-          uint8_t t192 = round((temperature/255.0)*191);
+            uint8_t temperature = 255 * (1.0 - (age/FadeTime()));
+            uint8_t t192 = round((temperature/255.0)*191);
 
-          // calculate ramp up from
-          uint8_t heatramp = t192 & 0x3F; // 0..63
-          heatramp <<= 2; // scale up to 0..252
+            // calculate ramp up from
+            uint8_t heatramp = t192 & 0x3F; // 0..63
+            heatramp <<= 2; // scale up to 0..252
 
-          if( t192 > 0x80)                      // hottest
-              c = CRGB(255, 255, heatramp);
-          else if( t192 > 0x40 )                // middle
-              c = CRGB( 255, heatramp, 0);
-          else                                  // coolest
-              c = CRGB( heatramp, 0, 0);
-          fadeToBlackBy(&c, 1, 255 * FadeoutAmount());
+            if( t192 > 0x80)                    // hottest
+                c = CRGB(255, 255, heatramp);
+            else if( t192 > 0x40 )              // middle
+                c = CRGB( 255, heatramp, 0);
+            else                                // coolest
+                c = CRGB( heatramp, 0, 0);
+            fadeToBlackBy(&c, 1, 255 * FadeoutAmount());
         }
 
         if (_iInsulator < 0)    // -1 is a major beat, all insulators
         {
             for (int i = 0; i < NUM_FANS; i++)
             {
-              FillRingPixels(c, i, _iRing);
+                FillRingPixels(c, i, _iRing);
             }
         }
         else    // Individual ring for a minor beat
         {
-          FillRingPixels(c, _iInsulator, _iRing);
+            FillRingPixels(c, _iInsulator, _iRing);
         }
     }
 
-    float PreignitionTime() const override         { return 0.0f;          }
-    float IgnitionTime()    const override         { return _ignitionTime; }
-    float HoldTime()        const override         { return 0.0f;          }
-    float FadeTime()        const override         { return _fadeTime;     }
+    float PreignitionTime() const override {
+        return 0.0f;
+    }
+    float IgnitionTime()    const override {
+        return _ignitionTime;
+    }
+    float HoldTime()        const override {
+        return 0.0f;
+    }
+    float FadeTime()        const override {
+        return _fadeTime;
+    }
 };
 
 #if ENABLE_AUDIO
 
 
-class MoltenGlassOnVioletBkgnd : public EffectWithId<MoltenGlassOnVioletBkgnd>, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
-{
-  private:
-
-    int                    _iLastInsulator = 0;
-    const CRGBPalette16 & _Palette;
-    CRGB _baseColor = CRGB::Black;
-
-  public:
-
-    MoltenGlassOnVioletBkgnd(const String & strName, const CRGBPalette16 & Palette)
-      : EffectWithId<MoltenGlassOnVioletBkgnd>(strName),
-        BeatEffectBase(1.50, 0.05),
-        ParticleSystem<SpinningPaletteRingParticle>(),
-        _Palette(Palette)
+    class MoltenGlassOnVioletBkgnd : public EffectWithId<MoltenGlassOnVioletBkgnd>, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
     {
-    }
+      private:
 
-    MoltenGlassOnVioletBkgnd(const JsonObjectConst& jsonObject)
-      : EffectWithId<MoltenGlassOnVioletBkgnd>(jsonObject),
-        BeatEffectBase(1.50, 0.05),
-        ParticleSystem<SpinningPaletteRingParticle>(),
-        _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>())
-    {
-    }
+        int _iLastInsulator = 0;
+        const CRGBPalette16 & _Palette;
+        CRGB _baseColor = CRGB::Black;
 
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
-    {
-        auto jsonDoc = CreateJsonDocument();
+      public:
 
-        JsonObject root = jsonDoc.to<JsonObject>();
-        LEDStripEffect::SerializeToJSON(root);
-
-        jsonDoc[PTY_PALETTE] = _Palette;
-
-        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
-    }
-
-
-    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
-    {
-        int iInsulator;
-        do
+        MoltenGlassOnVioletBkgnd(const String & strName, const CRGBPalette16 & Palette)
+            : EffectWithId<MoltenGlassOnVioletBkgnd>(strName),
+            BeatEffectBase(1.50, 0.05),
+            ParticleSystem<SpinningPaletteRingParticle>(),
+            _Palette(Palette)
         {
-          iInsulator = random(0, NUM_FANS);
-        } while (NUM_FANS > 3 && iInsulator == _iLastInsulator);
-        _iLastInsulator = iInsulator;
-
-        switch (random(10))
-        {
-          case 0:
-            _allParticles.push_back(SpinningPaletteRingParticle(0, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
-            _allParticles.push_back(SpinningPaletteRingParticle(2, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
-            _allParticles.push_back(SpinningPaletteRingParticle(4, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
-            break;
-
-          case 1:
-            _allParticles.push_back(SpinningPaletteRingParticle(1, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
-            _allParticles.push_back(SpinningPaletteRingParticle(3, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
-            break;
-
-          case 2:
-            _allParticles.push_back(SpinningPaletteRingParticle(0, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
-            _allParticles.push_back(SpinningPaletteRingParticle(1, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
-            _allParticles.push_back(SpinningPaletteRingParticle(2, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
-            _allParticles.push_back(SpinningPaletteRingParticle(3, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
-            _allParticles.push_back(SpinningPaletteRingParticle(4, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
-            break;
-
-          default:
-            _allParticles.push_back(SpinningPaletteRingParticle(iInsulator, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
-            break;
         }
-    }
 
-    virtual void Draw() override
-    {
-      // We are inheriting from both the insulator music beat effect and a particle system effect, and both need a chance
-      // to draw.  BeatEffectBase doesn't draw anything directly, but it does call us back at HandleBeat when needed.  We
-      // also have to update and render the particle system, which does the actual pixel drawing.  We clear the scene ever
-      // pass and rely on the fade effects of the particles to blend the
-
-      uint8_t v = 16  * g_Analyzer.VURatio();
-      _baseColor += CRGB(CHSV(200, 255, v));
-      _baseColor.fadeToBlackBy((min(255.0, 1000.0 * g_Values.AppTime.LastFrameTime())));
-      setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
-
-      BeatEffectBase::ProcessAudio();
-      ParticleSystem<SpinningPaletteRingParticle>::Render(_GFX);
-    }
-};
-
-class NewMoltenGlassOnVioletBkgnd : public EffectWithId<NewMoltenGlassOnVioletBkgnd>, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
-{
-  private:
-
-    int  _iLastInsulator = 0;
-    const CRGBPalette16 & _Palette;
-    CRGB _baseColor = CRGB::Black;
-
-  public:
-
-    NewMoltenGlassOnVioletBkgnd(const String & strName, const CRGBPalette16 & Palette)
-      : EffectWithId<NewMoltenGlassOnVioletBkgnd>(strName),
-        BeatEffectBase(1.0, 0.25 ),
-        ParticleSystem<SpinningPaletteRingParticle>(),
-        _Palette(Palette)
-    {
-    }
-
-    NewMoltenGlassOnVioletBkgnd(const JsonObjectConst& jsonObject)
-      : EffectWithId<NewMoltenGlassOnVioletBkgnd>(jsonObject),
-        BeatEffectBase(1.0, 0.25 ),
-        ParticleSystem<SpinningPaletteRingParticle>(),
-        _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>())
-    {
-    }
-
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
-    {
-        auto jsonDoc = CreateJsonDocument();
-
-        JsonObject root = jsonDoc.to<JsonObject>();
-        LEDStripEffect::SerializeToJSON(root);
-
-        jsonDoc[PTY_PALETTE] = _Palette;
-
-        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
-    }
-
-    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
-    {
-        int iInsulator;
-        do
+        MoltenGlassOnVioletBkgnd(const JsonObjectConst& jsonObject)
+            : EffectWithId<MoltenGlassOnVioletBkgnd>(jsonObject),
+            BeatEffectBase(1.50, 0.05),
+            ParticleSystem<SpinningPaletteRingParticle>(),
+            _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>())
         {
-          iInsulator = random(0, NUM_FANS);
-        } while (NUM_FANS > 3 && iInsulator == _iLastInsulator);
-        _iLastInsulator = iInsulator;
-
-        switch (random(10))
-        {
-          case 0:
-            _allParticles.push_back(SpinningPaletteRingParticle(0, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
-            _allParticles.push_back(SpinningPaletteRingParticle(2, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
-            _allParticles.push_back(SpinningPaletteRingParticle(4, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
-            break;
-
-          case 1:
-            _allParticles.push_back(SpinningPaletteRingParticle(1, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
-            _allParticles.push_back(SpinningPaletteRingParticle(3, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
-            break;
-
-          case 2:
-            _allParticles.push_back(SpinningPaletteRingParticle(0, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
-            _allParticles.push_back(SpinningPaletteRingParticle(1, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
-            _allParticles.push_back(SpinningPaletteRingParticle(2, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
-            _allParticles.push_back(SpinningPaletteRingParticle(3, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
-            _allParticles.push_back(SpinningPaletteRingParticle(4, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
-            break;
-
-          default:
-            _allParticles.push_back(SpinningPaletteRingParticle(iInsulator, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
-            break;
         }
-    }
 
-    virtual void Draw() override
-    {
-      ProcessAudio();
-      // We are inheriting from both the insulator music beat effect and a particle system effect, and both need a chance
-      // to draw.  BeatEffectBase doesn't draw anything directly, but it does call us back at HandleBeat when needed.  We
-      // also have to update and render the particle system, which does the actual pixel drawing.  We clear the scene ever
-      // pass and rely on the fade effects of the particles to blend the
-
-       uint8_t v = 16  * g_Analyzer.VURatio();
-      _baseColor += CRGB(CHSV(200, 255, v));
-      _baseColor.fadeToBlackBy((min(255.0, 1000.0 * g_Values.AppTime.LastFrameTime())));
-      setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
-
-      ParticleSystem<SpinningPaletteRingParticle>::Render(_GFX);
-    }
-};
-
-class SparklySpinningMusicEffect : public EffectWithId<SparklySpinningMusicEffect>, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
-{
-  private:
-
-    int  _iLastInsulator = 0;
-    const CRGBPalette16 & _Palette;
-    CRGB _baseColor = CRGB::Black;
-
-  public:
-
-    SparklySpinningMusicEffect(const String & strName, const CRGBPalette16 & Palette)
-      : EffectWithId<SparklySpinningMusicEffect>(strName), BeatEffectBase(), ParticleSystem<SpinningPaletteRingParticle>(), _Palette(Palette)
-    {
-    }
-
-    SparklySpinningMusicEffect(const JsonObjectConst& jsonObject)
-      : EffectWithId<SparklySpinningMusicEffect>(jsonObject),
-        BeatEffectBase(),
-        ParticleSystem<SpinningPaletteRingParticle>(),
-        _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>())
-    {
-    }
-
-    virtual bool SerializeToJSON(JsonObject& jsonObject) override
-    {
-        auto jsonDoc = CreateJsonDocument();
-
-        JsonObject root = jsonDoc.to<JsonObject>();
-        LEDStripEffect::SerializeToJSON(root);
-
-        jsonDoc[PTY_PALETTE] = _Palette;
-
-        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
-    }
-
-    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
-    {
-        int iInsulator;
-        do
+        virtual bool SerializeToJSON(JsonObject& jsonObject) override
         {
-          iInsulator = random(0, NUM_FANS);
-        } while (NUM_FANS > 3 && iInsulator == _iLastInsulator);
-        _iLastInsulator = iInsulator;
+            auto       jsonDoc = CreateJsonDocument();
 
-        _allParticles.push_back(SpinningPaletteRingParticle(iInsulator, 0, _Palette, 1, 1.0, 1.0, 1, 0, NOBLEND, true, 1.0, min(0.15f, elapsed/2)));
-    }
+            JsonObject root = jsonDoc.to<JsonObject>();
+            LEDStripEffect::SerializeToJSON(root);
 
-    virtual void Draw() override
-    {
-      // We are inheriting from both the insulator music beat effect and a particle system effect, and both need a chance
-      // to draw.  BeatEffectBase doesn't draw anything directly, but it does call us back at HandleBeat when needed.  We
-      // also have to update and render the particle system, which does the actual pixel drawing.  We clear the scene ever
-      // pass and rely on the fade effects of the particles to blend the
+            jsonDoc[PTY_PALETTE] = _Palette;
 
-      uint8_t v = 32  * g_Analyzer.VURatio();
-      _baseColor += CRGB(CHSV(beatsin8(1), 255, v));
-      _baseColor.fadeToBlackBy((min(255.0, 2500.0 * g_Values.AppTime.LastFrameTime())));
-      setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
+            return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
+        }
 
-      BeatEffectBase::ProcessAudio();
-      ParticleSystem<SpinningPaletteRingParticle>::Render(_GFX);
-      delay(20);
-    }
-};
 
-class MusicalHotWhiteInsulatorEffect : public EffectWithId<MusicalHotWhiteInsulatorEffect>, public BeatEffectBase, public ParticleSystem<HotWhiteRingParticle>
-{
-  private:
-
-    int  _iLastInsulator = 0;
-    CRGB _baseColor      = CRGB::Black;
-
-  public:
-
-    MusicalHotWhiteInsulatorEffect(const String & strName) : EffectWithId<MusicalHotWhiteInsulatorEffect>(strName), BeatEffectBase(), ParticleSystem<HotWhiteRingParticle>() {}
-
-    MusicalHotWhiteInsulatorEffect(const JsonObjectConst& jsonObject) : EffectWithId<MusicalHotWhiteInsulatorEffect>(jsonObject), BeatEffectBase(), ParticleSystem<HotWhiteRingParticle>() {}
-
-    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
-    {
-        int iInsulator;
-        do
+        virtual void HandleBeat(bool bMajor, float elapsed, float span) override
         {
-          iInsulator = random(0, NUM_FANS);
-        } while (NUM_FANS > 3 && iInsulator == _iLastInsulator);
-        _iLastInsulator = iInsulator;
+            int iInsulator;
+            do
+            {
+                iInsulator = random(0, NUM_FANS);
+            } while (NUM_FANS > 3 && iInsulator == _iLastInsulator);
+            _iLastInsulator = iInsulator;
 
-        _allParticles.push_back(HotWhiteRingParticle(iInsulator, 0, 0.25, 0.75));
-    }
+            switch (random(10))
+            {
+                case 0:
+                    _allParticles.push_back(SpinningPaletteRingParticle(0, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
+                    _allParticles.push_back(SpinningPaletteRingParticle(2, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
+                    _allParticles.push_back(SpinningPaletteRingParticle(4, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
+                    break;
 
-    virtual void Draw() override
+                case 1:
+                    _allParticles.push_back(SpinningPaletteRingParticle(1, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
+                    _allParticles.push_back(SpinningPaletteRingParticle(3, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
+                    break;
+
+                case 2:
+                    _allParticles.push_back(SpinningPaletteRingParticle(0, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
+                    _allParticles.push_back(SpinningPaletteRingParticle(1, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
+                    _allParticles.push_back(SpinningPaletteRingParticle(2, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
+                    _allParticles.push_back(SpinningPaletteRingParticle(3, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
+                    _allParticles.push_back(SpinningPaletteRingParticle(4, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
+                    break;
+
+                default:
+                    _allParticles.push_back(SpinningPaletteRingParticle(iInsulator, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
+                    break;
+            }
+        }
+
+        virtual void Draw() override
+        {
+            // We are inheriting from both the insulator music beat effect and a particle system effect, and both need a chance
+            // to draw.  BeatEffectBase doesn't draw anything directly, but it does call us back at HandleBeat when needed.  We
+            // also have to update and render the particle system, which does the actual pixel drawing.  We clear the scene ever
+            // pass and rely on the fade effects of the particles to blend the
+
+            uint8_t v = 16  * g_Analyzer.VURatio();
+            _baseColor += CRGB(CHSV(200, 255, v));
+            _baseColor.fadeToBlackBy((min(255.0, 1000.0 * g_Values.AppTime.LastFrameTime())));
+            setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
+
+            BeatEffectBase::ProcessAudio();
+            ParticleSystem<SpinningPaletteRingParticle>::Render(_GFX);
+        }
+    };
+
+    class NewMoltenGlassOnVioletBkgnd : public EffectWithId<NewMoltenGlassOnVioletBkgnd>, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
     {
-      // We are inheriting from both the insulator music beat effect and a particle system effect, and both need a chance
-      // to draw.  BeatEffectBase doesn't draw anything directly, but it does call us back at HandleBeat when needed.  We
-      // also have to update and render the particle system, which does the actual pixel drawing.  We clear the scene ever
-      // pass and rely on the fade effects of the particles to blend the
+      private:
 
-      uint8_t v = 32  * g_Analyzer.VURatio();
-      _baseColor += CRGB(CHSV(beatsin8(1), 255, v));
-      _baseColor.fadeToBlackBy((min(255.0,1000.0 * g_Values.AppTime.LastFrameTime())));
-      setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
-      setAllOnAllChannels(0,0,0);
+        int _iLastInsulator = 0;
+        const CRGBPalette16 & _Palette;
+        CRGB _baseColor = CRGB::Black;
 
-      BeatEffectBase::ProcessAudio();
-      ParticleSystem<HotWhiteRingParticle>::Render(_GFX);
-      delay(20);
-    }
-};
+      public:
+
+        NewMoltenGlassOnVioletBkgnd(const String & strName, const CRGBPalette16 & Palette)
+            : EffectWithId<NewMoltenGlassOnVioletBkgnd>(strName),
+            BeatEffectBase(1.0, 0.25 ),
+            ParticleSystem<SpinningPaletteRingParticle>(),
+            _Palette(Palette)
+        {
+        }
+
+        NewMoltenGlassOnVioletBkgnd(const JsonObjectConst& jsonObject)
+            : EffectWithId<NewMoltenGlassOnVioletBkgnd>(jsonObject),
+            BeatEffectBase(1.0, 0.25 ),
+            ParticleSystem<SpinningPaletteRingParticle>(),
+            _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>())
+        {
+        }
+
+        virtual bool SerializeToJSON(JsonObject& jsonObject) override
+        {
+            auto       jsonDoc = CreateJsonDocument();
+
+            JsonObject root = jsonDoc.to<JsonObject>();
+            LEDStripEffect::SerializeToJSON(root);
+
+            jsonDoc[PTY_PALETTE] = _Palette;
+
+            return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
+        }
+
+        virtual void HandleBeat(bool bMajor, float elapsed, float span) override
+        {
+            int iInsulator;
+            do
+            {
+                iInsulator = random(0, NUM_FANS);
+            } while (NUM_FANS > 3 && iInsulator == _iLastInsulator);
+            _iLastInsulator = iInsulator;
+
+            switch (random(10))
+            {
+                case 0:
+                    _allParticles.push_back(SpinningPaletteRingParticle(0, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
+                    _allParticles.push_back(SpinningPaletteRingParticle(2, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
+                    _allParticles.push_back(SpinningPaletteRingParticle(4, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
+                    break;
+
+                case 1:
+                    _allParticles.push_back(SpinningPaletteRingParticle(1, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
+                    _allParticles.push_back(SpinningPaletteRingParticle(3, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
+                    break;
+
+                case 2:
+                    _allParticles.push_back(SpinningPaletteRingParticle(0, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
+                    _allParticles.push_back(SpinningPaletteRingParticle(1, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
+                    _allParticles.push_back(SpinningPaletteRingParticle(2, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
+                    _allParticles.push_back(SpinningPaletteRingParticle(3, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
+                    _allParticles.push_back(SpinningPaletteRingParticle(4, 0, _Palette, 2, 50, -0.5, 1, 0, LINEARBLEND, true, 1.0, 0));
+                    break;
+
+                default:
+                    _allParticles.push_back(SpinningPaletteRingParticle(iInsulator, 0, _Palette, 256.0/FAN_SIZE, 0, -0.5, RING_SIZE_0, 0, LINEARBLEND, true, 1.0, 0));
+                    break;
+            }
+        }
+
+        virtual void Draw() override
+        {
+            ProcessAudio();
+            // We are inheriting from both the insulator music beat effect and a particle system effect, and both need a chance
+            // to draw.  BeatEffectBase doesn't draw anything directly, but it does call us back at HandleBeat when needed.  We
+            // also have to update and render the particle system, which does the actual pixel drawing.  We clear the scene ever
+            // pass and rely on the fade effects of the particles to blend the
+
+            uint8_t v = 16  * g_Analyzer.VURatio();
+            _baseColor += CRGB(CHSV(200, 255, v));
+            _baseColor.fadeToBlackBy((min(255.0, 1000.0 * g_Values.AppTime.LastFrameTime())));
+            setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
+
+            ParticleSystem<SpinningPaletteRingParticle>::Render(_GFX);
+        }
+    };
+
+    class SparklySpinningMusicEffect : public EffectWithId<SparklySpinningMusicEffect>, public BeatEffectBase, public ParticleSystem<SpinningPaletteRingParticle>
+    {
+      private:
+
+        int _iLastInsulator = 0;
+        const CRGBPalette16 & _Palette;
+        CRGB _baseColor = CRGB::Black;
+
+      public:
+
+        SparklySpinningMusicEffect(const String & strName, const CRGBPalette16 & Palette)
+            : EffectWithId<SparklySpinningMusicEffect>(strName), BeatEffectBase(), ParticleSystem<SpinningPaletteRingParticle>(), _Palette(Palette)
+        {
+        }
+
+        SparklySpinningMusicEffect(const JsonObjectConst& jsonObject)
+            : EffectWithId<SparklySpinningMusicEffect>(jsonObject),
+            BeatEffectBase(),
+            ParticleSystem<SpinningPaletteRingParticle>(),
+            _Palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>())
+        {
+        }
+
+        virtual bool SerializeToJSON(JsonObject& jsonObject) override
+        {
+            auto       jsonDoc = CreateJsonDocument();
+
+            JsonObject root = jsonDoc.to<JsonObject>();
+            LEDStripEffect::SerializeToJSON(root);
+
+            jsonDoc[PTY_PALETTE] = _Palette;
+
+            return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
+        }
+
+        virtual void HandleBeat(bool bMajor, float elapsed, float span) override
+        {
+            int iInsulator;
+            do
+            {
+                iInsulator = random(0, NUM_FANS);
+            } while (NUM_FANS > 3 && iInsulator == _iLastInsulator);
+            _iLastInsulator = iInsulator;
+
+            _allParticles.push_back(SpinningPaletteRingParticle(iInsulator, 0, _Palette, 1, 1.0, 1.0, 1, 0, NOBLEND, true, 1.0, min(0.15f, elapsed/2)));
+        }
+
+        virtual void Draw() override
+        {
+            // We are inheriting from both the insulator music beat effect and a particle system effect, and both need a chance
+            // to draw.  BeatEffectBase doesn't draw anything directly, but it does call us back at HandleBeat when needed.  We
+            // also have to update and render the particle system, which does the actual pixel drawing.  We clear the scene ever
+            // pass and rely on the fade effects of the particles to blend the
+
+            uint8_t v = 32  * g_Analyzer.VURatio();
+            _baseColor += CRGB(CHSV(beatsin8(1), 255, v));
+            _baseColor.fadeToBlackBy((min(255.0, 2500.0 * g_Values.AppTime.LastFrameTime())));
+            setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
+
+            BeatEffectBase::ProcessAudio();
+            ParticleSystem<SpinningPaletteRingParticle>::Render(_GFX);
+            delay(20);
+        }
+    };
+
+    class MusicalHotWhiteInsulatorEffect : public EffectWithId<MusicalHotWhiteInsulatorEffect>, public BeatEffectBase, public ParticleSystem<HotWhiteRingParticle>
+    {
+      private:
+
+        int _iLastInsulator = 0;
+        CRGB _baseColor      = CRGB::Black;
+
+      public:
+
+        MusicalHotWhiteInsulatorEffect(const String & strName) : EffectWithId<MusicalHotWhiteInsulatorEffect>(strName), BeatEffectBase(), ParticleSystem<HotWhiteRingParticle>() {
+        }
+
+        MusicalHotWhiteInsulatorEffect(const JsonObjectConst& jsonObject) : EffectWithId<MusicalHotWhiteInsulatorEffect>(jsonObject), BeatEffectBase(), ParticleSystem<HotWhiteRingParticle>() {
+        }
+
+        virtual void HandleBeat(bool bMajor, float elapsed, float span) override
+        {
+            int iInsulator;
+            do
+            {
+                iInsulator = random(0, NUM_FANS);
+            } while (NUM_FANS > 3 && iInsulator == _iLastInsulator);
+            _iLastInsulator = iInsulator;
+
+            _allParticles.push_back(HotWhiteRingParticle(iInsulator, 0, 0.25, 0.75));
+        }
+
+        virtual void Draw() override
+        {
+            // We are inheriting from both the insulator music beat effect and a particle system effect, and both need a chance
+            // to draw.  BeatEffectBase doesn't draw anything directly, but it does call us back at HandleBeat when needed.  We
+            // also have to update and render the particle system, which does the actual pixel drawing.  We clear the scene ever
+            // pass and rely on the fade effects of the particles to blend the
+
+            uint8_t v = 32  * g_Analyzer.VURatio();
+            _baseColor += CRGB(CHSV(beatsin8(1), 255, v));
+            _baseColor.fadeToBlackBy((min(255.0,1000.0 * g_Values.AppTime.LastFrameTime())));
+            setAllOnAllChannels(_baseColor.r, _baseColor.g, _baseColor.b);
+            setAllOnAllChannels(0,0,0);
+
+            BeatEffectBase::ProcessAudio();
+            ParticleSystem<HotWhiteRingParticle>::Render(_GFX);
+            delay(20);
+        }
+    };
 #endif
 

@@ -43,7 +43,7 @@
 
 // Palettes used by a number of effects
 
-const CRGBPalette16 BlueColors_p =
+const CRGBPalette16                               BlueColors_p =
 {
     CRGB::DarkBlue,
     CRGB::MediumBlue,
@@ -63,7 +63,7 @@ const CRGBPalette16 BlueColors_p =
     CRGB::MediumBlue
 };
 
-const CRGBPalette16 RedColors_p =
+const CRGBPalette16                               RedColors_p =
 {
     CRGB::Red,
     CRGB::DarkRed,
@@ -86,7 +86,7 @@ const CRGBPalette16 RedColors_p =
     CRGB::OrangeRed
 };
 
-const CRGBPalette16 GreenColors_p =
+const CRGBPalette16                               GreenColors_p =
 {
     CRGB::Green,
     CRGB::DarkGreen,
@@ -109,7 +109,7 @@ const CRGBPalette16 GreenColors_p =
     CRGB::LimeGreen
 };
 
-const CRGBPalette16 RGBColors_p =
+const CRGBPalette16                               RGBColors_p =
 {
     CRGB::Red,
     CRGB::Green,
@@ -129,7 +129,7 @@ const CRGBPalette16 RGBColors_p =
     CRGB::Blue
 };
 
-const CRGBPalette16 spectrumBasicColors =
+const CRGBPalette16                               spectrumBasicColors =
 {
     CRGB(0xFD0E35), // Red
     CRGB(0xFF8833), // Orange
@@ -149,7 +149,7 @@ const CRGBPalette16 spectrumBasicColors =
     CRGB(0xDB91EF)  // Lilac
 };
 
-const CRGBPalette16 spectrumAltColors =
+const CRGBPalette16                               spectrumAltColors =
 {
     CRGB::Red,
     CRGB::OrangeRed,
@@ -169,7 +169,7 @@ const CRGBPalette16 spectrumAltColors =
     CRGB::Indigo,
 };
 
-const CRGBPalette16 USAColors_p =
+const CRGBPalette16                               USAColors_p =
 {
     CRGB::Blue,
     CRGB::Blue,
@@ -189,7 +189,7 @@ const CRGBPalette16 USAColors_p =
     CRGB::Red,
 };
 
-const CRGBPalette16 rainbowPalette(RainbowColors_p);
+const CRGBPalette16                               rainbowPalette(RainbowColors_p);
 
 // A pointer to the global effect factories.
 extern DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories;
@@ -200,13 +200,13 @@ extern DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories;
 
 // A type alias for removing const, volatile, and reference from a type.
 template<typename T>
-using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
+using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T> >;
 
 // Gets the effect ID of a given effect type.
 template<typename T>
 constexpr EffectId effect_id_of_type() {
-    static_assert(std::is_base_of_v<LEDStripEffect, remove_cvref_t<T>>,
-                  "Type must derive from EffectWithId<Id>");
+    static_assert(std::is_base_of_v<LEDStripEffect, remove_cvref_t<T> >,
+            "Type must derive from EffectWithId<Id>");
     return remove_cvref_t<T>::ID;   // compile-time constant
 }
 
@@ -214,26 +214,30 @@ constexpr EffectId effect_id_of_type() {
 // Note that this is declared as a constexpr function, which means all ctor
 // args need to be static types. The fact this code compiles confirms that
 // is indeed the case.
-template<typename TEffect, typename... Args>
+template<typename TEffect, typename ... Args>
 constexpr FactoryId factory_id_of_instance(const Args&... args)
 {
     FactoryId h = fnv1a::hash<FactoryId>("effect");
     h = fnv1a::hash(effect_id_of_type<TEffect>(), h);
-    h = fnv1a::hash_pack(h, args...);
+    h = fnv1a::hash_pack(h, args ...);
     return h;
 }
 
 // Adds a default and JSON effect factory for a specific effect number and type.
 // All parameters beyond effectNumber and effect type are forwarded to the default constructor.
-template<typename TEffect, typename... Args>
+template<typename TEffect, typename ... Args>
 inline EffectFactories::NumberedFactory& AddEffect(EffectFactories& factories, Args&&... args)
 {
     return factories.AddEffect(
-        effect_id_of_type<TEffect>(),
-        [=]() -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<TEffect>(args...); },
-        [](const JsonObjectConst& jsonObject) -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<TEffect>(jsonObject); },
-        factory_id_of_instance<TEffect>(args...)
-    );
+            effect_id_of_type<TEffect>(),
+            [=]() -> std::shared_ptr<LEDStripEffect> {
+                return make_shared_psram<TEffect>(args ...);
+            },
+            [](const JsonObjectConst& jsonObject) -> std::shared_ptr<LEDStripEffect> {
+                return make_shared_psram<TEffect>(jsonObject);
+            },
+            factory_id_of_instance<TEffect>(args ...)
+            );
 }
 
 
@@ -241,20 +245,20 @@ inline EffectFactories::NumberedFactory& AddEffect(EffectFactories& factories, A
 //   RegisterAll(*g_ptrEffectFactories,
 //       Effect<idStripPalette, MyEffect>(args...),
 //       Disabled(Effect<idStripColorFill, OtherEffect>(args...)));
-template<typename... Adders>
+template<typename ... Adders>
 inline void RegisterAll(EffectFactories& factories, Adders&&... adders)
 {
     (static_cast<void>(adders(factories)), ...);
 }
 
 // Builder for a single effect entry used with RegisterAll
-template<typename TEffect, typename... Args>
+template<typename TEffect, typename ... Args>
 inline auto Effect(Args&&... args)
 {
     return [=](EffectFactories& factories) -> EffectFactories::NumberedFactory&
-    {
-        return AddEffect<TEffect>(factories, args...);
-    };
+           {
+               return AddEffect<TEffect>(factories, args ...);
+           };
 }
 
 // Decorator to mark an entry disabled-on-load when using RegisterAll
@@ -262,11 +266,11 @@ template<typename F>
 inline auto Disabled(F adder)
 {
     return [=](EffectFactories& factories) -> EffectFactories::NumberedFactory&
-    {
-        auto& nf = adder(factories);
-        nf.LoadDisabled = true;
-        return nf;
-    };
+           {
+               auto& nf = adder(factories);
+               nf.LoadDisabled = true;
+               return nf;
+           };
 }
 
 // Defines used by some StarEffect instances

@@ -8,8 +8,10 @@ class PatternSMRadialFire : public EffectWithId<PatternSMRadialFire>
 {
   public:
 
-    PatternSMRadialFire() : EffectWithId<PatternSMRadialFire>("RadialFire") {}
-    PatternSMRadialFire(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMRadialFire>(jsonObject) {}
+    PatternSMRadialFire() : EffectWithId<PatternSMRadialFire>("RadialFire") {
+    }
+    PatternSMRadialFire(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMRadialFire>(jsonObject) {
+    }
 
     void Start() override
     {

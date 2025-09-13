@@ -63,16 +63,16 @@ template <typename SERIALTYPE>
 class ImprovSerial
 {
     #if !(ENABLE_IMPROV_LOGGING)
-        #define log_write(...) do {} while(0)
+    #define log_write(...) do {} while(0)
     #endif
 
-public:
+  public:
 
     void setup(const String &firmware,
-                             const String &version,
-                             const String &variant,
-                             const String &name,
-                             SERIALTYPE *serial)
+               const String &version,
+               const String &variant,
+               const String &name,
+               SERIALTYPE *serial)
     {
         this->hw_serial_ = serial;
         this->firmware_name_ = firmware;
@@ -94,11 +94,11 @@ public:
     void loop()
     {
         static bool announcedPresence = [&]
-        {
-            debugI("Sending Improv packet to declare we're up. Ignore any IMPROV lines that follow this one.");
-            this->set_state_(improv::STATE_AUTHORIZED);
-            return true;
-        }();
+                                        {
+                                            debugI("Sending Improv packet to declare we're up. Ignore any IMPROV lines that follow this one.");
+                                            this->set_state_(improv::STATE_AUTHORIZED);
+                                            return true;
+                                        }();
 
         const uint32_t now = millis();
         if (now - this->last_read_byte_ > 50)
@@ -149,7 +149,7 @@ public:
         return String(this->command_.password.c_str());
     }
 
-protected:
+  protected:
 
     #if ENABLE_IMPROV_LOGGING
 
@@ -158,10 +158,10 @@ protected:
         void log_write(const char* format, ...)
         {
             constexpr int bufferSize = 256;
-            char lineBuffer[bufferSize];
+            char          lineBuffer[bufferSize];
 
-            auto file = SPIFFS.open(IMPROV_LOG_FILE, FILE_APPEND);
-            va_list args;
+            auto          file = SPIFFS.open(IMPROV_LOG_FILE, FILE_APPEND);
+            va_list       args;
 
             va_start(args, format);
             vsnprintf(lineBuffer, bufferSize, format, args);
@@ -327,7 +327,7 @@ protected:
                         log_write(".Sending details for SSID %s", WiFi.SSID(i).c_str());
                         // Send each ssid separately to avoid overflowing the buffer
                         std::vector<uint8_t> data = improv::build_rpc_response(
-                            improv::GET_WIFI_NETWORKS, {WiFi.SSID(i), str_sprintf("%d", WiFi.RSSI(i)), WiFi.encryptionType(i) != WIFI_AUTH_OPEN ? "YES" : "NO"}, false);
+                                improv::GET_WIFI_NETWORKS, {WiFi.SSID(i), str_sprintf("%d", WiFi.RSSI(i)), WiFi.encryptionType(i) != WIFI_AUTH_OPEN ? "YES" : "NO"}, false);
                         this->send_response_(data);
                     }
                 }
@@ -418,9 +418,9 @@ protected:
 
     std::vector<uint8_t> build_rpc_settings_response_(improv::Command command)
     {
-        std::vector<String> urls;
+        std::vector<String>  urls;
 
-        String webserver_url = String("http://") + WiFi.localIP().toString();
+        String               webserver_url = String("http://") + WiFi.localIP().toString();
         urls.push_back(webserver_url);
         std::vector<uint8_t> data = improv::build_rpc_response(command, urls, false);
 
@@ -429,7 +429,7 @@ protected:
 
     std::vector<uint8_t> build_version_info_()
     {
-        std::vector<String> infos = {this->firmware_name_, this->firmware_version_, this->hardware_variant_, this->device_name_};
+        std::vector<String>  infos = {this->firmware_name_, this->firmware_version_, this->hardware_variant_, this->device_name_};
         std::vector<uint8_t> data = improv::build_rpc_response(improv::GET_DEVICE_INFO, infos, false);
         return data;
     };
@@ -470,8 +470,8 @@ protected:
     String device_name_;
 
     #if !(ENABLE_IMPROV_LOGGING)
-        #undef log_write
+#undef log_write
     #endif
 };
 
-extern std::unique_ptr<ImprovSerial<typeof(Serial)>> g_pImprovSerial;
+extern std::unique_ptr<ImprovSerial<typeof(Serial)> > g_pImprovSerial;

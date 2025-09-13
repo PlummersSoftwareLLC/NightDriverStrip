@@ -27,8 +27,10 @@ class PatternSMFlowFields : public EffectWithId<PatternSMFlowFields>
 
   public:
 
-    PatternSMFlowFields() : EffectWithId<PatternSMFlowFields>("Liquidflow") {}
-    PatternSMFlowFields(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMFlowFields>(jsonObject) {}
+    PatternSMFlowFields() : EffectWithId<PatternSMFlowFields>("Liquidflow") {
+    }
+    PatternSMFlowFields(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMFlowFields>(jsonObject) {
+    }
 
     void Start() override
     {

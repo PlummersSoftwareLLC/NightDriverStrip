@@ -9,8 +9,10 @@ class PatternSMRainbowTunnel : public EffectWithId<PatternSMRainbowTunnel>
 {
   public:
 
-    PatternSMRainbowTunnel() : EffectWithId<PatternSMRainbowTunnel>("Colorspin") {}
-    PatternSMRainbowTunnel(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMRainbowTunnel>(jsonObject) {}
+    PatternSMRainbowTunnel() : EffectWithId<PatternSMRainbowTunnel>("Colorspin") {
+    }
+    PatternSMRainbowTunnel(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMRainbowTunnel>(jsonObject) {
+    }
 
     void Start() override
     {

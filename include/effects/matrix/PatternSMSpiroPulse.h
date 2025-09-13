@@ -20,8 +20,10 @@ class PatternSMSpiroPulse : public EffectWithId<PatternSMSpiroPulse>
 
   public:
 
-    PatternSMSpiroPulse() : EffectWithId<PatternSMSpiroPulse>("Spiro") {}
-    PatternSMSpiroPulse(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMSpiroPulse>(jsonObject) {}
+    PatternSMSpiroPulse() : EffectWithId<PatternSMSpiroPulse>("Spiro") {
+    }
+    PatternSMSpiroPulse(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMSpiroPulse>(jsonObject) {
+    }
 
     void Start() override
     {
@@ -56,8 +58,8 @@ class PatternSMSpiroPulse : public EffectWithId<PatternSMSpiroPulse>
         for (uint8_t i = 0; i < AM; i++)
         {
             g()->drawPixelXYF_Wu((CenterX + sin(t + (Angle * i)) * radX),
-                MATRIX_HEIGHT - 1 - (CenterY + cos(t + (Angle * i)) * radY),
-                ColorFromPalette(HeatColors_p, t * 10 + ((256 / AM) * i)));
+                    MATRIX_HEIGHT - 1 - (CenterY + cos(t + (Angle * i)) * radY),
+                    ColorFromPalette(HeatColors_p, t * 10 + ((256 / AM) * i)));
         }
     }
 };

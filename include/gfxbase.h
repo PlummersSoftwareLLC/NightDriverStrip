@@ -92,8 +92,8 @@ constexpr static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
         uint32_t noise_z;
         uint32_t noise_scale_x;
         uint32_t noise_scale_y;
-        uint8_t  noise[MATRIX_WIDTH][MATRIX_HEIGHT];
-        uint8_t  noisesmoothing;
+        uint8_t noise[MATRIX_WIDTH][MATRIX_HEIGHT];
+        uint8_t noisesmoothing;
     } Noise;
 
     // Enum type for the different noise approaches that are available. If anybody
@@ -107,21 +107,21 @@ constexpr static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
 
 class GFXBase : public Adafruit_GFX
 {
-#if USE_NOISE
-private:
-    // The standard noise approach used for noise function templates, if none is specified
-    // at the point of invocation.
-    static constexpr NoiseApproach _defaultNoiseApproach = NoiseApproach::Two;
-#endif
+    #if USE_NOISE
+      private:
+        // The standard noise approach used for noise function templates, if none is specified
+        // at the point of invocation.
+        static constexpr NoiseApproach _defaultNoiseApproach = NoiseApproach::Two;
+    #endif
 
-protected:
+  protected:
     size_t _width;
     size_t _height;
     size_t _ledcount;
 
     // 32 Entries in the 5-bit gamma table
     static constexpr auto gamma5 = to_array<uint8_t, 32>
-    ({
+                                       ({
         0x00, 0x01, 0x02, 0x03, 0x05, 0x07, 0x09, 0x0b,
         0x0e, 0x11, 0x14, 0x18, 0x1d, 0x22, 0x28, 0x2e,
         0x36, 0x3d, 0x46, 0x4f, 0x59, 0x64, 0x6f, 0x7c,
@@ -130,7 +130,7 @@ protected:
 
     // 64 Entries in the 6-bit gamma table
     static constexpr auto gamma6 = to_array<uint8_t, 64>
-    ({
+                                       ({
         0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x08,
         0x09, 0x0a, 0x0b, 0x0d, 0x0e, 0x10, 0x12, 0x13,
         0x15, 0x17, 0x19, 0x1b, 0x1d, 0x20, 0x22, 0x25,
@@ -158,7 +158,7 @@ protected:
     static constexpr int _heatColorsPaletteIndex = 6;
     static constexpr int _randomPaletteIndex = 9;
 
-public:
+  public:
     static const uint16_t kMatrixWidth = MATRIX_WIDTH;                                  // known working for actual matrix effects: 32, 64, 96, 128
     static const uint16_t kMatrixHeight = MATRIX_HEIGHT;                                // known working for actual matrix effects: 16, 32, 48, 64
 
@@ -192,10 +192,10 @@ public:
     }
 
     #if USE_NOISE
-    Noise &GetNoise() const
-    {
-        return *_ptrNoise;
-    }
+        Noise &GetNoise() const
+        {
+            return *_ptrNoise;
+        }
     #endif
 
     const CRGBPalette16 &GetCurrentPalette() const
@@ -319,11 +319,11 @@ public:
     // us to avoid an extra virtual function call in the inner loop of the effects.
 
     #if USE_HUB75
-        #define XY(x, y) ((y) * MATRIX_WIDTH + (x))
+    #define XY(x, y) ((y) * MATRIX_WIDTH + (x))
     #elif HELMET
-        #define XY(x, y) (x, MATRIX_HEIGHT - 1 - y)           // Invert the Y axis for the helmet display
+    #define XY(x, y) (x, MATRIX_HEIGHT - 1 - y)               // Invert the Y axis for the helmet display
     #else
-        #define XY(x, y) (((x) & 0x01) ? (((x) * MATRIX_HEIGHT) + ((MATRIX_HEIGHT - 1) - (y))) : (((x) * MATRIX_HEIGHT) + (y)))
+    #define XY(x, y) (((x) & 0x01) ? (((x) * MATRIX_HEIGHT) + ((MATRIX_HEIGHT - 1) - (y))) : (((x) * MATRIX_HEIGHT) + (y)))
     #endif
 
     // Retrieves the color of a pixel at the specified X and Y coordinates.
@@ -394,7 +394,7 @@ public:
     // Draws a gradient line using floating point coordinates (DDA algorithm).
     void drawLineF(float x1, float y1, float x2, float y2, const CRGB &col1, const CRGB &col2 = CRGB::Black)
     {
-        CRGB c2 = (col2 == CRGB::Black) ? col1 : col2;
+        CRGB  c2 = (col2 == CRGB::Black) ? col1 : col2;
         float dx = x2 - x1;
         float dy = y2 - y1;
         float steps = fmax(fabs(dx), fabs(dy));
@@ -408,7 +408,7 @@ public:
         float y = y1;
         for (int i = 0; i <= steps; i++) {
             uint8_t blend_amount = (uint8_t)((i / steps) * 255);
-            CRGB color = blend(col1, c2, blend_amount);
+            CRGB    color = blend(col1, c2, blend_amount);
             drawPixelXYF_Wu(x, y, color);
             x += xinc;
             y += yinc;
@@ -470,8 +470,8 @@ public:
     // Applies scale = 255 - fadeValue to the pixel's RGB in-place.
     __attribute__((always_inline)) void fadePixelToBlackBy(int16_t x, int16_t y, uint8_t fadeValue) noexcept
     {
-        CRGB &px = leds[XY(x, y)];
-        const uint8_t scale = 255 - fadeValue;
+        CRGB &         px = leds[XY(x, y)];
+        const uint8_t  scale = 255 - fadeValue;
         const uint16_t scale_fixed = (uint16_t)scale + 1;
         px.r = (uint8_t)((((uint16_t)px.r) * scale_fixed) >> 8);
         px.g = (uint8_t)((((uint16_t)px.g) * scale_fixed) >> 8);
@@ -481,8 +481,8 @@ public:
     // Linear-index overload
     __attribute__((always_inline)) void fadePixelToBlackBy(int16_t i, uint8_t fadeValue) noexcept
     {
-        CRGB &px = leds[i];
-        const uint8_t scale = 255 - fadeValue;
+        CRGB &         px = leds[i];
+        const uint8_t  scale = 255 - fadeValue;
         const uint16_t scale_fixed = (uint16_t)scale + 1;
         px.r = (uint8_t)((((uint16_t)px.r) * scale_fixed) >> 8);
         px.g = (uint8_t)((((uint16_t)px.g) * scale_fixed) >> 8);
@@ -559,21 +559,21 @@ public:
 
         /* Example:
 
-          Starting at 3.25, draw for 1.5:
-          We start at pixel 3.
-          We fill pixel with .75 worth of color
-          We advance to next pixel
+           Starting at 3.25, draw for 1.5:
+           We start at pixel 3.
+           We fill pixel with .75 worth of color
+           We advance to next pixel
 
-          We fill one pixel and advance to next pixel
+           We fill one pixel and advance to next pixel
 
-          We are now at pixel 5, frac2 = .75
-          We fill pixel with .75 worth of color
-        */
+           We are now at pixel 5, frac2 = .75
+           We fill pixel with .75 worth of color
+         */
 
         uint8_t fade1 = (uint8_t) ((std::max(frac1, 1.0f - count)) * 255); // Fraction is how far past pixel boundary we are (up to our total size) so larger fraction is more dimming
         uint8_t fade2 = (uint8_t) ((1.0f - frac2) * 255);                   // Fraction is how far we are poking into this pixel, so larger fraction is less dimming
-        CRGB c1 = c;
-        CRGB c2 = c;
+        CRGB    c1 = c;
+        CRGB    c2 = c;
         c1 = c1.fadeToBlackBy(fade1);
         c2 = c2.fadeToBlackBy(fade2);
 
@@ -674,7 +674,7 @@ public:
             return;
 
         const int minutesPerPaletteCycle = 2;
-        uint8_t secondHand = ((millis() / minutesPerPaletteCycle) / 1000) % 60;
+        uint8_t   secondHand = ((millis() / minutesPerPaletteCycle) / 1000) % 60;
 
         if (_lastSecond != secondHand)
         {
@@ -765,51 +765,51 @@ public:
 
         switch (_paletteIndex)
         {
-        case 0:
-            _targetPalette = RainbowColors_p;
-            _currentPaletteName = "Rainbow";
-            break;
+            case 0:
+                _targetPalette = RainbowColors_p;
+                _currentPaletteName = "Rainbow";
+                break;
             // case 1:
             //   targetPalette = RainbowStripeColors_p;
             //   currentPaletteName = "RainbowStripe";
             //   break;
-        case 1:
-            _targetPalette = OceanColors_p;
-            _currentPaletteName = "Ocean";
-            break;
-        case 2:
-            _targetPalette = CloudColors_p;
-            _currentPaletteName = "Cloud";
-            break;
-        case 3:
-            _targetPalette = ForestColors_p;
-            _currentPaletteName = "Forest";
-            break;
-        case 4:
-            _targetPalette = PartyColors_p;
-            _currentPaletteName = "Party";
-            break;
-        case 5:
-            setupGrayscalePalette();
-            _currentPaletteName = "Grey";
-            break;
-        case _heatColorsPaletteIndex:
-            _targetPalette = HeatColors_p;
-            _currentPaletteName = "Heat";
-            break;
-        case 7:
-            _targetPalette = LavaColors_p;
-            _currentPaletteName = "Lava";
-            break;
-        case 8:
-            setupIcePalette();
-            _currentPaletteName = "Ice";
-            break;
-        case _randomPaletteIndex:
-            loadPalette(random(0, _paletteCount - 1));
-            _paletteIndex = _randomPaletteIndex;
-            _currentPaletteName = "Random";
-            break;
+            case 1:
+                _targetPalette = OceanColors_p;
+                _currentPaletteName = "Ocean";
+                break;
+            case 2:
+                _targetPalette = CloudColors_p;
+                _currentPaletteName = "Cloud";
+                break;
+            case 3:
+                _targetPalette = ForestColors_p;
+                _currentPaletteName = "Forest";
+                break;
+            case 4:
+                _targetPalette = PartyColors_p;
+                _currentPaletteName = "Party";
+                break;
+            case 5:
+                setupGrayscalePalette();
+                _currentPaletteName = "Grey";
+                break;
+            case _heatColorsPaletteIndex:
+                _targetPalette = HeatColors_p;
+                _currentPaletteName = "Heat";
+                break;
+            case 7:
+                _targetPalette = LavaColors_p;
+                _currentPaletteName = "Lava";
+                break;
+            case 8:
+                setupIcePalette();
+                _currentPaletteName = "Ice";
+                break;
+            case _randomPaletteIndex:
+                loadPalette(random(0, _paletteCount - 1));
+                _paletteIndex = _randomPaletteIndex;
+                _currentPaletteName = "Random";
+                break;
         }
         _currentPalette = _targetPalette;
     }
@@ -828,7 +828,7 @@ public:
             {"Ice", 8}
         };
 
-        auto it = paletteMap.find(paletteName.c_str());
+        auto                                              it = paletteMap.find(paletteName.c_str());
         if (it != paletteMap.end()) {
             loadPalette(it->second);  // Found a matching palette, load it
         } else if (paletteName == "Random") {
@@ -1436,7 +1436,7 @@ public:
     static const PolarMapArray& getPolarMap()
     {
         static std::unique_ptr<PolarMapArray> rMap_ptr;
-        static std::mutex rMap_mutex;
+        static std::mutex                     rMap_mutex;
 
         // Double-checked locking for thread-safe, on-demand initialization
         if (!rMap_ptr)
@@ -1447,10 +1447,10 @@ public:
                 // Allocate from PSRAM using the project's helper
                 rMap_ptr = make_unique_psram<PolarMapArray>();
 
-                auto& rMap = *rMap_ptr;
+                auto&          rMap = *rMap_ptr;
                 const uint16_t C_X = kMatrixWidth / 2;
                 const uint16_t C_Y = kMatrixHeight / 2;
-                const float mapp = 255.0f / kMatrixWidth;
+                const float    mapp = 255.0f / kMatrixWidth;
 
                 for (int16_t x = -C_X; x < C_X + (kMatrixWidth % 2); x++)
                 {

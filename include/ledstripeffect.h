@@ -46,24 +46,24 @@
 // a SettingSpec container is easy to overlook.
 
 // The type for effect SettingSpec containers
-using EffectSettingSpecs = std::vector<SettingSpec, psram_allocator<SettingSpec>>;
+using EffectSettingSpecs = std::vector<SettingSpec, psram_allocator<SettingSpec> >;
 
 // Declares a static class member variable that contains the SettingSpecs for an effect, if it has them.
 // If an effect uses this macro, it also needs a matching INIT_EFFECT_SETTING_SPECS invocation in
 // effects.cpp, or linker errors will ensue.
 #define DECLARE_EFFECT_SETTING_SPECS(memberName) \
-    static EffectSettingSpecs memberName
+        static EffectSettingSpecs memberName
 
 // Initializes the effect setting specs member that's been added to an effect class. There must be one
 // use of this in effects.cpp for every use DECLARE_EFFECT_SETTING_SPECS, or the linker will balk.
 #define INIT_EFFECT_SETTING_SPECS(effectName, specsMember) \
-    EffectSettingSpecs effectName::specsMember = {}
+        EffectSettingSpecs effectName::specsMember = {}
 
 // This macro returns from the invoking function (which would usually be SetSetting())
 // if the settingName and propertyName passed to it match, and the "value" was thus
 // assigned to the "property".
 #define RETURN_IF_SET(settingName, propertyName, property, value) \
-    if (SetIfSelected(settingName, propertyName, property, value)) \
+        if (SetIfSelected(settingName, propertyName, property, value)) \
         return true
 
 // LEDStripEffect
@@ -83,9 +83,9 @@ class LEDStripEffect : public IJSONSerializable
     };
 
     DECLARE_EFFECT_SETTING_SPECS(_baseSettingSpecs);
-    std::vector<std::reference_wrapper<SettingSpec>> _settingSpecReferences;
+    std::vector<std::reference_wrapper<SettingSpec> > _settingSpecReferences;
 
-    bool   _coreEffect = false;
+    bool _coreEffect = false;
 
     // This "lazy loads" the SettingSpec instances for LEDStripEffect. Note that it adds the actual
     // instances to a static vector, meaning they are loaded once for all effects. The _settingSpecReferences
@@ -100,40 +100,40 @@ class LEDStripEffect : public IJSONSerializable
         // ...otherwise, create and add them
 
         _baseSettingSpecs.emplace_back(
-            ACTUAL_NAME_OF(_friendlyName),
-            "Friendly name",
-            "The friendly name of the effect, as shown in the web UI and/or on the matrix.",
-            SettingSpec::SettingType::String
-        );
+                ACTUAL_NAME_OF(_friendlyName),
+                "Friendly name",
+                "The friendly name of the effect, as shown in the web UI and/or on the matrix.",
+                SettingSpec::SettingType::String
+                );
         _baseSettingSpecs.emplace_back(
-            ACTUAL_NAME_OF(_maximumEffectTime),
-            "Maximum effect time",
-            "The maximum time in ms that the effect is shown per effect rotation. This duration is only applied if it's "
-            "shorter than the default effect interval. A value of 0 means no maximum effect time is set.",
-            SettingSpec::SettingType::PositiveBigInteger
-        );
+                ACTUAL_NAME_OF(_maximumEffectTime),
+                "Maximum effect time",
+                "The maximum time in ms that the effect is shown per effect rotation. This duration is only applied if it's "
+                "shorter than the default effect interval. A value of 0 means no maximum effect time is set.",
+                SettingSpec::SettingType::PositiveBigInteger
+                );
         _baseSettingSpecs.emplace_back(
-            "hasMaximumEffectTime",
-            "Has maximum effect time set",
-            "Indicates if the effect has a maximum effect time set.",
-            SettingSpec::SettingType::Boolean
-        ).Access = SettingSpec::SettingAccess::ReadOnly;
+                "hasMaximumEffectTime",
+                "Has maximum effect time set",
+                "Indicates if the effect has a maximum effect time set.",
+                SettingSpec::SettingType::Boolean
+                ).Access = SettingSpec::SettingAccess::ReadOnly;
         _baseSettingSpecs.emplace_back(
-            "clearMaximumEffectTime",
-            "Clear maximum effect time",
-            "Clear maximum effect time. Set to true to reset the maximum effect time to the default value.",
-            SettingSpec::SettingType::Boolean
-        ).Access = SettingSpec::SettingAccess::WriteOnly;
+                "clearMaximumEffectTime",
+                "Clear maximum effect time",
+                "Clear maximum effect time. Set to true to reset the maximum effect time to the default value.",
+                SettingSpec::SettingType::Boolean
+                ).Access = SettingSpec::SettingAccess::WriteOnly;
     }
 
   protected:
 
     size_t _cLEDs = 0;
     String _friendlyName;
-    bool   _enabled = true;
+    bool _enabled = true;
     size_t _maximumEffectTime = 0;
 
-    std::vector<std::shared_ptr<GFXBase>> _GFX;
+    std::vector<std::shared_ptr<GFXBase> > _GFX;
 
     // Function that assigns a value to a property if two names match
     template <typename TProperty, typename TValue>
@@ -179,10 +179,10 @@ class LEDStripEffect : public IJSONSerializable
         if (settingName != propertyName)
             return false;
 
-        auto src = CreateJsonDocument();
+        auto         src = CreateJsonDocument();
         deserializeJson(src, value);
-        CRGB colors[16];
-        int colorIndex = 0;
+        CRGB         colors[16];
+        int          colorIndex = 0;
 
         const auto & componentsArray = src.as<JsonArrayConst>();
         for (const auto &v: componentsArray)
@@ -242,7 +242,7 @@ class LEDStripEffect : public IJSONSerializable
 
     virtual ~LEDStripEffect() = default;
 
-    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx)
+    virtual bool Init(std::vector<std::shared_ptr<GFXBase> >& gfx)
     {
         debugV("Init %s", _friendlyName.c_str());
 
@@ -255,7 +255,8 @@ class LEDStripEffect : public IJSONSerializable
         return true;
     }
 
-    virtual void Start() {}                                         // Optional method called when time to clean/init the effect
+    virtual void Start() {
+    }                                                               // Optional method called when time to clean/init the effect
     virtual void Draw() = 0;                                        // Your effect must implement these
 
     std::shared_ptr<GFXBase> g(size_t channel = 0) const
@@ -264,10 +265,10 @@ class LEDStripEffect : public IJSONSerializable
     }
 
     #if HEXAGON
-      std::shared_ptr<HexagonGFX> hg(size_t channel = 0)
-      {
-        return std::static_pointer_cast<HexagonGFX>(_GFX[channel]);
-      }
+        std::shared_ptr<HexagonGFX> hg(size_t channel = 0)
+        {
+            return std::static_pointer_cast<HexagonGFX>(_GFX[channel]);
+        }
     #endif
 
     virtual bool CanDisplayVUMeter() const
@@ -324,15 +325,15 @@ class LEDStripEffect : public IJSONSerializable
     static CRGB RandomRainbowColor()
     {
         static const CRGB colors[] =
-            {
-                CRGB::Green,
-                CRGB::Red,
-                CRGB::Blue,
-                CRGB::Orange,
-                CRGB::Indigo,
-                CRGB::Violet
-            };
-        int randomColorIndex = random_range(0U, std::size(colors));
+        {
+            CRGB::Green,
+            CRGB::Red,
+            CRGB::Blue,
+            CRGB::Orange,
+            CRGB::Indigo,
+            CRGB::Violet
+        };
+        int               randomColorIndex = random_range(0U, std::size(colors));
         return colors[randomColorIndex];
     }
 
@@ -562,7 +563,7 @@ class LEDStripEffect : public IJSONSerializable
 
     // Lazily loads the SettingsSpecs for this effect if they haven't been loaded yet, and
     // returns a vector with reference_wrappers to them.
-    virtual const std::vector<std::reference_wrapper<SettingSpec>>& GetSettingSpecs()
+    virtual const std::vector<std::reference_wrapper<SettingSpec> >& GetSettingSpecs()
     {
         // If the SettingSpecs reference_wrapper vector is already filled, return that
         if (!_settingSpecReferences.empty())
@@ -623,7 +624,7 @@ class LEDStripEffect : public IJSONSerializable
 };
 
 #ifndef EFFECT_ID_DEBUG
-#define EFFECT_ID_DEBUG 0
+    #define EFFECT_ID_DEBUG 0
 #endif
 
 // Internal helpers for deriving a per-type EffectId and (optionally) logging what was used to compute it.
@@ -656,35 +657,35 @@ class LEDStripEffect : public IJSONSerializable
 // - Enable EFFECT_ID_DEBUG to inspect the underlying token string and the derived hash during development.
 namespace _effect_id_detail {
 
-    template <typename T>                                       // Return the compiler-provided token string used for hashing
-    constexpr const char* type_token() {
-#if defined(__GNUC__) || defined(__clang__)
+template <typename T>                                           // Return the compiler-provided token string used for hashing
+constexpr const char* type_token() {
+    #if defined(__GNUC__) || defined(__clang__)
         return __PRETTY_FUNCTION__;
-#else
-        #error "EffectWithId requires a compiler that supports __PRETTY_FUNCTION__"
-#endif
-    }
+    #else
+    #error "EffectWithId requires a compiler that supports __PRETTY_FUNCTION__"
+    #endif
+}
 
-    template <typename T>
-    constexpr EffectId token_id_for_type()
-    {
-        return fnv1a::hash_cstr<EffectId>(type_token<T>());
-    }
+template <typename T>
+constexpr EffectId token_id_for_type()
+{
+    return fnv1a::hash_cstr<EffectId>(type_token<T>());
+}
 
-    template <typename T>                                       // Optional one-time debug print of the token string and hash
-    inline void debug_log_type_token_once() {
-#if EFFECT_ID_DEBUG
+template <typename T>                                           // Optional one-time debug print of the token string and hash
+inline void debug_log_type_token_once() {
+    #if EFFECT_ID_DEBUG
         static bool logged = false;
         if (!logged) {
             logged = true;
-            const char* token = type_token<T>();
+            const char*    token = type_token<T>();
             const EffectId id = token_id_for_type<T>();
             // Print both the raw token string and the resulting hash used as the EffectId
             debugI("Effect ID token string: %s", token);
             debugI("Effect ID hash: 0x%08lx", static_cast<unsigned long>(id));
         }
-#endif
-    }
+    #endif
+}
 }
 
 // CRTP helper: derive as EffectWithId<Derived> to auto-provide a unique, stable ID per type
@@ -692,18 +693,20 @@ namespace _effect_id_detail {
 template<typename TDerived>
 class EffectWithId : public LEDStripEffect
 {
-public:
+  public:
     static constexpr EffectId ID = _effect_id_detail::token_id_for_type<TDerived>();
 
-    explicit EffectWithId(const String & strName) : LEDStripEffect(strName) {}
-    explicit EffectWithId(const JsonObjectConst&  jsonObject) : LEDStripEffect(jsonObject) {}
+    explicit EffectWithId(const String & strName) : LEDStripEffect(strName) {
+    }
+    explicit EffectWithId(const JsonObjectConst&  jsonObject) : LEDStripEffect(jsonObject) {
+    }
 
     EffectId effectId() const override
     {
-#if EFFECT_ID_DEBUG
-    // Log the token string and hash once per type at first use
-    _effect_id_detail::debug_log_type_token_once<TDerived>();
-#endif
+        #if EFFECT_ID_DEBUG
+            // Log the token string and hash once per type at first use
+            _effect_id_detail::debug_log_type_token_once<TDerived>();
+        #endif
         return ID;
     }
 };

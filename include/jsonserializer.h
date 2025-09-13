@@ -38,13 +38,15 @@
 struct IJSONSerializable
 {
     virtual bool SerializeToJSON(JsonObject& jsonObject) = 0;
-    virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject) { return false; }
+    virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject) {
+        return false;
+    }
 };
 
 template <class E>
 constexpr auto to_value(E e) noexcept
 {
-	return static_cast<std::underlying_type_t<E>>(e);
+    return static_cast<std::underlying_type_t<E> >(e);
 }
 
 #if USE_PSRAM
@@ -101,67 +103,67 @@ uint32_t toUint32(const CRGB& color);
 
 namespace ArduinoJson
 {
-    template <>
-    struct Converter<CRGB>
+template <>
+struct Converter<CRGB>
+{
+    static bool toJson(const CRGB& color, JsonVariant dst)
     {
-        static bool toJson(const CRGB& color, JsonVariant dst)
-        {
-            return dst.set(toUint32(color));
-        }
-
-        static CRGB fromJson(JsonVariantConst src)
-        {
-            return CRGB(src.as<uint32_t>());
-        }
-
-        static bool checkJson(JsonVariantConst src)
-        {
-            return src.is<uint32_t>();
-        }
-    };
-
-    inline bool canConvertFromJson(JsonVariantConst src, const CRGB&)
-    {
-        return Converter<CRGB>::checkJson(src);
+        return dst.set(toUint32(color));
     }
 
-    template <>
-    struct Converter<CRGBPalette16>
+    static CRGB fromJson(JsonVariantConst src)
     {
-        static bool toJson(const CRGBPalette16& palette, JsonVariant dst)
-        {
-            auto doc = CreateJsonDocument();
-
-            JsonArray colors = doc.to<JsonArray>();
-
-            for (auto& color: palette.entries)
-                colors.add(color);
-
-            return dst.set(doc);
-        }
-
-        static CRGBPalette16 fromJson(JsonVariantConst src)
-        {
-            CRGB colors[16];
-            int colorIndex = 0;
-
-            JsonArrayConst componentsArray = src.as<JsonArrayConst>();
-            for (JsonVariantConst value : componentsArray)
-                colors[colorIndex++] = value.as<CRGB>();
-
-            return CRGBPalette16(colors);
-        }
-
-        static bool checkJson(JsonVariantConst src)
-        {
-            return src.is<JsonArrayConst>() && src.as<JsonArrayConst>().size() == 16;
-        }
-    };
-
-    inline bool canConvertFromJson(JsonVariantConst src, const CRGBPalette16&)
-    {
-        return Converter<CRGBPalette16>::checkJson(src);
+        return CRGB(src.as<uint32_t>());
     }
+
+    static bool checkJson(JsonVariantConst src)
+    {
+        return src.is<uint32_t>();
+    }
+};
+
+inline bool canConvertFromJson(JsonVariantConst src, const CRGB&)
+{
+    return Converter<CRGB>::checkJson(src);
+}
+
+template <>
+struct Converter<CRGBPalette16>
+{
+    static bool toJson(const CRGBPalette16& palette, JsonVariant dst)
+    {
+        auto      doc = CreateJsonDocument();
+
+        JsonArray colors = doc.to<JsonArray>();
+
+        for (auto& color: palette.entries)
+            colors.add(color);
+
+        return dst.set(doc);
+    }
+
+    static CRGBPalette16 fromJson(JsonVariantConst src)
+    {
+        CRGB           colors[16];
+        int            colorIndex = 0;
+
+        JsonArrayConst componentsArray = src.as<JsonArrayConst>();
+        for (JsonVariantConst value : componentsArray)
+            colors[colorIndex++] = value.as<CRGB>();
+
+        return CRGBPalette16(colors);
+    }
+
+    static bool checkJson(JsonVariantConst src)
+    {
+        return src.is<JsonArrayConst>() && src.as<JsonArrayConst>().size() == 16;
+    }
+};
+
+inline bool canConvertFromJson(JsonVariantConst src, const CRGBPalette16&)
+{
+    return Converter<CRGBPalette16>::checkJson(src);
+}
 }
 
 bool BoolFromText(const String& text);
@@ -186,16 +188,18 @@ class JSONWriter
 
         explicit WriterEntry(std::function<void()> writer) :
             writer(std::move(writer))
-        {}
+        {
+        }
 
         WriterEntry(WriterEntry&& entry)  noexcept : WriterEntry(entry.writer)
-        {}
+        {
+        }
     };
 
-    std::vector<WriterEntry, psram_allocator<WriterEntry>> writers;
-    std::atomic_ulong        latestFlagMs;
-    std::atomic_bool         flushRequested;
-    std::atomic_bool         haltWrites;
+    std::vector<WriterEntry, psram_allocator<WriterEntry> > writers;
+    std::atomic_ulong latestFlagMs;
+    std::atomic_bool flushRequested;
+    std::atomic_bool haltWrites;
 
   public:
 

@@ -57,7 +57,9 @@ class Page
     virtual ~Page() = default;
 
     // Human-readable name (for diagnostics)
-    virtual std::string Name() const { return std::string("Page"); }
+    virtual std::string Name() const {
+        return std::string("Page");
+    }
 
     // Render this page. bRedraw indicates a full redraw is requested.
     virtual void Draw(Screen& display, bool bRedraw) = 0;
@@ -87,10 +89,18 @@ class Screen : public GFXBase
 
     // Display capabilities and theme colors
     // Default: color display with a blue theme and white/yellow accents.
-    virtual bool IsMonochrome() const { return false; }
-    virtual uint16_t GetTextColor() const { return WHITE16; }
-    virtual uint16_t GetBkgndColor() const { return BLUE16; }
-    virtual uint16_t GetBorderColor() const { return YELLOW16; }
+    virtual bool IsMonochrome() const {
+        return false;
+    }
+    virtual uint16_t GetTextColor() const {
+        return WHITE16;
+    }
+    virtual uint16_t GetBkgndColor() const {
+        return BLUE16;
+    }
+    virtual uint16_t GetBorderColor() const {
+        return YELLOW16;
+    }
 
     // Define the drawable area for the spectrum to render into the status area
 
@@ -113,7 +123,7 @@ class Screen : public GFXBase
 
     virtual int fontHeight()
     {
-        int16_t x1, y1;
+        int16_t  x1, y1;
         uint16_t w, h;
         getTextBounds(String("W"), 0, 0, &x1, &y1, &w, &h);
         return h;
@@ -125,7 +135,7 @@ class Screen : public GFXBase
 
     virtual int textHeight(const String & str)
     {
-        int16_t x1, y1;
+        int16_t  x1, y1;
         uint16_t w, h;
         getTextBounds(str, 0, 0, &x1, &y1, &w, &h);
         return h;
@@ -137,7 +147,7 @@ class Screen : public GFXBase
 
     virtual int textWidth(const String & str)
     {
-        int16_t x1, y1;
+        int16_t  x1, y1;
         uint16_t w, h;
         getTextBounds(str, 0, 0, &x1, &y1, &w, &h);
         return w;
@@ -161,14 +171,16 @@ class Screen : public GFXBase
 
   public:
 
-    inline float GetScreenFPS() const { return _screenFPS; }
-    
+    inline float GetScreenFPS() const {
+        return _screenFPS;
+    }
+
     inline void SetScreenFPS(float fps)
     {
         _screenFPS = fps;
         _fpsTouchedThisFrame = true;
     }
-    
+
     // TouchFPS
     // Marks the FPS value as intentionally managed this frame without changing it.
     // This prevents the fallback loop-based FPS from overwriting an effect-driven FPS
@@ -180,7 +192,7 @@ class Screen : public GFXBase
 
     inline void UpdateScreenFPSFromDelta(uint32_t dtMs)
     {
-        if (dtMs == 0) 
+        if (dtMs == 0)
             return;
         const float inst = 1000.0f / (float)dtMs;
         // Light smoothing to avoid flicker
@@ -189,9 +201,9 @@ class Screen : public GFXBase
     }
 
   private:
-  
-  // Page registry and page count helpers
-    static std::vector<std::unique_ptr<class Page>>& Pages();
+
+    // Page registry and page count helpers
+    static std::vector<std::unique_ptr<class Page> >& Pages();
     static int ActivePageCount();
 
     #if defined(TOGGLE_BUTTON_0)
@@ -254,7 +266,7 @@ class Screen : public GFXBase
     {
         TFT_eSPI tft;
 
-    public:
+      public:
 
         TFTScreen(int w, int h) : Screen(w, h)
         {
@@ -312,7 +324,7 @@ class Screen : public GFXBase
             return lv_color_make(r, g, b);
         }
 
-    public:
+      public:
 
         AMOLEDScreen(int w, int h) : Screen(w, h)
         {
@@ -390,11 +402,19 @@ class Screen : public GFXBase
             lv_canvas_fill_bg(canvas, lv_color, LV_OPA_COVER);
         }
 
-    // AMOLED is a full color panel but we want a different default theme
-    virtual bool IsMonochrome() const override { return false; }
-    virtual uint16_t GetTextColor() const override { return Screen::to16bit(CRGB(100, 255, 20)); }
-    virtual uint16_t GetBkgndColor() const override { return Screen::to16bit(CRGB::Black); }
-    virtual uint16_t GetBorderColor() const override { return Screen::to16bit(CRGB::Red); }
+        // AMOLED is a full color panel but we want a different default theme
+        virtual bool IsMonochrome() const override {
+            return false;
+        }
+        virtual uint16_t GetTextColor() const override {
+            return Screen::to16bit(CRGB(100, 255, 20));
+        }
+        virtual uint16_t GetBkgndColor() const override {
+            return Screen::to16bit(CRGB::Black);
+        }
+        virtual uint16_t GetBorderColor() const override {
+            return Screen::to16bit(CRGB::Red);
+        }
 
     };
 #endif
@@ -413,42 +433,50 @@ class Screen : public GFXBase
     {
         U8G2_SSD1306_128X64_NONAME_F_HW_I2C oled;
 
-    public:
+      public:
         #if ARDUINO_HELTEC_WIFI_LORA_32_V3
             OLEDScreen(int w, int h) : Screen(w, h), oled(U8G2_R2, /*reset*/ 21, /*clk*/ 18, /*data*/ 17)
         #else
             OLEDScreen(int w, int h) : Screen(w, h), oled(U8G2_R2, /*reset*/ 16, /*clk*/ 15, /*data*/ 4)
-        #endif
-        {
-            oled.begin();
-            oled.clear();
-        }
+                #endif
+            {
+                oled.begin();
+                oled.clear();
+            }
 
-        virtual void StartFrame() override
-        {
-            oled.clearBuffer();
-        }
+            virtual void StartFrame() override
+            {
+                oled.clearBuffer();
+            }
 
-        virtual void EndFrame() override
-        {
-            oled.sendBuffer();
-        }
-        virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
-        {
-            oled.setDrawColor(color == BLACK16 ? 0  : 1);
-            oled.drawPixel(x, y);
-        }
+            virtual void EndFrame() override
+            {
+                oled.sendBuffer();
+            }
+            virtual void drawPixel(int16_t x, int16_t y, uint16_t color) override
+            {
+                oled.setDrawColor(color == BLACK16 ? 0  : 1);
+                oled.drawPixel(x, y);
+            }
 
-        virtual void fillScreen(uint16_t color) override
-        {
-            oled.clearDisplay();
-        }
+            virtual void fillScreen(uint16_t color) override
+            {
+                oled.clearDisplay();
+            }
 
-    // Monochrome OLED defaults
-    virtual bool IsMonochrome() const override { return true; }
-    virtual uint16_t GetTextColor() const override { return WHITE16; }
-    virtual uint16_t GetBkgndColor() const override { return BLACK16; }
-    virtual uint16_t GetBorderColor() const override { return WHITE16; }
+            // Monochrome OLED defaults
+            virtual bool IsMonochrome() const override {
+                return true;
+            }
+            virtual uint16_t GetTextColor() const override {
+                return WHITE16;
+            }
+            virtual uint16_t GetBkgndColor() const override {
+                return BLACK16;
+            }
+            virtual uint16_t GetBorderColor() const override {
+                return WHITE16;
+            }
     };
 #endif
 
@@ -465,7 +493,7 @@ class Screen : public GFXBase
 
     class SSD1306Screen : public Screen
     {
-    public:
+      public:
 
         SSD1306Screen(int w, int h) : Screen(w, h)
         {
@@ -497,11 +525,19 @@ class Screen : public GFXBase
             Heltec.display->clear();
         }
 
-    // Monochrome OLED defaults
-    virtual bool IsMonochrome() const override { return true; }
-    virtual uint16_t GetTextColor() const override { return WHITE16; }
-    virtual uint16_t GetBkgndColor() const override { return BLACK16; }
-    virtual uint16_t GetBorderColor() const override { return WHITE16; }
+        // Monochrome OLED defaults
+        virtual bool IsMonochrome() const override {
+            return true;
+        }
+        virtual uint16_t GetTextColor() const override {
+            return WHITE16;
+        }
+        virtual uint16_t GetBkgndColor() const override {
+            return BLACK16;
+        }
+        virtual uint16_t GetBorderColor() const override {
+            return WHITE16;
+        }
     };
 #endif
 
@@ -531,13 +567,13 @@ class Screen : public GFXBase
         lgfx::Panel_ILI9488 _panel_instance;
         lgfx::Bus_SPI _bus_instance;
 
-    public:
+      public:
 
         ElecrowScreen(int w, int h) : Screen(w, h)
         {
-             // I'm not a fan of these local clauses but it keeps it the same as the original sample code
+            // I'm not a fan of these local clauses but it keeps it the same as the original sample code
 
-             {
+            {
                 auto cfg = _bus_instance.config();
                 cfg.spi_host = SPI3_HOST;
                 cfg.spi_mode = 0;
@@ -667,14 +703,14 @@ class Screen : public GFXBase
         SPIClass hspi;
         std::unique_ptr<Adafruit_ILI9341> pLCD;
 
-    public:
+      public:
 
         LCDScreen(int w, int h) : Screen(w, h), hspi(HSPI)
         {
             hspi.begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1);
 
             #ifdef TFT_BL
-            pinMode(TFT_BL, OUTPUT); //initialize BL
+                pinMode(TFT_BL, OUTPUT); //initialize BL
             #endif
 
             pLCD = std::make_unique<Adafruit_ILI9341>(&hspi, TFT_DC, TFT_CS, TFT_RST);

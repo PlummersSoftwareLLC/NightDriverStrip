@@ -46,7 +46,7 @@
 #define CURRENT_EFFECT_CONFIG_FILE  "/current.cfg"
 
 #define INFORM_EVENT_LISTENERS(listeners, function, ...) \
-    std::for_each(listeners.begin(), listeners.end(), [&](auto& listener) { std::invoke(&function, listener __VA_OPT__(,) __VA_ARGS__); })
+        std::for_each(listeners.begin(), listeners.end(), [&](auto& listener) { std::invoke(&function, listener __VA_OPT__( ,) __VA_ARGS__); })
 
 // Forward references to functions in our accompanying CPP file
 
@@ -61,7 +61,7 @@ void RemoveEffectManagerConfig();
 
 class IFrameEventListener
 {
-public:
+  public:
     virtual void OnNewFrameAvailable() = 0;
 };
 
@@ -71,7 +71,7 @@ public:
 
 class IEffectEventListener
 {
-public:
+  public:
     virtual void OnCurrentEffectChanged(size_t currentEffectIndex) = 0;
     virtual void OnEffectListDirty() = 0;
     virtual void OnEffectEnabledStateChanged(size_t effectIndex, bool newState) = 0;
@@ -87,7 +87,7 @@ class BaseFrameEventListener : public IFrameEventListener
 {
     std::atomic<bool> _newFrameAvailable = false;
 
-public:
+  public:
     void OnNewFrameAvailable() override
     {
         _newFrameAvailable = true;
@@ -103,9 +103,9 @@ public:
 //
 // Handles keeping track of the effects, which one is active, asking it to draw, etc.
 
-class  EffectManager : public IJSONSerializable
+class EffectManager : public IJSONSerializable
 {
-    std::vector<std::shared_ptr<LEDStripEffect>> _vEffects;
+    std::vector<std::shared_ptr<LEDStripEffect> > _vEffects;
 
     size_t _iCurrentEffect = 0;
     uint _effectStartTime;
@@ -115,10 +115,10 @@ class  EffectManager : public IJSONSerializable
     std::atomic_bool _newFrameAvailable = false;
     String _effectSetHashString = "";
 
-    std::vector<std::shared_ptr<GFXBase>> _gfx;
+    std::vector<std::shared_ptr<GFXBase> > _gfx;
     std::shared_ptr<LEDStripEffect> _tempEffect;
-    std::vector<std::reference_wrapper<IFrameEventListener>> _frameEventListeners;
-    std::vector<std::reference_wrapper<IEffectEventListener>> _effectEventListeners;
+    std::vector<std::reference_wrapper<IFrameEventListener> > _frameEventListeners;
+    std::vector<std::reference_wrapper<IEffectEventListener> > _effectEventListeners;
 
     void construct(bool clearTempEffect)
     {
@@ -162,11 +162,11 @@ class  EffectManager : public IJSONSerializable
         _vEffects.clear();
     }
 
-public:
+  public:
     static const uint csFadeButtonSpeed = 15 * 1000;
     static const uint csSmoothButtonSpeed = 60 * 1000;
 
-    EffectManager(const std::shared_ptr<LEDStripEffect>& effect, std::vector<std::shared_ptr<GFXBase>>& gfx)
+    EffectManager(const std::shared_ptr<LEDStripEffect>& effect, std::vector<std::shared_ptr<GFXBase> >& gfx)
         : _gfx(gfx)
     {
         debugV("EffectManager Splash Effect Constructor");
@@ -177,7 +177,7 @@ public:
         construct(false);
     }
 
-    explicit EffectManager(std::vector<std::shared_ptr<GFXBase>>& gfx)
+    explicit EffectManager(std::vector<std::shared_ptr<GFXBase> >& gfx)
         : _gfx(gfx)
     {
         debugV("EffectManager Constructor");
@@ -185,7 +185,7 @@ public:
         LoadDefaultEffects();
     }
 
-    EffectManager(const JsonObjectConst& jsonObject, std::vector<std::shared_ptr<GFXBase>>& gfx)
+    EffectManager(const JsonObjectConst& jsonObject, std::vector<std::shared_ptr<GFXBase> >& gfx)
         : _gfx(gfx)
     {
         debugV("EffectManager JSON Constructor");
@@ -209,7 +209,7 @@ public:
 
     // GetBaseGraphics - Returns the vector of GFXBase objects that the effects use to draw
 
-    std::vector<std::shared_ptr<GFXBase>> & GetBaseGraphics()
+    std::vector<std::shared_ptr<GFXBase> > & GetBaseGraphics()
     {
         return _gfx;
     }
@@ -282,7 +282,7 @@ public:
         {
             // Try to load effect enabled state from JSON also, default to "enabled" otherwise
             JsonArrayConst enabledArray = jsonObject["eef"].as<JsonArrayConst>();
-            size_t enabledSize = enabledArray.isNull() ? 0 : enabledArray.size();
+            size_t         enabledSize = enabledArray.isNull() ? 0 : enabledArray.size();
 
             for (int i = 0; i < _vEffects.size(); i++)
             {
@@ -373,7 +373,7 @@ public:
         std::shared_ptr<LEDStripEffect> & effect = _tempEffect ? _tempEffect : _vEffects[_iCurrentEffect];
 
         #if USE_HUB75
-            auto pMatrix = std::static_pointer_cast<HUB75GFX>(_gfx[0]);
+            auto                          pMatrix = std::static_pointer_cast<HUB75GFX>(_gfx[0]);
             pMatrix->SetCaption(effect->FriendlyName(), CAPTION_TIME);
         #endif
 
@@ -547,7 +547,7 @@ public:
         INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnIntervalChanged, interval);
     }
 
-    const std::vector<std::shared_ptr<LEDStripEffect>> & EffectsList() const
+    const std::vector<std::shared_ptr<LEDStripEffect> > & EffectsList() const
     {
         return _vEffects;
     }
@@ -559,7 +559,9 @@ public:
 
     bool AreEffectsEnabled() const
     {
-        return std::any_of(_vEffects.begin(), _vEffects.end(), [](const auto& pEffect){ return pEffect->IsEnabled(); } );
+        return std::any_of(_vEffects.begin(), _vEffects.end(), [](const auto& pEffect){
+                    return pEffect->IsEnabled();
+                } );
     }
 
     size_t GetCurrentEffectIndex() const
@@ -617,7 +619,7 @@ public:
         auto& currentEffect = GetCurrentEffect();
         // This allows you to return a MaximumEffectTime and your effect won't be shown longer than that
         return min((IsIntervalEternal() ? std::numeric_limits<uint>::max() : _effectInterval),
-                   (currentEffect.HasMaximumEffectTime() ? currentEffect.MaximumEffectTime() : std::numeric_limits<uint>::max()));
+                (currentEffect.HasMaximumEffectTime() ? currentEffect.MaximumEffectTime() : std::numeric_limits<uint>::max()));
     }
 
     uint GetInterval() const

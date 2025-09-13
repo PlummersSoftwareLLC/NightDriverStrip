@@ -42,14 +42,14 @@ class PatternQR : public EffectWithId<PatternQR>
         lastData = "";
     }
 
-protected:
+  protected:
 
     String lastData;
     QRCode qrcode;
     uint8_t * qrcodeData = nullptr;
     const int qrVersion = 2;
 
-public:
+  public:
 
     PatternQR() : EffectWithId<PatternQR>("QR")
     {
@@ -90,7 +90,7 @@ public:
         const uint16_t foregroundColor = WHITE16;
         const uint16_t borderColor = BLUE16;
         if (qrcode.size + topMargin + borderSize > MATRIX_HEIGHT - 1)
-        throw std::runtime_error("Matrix can't hold the QR code height");
+            throw std::runtime_error("Matrix can't hold the QR code height");
 
         int w = qrcode.size + borderSize * 2;
         int h = w;

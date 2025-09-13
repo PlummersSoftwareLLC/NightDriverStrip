@@ -71,55 +71,55 @@
 
 // Declares the member variable for a property with indicated type and name
 #define SC_DECLARE(name, ...) \
-  private: \
-    std::unique_ptr<::__VA_ARGS__> SC_MEMBER(name) = nullptr;
+      private: \
+        std::unique_ptr<::__VA_ARGS__> SC_MEMBER(name) = nullptr;
 
 // Creates a Setup method for a property (with indicated type and name) that invokes a parameterless constructor
 #define SC_SIMPLE_SETUP_FOR(name, ...) \
-  public: \
-    ::__VA_ARGS__& Setup ## name() \
-    { \
-        if (!SC_MEMBER(name)) \
+      public: \
+        ::__VA_ARGS__& Setup ## name() \
+        { \
+            if (!SC_MEMBER(name)) \
             SC_MEMBER(name).reset(new ::__VA_ARGS__()); \
-        return *SC_MEMBER(name); \
-    }
+            return *SC_MEMBER(name); \
+        }
 
 // Creates a Setup method for a property (with indicated type and name) that forwards any arguments to the constructor
 #define SC_FORWARDING_SETUP_FOR(name, ...) \
-  public: \
-    template<typename... Args> \
-    ::__VA_ARGS__& Setup ## name(Args&&... args) \
-    { \
-        if (!SC_MEMBER(name)) \
+      public: \
+        template<typename ... Args> \
+        ::__VA_ARGS__& Setup ## name(Args&&... args) \
+        { \
+            if (!SC_MEMBER(name)) \
             SC_MEMBER(name).reset(new ::__VA_ARGS__(std::forward<Args>(args)...)); \
-        return *SC_MEMBER(name); \
-    }
+            return *SC_MEMBER(name); \
+        }
 
 // Creates the Has and getter methods for a property with indicated type and name
 #define SC_GETTERS_FOR(name, ...) \
-  public: \
-    bool Has ## name() const \
-    { \
-        return !!SC_MEMBER(name); \
-    } \
+      public: \
+        bool Has ## name() const \
+        { \
+            return !!SC_MEMBER(name); \
+        } \
     \
-    ::__VA_ARGS__& name() const \
-    { \
-        CheckPointer(SC_MEMBER(name), #name); \
-        return *SC_MEMBER(name); \
-    }
+        ::__VA_ARGS__& name() const \
+        { \
+            CheckPointer(SC_MEMBER(name), #name); \
+            return *SC_MEMBER(name); \
+        }
 
 // Creates a full property with the type and name indicated, having a simple Setup method
 #define SC_SIMPLE_PROPERTY(name, ...) \
-    SC_DECLARE(name, __VA_ARGS__) \
-    SC_SIMPLE_SETUP_FOR(name, __VA_ARGS__) \
-    SC_GETTERS_FOR(name, __VA_ARGS__)
+        SC_DECLARE(name, __VA_ARGS__) \
+        SC_SIMPLE_SETUP_FOR(name, __VA_ARGS__) \
+        SC_GETTERS_FOR(name, __VA_ARGS__)
 
 // Creates a full property with the type and name indicated, having a forwarding Setup method
 #define SC_FORWARDING_PROPERTY(name, ...) \
-    SC_DECLARE(name, __VA_ARGS__) \
-    SC_FORWARDING_SETUP_FOR(name, __VA_ARGS__) \
-    SC_GETTERS_FOR(name, __VA_ARGS__)
+        SC_DECLARE(name, __VA_ARGS__) \
+        SC_FORWARDING_SETUP_FOR(name, __VA_ARGS__) \
+        SC_GETTERS_FOR(name, __VA_ARGS__)
 
 class SystemContainer
 {
@@ -139,14 +139,14 @@ class SystemContainer
     // -------------------------------------------------------------
     // Devices
 
-    SC_SIMPLE_PROPERTY(Devices, std::vector<std::shared_ptr<GFXBase>>)
+    SC_SIMPLE_PROPERTY(Devices, std::vector<std::shared_ptr<GFXBase> >)
 
     // -------------------------------------------------------------
     // BufferManagers
 
-    SC_DECLARE(BufferManagers, std::vector<LEDBufferManager, psram_allocator<LEDBufferManager>>)
+    SC_DECLARE(BufferManagers, std::vector<LEDBufferManager, psram_allocator<LEDBufferManager> >)
 
-    public: std::vector<LEDBufferManager, psram_allocator<LEDBufferManager>>& SetupBufferManagers()
+  public: std::vector<LEDBufferManager, psram_allocator<LEDBufferManager> >& SetupBufferManagers()
     {
         if (!!SC_MEMBER(BufferManagers))
             return *SC_MEMBER(BufferManagers);
@@ -164,8 +164,8 @@ class SystemContainer
             uint32_t memtouse = ESP.getFreeHeap() - RESERVE_MEMORY;
         #endif
 
-        uint32_t memtoalloc = (SC_MEMBER(Devices)->size() * (sizeof(LEDBuffer) + NUM_LEDS * sizeof(CRGB)));
-        uint32_t cBuffers = memtouse / memtoalloc;
+        uint32_t     memtoalloc = (SC_MEMBER(Devices)->size() * (sizeof(LEDBuffer) + NUM_LEDS * sizeof(CRGB)));
+        uint32_t     cBuffers = memtouse / memtoalloc;
 
         if (cBuffers < MIN_BUFFERS)
         {
@@ -180,7 +180,7 @@ class SystemContainer
 
         debugW("Reserving %d LED buffers for a total of %d bytes...", cBuffers, memtoalloc * cBuffers);
 
-        SC_MEMBER(BufferManagers) = make_unique_psram<std::vector<LEDBufferManager, psram_allocator<LEDBufferManager>>>();
+        SC_MEMBER(BufferManagers) = make_unique_psram<std::vector<LEDBufferManager, psram_allocator<LEDBufferManager> > >();
 
         for (auto& device : *SC_MEMBER(Devices))
             SC_MEMBER(BufferManagers)->emplace_back(cBuffers, device);
@@ -188,7 +188,7 @@ class SystemContainer
         return *SC_MEMBER(BufferManagers);
     }
 
-    SC_GETTERS_FOR(BufferManagers, std::vector<LEDBufferManager, psram_allocator<LEDBufferManager>>)
+    SC_GETTERS_FOR(BufferManagers, std::vector<LEDBufferManager, psram_allocator<LEDBufferManager> >)
 
     // -------------------------------------------------------------
     // EffectManager
@@ -201,7 +201,7 @@ class SystemContainer
     SC_DECLARE(TaskManager, NightDriverTaskManager)
 
     // Creates, begins and returns the TaskManager
-    public: ::NightDriverTaskManager& SetupTaskManager()
+  public: ::NightDriverTaskManager& SetupTaskManager()
     {
         if (!SC_MEMBER(TaskManager))
         {
@@ -221,7 +221,7 @@ class SystemContainer
     SC_DECLARE(JSONWriter, JSONWriter)
 
     // Creates and returns the config objects. Requires TaskManager to have already been setup.
-    public: void SetupConfig()
+  public: void SetupConfig()
     {
         if (!SC_MEMBER(TaskManager))
         {
@@ -288,7 +288,7 @@ class SystemContainer
         SC_DECLARE(Display, Screen)
 
         // Creates and returns the display. The exact screen type is a template argument.
-        public: template<typename Ts, typename... Args>
+      public: template<typename Ts, typename ... Args>
         ::Screen& SetupDisplay(Args&&... args)
         {
             SC_MEMBER(Display) = make_unique_psram<Ts>(std::forward<Args>(args)...);

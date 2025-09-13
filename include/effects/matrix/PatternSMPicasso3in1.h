@@ -110,7 +110,7 @@ class PatternSMPicasso3in1 : public EffectWithId<PatternSMPicasso3in1>
         for (uint8_t i = 0; i < enlargedObjectNUM - 2U; i += 2)
         {
             g()->drawLine(trackingObjects[i].posX, trackingObjects[i].posY, trackingObjects[i + 1U].posX,
-                     trackingObjects[i + 1U].posY, CHSV(trackingObjects[i].hue, 255U, 255U));
+                    trackingObjects[i + 1U].posY, CHSV(trackingObjects[i].hue, 255U, 255U));
             // DrawLine(trackingObjectPosX[i], trackingObjectPosY[i],
             // trackingObjectPosX[i+1U], trackingObjectPosY[i+1U],
             // ColorFromPalette(*curPalette, trackingObjectHue[i]));
@@ -128,7 +128,7 @@ class PatternSMPicasso3in1 : public EffectWithId<PatternSMPicasso3in1>
 
         for (uint8_t i = 0; i < enlargedObjectNUM - 1U; i++)
             g()->drawLine(trackingObjects[i].posX, trackingObjects[i].posY, trackingObjects[i + 1U].posX,
-                      trackingObjects[i + 1U].posY, CHSV(trackingObjects[i].hue, 255U, 255U));
+                    trackingObjects[i + 1U].posY, CHSV(trackingObjects[i].hue, 255U, 255U));
 
         EVERY_N_MILLIS(20000)
         {
@@ -145,8 +145,8 @@ class PatternSMPicasso3in1 : public EffectWithId<PatternSMPicasso3in1>
 
         for (uint8_t i = 0; i < enlargedObjectNUM - 2U; i += 2)
             g()->DrawSafeCircle(fabs(trackingObjects[i].posX - trackingObjects[i + 1U].posX),
-                       fabs(trackingObjects[i].posY - trackingObjects[i + 1U].posX),
-                       fabs(trackingObjects[i].posX - trackingObjects[i].posY), CHSV(trackingObjects[i].hue, 255U, 255U));
+                    fabs(trackingObjects[i].posY - trackingObjects[i + 1U].posX),
+                    fabs(trackingObjects[i].posX - trackingObjects[i].posY), CHSV(trackingObjects[i].hue, 255U, 255U));
 
         EVERY_N_MILLIS(20000)
         {
@@ -158,21 +158,21 @@ class PatternSMPicasso3in1 : public EffectWithId<PatternSMPicasso3in1>
   public:
 
     PatternSMPicasso3in1()
-      : EffectWithId<PatternSMPicasso3in1>("Picasso"),
+        : EffectWithId<PatternSMPicasso3in1>("Picasso"),
         _scale(-1)
     {
     }
 
     PatternSMPicasso3in1(const String& name, int scale)
-      : EffectWithId<PatternSMPicasso3in1>(name),
+        : EffectWithId<PatternSMPicasso3in1>(name),
         _scale(scale)
     {
     }
 
 
     PatternSMPicasso3in1(const JsonObjectConst &jsonObject)
-      : EffectWithId<PatternSMPicasso3in1>(jsonObject),
-      _scale(jsonObject[PTY_SCALE])
+        : EffectWithId<PatternSMPicasso3in1>(jsonObject),
+        _scale(jsonObject[PTY_SCALE])
     {
     }
 
@@ -208,7 +208,7 @@ class PatternSMPicasso3in1 : public EffectWithId<PatternSMPicasso3in1>
     void Start() override
     {
         g()->Clear();
-	    Scale = _scale;
+        Scale = _scale;
         RecalibrateDrawnObjects();
     }
 
@@ -220,11 +220,11 @@ class PatternSMPicasso3in1 : public EffectWithId<PatternSMPicasso3in1>
         if (last_scale != Scale)
         {
             debugA("Recalibrating from %d to %d", last_scale, Scale);
-                PicassoGenerate(true);
-                last_scale = Scale;
-	    }
+            PicassoGenerate(true);
+            last_scale = Scale;
+        }
 
-	    Scale = _scale;
+        Scale = _scale;
 
         if (Scale < 34U)
             PicassoRoutine1();  // Scale is less than 34

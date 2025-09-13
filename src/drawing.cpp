@@ -38,7 +38,7 @@
 #include "effects/matrix/spectrumeffects.h"
 #include "systemcontainer.h"
 
-static DRAM_ATTR CRGB l_SinglePixel = CRGB::Blue;
+static DRAM_ATTR CRGB l_SinglePixel    = CRGB::Blue;
 static DRAM_ATTR uint64_t l_usLastWifiDraw = 0;
 
 // The g_buffer_mutex is a global mutex used to protect access while adding or removing frames
@@ -57,32 +57,30 @@ uint16_t WiFiDraw()
     std::lock_guard<std::mutex> guard(g_buffer_mutex);
 
     uint16_t pixelsDrawn = 0;
-    for (auto& bufferManager : g_ptrSystem->BufferManagers())
+    for(auto&bufferManager : g_ptrSystem->BufferManagers())
     {
-
         timeval tv;
         gettimeofday(&tv, nullptr);
 
         // Pull buffers out of the queue.
 
-        if (false == bufferManager.IsEmpty())
+        if(false == bufferManager.IsEmpty())
         {
             std::shared_ptr<LEDBuffer> pBuffer;
-            if (NTPTimeClient::HasClockBeenSet() == false)
-            {
+            if(NTPTimeClient::HasClockBeenSet() == false)
                 pBuffer = bufferManager.GetOldestBuffer();
-            }
             else
-            {
                 // Using a 'while' rather than an 'if' causes it to pull frames until it's caught up
                 // written as 'while' it will pull frames until it gets one that is current.
                 // Chew through ALL frames older than now, ignoring all but the last of them
 
-                while (!bufferManager.IsEmpty() && bufferManager.PeekOldestBuffer()->IsBufferOlderThan(tv))
+                while(!bufferManager.IsEmpty() && bufferManager.PeekOldestBuffer()->IsBufferOlderThan(tv))
+                {
                     pBuffer = bufferManager.GetOldestBuffer();
-            }
+                }
 
-            if (pBuffer)
+
+            if(pBuffer)
             {
                 l_usLastWifiDraw = micros();
                 debugV("Calling LEDBuffer::Draw from wire with %d/%d pixels.", pixelsDrawn, NUM_LEDS);
@@ -93,7 +91,9 @@ uint16_t WiFiDraw()
             }
         }
     }
+
     debugV("WifIDraw claims to have drawn %d pixels", pixelsDrawn);
+
     return pixelsDrawn;
 }
 
@@ -103,37 +103,42 @@ uint16_t WiFiDraw()
 
 uint16_t LocalDraw()
 {
-    if (!g_ptrSystem->HasEffectManager())
+    if(!g_ptrSystem->HasEffectManager())
     {
         debugW("Drawing before EffectManager is ready, so delaying...");
         delay(100);
+
         return 0;
     }
     else
     {
-        auto& effectManager = g_ptrSystem->EffectManager();
+        auto&effectManager = g_ptrSystem->EffectManager();
 
-        if (effectManager.EffectCount() > 0)
+        if(effectManager.EffectCount() > 0)
         {
             // If we've never drawn from wifi before, now would also be a good time to local draw
-            if (l_usLastWifiDraw == 0 || (micros() - l_usLastWifiDraw > (TIME_BEFORE_LOCAL * MICROS_PER_SECOND)))
+            if(l_usLastWifiDraw == 0 || (micros() - l_usLastWifiDraw > (TIME_BEFORE_LOCAL * MICROS_PER_SECOND)))
             {
                 effectManager.Update(); // Draw the current built in effect
 
                 #if SHOW_VU_METER
                     #if ENABLE_AUDIO
                         static auto spectrum = std::static_pointer_cast<SpectrumAnalyzerEffect>(GetSpectrumAnalyzer(0));
-                        if (effectManager.IsVUVisible())
-                            spectrum->DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0, g_Analyzer.IsRemoteAudioActive() ? & vuPaletteBlue : &vuPaletteGreen);
+                        if(effectManager.IsVUVisible())
+                            spectrum->DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0, g_Analyzer.IsRemoteAudioActive() ? &vuPaletteBlue : &
+                                    vuPaletteGreen);
+
                     #endif
                 #endif
 
                 debugV("LocalDraw claims to have drawn %d pixels", NUM_LEDS);
+
                 return NUM_LEDS;
             }
             else
             {
-                debugV("Not drawing local effect because last wifi draw was %lf seconds ago.", (micros() - l_usLastWifiDraw) / (float)MICROS_PER_SECOND);
+                debugV("Not drawing local effect because last wifi draw was %lf seconds ago.", (micros() - l_usLastWifiDraw) / (float) MICROS_PER_SECOND);
+
                 // It's important to return 0 when you do not draw so that the caller knows we did not
                 // render any pixels, and we can/should wait until the next frame.  Otherwise, the caller might
                 // draw the strip needlessly, which can take significant time.
@@ -143,6 +148,7 @@ uint16_t LocalDraw()
     }
 
     debugV("Local draw not drawing");
+
     return 0;
 }
 
@@ -156,49 +162,51 @@ int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, ui
 
     // Delay enough to slow down to the desired framerate
 
-#if MILLIS_PER_FRAME == 0
+    #if MILLIS_PER_FRAME == 0
 
-    if (localPixelsDrawn > 0)
-    {
-        const double fpsRaw = static_cast<double>(g_ptrSystem->EffectManager().GetCurrentEffect().DesiredFramesPerSecond());
-        // If FPS is invalid (<= 0 or non-finite), treat as unlimited (0s minimum frame time).
-        const double minimumFrameTime = (!std::isfinite(fpsRaw) || fpsRaw <= 0.0) ? 0.0 : (1.0 / fpsRaw);
-        // Use a monotonic-like elapsed (never negative) in case wall clock adjustments go backward.
-        const double elapsed = std::max(0.0, g_Values.AppTime.CurrentTime() - frameStartTime);
-        // Always recompute FreeDrawTime so it cannot "stick" to a prior large value.
-        g_Values.FreeDrawTime = std::clamp(minimumFrameTime - elapsed, 0.0, 1.0);
-    }
-    else if (wifiPixelsDrawn > 0)
-    {
-        // Look through all the channels to see how far away the next wifi frame is times for.  We can then delay
-        // up to the minimum value found across all buffer managers.
-
-        double t = std::numeric_limits<double>::max();
-        bool bFoundFrame = false;
-
-        for (auto& bufferManager : g_ptrSystem->BufferManagers())
+        if(localPixelsDrawn > 0)
         {
-            auto pOldest = bufferManager.PeekOldestBuffer();
-            if (pOldest)
-            {
-                // TimeTillDue() should be non-negative for future-due frames; if negative (stale), treat as now.
-                // Note I'm not using clamp since clamp can return nan if TimeTillDue does, whereas this guards against that.
-                t = std::min(t, std::max(0.0, pOldest->TimeTillDue()));
-                bFoundFrame = true;
-            }
+            const double fpsRaw           = static_cast<double>(g_ptrSystem->EffectManager().GetCurrentEffect().DesiredFramesPerSecond());
+            // If FPS is invalid (<= 0 or non-finite), treat as unlimited (0s minimum frame time).
+            const double minimumFrameTime = (!std::isfinite(fpsRaw) || fpsRaw <= 0.0) ? 0.0 : (1.0 / fpsRaw);
+            // Use a monotonic-like elapsed (never negative) in case wall clock adjustments go backward.
+            const double elapsed          = std::max(0.0, g_Values.AppTime.CurrentTime() - frameStartTime);
+            // Always recompute FreeDrawTime so it cannot "stick" to a prior large value.
+            g_Values.FreeDrawTime = std::clamp(minimumFrameTime - elapsed, 0.0, 1.0);
         }
-        // Bound the delay to at most 1 second to avoid pathological multi-second sleeps.
-        g_Values.FreeDrawTime = bFoundFrame ? std::clamp(t, 0.0, 1.0) : kMinDelay;
-    }
-    else
-    {
-        debugV("Nothing drawn this pass because neither wifi nor local rendered a frame");
-        // Nothing drawn this pass - check back soon
-        g_Values.FreeDrawTime = kMinDelay;
-    }
+        else if(wifiPixelsDrawn > 0)
+        {
+            // Look through all the channels to see how far away the next wifi frame is times for.  We can then delay
+            // up to the minimum value found across all buffer managers.
 
-    return g_Values.FreeDrawTime * MILLIS_PER_SECOND;
-#endif
+            double t           = std::numeric_limits<double>::max();
+            bool bFoundFrame = false;
+
+            for(auto&bufferManager : g_ptrSystem->BufferManagers())
+            {
+                auto pOldest = bufferManager.PeekOldestBuffer();
+                if(pOldest)
+                {
+                    // TimeTillDue() should be non-negative for future-due frames; if negative (stale), treat as now.
+                    // Note I'm not using clamp since clamp can return nan if TimeTillDue does, whereas this guards against that.
+                    t           = std::min(t, std::max(0.0, pOldest->TimeTillDue()));
+                    bFoundFrame = true;
+                }
+            }
+
+            // Bound the delay to at most 1 second to avoid pathological multi-second sleeps.
+            g_Values.FreeDrawTime = bFoundFrame ? std::clamp(t, 0.0, 1.0) : kMinDelay;
+        }
+        else
+        {
+            debugV("Nothing drawn this pass because neither wifi nor local rendered a frame");
+            // Nothing drawn this pass - check back soon
+            g_Values.FreeDrawTime = kMinDelay;
+        }
+
+        return g_Values.FreeDrawTime * MILLIS_PER_SECOND;
+
+    #endif
 }
 
 // ShowOnboardLED
@@ -252,7 +260,7 @@ void ShowOnboardPixel()
 //
 // Main draw loop entry point
 
-void IRAM_ATTR DrawLoopTaskEntry(void *)
+void IRAM_ATTR DrawLoopTaskEntry(void*)
 {
     debugW(">> DrawLoopTaskEntry\n");
 
@@ -268,30 +276,31 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
     debugW("Entering main draw loop!");
 
-    for (;;)
+    for(;;)
     {
         g_Values.AppTime.NewFrame();
 
-        uint16_t localPixelsDrawn   = 0;
-        uint16_t wifiPixelsDrawn    = 0;
-        double frameStartTime       = g_Values.AppTime.FrameStartTime();
+        uint16_t localPixelsDrawn = 0;
+        uint16_t wifiPixelsDrawn  = 0;
+        double frameStartTime   = g_Values.AppTime.FrameStartTime();
 
-        auto graphics = g_ptrSystem->EffectManager().GetBaseGraphics()[0];
+        auto graphics         = g_ptrSystem->EffectManager().GetBaseGraphics()[0];
 
         graphics->PrepareFrame();
 
-        if (WiFi.isConnected())
+        if(WiFi.isConnected())
             wifiPixelsDrawn = WiFiDraw();
 
-        // If we didn't draw now, and it's been a while since we did, and we have at least one local effect, then draw the local effect instead
+        // If we didn't draw now, and it's been a while since we did, and we have at least one local effect, then draw the local effect
+        // instead
 
-        if (wifiPixelsDrawn == 0)
+        if(wifiPixelsDrawn == 0)
             localPixelsDrawn = LocalDraw();
 
         // If we drew any pixels by any method, we'll call that a frame and track it for FPS purposes.  We also notify the
         // color data thread that a new frame is available and can be transmitted to clients
 
-        if (wifiPixelsDrawn + localPixelsDrawn > 0)
+        if(wifiPixelsDrawn + localPixelsDrawn > 0)
         {
             // If the module has onboard LEDs, we support a couple of different types, and we set it to be the same as whatever
             // is on LED #0 of Channel #0.
@@ -313,7 +322,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         // Once an OTA flash update has started, we don't want to hog the CPU or it goes quite slowly,
         // so we'll slow down to share the CPU a bit once the update has begun
 
-        if (g_Values.UpdateStarted)
+        if(g_Values.UpdateStarted)
             delay(500);
     }
 }

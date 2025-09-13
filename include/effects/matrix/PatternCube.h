@@ -216,12 +216,12 @@ class PatternCube : public EffectWithId<PatternCube>
   public:
     PatternCube() : EffectWithId<PatternCube>("Cubes")
     {
-      construct();
+        construct();
     }
 
     PatternCube(const JsonObjectConst& jsonObject) : EffectWithId<PatternCube>(jsonObject)
     {
-      construct();
+        construct();
     }
 
     void Draw() override
@@ -264,7 +264,7 @@ class PatternCube : public EffectWithId<PatternCube>
                 e = edge + i;
                 if (!e->visible)
                     g()->BresenhamLine(screen[e->x].x + xOffset, screen[e->x].y, screen[e->y].x + xOffset,
-                                       screen[e->y].y, color);
+                            screen[e->y].y, color);
             }
 
             color = g()->ColorFromCurrentPalette(hue + 128 + xOffset);
@@ -275,7 +275,7 @@ class PatternCube : public EffectWithId<PatternCube>
                 e = edge + i;
                 if (e->visible)
                     g()->BresenhamLine(screen[e->x].x + xOffset, screen[e->x].y, screen[e->y].x + xOffset,
-                                       screen[e->y].y, color);
+                            screen[e->y].y, color);
             }
 
             step++;

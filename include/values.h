@@ -44,10 +44,10 @@ struct Values
     uint32_t FPS = 0;                                                       // Our global framerate
     bool UpdateStarted = false;                                             // Has an OTA update started?
     uint8_t Fader = 255;
-#if USE_HUB75
-    int MatrixPowerMilliwatts = 0;                                         // Matrix power draw in mw
-    uint8_t MatrixScaledBrightness = 255;                                  // 0-255 scaled brightness to stay in limit
-#endif
+    #if USE_HUB75
+        int MatrixPowerMilliwatts = 0;                                     // Matrix power draw in mw
+        uint8_t MatrixScaledBrightness = 255;                              // 0-255 scaled brightness to stay in limit
+    #endif
 };
 
 extern Values g_Values;

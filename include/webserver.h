@@ -68,14 +68,14 @@ class CWebServer
   private:
     // Template for param to value converter function, used by PushPostParamIfPresent()
     template<typename Tv>
-    using ParamValueGetter = std::function<Tv(const AsyncWebParameter *param)>;
+    using ParamValueGetter = std::function<Tv (const AsyncWebParameter *param)>;
 
     // Template for value setting forwarding function, used by PushPostParamIfPresent()
     template<typename Tv>
-    using ValueSetter = std::function<bool(Tv)>;
+    using ValueSetter = std::function<bool (Tv)>;
 
     // Value validating function type, as used by DeviceConfig (and possible others)
-    using ValueValidator = std::function<DeviceConfig::ValidateResponse(const String&)>;
+    using ValueValidator = std::function<DeviceConfig::ValidateResponse (const String&)>;
 
     // Device stats that don't change after startup
     struct StaticStatistics
@@ -104,8 +104,8 @@ class CWebServer
         }
     };
 
-    static std::vector<SettingSpec, psram_allocator<SettingSpec>> mySettingSpecs;
-    static std::vector<std::reference_wrapper<SettingSpec>> deviceSettingSpecs;
+    static std::vector<SettingSpec, psram_allocator<SettingSpec> > mySettingSpecs;
+    static std::vector<std::reference_wrapper<SettingSpec> > deviceSettingSpecs;
     static const std::map<String, ValueValidator> settingValidators;
 
     AsyncWebServer _server;
@@ -131,7 +131,9 @@ class CWebServer
     template<typename Tv>
     static bool PushPostParamIfPresent(const AsyncWebServerRequest * pRequest, const String & paramName, ValueSetter<Tv> setter)
     {
-        return PushPostParamIfPresent<Tv>(pRequest, paramName, setter, [](const AsyncWebParameter * param) { return param->value(); });
+        return PushPostParamIfPresent<Tv>(pRequest, paramName, setter, [](const AsyncWebParameter * param) {
+                    return param->value();
+                });
     }
 
     // AddCORSHeaderAndSend(OK)Response
@@ -154,15 +156,15 @@ class CWebServer
     static void AddCORSHeaderAndSendBadRequest(AsyncWebServerRequest * pRequest, const String& message)
     {
         AddCORSHeaderAndSendResponse(pRequest, pRequest->beginResponse(HTTP_CODE_BAD_REQUEST, "text/json",
-            "{\"message\": \"" + message + "\"}"));
+                "{\"message\": \"" + message + "\"}"));
     }
 
     // Straightforward support functions
 
     static void SendBufferOverflowResponse(AsyncWebServerRequest * pRequest);
     static bool IsPostParamTrue(AsyncWebServerRequest * pRequest, const String & paramName);
-    static const std::vector<std::reference_wrapper<SettingSpec>> & LoadDeviceSettingSpecs();
-    static void SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, const std::vector<std::reference_wrapper<SettingSpec>> & settingSpecs);
+    static const std::vector<std::reference_wrapper<SettingSpec> > & LoadDeviceSettingSpecs();
+    static void SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, const std::vector<std::reference_wrapper<SettingSpec> > & settingSpecs);
     static void SetSettingsIfPresent(AsyncWebServerRequest * pRequest);
     static long GetEffectIndexFromParam(AsyncWebServerRequest * pRequest, bool post = false);
     static bool CheckAndGetSettingsEffect(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect, bool post = false);
@@ -196,22 +198,23 @@ class CWebServer
     void ServeEmbeddedFile(const char strUri[], EmbeddedWebFile &file)
     {
         _server.on(strUri, HTTP_GET, [strUri, file](AsyncWebServerRequest *request)
-        {
-            Serial.printf("GET for: %s\n", strUri);
-            AsyncWebServerResponse *response = request->beginResponse(200, file.type, file.contents, file.length);
-            if (file.encoding)
-            {
-                response->addHeader("Content-Encoding", file.encoding);
-            }
+                {
+                    Serial.printf("GET for: %s\n", strUri);
+                    AsyncWebServerResponse *response = request->beginResponse(200, file.type, file.contents, file.length);
+                    if (file.encoding)
+                    {
+                        response->addHeader("Content-Encoding", file.encoding);
+                    }
 
-            AddCORSHeaderAndSendResponse(request, response);
-        });
+                    AddCORSHeaderAndSendResponse(request, response);
+                });
     }
 
   public:
     CWebServer()
         : _server(NetworkPort::Webserver), _staticStats()
-    {}
+    {
+    }
 
     // begin - register page load handlers and start serving pages
     void begin();

@@ -79,7 +79,7 @@
 
 class PatternMandala : public EffectWithId<PatternMandala>
 {
-private:
+  private:
     // The coordinates for 16-bit noise spaces.
 #define NUM_LAYERS 1
 
@@ -90,10 +90,12 @@ private:
     int16_t dsx;
     int16_t dsy;
 
-public:
+  public:
 
-    PatternMandala() : EffectWithId<PatternMandala>("MRI") {}
-    PatternMandala(const JsonObjectConst& jsonObject) : EffectWithId<PatternMandala>(jsonObject) {}
+    PatternMandala() : EffectWithId<PatternMandala>("MRI") {
+    }
+    PatternMandala(const JsonObjectConst& jsonObject) : EffectWithId<PatternMandala>(jsonObject) {
+    }
 
     virtual size_t DesiredFramesPerSecond() const override
     {

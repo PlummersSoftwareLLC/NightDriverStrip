@@ -42,25 +42,25 @@ class PaletteEffectBase : public EffectWithId<TEffect>
     const CRGBPalette16 _palette;
     const float _density;
     const float _paletteSpeed;
-    const float  _lightSize;
+    const float _lightSize;
     const float _gapSize;
     const float _LEDSPerSecond;
-    const TBlendType  _blend;
-    const bool  _bErase;
+    const TBlendType _blend;
+    const bool _bErase;
     const float _brightness;
 
   public:
 
     PaletteEffectBase(const CRGBPalette16 & palette,
-                  float density = 1.0f,
-                  float paletteSpeed = 1.0f,
-                  float ledsPerSecond = 0.0f,
-                  float lightSize = 1.0f,
-                  float gapSize = 1.0f,
-                  TBlendType blend = LINEARBLEND,
-                  bool  bErase = true,
-                  float brightness = 1.0)
-      : EffectWithId<TEffect>("Palette Effect"),
+                      float density = 1.0f,
+                      float paletteSpeed = 1.0f,
+                      float ledsPerSecond = 0.0f,
+                      float lightSize = 1.0f,
+                      float gapSize = 1.0f,
+                      TBlendType blend = LINEARBLEND,
+                      bool bErase = true,
+                      float brightness = 1.0)
+        : EffectWithId<TEffect>("Palette Effect"),
         _startIndex(0.0f),
         _paletteIndex(0.0f),
         _palette(palette),
@@ -76,7 +76,7 @@ class PaletteEffectBase : public EffectWithId<TEffect>
     }
 
     PaletteEffectBase(const JsonObjectConst& jsonObject)
-      : EffectWithId<TEffect>(jsonObject),
+        : EffectWithId<TEffect>(jsonObject),
         _startIndex(0.0f),
         _paletteIndex(0.0f),
         _palette(jsonObject[PTY_PALETTE].as<CRGBPalette16>()),
@@ -93,7 +93,7 @@ class PaletteEffectBase : public EffectWithId<TEffect>
 
     bool SerializeToJSON(JsonObject& jsonObject) override
     {
-        auto jsonDoc = CreateJsonDocument();
+        auto       jsonDoc = CreateJsonDocument();
 
         JsonObject root = jsonDoc.to<JsonObject>();
         LEDStripEffect::SerializeToJSON(root);
@@ -114,10 +114,10 @@ class PaletteEffectBase : public EffectWithId<TEffect>
     void Draw() override
     {
         if (_bErase)
-          LEDStripEffect::setAllOnAllChannels(0,0,0);
+            LEDStripEffect::setAllOnAllChannels(0,0,0);
 
-        float deltaTime = g_Values.AppTime.LastFrameTime();
-        float increment = (deltaTime * _LEDSPerSecond);
+        float     deltaTime = g_Values.AppTime.LastFrameTime();
+        float     increment = (deltaTime * _LEDSPerSecond);
         const int totalSize = _gapSize + _lightSize + 1;
         _startIndex   = totalSize > 1 ? fmodf(_startIndex + increment, totalSize) : 0;
 
@@ -130,36 +130,36 @@ class PaletteEffectBase : public EffectWithId<TEffect>
 
         if (_gapSize == 0)
         {
-          for (int i = 0; i < LEDStripEffect::_cLEDs; i+=_lightSize)
-          {
-            iColor = fmodf(iColor + _density, 256);
-            LEDStripEffect::setPixelsOnAllChannels(i, _lightSize, ColorFromPalette(_palette, iColor, 255 * _brightness, _blend), false);
-          }
+            for (int i = 0; i < LEDStripEffect::_cLEDs; i+=_lightSize)
+            {
+                iColor = fmodf(iColor + _density, 256);
+                LEDStripEffect::setPixelsOnAllChannels(i, _lightSize, ColorFromPalette(_palette, iColor, 255 * _brightness, _blend), false);
+            }
         }
         else
         {
-          // Start far enough "back" to have one off-strip light and gap, and then we need to draw at least as far as the last light.
-          // This prevents sticks of light from "appearing" or "disappearing" at the ends
+            // Start far enough "back" to have one off-strip light and gap, and then we need to draw at least as far as the last light.
+            // This prevents sticks of light from "appearing" or "disappearing" at the ends
 
-          for (float i = 0-totalSize; i < LEDStripEffect::_cLEDs + _lightSize; i++)
-          {
-              // We look for each pixel where we cross an even multiple of the light+gap size, which means it's time to start the drawing
-              // of the light here
+            for (float i = 0-totalSize; i < LEDStripEffect::_cLEDs + _lightSize; i++)
+            {
+                // We look for each pixel where we cross an even multiple of the light+gap size, which means it's time to start the drawing
+                // of the light here
 
-              iColor = fmodf(iColor + _density, 256);
-              int index = fmodf(i, totalSize);
-              if (index == 0)
-              {
-                  CRGB c = ColorFromPalette(_palette, iColor, 255 * _brightness, _blend);
-                  LEDStripEffect::setPixelsOnAllChannels(i+_startIndex, _lightSize, c,false);
-              }
-          }
+                iColor = fmodf(iColor + _density, 256);
+                int index = fmodf(i, totalSize);
+                if (index == 0)
+                {
+                    CRGB c = ColorFromPalette(_palette, iColor, 255 * _brightness, _blend);
+                    LEDStripEffect::setPixelsOnAllChannels(i+_startIndex, _lightSize, c,false);
+                }
+            }
         }
     }
 };
 
 class PaletteEffect : public PaletteEffectBase<PaletteEffect>
 {
-public:
+  public:
     using PaletteEffectBase<PaletteEffect>::PaletteEffectBase;
 };

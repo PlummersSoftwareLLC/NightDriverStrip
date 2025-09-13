@@ -27,8 +27,10 @@ class PatternSMMetaBalls : public EffectWithId<PatternSMMetaBalls>
 
   public:
 
-    PatternSMMetaBalls() : EffectWithId<PatternSMMetaBalls>("MetaBalls") {}
-    PatternSMMetaBalls(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMMetaBalls>(jsonObject) {}
+    PatternSMMetaBalls() : EffectWithId<PatternSMMetaBalls>("MetaBalls") {
+    }
+    PatternSMMetaBalls(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMMetaBalls>(jsonObject) {
+    }
 
     void Start() override
     {

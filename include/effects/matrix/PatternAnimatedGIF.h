@@ -52,22 +52,22 @@
 
 // The GIF files are embedded within the flash image, and we need to tell the linker where they are
 
-extern const uint8_t colorsphere_start[]     asm("_binary_assets_gif_colorsphere_gif_start");
-extern const uint8_t colorsphere_end[]       asm("_binary_assets_gif_colorsphere_gif_end");
-extern const uint8_t atomic_start[]          asm("_binary_assets_gif_atomic_gif_start");
-extern const uint8_t atomic_end[]            asm("_binary_assets_gif_atomic_gif_end");
-extern const uint8_t threerings_start[]      asm("_binary_assets_gif_threerings_gif_start");
-extern const uint8_t threerings_end[]        asm("_binary_assets_gif_threerings_gif_end");
-extern const uint8_t pacman_start[]          asm("_binary_assets_gif_pacman_gif_start");
-extern const uint8_t pacman_end[]            asm("_binary_assets_gif_pacman_gif_end");
-extern const uint8_t banana_start[]          asm("_binary_assets_gif_banana_gif_start");
-extern const uint8_t banana_end[]            asm("_binary_assets_gif_banana_gif_end");
-extern const uint8_t nyancat_start[]         asm("_binary_assets_gif_nyancat_gif_start");
-extern const uint8_t nyancat_end[]           asm("_binary_assets_gif_nyancat_gif_end");
-extern const uint8_t tesseract_start[]       asm("_binary_assets_gif_tesseract_gif_start");
-extern const uint8_t tesseract_end[]         asm("_binary_assets_gif_tesseract_gif_end");
-extern const uint8_t firelog_start[]         asm("_binary_assets_gif_firelog_gif_start");
-extern const uint8_t firelog_end[]           asm("_binary_assets_gif_firelog_gif_end");
+extern const uint8_t colorsphere_start[]     asm ("_binary_assets_gif_colorsphere_gif_start");
+extern const uint8_t colorsphere_end[]       asm ("_binary_assets_gif_colorsphere_gif_end");
+extern const uint8_t atomic_start[]          asm ("_binary_assets_gif_atomic_gif_start");
+extern const uint8_t atomic_end[]            asm ("_binary_assets_gif_atomic_gif_end");
+extern const uint8_t threerings_start[]      asm ("_binary_assets_gif_threerings_gif_start");
+extern const uint8_t threerings_end[]        asm ("_binary_assets_gif_threerings_gif_end");
+extern const uint8_t pacman_start[]          asm ("_binary_assets_gif_pacman_gif_start");
+extern const uint8_t pacman_end[]            asm ("_binary_assets_gif_pacman_gif_end");
+extern const uint8_t banana_start[]          asm ("_binary_assets_gif_banana_gif_start");
+extern const uint8_t banana_end[]            asm ("_binary_assets_gif_banana_gif_end");
+extern const uint8_t nyancat_start[]         asm ("_binary_assets_gif_nyancat_gif_start");
+extern const uint8_t nyancat_end[]           asm ("_binary_assets_gif_nyancat_gif_end");
+extern const uint8_t tesseract_start[]       asm ("_binary_assets_gif_tesseract_gif_start");
+extern const uint8_t tesseract_end[]         asm ("_binary_assets_gif_tesseract_gif_end");
+extern const uint8_t firelog_start[]         asm ("_binary_assets_gif_firelog_gif_start");
+extern const uint8_t firelog_end[]           asm ("_binary_assets_gif_firelog_gif_end");
 
 // AnimatedGIFs
 //
@@ -92,15 +92,16 @@ enum class GIFIdentifier : int
 
 struct GIFInfo : public EmbeddedFile
 {
-    uint16_t        _width;
-    uint16_t        _height;
-    uint8_t         _fps;
+    uint16_t _width;
+    uint16_t _height;
+    uint8_t _fps;
     GIFInfo(const uint8_t start[], const uint8_t end[], uint16_t width, uint16_t height, uint8_t fps)
         : EmbeddedFile(start, end), _width(width), _height(height), _fps(fps)
-    {}
+    {
+    }
 };
 
-static const std::map<GIFIdentifier, const GIFInfo, std::less<GIFIdentifier>, const psram_allocator<std::pair<GIFIdentifier, const GIFInfo>>> AnimatedGIFs =
+static const std::map<GIFIdentifier, const GIFInfo, std::less<GIFIdentifier>, const psram_allocator<std::pair<GIFIdentifier, const GIFInfo> > > AnimatedGIFs =
 {
     // Banana has 8 frames.  Most music is around 120BPM, so we need to play each frame for 1/15th of a second to somewhat align with a typical beat
     { GIFIdentifier::Banana,       GIFInfo(banana_start,      banana_end,      32, 32, 10 ) },      //  4 KB
@@ -120,24 +121,24 @@ static const std::map<GIFIdentifier, const GIFInfo, std::less<GIFIdentifier>, co
 
 struct
 {
-    int             _offsetX   = 0;
-    int             _offsetY   = 0;
-    uint8_t         _fps       = 24;
-    CRGB            _bkColor   = CRGB::Black;
+    int _offsetX   = 0;
+    int _offsetY   = 0;
+    uint8_t _fps       = 24;
+    CRGB _bkColor   = CRGB::Black;
     // Scaling parameters for best-fit rendering
-    float           _scaleX    = 1.0f;
-    float           _scaleY    = 1.0f;
-    uint16_t        _srcWidth  = 0;
-    uint16_t        _srcHeight = 0;
-    uint16_t        _dstWidth  = 0;
-    uint16_t        _dstHeight = 0;
+    float _scaleX    = 1.0f;
+    float _scaleY    = 1.0f;
+    uint16_t _srcWidth  = 0;
+    uint16_t _srcHeight = 0;
+    uint16_t _dstWidth  = 0;
+    uint16_t _dstHeight = 0;
 }
 g_gifDecoderState;
 
 // We dynamically allocate the GIF decoder because it's pretty big and we don't want to waste the base
 // ram on it.  This way it, and the GIFs it decodes, can live in PSRAM.
 
-const std::unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 16, true>> g_ptrGIFDecoder = make_unique_psram<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 16, true>>();
+const std::unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 16, true> > g_ptrGIFDecoder = make_unique_psram<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 16, true> >();
 
 // PatternAnimatedGIF
 //
@@ -219,21 +220,21 @@ class PatternAnimatedGIF : public EffectWithId<PatternAnimatedGIF>
         return FrameDoubling() ? g_gifDecoderState._fps * 2 : g_gifDecoderState._fps;
     }
 
-public:
+  public:
 
     PatternAnimatedGIF(const String & friendlyName, GIFIdentifier gifIndex, bool preClear = false, CRGB bkColor = CRGB::Black)
         : EffectWithId<PatternAnimatedGIF>(friendlyName),
-          _preClear(preClear),
-          _gifIndex(gifIndex),
-          _bkColor(bkColor)
+        _preClear(preClear),
+        _gifIndex(gifIndex),
+        _bkColor(bkColor)
     {
     }
 
     PatternAnimatedGIF(const JsonObjectConst& jsonObject)
         : EffectWithId<PatternAnimatedGIF>(jsonObject),
-          _preClear(jsonObject[PTY_PRECLEAR]),
-          _gifIndex((GIFIdentifier)jsonObject[PTY_GIFINDEX].as<std::underlying_type_t<GIFIdentifier>>()),
-          _bkColor(jsonObject[PTY_BKCOLOR])
+        _preClear(jsonObject[PTY_PRECLEAR]),
+        _gifIndex((GIFIdentifier)jsonObject[PTY_GIFINDEX].as<std::underlying_type_t<GIFIdentifier> >()),
+        _bkColor(jsonObject[PTY_BKCOLOR])
     {
     }
 
@@ -292,7 +293,7 @@ public:
         int offsetY = (MATRIX_HEIGHT - dstHeight) / 2;
 
         debugI("GIF scaling: %dx%d -> %dx%d (scale %.2f,%.2f) offset (%d,%d)",
-               gifWidth, gifHeight, dstWidth, dstHeight, scaleX, scaleY, offsetX, offsetY);
+                gifWidth, gifHeight, dstWidth, dstHeight, scaleX, scaleY, offsetX, offsetY);
 
         g_gifDecoderState._offsetX   = offsetX;
         g_gifDecoderState._offsetY   = offsetY;

@@ -128,28 +128,28 @@ struct squareFace
 
 struct triFace
 {
-  int length;
-  int sommets[3];
-  int ed[3];
+    int length;
+    int sommets[3];
+    int ed[3];
 
-  triFace()
-  {
-    set(-1,-1,-1);
-  }
-  triFace(int a, int b, int c)
-  {
-    this->length =3;
-    this->sommets[0]=a;
-    this->sommets[1]=b;
-    this->sommets[2]=c;
-  }
-  void set(int a, int b, int c)
-  {
-    this->length =3;
-    this->sommets[0]=a;
-    this->sommets[1]=b;
-    this->sommets[2]=c;
-  }
+    triFace()
+    {
+        set(-1,-1,-1);
+    }
+    triFace(int a, int b, int c)
+    {
+        this->length =3;
+        this->sommets[0]=a;
+        this->sommets[1]=b;
+        this->sommets[2]=c;
+    }
+    void set(int a, int b, int c)
+    {
+        this->length =3;
+        this->sommets[0]=a;
+        this->sommets[1]=b;
+        this->sommets[2]=c;
+    }
 };
 
 #endif

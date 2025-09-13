@@ -18,7 +18,8 @@ class PatternSMBlurringColors : public EffectWithId<PatternSMBlurringColors>
     {
       public:
 
-        PowderItem() {}
+        PowderItem() {
+        }
 
         void Clear()
         {
@@ -74,7 +75,7 @@ class PatternSMBlurringColors : public EffectWithId<PatternSMBlurringColors>
     bool inline ParticlesUpdate(PowderItem& powder_item)
     {
         powder_item._state--; // ttl // You also need to add speedfactor here.
-                                  // good luck there!
+        // good luck there!
 
         // Apply velocity.
         powder_item._position_x += powder_item._speed_x;
@@ -155,8 +156,10 @@ class PatternSMBlurringColors : public EffectWithId<PatternSMBlurringColors>
 
   public:
 
-    PatternSMBlurringColors() : EffectWithId<PatternSMBlurringColors>("Powder") {}
-    PatternSMBlurringColors(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMBlurringColors>(jsonObject) {}
+    PatternSMBlurringColors() : EffectWithId<PatternSMBlurringColors>("Powder") {
+    }
+    PatternSMBlurringColors(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMBlurringColors>(jsonObject) {
+    }
 
     void Start() override
     {
@@ -167,9 +170,9 @@ class PatternSMBlurringColors : public EffectWithId<PatternSMBlurringColors>
             enlargedObjectNUM = AVAILABLE_BOID_COUNT;
 
         deltaValue = powder_item_max_count /
-            (sqrt(CENTER_X_MAJOR * CENTER_X_MAJOR + CENTER_Y_MAJOR * CENTER_Y_MAJOR) * 4U) + 1U;
-            // 4 - this is because in 1 cycle the particle flies exactly a
-            // quarter the distance between 2 neighboring pixels
+                     (sqrt(CENTER_X_MAJOR * CENTER_X_MAJOR + CENTER_Y_MAJOR * CENTER_Y_MAJOR) * 4U) + 1U;
+        // 4 - this is because in 1 cycle the particle flies exactly a
+        // quarter the distance between 2 neighboring pixels
 
         for (auto& powder_item : _powder_items)
             powder_item.Clear();

@@ -89,7 +89,7 @@
 
 class PatternCircuit : public EffectWithId<PatternCircuit>
 {
-private:
+  private:
 
     static const uint8_t SNAKE_LENGTH = 64;
 
@@ -120,17 +120,17 @@ private:
         {
             switch (direction)
             {
-            case UP:
-            case DOWN:
-                direction = random(0, 2) == 1 ? RIGHT : LEFT;
-                break;
+                case UP:
+                case DOWN:
+                    direction = random(0, 2) == 1 ? RIGHT : LEFT;
+                    break;
 
-            case LEFT:
-            case RIGHT:
-                direction = random(0, 2) == 1 ? DOWN : UP;
+                case LEFT:
+                case RIGHT:
+                    direction = random(0, 2) == 1 ? DOWN : UP;
 
-            default:
-                break;
+                default:
+                    break;
             }
         }
 
@@ -156,18 +156,18 @@ private:
         {
             switch (direction)
             {
-            case UP:
-                pixels[0].y = (pixels[0].y + 1) % MATRIX_HEIGHT;
-                break;
-            case LEFT:
-                pixels[0].x = (pixels[0].x + 1) % MATRIX_WIDTH;
-                break;
-            case DOWN:
-                pixels[0].y = pixels[0].y == 0 ? MATRIX_HEIGHT - 1 : pixels[0].y - 1;
-                break;
-            case RIGHT:
-                pixels[0].x = pixels[0].x == 0 ? MATRIX_WIDTH - 1 : pixels[0].x - 1;
-                break;
+                case UP:
+                    pixels[0].y = (pixels[0].y + 1) % MATRIX_HEIGHT;
+                    break;
+                case LEFT:
+                    pixels[0].x = (pixels[0].x + 1) % MATRIX_WIDTH;
+                    break;
+                case DOWN:
+                    pixels[0].y = pixels[0].y == 0 ? MATRIX_HEIGHT - 1 : pixels[0].y - 1;
+                    break;
+                case RIGHT:
+                    pixels[0].x = pixels[0].x == 0 ? MATRIX_WIDTH - 1 : pixels[0].x - 1;
+                    break;
             }
         }
 
@@ -190,11 +190,17 @@ private:
         snakes = (Path *) PreferPSRAMAlloc(snakeCount * sizeof(Path)); //
     }
 
-public:
+  public:
 
-    PatternCircuit() : EffectWithId<PatternCircuit>("Circuit") { construct(); }
-    PatternCircuit(const JsonObjectConst& jsonObject) : EffectWithId<PatternCircuit>(jsonObject) { construct(); }
-    ~PatternCircuit() { free(snakes); }
+    PatternCircuit() : EffectWithId<PatternCircuit>("Circuit") {
+        construct();
+    }
+    PatternCircuit(const JsonObjectConst& jsonObject) : EffectWithId<PatternCircuit>(jsonObject) {
+        construct();
+    }
+    ~PatternCircuit() {
+        free(snakes);
+    }
 
     unsigned long msStart;
 

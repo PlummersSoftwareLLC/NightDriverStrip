@@ -145,7 +145,7 @@ class TaskManager
     IdleTask _taskIdle0;
     IdleTask _taskIdle1;
 
-public:
+  public:
 
     float GetCPUUsagePercent(int iCore = -1) const
     {
@@ -214,11 +214,11 @@ void IRAM_ATTR ColorDataTaskEntry(void *);
 
 class NightDriverTaskManager : public TaskManager
 {
-public:
+  public:
 
-    using EffectTaskFunction = std::function<void(LEDStripEffect&)>;
+    using EffectTaskFunction = std::function<void (LEDStripEffect&)>;
 
-private:
+  private:
 
     struct EffectTaskParams
     {
@@ -226,9 +226,10 @@ private:
         LEDStripEffect* pEffect;
 
         EffectTaskParams(EffectTaskFunction function, LEDStripEffect* pEffect)
-          : function(std::move(function)),
+            : function(std::move(function)),
             pEffect(pEffect)
-        {}
+        {
+        }
     };
 
     TaskHandle_t _taskScreen        = nullptr;
@@ -246,10 +247,10 @@ private:
 
     static void EffectTaskEntry(void *pVoid)
     {
-        EffectTaskParams *pTaskParams = (EffectTaskParams *)pVoid;
+        EffectTaskParams * pTaskParams = (EffectTaskParams *)pVoid;
 
         EffectTaskFunction function = pTaskParams->function;
-        LEDStripEffect* pEffect = pTaskParams->pEffect;
+        LEDStripEffect*    pEffect = pTaskParams->pEffect;
 
         // Delete the params object before we invoke the actual function; they tend to run indefinitely
         delete pTaskParams;
@@ -257,7 +258,7 @@ private:
         function(*pEffect);
     }
 
-public:
+  public:
 
     ~NightDriverTaskManager()
     {
@@ -297,7 +298,8 @@ public:
     void StartColorDataThread()
     {
         #if COLORDATA_SERVER_ENABLED
-            Serial.print( str_sprintf(">> Launching ColorData Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
+            Serial.print( str_sprintf(">> Launching ColorData Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(),
+                ESP.getPsramSize()) );
             xTaskCreatePinnedToCore(ColorDataTaskEntry, "ColorData Loop", DEFAULT_STACK_SIZE, nullptr, COLORDATA_PRIORITY, &_taskColorData, COLORDATA_CORE);
             CheckHeap();
         #endif
@@ -390,9 +392,10 @@ public:
         // We use a raw pointer here just to cross the thread/task boundary. The EffectTaskEntry method
         //   deletes the object as soon as it can.
         EffectTaskParams* pTaskParams = new EffectTaskParams(std::move(function), pEffect);
-        TaskHandle_t effectTask = nullptr;
+        TaskHandle_t      effectTask = nullptr;
 
-        Serial.print( str_sprintf(">> Launching %s Effect Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", name, ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize()) );
+        Serial.print( str_sprintf(">> Launching %s Effect Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", name, ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(),
+                ESP.getPsramSize()) );
 
         if (xTaskCreatePinnedToCore(EffectTaskEntry, name, DEFAULT_STACK_SIZE, pTaskParams, priority, &effectTask, core) == pdPASS)
             _vEffectTasks.push_back(effectTask);

@@ -32,111 +32,111 @@
 #pragma once
 #if ENABLE_AUDIO
 
-class LaserShot
-{
-  private:
-
-    float         _position = 0.0;
-    float         _speed    = 10.0;
-    float         _size     = 10.0;
-    uint8_t       _hue      = 0;
-
-  public:
-
-    LaserShot(float position, float speed, float size, uint8_t hue)
+    class LaserShot
     {
-        _position = position;
-        _speed    = speed;
-        _size     = size;
-        _hue      = hue;
-    }
+      private:
 
-    virtual bool Update(float elapsed)
-    {
-        _hue += _speed * elapsed;
-        _position += _speed * elapsed;
-        if (_position > NUM_LEDS)
-            return false;
-        return true;
-    }
+        float _position = 0.0;
+        float _speed    = 10.0;
+        float _size     = 10.0;
+        uint8_t _hue      = 0;
 
-    virtual void Draw(std::shared_ptr<GFXBase> pGFX)
-    {
-        for (float d = 0; d < _size && d + _position < NUM_LEDS; d++)
-            pGFX->setPixelsF(_position + d, 1.0, CHSV(_hue + d, 255, 255), true);
-    }
-};
+      public:
 
-class LaserLineEffect : public BeatEffectBase, public EffectWithId<LaserLineEffect>
-{
-  private:
-
-    std::vector<LaserShot>      _shots;
-    std::shared_ptr<GFXBase>    _gfx;
-    float                      _defaultSize;
-    float                      _defaultSpeed;
-
-  public:
-
-    LaserLineEffect(float speed, float size)
-        : BeatEffectBase(1.50, 0.00),
-          EffectWithId<LaserLineEffect>("LaserLine"),
-          _defaultSize(size),
-          _defaultSpeed(speed)
-    {
-    }
-
-    LaserLineEffect(const JsonObjectConst& jsonObject)
-        : BeatEffectBase(1.50, 0.00),
-          EffectWithId<LaserLineEffect>(jsonObject),
-          _defaultSize(jsonObject[PTY_SIZE]),
-          _defaultSpeed(jsonObject[PTY_SPEED])
-    {
-    }
-
-    bool SerializeToJSON(JsonObject& jsonObject) override
-    {
-        auto jsonDoc = CreateJsonDocument();
-
-        JsonObject root = jsonDoc.to<JsonObject>();
-        LEDStripEffect::SerializeToJSON(root);
-
-        jsonDoc[PTY_SIZE] = _defaultSize;
-        jsonDoc[PTY_SPEED] = _defaultSpeed;
-
-        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
-    }
-
-    bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
-    {
-        debugW("Initialized LaserLine Effect");
-        _gfx = gfx[0];
-        if (!LEDStripEffect::Init(gfx))
-            return false;
-        return true;
-    }
-
-    void Draw()
-    {
-        ProcessAudio();
-
-        fadeAllChannelsToBlackBy(200);
-
-        auto it = _shots.begin();
-        while(it != _shots.end())
+        LaserShot(float position, float speed, float size, uint8_t hue)
         {
-            it->Draw(_gfx);
-            if (!it->Update(g_Values.AppTime.LastFrameTime()))
-                _shots.erase(it);
-            else
-                it++;
+            _position = position;
+            _speed    = speed;
+            _size     = size;
+            _hue      = hue;
         }
-    }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
-    {
-        _shots.push_back(LaserShot(0.0, _defaultSpeed, _defaultSize, random8()));
+        virtual bool Update(float elapsed)
+        {
+            _hue += _speed * elapsed;
+            _position += _speed * elapsed;
+            if (_position > NUM_LEDS)
+                return false;
+            return true;
+        }
+
+        virtual void Draw(std::shared_ptr<GFXBase> pGFX)
+        {
+            for (float d = 0; d < _size && d + _position < NUM_LEDS; d++)
+                pGFX->setPixelsF(_position + d, 1.0, CHSV(_hue + d, 255, 255), true);
+        }
     };
-};
+
+    class LaserLineEffect : public BeatEffectBase, public EffectWithId<LaserLineEffect>
+    {
+      private:
+
+        std::vector<LaserShot> _shots;
+        std::shared_ptr<GFXBase> _gfx;
+        float _defaultSize;
+        float _defaultSpeed;
+
+      public:
+
+        LaserLineEffect(float speed, float size)
+            : BeatEffectBase(1.50, 0.00),
+            EffectWithId<LaserLineEffect>("LaserLine"),
+            _defaultSize(size),
+            _defaultSpeed(speed)
+        {
+        }
+
+        LaserLineEffect(const JsonObjectConst& jsonObject)
+            : BeatEffectBase(1.50, 0.00),
+            EffectWithId<LaserLineEffect>(jsonObject),
+            _defaultSize(jsonObject[PTY_SIZE]),
+            _defaultSpeed(jsonObject[PTY_SPEED])
+        {
+        }
+
+        bool SerializeToJSON(JsonObject& jsonObject) override
+        {
+            auto       jsonDoc = CreateJsonDocument();
+
+            JsonObject root = jsonDoc.to<JsonObject>();
+            LEDStripEffect::SerializeToJSON(root);
+
+            jsonDoc[PTY_SIZE] = _defaultSize;
+            jsonDoc[PTY_SPEED] = _defaultSpeed;
+
+            return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
+        }
+
+        bool Init(std::vector<std::shared_ptr<GFXBase> >& gfx) override
+        {
+            debugW("Initialized LaserLine Effect");
+            _gfx = gfx[0];
+            if (!LEDStripEffect::Init(gfx))
+                return false;
+            return true;
+        }
+
+        void Draw()
+        {
+            ProcessAudio();
+
+            fadeAllChannelsToBlackBy(200);
+
+            auto it = _shots.begin();
+            while(it != _shots.end())
+            {
+                it->Draw(_gfx);
+                if (!it->Update(g_Values.AppTime.LastFrameTime()))
+                    _shots.erase(it);
+                else
+                    it++;
+            }
+        }
+
+        virtual void HandleBeat(bool bMajor, float elapsed, float span) override
+        {
+            _shots.push_back(LaserShot(0.0, _defaultSpeed, _defaultSize, random8()));
+        };
+    };
 
 #endif

@@ -41,59 +41,65 @@
 // Maps settings for which a validator is available to the invocation thereof
 const std::map<String, CWebServer::ValueValidator> CWebServer::settingValidators
 {
-    { DeviceConfig::OpenWeatherApiKeyTag, [](const String& value) { return g_ptrSystem->DeviceConfig().ValidateOpenWeatherAPIKey(value); } },
-    { DeviceConfig::PowerLimitTag,        [](const String& value) { return g_ptrSystem->DeviceConfig().ValidatePowerLimit(value); } },
-    { DeviceConfig::BrightnessTag,        [](const String& value) { return g_ptrSystem->DeviceConfig().ValidateBrightness(value); } }
+    { DeviceConfig::OpenWeatherApiKeyTag, [](const String&value) {
+          return g_ptrSystem->DeviceConfig().ValidateOpenWeatherAPIKey(value);
+      } },
+    { DeviceConfig::PowerLimitTag,        [](const String&value) {
+          return g_ptrSystem->DeviceConfig().ValidatePowerLimit(value);
+      } },
+    { DeviceConfig::BrightnessTag,        [](const String&value) {
+          return g_ptrSystem->DeviceConfig().ValidateBrightness(value);
+      } }
 };
 
-std::vector<SettingSpec, psram_allocator<SettingSpec>> CWebServer::mySettingSpecs = {};
-std::vector<std::reference_wrapper<SettingSpec>> CWebServer::deviceSettingSpecs{};
+std::vector<SettingSpec, psram_allocator<SettingSpec> > CWebServer::mySettingSpecs = {};
+std::vector<std::reference_wrapper<SettingSpec> >       CWebServer::deviceSettingSpecs{};
 
 // Member function template specializations
 
 // Push param that represents a bool. Values considered true are text "true" and any whole number not equal to 0
 template<>
-bool CWebServer::PushPostParamIfPresent<bool>(const AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<bool> setter)
+bool CWebServer::PushPostParamIfPresent<bool>(const AsyncWebServerRequest*pRequest, const String&paramName, ValueSetter<bool> setter)
 {
-    return PushPostParamIfPresent<bool>(pRequest, paramName, std::move(setter), [](const AsyncWebParameter * param) constexpr
-    {
-        return BoolFromText(param->value());
-    });
+    return PushPostParamIfPresent<bool>(pRequest, paramName, std::move(setter), [](const AsyncWebParameter*param) constexpr
+            {
+                return BoolFromText(param->value());
+            });
 }
 
 // Push param that represents a size_t
 template<>
-bool CWebServer::PushPostParamIfPresent<size_t>(const AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<size_t> setter)
+bool CWebServer::PushPostParamIfPresent<size_t>(const AsyncWebServerRequest*pRequest, const String&paramName, ValueSetter<size_t> setter)
 {
-    return PushPostParamIfPresent<size_t>(pRequest, paramName, std::move(setter), [](const AsyncWebParameter * param) constexpr
-    {
-        return strtoul(param->value().c_str(), nullptr, 10);
-    });
+    return PushPostParamIfPresent<size_t>(pRequest, paramName, std::move(setter), [](const AsyncWebParameter*param) constexpr
+            {
+                return strtoul(param->value().c_str(), nullptr, 10);
+            });
 }
 
 // Push param that represents an int
 template<>
-bool CWebServer::PushPostParamIfPresent<int>(const AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<int> setter)
+bool CWebServer::PushPostParamIfPresent<int>(const AsyncWebServerRequest*pRequest, const String&paramName, ValueSetter<int> setter)
 {
-    return PushPostParamIfPresent<int>(pRequest, paramName, std::move(setter), [](const AsyncWebParameter * param) constexpr
-    {
-        return std::stoi(param->value().c_str());
-    });
+    return PushPostParamIfPresent<int>(pRequest, paramName, std::move(setter), [](const AsyncWebParameter*param) constexpr
+            {
+                return std::stoi(param->value().c_str());
+            });
 }
 
 // Push param that represents a color
 template<>
-bool CWebServer::PushPostParamIfPresent<CRGB>(const AsyncWebServerRequest * pRequest, const String &paramName, ValueSetter<CRGB> setter)
+bool CWebServer::PushPostParamIfPresent<CRGB>(const AsyncWebServerRequest*pRequest, const String&paramName, ValueSetter<CRGB> setter)
 {
-    return PushPostParamIfPresent<CRGB>(pRequest, paramName, std::move(setter), [](const AsyncWebParameter * param) constexpr
-    {
-        return CRGB(strtoul(param->value().c_str(), nullptr, 10));
-    });
+    return PushPostParamIfPresent<CRGB>(pRequest, paramName, std::move(setter), [](const AsyncWebParameter*param) constexpr
+            {
+                return CRGB(strtoul(param->value().c_str(), nullptr, 10));
+            });
 }
 
 // Add CORS header to and send JSON response
 template<>
-void CWebServer::AddCORSHeaderAndSendResponse<AsyncJsonResponse>(AsyncWebServerRequest * pRequest, AsyncJsonResponse * pResponse)
+void CWebServer::AddCORSHeaderAndSendResponse<AsyncJsonResponse>(AsyncWebServerRequest*pRequest, AsyncJsonResponse*pResponse)
 {
     pResponse->setLength();
     AddCORSHeaderAndSendResponse<AsyncWebServerResponse>(pRequest, pResponse);
@@ -104,54 +110,67 @@ void CWebServer::AddCORSHeaderAndSendResponse<AsyncJsonResponse>(AsyncWebServerR
 // begin - register page load handlers and start serving pages
 void CWebServer::begin()
 {
-    [[maybe_unused]] extern const uint8_t html_start[] asm("_binary_site_dist_index_html_gz_start");
-    [[maybe_unused]] extern const uint8_t html_end[] asm("_binary_site_dist_index_html_gz_end");
-    [[maybe_unused]] extern const uint8_t js_start[] asm("_binary_site_dist_index_js_gz_start");
-    [[maybe_unused]] extern const uint8_t js_end[] asm("_binary_site_dist_index_js_gz_end");
-    [[maybe_unused]] extern const uint8_t ico_start[] asm("_binary_site_dist_favicon_ico_gz_start");
-    [[maybe_unused]] extern const uint8_t ico_end[] asm("_binary_site_dist_favicon_ico_gz_end");
-    [[maybe_unused]] extern const uint8_t timezones_start[] asm("_binary_config_timezones_json_start");
-    [[maybe_unused]] extern const uint8_t timezones_end[] asm("_binary_config_timezones_json_end");
+    [[maybe_unused]] extern const uint8_t html_start[] asm ("_binary_site_dist_index_html_gz_start");
+    [[maybe_unused]] extern const uint8_t html_end[] asm ("_binary_site_dist_index_html_gz_end");
+    [[maybe_unused]] extern const uint8_t js_start[] asm ("_binary_site_dist_index_js_gz_start");
+    [[maybe_unused]] extern const uint8_t js_end[] asm ("_binary_site_dist_index_js_gz_end");
+    [[maybe_unused]] extern const uint8_t ico_start[] asm ("_binary_site_dist_favicon_ico_gz_start");
+    [[maybe_unused]] extern const uint8_t ico_end[] asm ("_binary_site_dist_favicon_ico_gz_end");
+    [[maybe_unused]] extern const uint8_t timezones_start[] asm ("_binary_config_timezones_json_start");
+    [[maybe_unused]] extern const uint8_t timezones_end[] asm ("_binary_config_timezones_json_end");
 
     EmbeddedWebFile html_file(html_start, html_end, "text/html", "gzip");
     EmbeddedWebFile js_file(js_start, js_end, "application/javascript", "gzip");
     EmbeddedWebFile ico_file(ico_start, ico_end, "image/vnd.microsoft.icon", "gzip");
-    EmbeddedWebFile timezones_file(timezones_start, timezones_end - 1, "text/json"); // end - 1 because of zero-termination
+    EmbeddedWebFile timezones_file(timezones_start, timezones_end - 1, "text/json");                       // end - 1 because of
+                                                                                                           // zero-termination
 
     debugI("Embedded html file size: %d", html_file.length);
     debugI("Embedded jsx file size: %d", js_file.length);
     debugI("Embedded ico file size: %d", ico_file.length);
     debugI("Embedded timezones file size: %d", timezones_file.length);
 
-    _staticStats.HeapSize = ESP.getHeapSize();
-    _staticStats.DmaHeapSize = heap_caps_get_total_size(MALLOC_CAP_DMA);
-    _staticStats.PsramSize = ESP.getPsramSize();
-    _staticStats.ChipModel = ESP.getChipModel();
-    _staticStats.ChipCores = ESP.getChipCores();
-    _staticStats.CpuFreqMHz = ESP.getCpuFreqMHz();
-    _staticStats.SketchSize = ESP.getSketchSize();
+    _staticStats.HeapSize        = ESP.getHeapSize();
+    _staticStats.DmaHeapSize     = heap_caps_get_total_size(MALLOC_CAP_DMA);
+    _staticStats.PsramSize       = ESP.getPsramSize();
+    _staticStats.ChipModel       = ESP.getChipModel();
+    _staticStats.ChipCores       = ESP.getChipCores();
+    _staticStats.CpuFreqMHz      = ESP.getCpuFreqMHz();
+    _staticStats.SketchSize      = ESP.getSketchSize();
     _staticStats.FreeSketchSpace = ESP.getFreeSketchSpace();
-    _staticStats.FlashChipSize = ESP.getFlashChipSize();
+    _staticStats.FlashChipSize   = ESP.getFlashChipSize();
 
     debugI("Connecting Web Endpoints");
 
     // SPIFFS file requests
 
-    _server.on("/effectsConfig",         HTTP_GET,  [](AsyncWebServerRequest* pRequest) { pRequest->send(SPIFFS, EFFECTS_CONFIG_FILE,   "text/json"); });
+    _server.on("/effectsConfig",         HTTP_GET,  [](AsyncWebServerRequest*pRequest) {
+                pRequest->send(SPIFFS, EFFECTS_CONFIG_FILE,   "text/json");
+            });
     #if ENABLE_IMPROV_LOGGING
-        _server.on(IMPROV_LOG_FILE,      HTTP_GET,  [](AsyncWebServerRequest* pRequest) { pRequest->send(SPIFFS, IMPROV_LOG_FILE,       "text/plain"); });
+        _server.on(IMPROV_LOG_FILE,      HTTP_GET,  [](AsyncWebServerRequest*pRequest) {
+                pRequest->send(SPIFFS, IMPROV_LOG_FILE,       "text/plain");
+            });
     #endif
 
     // Instance handler requests
 
-    _server.on("/statistics/static",     HTTP_GET,  [this](AsyncWebServerRequest* pRequest)
-                                                    { this->GetStatistics(pRequest, StatisticsType::Static); });
-    _server.on("/statistics/dynamic",    HTTP_GET,  [this](AsyncWebServerRequest* pRequest)
-                                                    { this->GetStatistics(pRequest, StatisticsType::Dynamic); });
-    _server.on("/statistics",            HTTP_GET,  [this](AsyncWebServerRequest* pRequest)
-                                                    { this->GetStatistics(pRequest); });
-    _server.on("/getStatistics",         HTTP_GET,  [this](AsyncWebServerRequest* pRequest)
-                                                    { this->GetStatistics(pRequest); });
+    _server.on("/statistics/static",     HTTP_GET,  [this](AsyncWebServerRequest*pRequest)
+            {
+                this->GetStatistics(pRequest, StatisticsType::Static);
+            });
+    _server.on("/statistics/dynamic",    HTTP_GET,  [this](AsyncWebServerRequest*pRequest)
+            {
+                this->GetStatistics(pRequest, StatisticsType::Dynamic);
+            });
+    _server.on("/statistics",            HTTP_GET,  [this](AsyncWebServerRequest*pRequest)
+            {
+                this->GetStatistics(pRequest);
+            });
+    _server.on("/getStatistics",         HTTP_GET,  [this](AsyncWebServerRequest*pRequest)
+            {
+                this->GetStatistics(pRequest);
+            });
 
     // Static handler requests
 
@@ -193,64 +212,72 @@ void CWebServer::begin()
 
     // Not found handler
 
-    _server.onNotFound([](AsyncWebServerRequest *request)
-    {
-        if (request->method() == HTTP_OPTIONS) {
-            request->send(HTTP_CODE_OK);                                     // Apparently needed for CORS: https://github.com/me-no-dev/ESPAsyncWebServer
-        } else {
-                debugW("Failed GET for %s\n", request->url().c_str() );
-            request->send(HTTP_CODE_NOT_FOUND);
-        }
-    });
+    _server.onNotFound([](AsyncWebServerRequest*request)
+            {
+                if(request->method() == HTTP_OPTIONS)
+                {
+                    request->send(HTTP_CODE_OK);                             // Apparently needed for CORS:
+                                                                             // https://github.com/me-no-dev/ESPAsyncWebServer
+                }
+                else
+                {
+                    debugW("Failed GET for %s\n", request->url().c_str() );
+                    request->send(HTTP_CODE_NOT_FOUND);
+                }
+            });
 
     _server.begin();
 
     debugI("HTTP server started");
 }
 
-bool CWebServer::IsPostParamTrue(AsyncWebServerRequest * pRequest, const String & paramName)
+bool CWebServer::IsPostParamTrue(AsyncWebServerRequest*pRequest, const String&paramName)
 {
     bool returnValue = false;
 
-    PushPostParamIfPresent<bool>(pRequest, paramName, [&returnValue](auto value) { returnValue = value; return true; });
+    PushPostParamIfPresent<bool>(pRequest, paramName, [&returnValue](auto value) {
+                returnValue = value;
+
+                return true;
+            });
 
     return returnValue;
 }
 
-long CWebServer::GetEffectIndexFromParam(AsyncWebServerRequest * pRequest, bool post)
+long CWebServer::GetEffectIndexFromParam(AsyncWebServerRequest*pRequest, bool post)
 {
-    if (!pRequest->hasParam("effectIndex", post, false))
+    if(!pRequest->hasParam("effectIndex", post, false))
         return -1;
 
     return strtol(pRequest->getParam("effectIndex", post, false)->value().c_str(), nullptr, 10);
 }
 
-void CWebServer::SendBufferOverflowResponse(AsyncWebServerRequest * pRequest)
+void CWebServer::SendBufferOverflowResponse(AsyncWebServerRequest*pRequest)
 {
     AddCORSHeaderAndSendResponse(
-        pRequest,
-        pRequest->beginResponse(
-            HTTP_CODE_INTERNAL_SERVER_ERROR,
-            "text/json",
-            "{\"message\": \"JSON response buffer overflow\"}"
-        )
-    );
+            pRequest,
+            pRequest->beginResponse(
+                    HTTP_CODE_INTERNAL_SERVER_ERROR,
+                    "text/json",
+                    "{\"message\": \"JSON response buffer overflow\"}"
+                    )
+            );
 }
 
-void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
+void CWebServer::GetEffectListText(AsyncWebServerRequest*pRequest)
 {
     debugV("GetEffectListText");
 
-    auto response = new AsyncJsonResponse();
-    auto& j = response->getRoot();
-    auto& effectManager = g_ptrSystem->EffectManager();
+    auto response      = new AsyncJsonResponse();
+    auto&j             = response->getRoot();
+    auto&effectManager = g_ptrSystem->EffectManager();
 
     j["currentEffect"]         = effectManager.GetCurrentEffectIndex();
     j["millisecondsRemaining"] = effectManager.GetTimeRemainingForCurrentEffect();
     j["eternalInterval"]       = effectManager.IsIntervalEternal();
     j["effectInterval"]        = effectManager.GetInterval();
 
-    for (const auto& effect : effectManager.EffectsList())
+    for(const auto&effect : effectManager.EffectsList())
     {
         auto effectDoc = CreateJsonDocument();
 
@@ -258,10 +285,11 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
         effectDoc["enabled"] = effect->IsEnabled();
         effectDoc["core"]    = effect->IsCoreEffect();
 
-        if (!j["Effects"].add(effectDoc))
+        if(!j["Effects"].add(effectDoc))
         {
             debugV("JSON response buffer overflow!");
             SendBufferOverflowResponse(pRequest);
+
             return;
         }
     }
@@ -269,81 +297,82 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
     AddCORSHeaderAndSendResponse(pRequest, response);
 }
 
-void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest, StatisticsType statsType) const
+void CWebServer::GetStatistics(AsyncWebServerRequest*pRequest, StatisticsType statsType) const
 {
     debugV("GetStatistics");
 
     auto response = new AsyncJsonResponse();
-    auto& j = response->getRoot();
+    auto&j        = response->getRoot();
 
-    if ((statsType & StatisticsType::Static) != StatisticsType::None)
+    if((statsType&StatisticsType::Static) != StatisticsType::None)
     {
-        j["MATRIX_WIDTH"]          = MATRIX_WIDTH;
-        j["MATRIX_HEIGHT"]         = MATRIX_HEIGHT;
-        j["FRAMES_SOCKET"]         = !!COLORDATA_WEB_SOCKET_ENABLED;
-        j["EFFECTS_SOCKET"]        = !!EFFECTS_WEB_SOCKET_ENABLED;
-        j["CHIP_MODEL"]            = _staticStats.ChipModel;
-        j["CHIP_CORES"]            = _staticStats.ChipCores;
-        j["CHIP_SPEED"]            = _staticStats.CpuFreqMHz;
-        j["PROG_SIZE"]             = _staticStats.SketchSize;
-        j["CODE_SIZE"]             = _staticStats.SketchSize;
-        j["FLASH_SIZE"]            = _staticStats.FlashChipSize;
-        j["HEAP_SIZE"]             = _staticStats.HeapSize;
-        j["DMA_SIZE"]              = _staticStats.DmaHeapSize;
-        j["PSRAM_SIZE"]            = _staticStats.PsramSize;
-        j["CODE_FREE"]             = _staticStats.FreeSketchSpace;
+        j["MATRIX_WIDTH"]   = MATRIX_WIDTH;
+        j["MATRIX_HEIGHT"]  = MATRIX_HEIGHT;
+        j["FRAMES_SOCKET"]  = !!COLORDATA_WEB_SOCKET_ENABLED;
+        j["EFFECTS_SOCKET"] = !!EFFECTS_WEB_SOCKET_ENABLED;
+        j["CHIP_MODEL"]     = _staticStats.ChipModel;
+        j["CHIP_CORES"]     = _staticStats.ChipCores;
+        j["CHIP_SPEED"]     = _staticStats.CpuFreqMHz;
+        j["PROG_SIZE"]      = _staticStats.SketchSize;
+        j["CODE_SIZE"]      = _staticStats.SketchSize;
+        j["FLASH_SIZE"]     = _staticStats.FlashChipSize;
+        j["HEAP_SIZE"]      = _staticStats.HeapSize;
+        j["DMA_SIZE"]       = _staticStats.DmaHeapSize;
+        j["PSRAM_SIZE"]     = _staticStats.PsramSize;
+        j["CODE_FREE"]      = _staticStats.FreeSketchSpace;
     }
 
-    if ((statsType & StatisticsType::Dynamic) != StatisticsType::None)
+    if((statsType&StatisticsType::Dynamic) != StatisticsType::None)
     {
-        j["LED_FPS"]               = g_Values.FPS;
-        j["SERIAL_FPS"]            = g_Analyzer.SerialFPS();
-        j["AUDIO_FPS"]             = g_Analyzer.AudioFPS();
-        j["HEAP_FREE"]             = ESP.getFreeHeap();
-        j["HEAP_MIN"]              = ESP.getMinFreeHeap();
-        j["DMA_FREE"]              = heap_caps_get_free_size(MALLOC_CAP_DMA);
-        j["DMA_MIN"]               = heap_caps_get_largest_free_block(MALLOC_CAP_DMA);
-        j["PSRAM_FREE"]            = ESP.getFreePsram();
-        j["PSRAM_MIN"]             = ESP.getMinFreePsram();
-        auto& taskManager = g_ptrSystem->TaskManager();
+        j["LED_FPS"]    = g_Values.FPS;
+        j["SERIAL_FPS"] = g_Analyzer.SerialFPS();
+        j["AUDIO_FPS"]  = g_Analyzer.AudioFPS();
+        j["HEAP_FREE"]  = ESP.getFreeHeap();
+        j["HEAP_MIN"]   = ESP.getMinFreeHeap();
+        j["DMA_FREE"]   = heap_caps_get_free_size(MALLOC_CAP_DMA);
+        j["DMA_MIN"]    = heap_caps_get_largest_free_block(MALLOC_CAP_DMA);
+        j["PSRAM_FREE"] = ESP.getFreePsram();
+        j["PSRAM_MIN"]  = ESP.getMinFreePsram();
+        auto&taskManager = g_ptrSystem->TaskManager();
 
-        j["CPU_USED"]              = taskManager.GetCPUUsagePercent();
-        j["CPU_USED_CORE0"]        = taskManager.GetCPUUsagePercent(0);
-        j["CPU_USED_CORE1"]        = taskManager.GetCPUUsagePercent(1);
+        j["CPU_USED"]       = taskManager.GetCPUUsagePercent();
+        j["CPU_USED_CORE0"] = taskManager.GetCPUUsagePercent(0);
+        j["CPU_USED_CORE1"] = taskManager.GetCPUUsagePercent(1);
     }
 
     AddCORSHeaderAndSendResponse(pRequest, response);
 }
 
-void CWebServer::SetCurrentEffectIndex(AsyncWebServerRequest * pRequest)
+void CWebServer::SetCurrentEffectIndex(AsyncWebServerRequest*pRequest)
 {
     debugV("SetCurrentEffectIndex");
     PushPostParamIfPresent<size_t>(pRequest, "currentEffectIndex", SET_VALUE(g_ptrSystem->EffectManager().SetCurrentEffectIndex(value)));
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
-void CWebServer::EnableEffect(AsyncWebServerRequest * pRequest)
+void CWebServer::EnableEffect(AsyncWebServerRequest*pRequest)
 {
     debugV("EnableEffect");
     PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_ptrSystem->EffectManager().EnableEffect(value)));
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
-void CWebServer::DisableEffect(AsyncWebServerRequest * pRequest)
+void CWebServer::DisableEffect(AsyncWebServerRequest*pRequest)
 {
     debugV("DisableEffect");
     PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_ptrSystem->EffectManager().DisableEffect(value)));
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
-void CWebServer::MoveEffect(AsyncWebServerRequest * pRequest)
+void CWebServer::MoveEffect(AsyncWebServerRequest*pRequest)
 {
     debugV("MoveEffect");
 
     auto fromIndex = GetEffectIndexFromParam(pRequest, true);
-    if (fromIndex == -1)
+    if(fromIndex == -1)
     {
         AddCORSHeaderAndSendOKResponse(pRequest);
+
         return;
     }
 
@@ -351,46 +380,50 @@ void CWebServer::MoveEffect(AsyncWebServerRequest * pRequest)
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
-void CWebServer::CopyEffect(AsyncWebServerRequest * pRequest)
+void CWebServer::CopyEffect(AsyncWebServerRequest*pRequest)
 {
     debugV("CopyEffect");
 
     auto index = GetEffectIndexFromParam(pRequest, true);
-    if (index == -1)
+    if(index == -1)
     {
         AddCORSHeaderAndSendOKResponse(pRequest);
+
         return;
     }
 
     auto effect = g_ptrSystem->EffectManager().CopyEffect(index);
-    if (!effect)
+    if(!effect)
     {
         AddCORSHeaderAndSendOKResponse(pRequest);
+
         return;
     }
 
     ApplyEffectSettings(pRequest, effect);
 
-    if (g_ptrSystem->EffectManager().AppendEffect(effect))
+    if(g_ptrSystem->EffectManager().AppendEffect(effect))
         SendEffectSettingsResponse(pRequest, effect);
     else
         AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
-void CWebServer::DeleteEffect(AsyncWebServerRequest * pRequest)
+void CWebServer::DeleteEffect(AsyncWebServerRequest*pRequest)
 {
     debugV("DeleteEffect");
 
     auto index = GetEffectIndexFromParam(pRequest, true);
-    if (index == -1)
+    if(index == -1)
     {
         AddCORSHeaderAndSendOKResponse(pRequest);
+
         return;
     }
 
-    if (index < g_ptrSystem->EffectManager().EffectCount() && g_ptrSystem->EffectManager().EffectsList()[index]->IsCoreEffect())
+    if(index < g_ptrSystem->EffectManager().EffectCount() && g_ptrSystem->EffectManager().EffectsList()[index]->IsCoreEffect())
     {
         AddCORSHeaderAndSendBadRequest(pRequest, "Can't delete core effect");
+
         return;
     }
 
@@ -398,47 +431,52 @@ void CWebServer::DeleteEffect(AsyncWebServerRequest * pRequest)
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
-void CWebServer::NextEffect(AsyncWebServerRequest * pRequest)
+void CWebServer::NextEffect(AsyncWebServerRequest*pRequest)
 {
     debugV("NextEffect");
     g_ptrSystem->EffectManager().NextEffect();
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
-void CWebServer::PreviousEffect(AsyncWebServerRequest * pRequest)
+void CWebServer::PreviousEffect(AsyncWebServerRequest*pRequest)
 {
     debugV("PreviousEffect");
     g_ptrSystem->EffectManager().PreviousEffect();
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
-void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, const std::vector<std::reference_wrapper<SettingSpec>> & settingSpecs)
+void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest*pRequest, const std::vector<std::reference_wrapper<SettingSpec> >&settingSpecs)
 {
-    auto response = new AsyncJsonResponse();
+    auto response  = new AsyncJsonResponse();
     auto jsonArray = response->getRoot().to<JsonArray>();
 
-    for (const auto& specWrapper : settingSpecs)
+    for(const auto&specWrapper : settingSpecs)
     {
-        const auto& spec = specWrapper.get();
+        const auto&spec       = specWrapper.get();
         auto specObject = jsonArray.add<JsonObject>();
 
-        auto jsonDoc = CreateJsonDocument();
+        auto jsonDoc    = CreateJsonDocument();
 
-        jsonDoc["name"] = spec.Name;
+        jsonDoc["name"]         = spec.Name;
         jsonDoc["friendlyName"] = spec.FriendlyName;
-        if (spec.Description)
+        if(spec.Description)
             jsonDoc["description"] = spec.Description;
-        jsonDoc["type"] = to_value(spec.Type);
+
+        jsonDoc["type"]     = to_value(spec.Type);
         jsonDoc["typeName"] = spec.TypeName();
-        if (spec.HasValidation)
+        if(spec.HasValidation)
             jsonDoc["hasValidation"] = true;
-        if (spec.MinimumValue.has_value())
+
+        if(spec.MinimumValue.has_value())
             jsonDoc["minimumValue"] = spec.MinimumValue.value();
-        if (spec.MaximumValue.has_value())
+
+        if(spec.MaximumValue.has_value())
             jsonDoc["maximumValue"] = spec.MaximumValue.value();
-        if (spec.EmptyAllowed.has_value())
+
+        if(spec.EmptyAllowed.has_value())
             jsonDoc["emptyAllowed"] = spec.EmptyAllowed.value();
-        switch (spec.Access)
+
+        switch(spec.Access)
         {
             case SettingSpec::SettingAccess::ReadOnly:
                 jsonDoc["readOnly"] = true;
@@ -453,10 +491,11 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
                 break;
         }
 
-        if (jsonDoc.overflowed() || !specObject.set(jsonDoc.as<JsonObjectConst>()))
+        if(jsonDoc.overflowed() || !specObject.set(jsonDoc.as<JsonObjectConst>()))
         {
             debugV("JSON response buffer overflow!");
             SendBufferOverflowResponse(pRequest);
+
             return;
         }
     }
@@ -464,16 +503,16 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
     AddCORSHeaderAndSendResponse(pRequest, response);
 }
 
-const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceSettingSpecs()
+const std::vector<std::reference_wrapper<SettingSpec> > & CWebServer::LoadDeviceSettingSpecs()
 {
-    if (deviceSettingSpecs.empty())
+    if(deviceSettingSpecs.empty())
     {
         mySettingSpecs.emplace_back(
-            "effectInterval",
-            "Effect interval",
-            "The duration in milliseconds that an individual effect runs, before the next effect is activated.",
-            SettingSpec::SettingType::PositiveBigInteger
-        );
+                "effectInterval",
+                "Effect interval",
+                "The duration in milliseconds that an individual effect runs, before the next effect is activated.",
+                SettingSpec::SettingType::PositiveBigInteger
+                );
         deviceSettingSpecs.insert(deviceSettingSpecs.end(), mySettingSpecs.begin(), mySettingSpecs.end());
 
         auto deviceConfigSpecs = g_ptrSystem->DeviceConfig().GetSettingSpecs();
@@ -483,19 +522,19 @@ const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceS
     return deviceSettingSpecs;
 }
 
-void CWebServer::GetSettingSpecs(AsyncWebServerRequest * pRequest)
+void CWebServer::GetSettingSpecs(AsyncWebServerRequest*pRequest)
 {
     SendSettingSpecsResponse(pRequest, LoadDeviceSettingSpecs());
 }
 
 // Responds with current config, excluding any sensitive values
-void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
+void CWebServer::GetSettings(AsyncWebServerRequest*pRequest)
 {
     debugV("GetSettings");
 
-    auto response = new AsyncJsonResponse();
+    auto response   = new AsyncJsonResponse();
     response->addHeader("Server", "NightDriverStrip");
-    auto root = response->getRoot();
+    auto root       = response->getRoot();
     JsonObject jsonObject = root.to<JsonObject>();
 
     // We get the serialized JSON for the device config, without any sensitive values
@@ -507,12 +546,12 @@ void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
 
 // Support function that silently sets whatever settings are included in the request passed.
 //   Composing a response is left to the invoker!
-void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
+void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest*pRequest)
 {
-    auto& deviceConfig = g_ptrSystem->DeviceConfig();
-    auto& effectManager = g_ptrSystem->EffectManager();
+    auto&deviceConfig  = g_ptrSystem->DeviceConfig();
+    auto&effectManager = g_ptrSystem->EffectManager();
 
-    PushPostParamIfPresent<size_t>(pRequest,"effectInterval", SET_VALUE(effectManager.SetInterval(value)));
+    PushPostParamIfPresent<size_t>(pRequest, "effectInterval", SET_VALUE(effectManager.SetInterval(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::HostnameTag, SET_VALUE(deviceConfig.SetHostname(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::LocationTag, SET_VALUE(deviceConfig.SetLocation(value)));
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::LocationIsZipTag, SET_VALUE(deviceConfig.SetLocationIsZip(value)));
@@ -527,7 +566,7 @@ void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
     PushPostParamIfPresent<int>(pRequest, DeviceConfig::BrightnessTag, SET_VALUE(deviceConfig.SetBrightness(value)));
 
     #if SHOW_VU_METER
-    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::ShowVUMeterTag, SET_VALUE(effectManager.ShowVU(value)));
+        PushPostParamIfPresent<bool>(pRequest, DeviceConfig::ShowVUMeterTag, SET_VALUE(effectManager.ShowVU(value)));
     #endif
 
     std::optional<CRGB> globalColor = {};
@@ -537,12 +576,12 @@ void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
     PushPostParamIfPresent<CRGB>(pRequest, DeviceConfig::SecondColorTag, SET_VALUE(secondColor = value));
 
     deviceConfig.ApplyColorSettings(globalColor, secondColor,
-                                    IsPostParamTrue(pRequest, DeviceConfig::ClearGlobalColorTag),
-                                    IsPostParamTrue(pRequest, DeviceConfig::ApplyGlobalColorsTag));
+            IsPostParamTrue(pRequest, DeviceConfig::ClearGlobalColorTag),
+            IsPostParamTrue(pRequest, DeviceConfig::ApplyGlobalColorsTag));
 }
 
 // Set settings and return resulting config
-void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
+void CWebServer::SetSettings(AsyncWebServerRequest*pRequest)
 {
     debugV("SetSettings");
 
@@ -552,12 +591,12 @@ void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
     GetSettings(pRequest);
 }
 
-bool CWebServer::CheckAndGetSettingsEffect(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect, bool post)
+bool CWebServer::CheckAndGetSettingsEffect(AsyncWebServerRequest*pRequest, std::shared_ptr<LEDStripEffect>&effect, bool post)
 {
     auto effectsList = g_ptrSystem->EffectManager().EffectsList();
     auto effectIndex = GetEffectIndexFromParam(pRequest, post);
 
-    if (effectIndex < 0 || effectIndex >= effectsList.size())
+    if(effectIndex < 0 || effectIndex >= effectsList.size())
     {
         AddCORSHeaderAndSendOKResponse(pRequest);
 
@@ -569,11 +608,11 @@ bool CWebServer::CheckAndGetSettingsEffect(AsyncWebServerRequest * pRequest, std
     return true;
 }
 
-void CWebServer::GetEffectSettingSpecs(AsyncWebServerRequest * pRequest)
+void CWebServer::GetEffectSettingSpecs(AsyncWebServerRequest*pRequest)
 {
     std::shared_ptr<LEDStripEffect> effect;
 
-    if (!CheckAndGetSettingsEffect(pRequest, effect))
+    if(!CheckAndGetSettingsEffect(pRequest, effect))
         return;
 
     auto settingSpecs = effect->GetSettingSpecs();
@@ -581,14 +620,15 @@ void CWebServer::GetEffectSettingSpecs(AsyncWebServerRequest * pRequest)
     SendSettingSpecsResponse(pRequest, settingSpecs);
 }
 
-void CWebServer::SendEffectSettingsResponse(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect)
+void CWebServer::SendEffectSettingsResponse(AsyncWebServerRequest*pRequest, std::shared_ptr<LEDStripEffect>&effect)
 {
-    auto response = std::make_unique<AsyncJsonResponse>();
+    auto response   = std::make_unique<AsyncJsonResponse>();
     auto jsonObject = response->getRoot().to<JsonObject>();
 
-    if (effect->SerializeSettingsToJSON(jsonObject))
+    if(effect->SerializeSettingsToJSON(jsonObject))
     {
         AddCORSHeaderAndSendResponse(pRequest, response.release());
+
         return;
     }
 
@@ -596,42 +636,44 @@ void CWebServer::SendEffectSettingsResponse(AsyncWebServerRequest * pRequest, st
     SendBufferOverflowResponse(pRequest);
 }
 
-void CWebServer::GetEffectSettings(AsyncWebServerRequest * pRequest)
+void CWebServer::GetEffectSettings(AsyncWebServerRequest*pRequest)
 {
     debugV("GetEffectSettings");
 
     std::shared_ptr<LEDStripEffect> effect;
 
-    if (!CheckAndGetSettingsEffect(pRequest, effect))
+    if(!CheckAndGetSettingsEffect(pRequest, effect))
         return;
 
     SendEffectSettingsResponse(pRequest, effect);
 }
 
-bool CWebServer::ApplyEffectSettings(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect)
+bool CWebServer::ApplyEffectSettings(AsyncWebServerRequest*pRequest, std::shared_ptr<LEDStripEffect>&effect)
 {
     bool settingChanged = false;
 
-    for (auto& settingSpecWrapper : effect->GetSettingSpecs())
+    for(auto&settingSpecWrapper : effect->GetSettingSpecs())
     {
-        const String& settingName = settingSpecWrapper.get().Name;
-        settingChanged = PushPostParamIfPresent<String>(pRequest, settingName, [&](auto value) { return effect->SetSetting(settingName, value); })
-            || settingChanged;
+        const String&settingName = settingSpecWrapper.get().Name;
+        settingChanged = PushPostParamIfPresent<String>(pRequest, settingName, [&](auto value) {
+                    return effect->SetSetting(settingName, value);
+                })
+                         || settingChanged;
     }
 
     return settingChanged;
 }
 
-void CWebServer::SetEffectSettings(AsyncWebServerRequest * pRequest)
+void CWebServer::SetEffectSettings(AsyncWebServerRequest*pRequest)
 {
     debugV("SetEffectSettings");
 
     std::shared_ptr<LEDStripEffect> effect;
 
-    if (!CheckAndGetSettingsEffect(pRequest, effect, true))
+    if(!CheckAndGetSettingsEffect(pRequest, effect, true))
         return;
 
-    if (ApplyEffectSettings(pRequest, effect))
+    if(ApplyEffectSettings(pRequest, effect))
         SaveEffectManagerConfig();
 
     SendEffectSettingsResponse(pRequest, effect);
@@ -639,46 +681,49 @@ void CWebServer::SetEffectSettings(AsyncWebServerRequest * pRequest)
 
 // Validate and set one setting. If no validator is available in settingValidators for the setting, validation is skipped.
 //   Requests containing more than one known setting are malformed and rejected.
-void CWebServer::ValidateAndSetSetting(AsyncWebServerRequest * pRequest)
+void CWebServer::ValidateAndSetSetting(AsyncWebServerRequest*pRequest)
 {
     String paramName;
 
-    for (auto& settingSpecWrapper : LoadDeviceSettingSpecs())
+    for(auto&settingSpecWrapper : LoadDeviceSettingSpecs())
     {
-        auto& settingSpec = settingSpecWrapper.get();
+        auto&settingSpec = settingSpecWrapper.get();
 
-        if (pRequest->hasParam(settingSpec.Name, true))
+        if(pRequest->hasParam(settingSpec.Name, true))
         {
-            if (paramName.isEmpty())
+            if(paramName.isEmpty())
                 paramName = settingSpec.Name;
             else
             // We found multiple known settings in the request, which we don't allow
             {
                 AddCORSHeaderAndSendBadRequest(pRequest, "Malformed request");
+
                 return;
             }
         }
     }
 
     // No known setting in the request, so we can stop processing and go on with our business
-    if (paramName.isEmpty())
+    if(paramName.isEmpty())
     {
         AddCORSHeaderAndSendOKResponse(pRequest);
+
         return;
     }
 
     auto validator = settingValidators.find(paramName);
-    if (validator != settingValidators.end())
+    if(validator != settingValidators.end())
     {
-        const String &paramValue = pRequest->getParam(paramName, true)->value();
+        const String&paramValue = pRequest->getParam(paramName, true)->value();
         bool isValid;
         String validationMessage;
 
         std::tie(isValid, validationMessage) = validator->second(paramValue);
 
-        if (!isValid)
+        if(!isValid)
         {
             AddCORSHeaderAndSendBadRequest(pRequest, validationMessage);
+
             return;
         }
     }
@@ -689,16 +734,16 @@ void CWebServer::ValidateAndSetSetting(AsyncWebServerRequest * pRequest)
 }
 
 // Reset effect config, device config and/or the board itself
-void CWebServer::Reset(AsyncWebServerRequest * pRequest)
+void CWebServer::Reset(AsyncWebServerRequest*pRequest)
 {
-    bool boardResetRequested = IsPostParamTrue(pRequest, "board");
-    bool deviceConfigResetRequested = IsPostParamTrue(pRequest, "deviceConfig");
+    bool boardResetRequested         = IsPostParamTrue(pRequest, "board");
+    bool deviceConfigResetRequested  = IsPostParamTrue(pRequest, "deviceConfig");
     bool effectsConfigResetRequested = IsPostParamTrue(pRequest, "effectsConfig");
 
     // We can now let the requester know we're taking care of things without making them wait longer
     AddCORSHeaderAndSendOKResponse(pRequest);
 
-    if (boardResetRequested)
+    if(boardResetRequested)
     {
         // Flush any pending writes and make sure nothing is written after. We do this to make sure
         //   that what needs saving is written, but no further writes take place after any requested
@@ -710,19 +755,19 @@ void CWebServer::Reset(AsyncWebServerRequest * pRequest)
         delay(3000);
     }
 
-    if (deviceConfigResetRequested)
+    if(deviceConfigResetRequested)
     {
         debugI("Removing DeviceConfig");
         g_ptrSystem->DeviceConfig().RemovePersisted();
     }
 
-    if (effectsConfigResetRequested)
+    if(effectsConfigResetRequested)
     {
         debugI("Removing EffectManager config");
         RemoveEffectManagerConfig();
     }
 
-    if (boardResetRequested)
+    if(boardResetRequested)
     {
         debugW("Resetting device at API request!");
         throw std::runtime_error("Resetting device at API request");

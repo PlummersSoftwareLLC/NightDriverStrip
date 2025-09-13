@@ -33,38 +33,38 @@
 
 DEFINE_GRADIENT_PALETTE( vu_gpGreen )
 {
-      0,     0,   4,   0,   // near black green
-     64,     0, 255,   0,   // green
-    128,   255, 255,   0,   // yellow
-    192,   255,   0,   0,   // red
-    255,   255,   0,   0    // red
+    0,     0,   4,   0,     // near black green
+    64,    0, 255,   0,     // green
+    128, 255, 255,   0,     // yellow
+    192, 255,   0,   0,     // red
+    255, 255,   0,   0      // red
 };
 const CRGBPalette16 vuPaletteGreen = vu_gpGreen;
 
 DEFINE_GRADIENT_PALETTE( vu_gpBlue )
 {
-      0,     0,   0,   4,   // near black green
-     64,     0,   0, 255,   // blue
-    128,     0, 255,   0,   // green
-    192,   255,   0,   0,   // red
-    255,   255,   0,   0    // red
+    0,     0,   0,   4,     // near black green
+    64,    0,   0, 255,     // blue
+    128,   0, 255,   0,     // green
+    192, 255,   0,   0,     // red
+    255, 255,   0,   0      // red
 };
 const CRGBPalette16 vuPaletteBlue = vu_gpBlue;
 
-extern const TProgmemRGBPalette16 BlueHeatColors_p FL_PROGMEM =
+extern const TProgmemRGBPalette16 BlueHeatColors_p FL_PROGMEM    =
 {
     0x000000,
-    0x000033, 0x000066, 0x000099, 0x0000CC, 0x0000FF,
-    0x0033FF, 0x0066FF, 0x0099FF, 0x00CCFF, 0x00FFFF,
-    0x33FFFF, 0x66FFFF, 0x99FFFF, 0xCCFFFF, 0xFFFFFF
+    0x000033,0x000066,  0x000099,  0x0000CC,  0x0000FF,
+    0x0033FF,0x0066FF,  0x0099FF,  0x00CCFF,  0x00FFFF,
+    0x33FFFF,0x66FFFF,  0x99FFFF,  0xCCFFFF,  0xFFFFFF
 };
 
 extern const TProgmemRGBPalette16 GreenHeatColors_p FL_PROGMEM =
 {
     0x000000,
-    0x003300, 0x006600, 0x009900, 0x00CC00, 0x00FF00,
-    0x33FF00, 0x66FF00, 0x99FF00, 0xCCFF00, 0xFFFF00,
-    0xFFFF33, 0xFFFF66, 0xFFFF99, 0xFFFFCC, 0xFFFFFF
+    0x003300,0x006600,  0x009900,  0x00CC00,  0x00FF00,
+    0x33FF00,0x66FF00,  0x99FF00,  0xCCFF00,  0xFFFF00,
+    0xFFFF33,0xFFFF66,  0xFFFF99,  0xFFFFCC,  0xFFFFFF
 };
 
 // HeatColors2_p
@@ -75,7 +75,7 @@ extern const TProgmemRGBPalette16 GreenHeatColors_p FL_PROGMEM =
 extern const TProgmemRGBPalette16 HeatColors2_p FL_PROGMEM =
 {
     0x000000,
-    0x330000, 0x660000, 0x990000, 0xCC0000, 0xFF0000,
-    0xFF3300, 0xFF6600, 0xFF9900, 0xFFCC00, 0xFFFF00,
-    0xFFFF33, 0xFFFF66, 0xFFFF99, 0xFFFFCC, 0x0000FF
+    0x330000,0x660000,  0x990000,  0xCC0000,  0xFF0000,
+    0xFF3300,0xFF6600,  0xFF9900,  0xFFCC00,  0xFFFF00,
+    0xFFFF33,0xFFFF66,  0xFFFF99,  0xFFFFCC,  0x0000FF
 };

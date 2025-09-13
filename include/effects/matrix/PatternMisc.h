@@ -31,27 +31,27 @@
 
 
 /*
-*
-* Aurora: https://github.com/pixelmatix/aurora
-* Copyright (c) 2014 Jason Coon
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy of
-* this software and associated documentation files (the "Software"), to deal in
-* the Software without restriction, including without limitation the rights to
-* use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-* the Software, and to permit persons to whom the Software is furnished to do so,
-* subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in all
-* copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-* FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-* COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-* IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-* CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
+ *
+ * Aurora: https://github.com/pixelmatix/aurora
+ * Copyright (c) 2014 Jason Coon
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
 
 #ifndef PatternMisc_H
 #define PatternMisc_H
@@ -62,8 +62,10 @@ class PatternSunburst : public EffectWithId<PatternSunburst>
 {
   public:
 
-    PatternSunburst() : EffectWithId<PatternSunburst>("Sunburst") {}
-    PatternSunburst(const JsonObjectConst& jsonObject) : EffectWithId<PatternSunburst>(jsonObject) {}
+    PatternSunburst() : EffectWithId<PatternSunburst>("Sunburst") {
+    }
+    PatternSunburst(const JsonObjectConst& jsonObject) : EffectWithId<PatternSunburst>(jsonObject) {
+    }
 
     virtual size_t DesiredFramesPerSecond() const override
     {
@@ -98,8 +100,10 @@ class PatternRose : public EffectWithId<PatternRose>
 {
   public:
 
-    PatternRose() : EffectWithId<PatternRose>("Rose") {}
-    PatternRose(const JsonObjectConst& jsonObject) : EffectWithId<PatternRose>(jsonObject) {}
+    PatternRose() : EffectWithId<PatternRose>("Rose") {
+    }
+    PatternRose(const JsonObjectConst& jsonObject) : EffectWithId<PatternRose>(jsonObject) {
+    }
 
     virtual size_t DesiredFramesPerSecond() const override
     {
@@ -147,9 +151,11 @@ class PatternPinwheel : public EffectWithId<PatternPinwheel>
 {
   public:
 
-    PatternPinwheel() : EffectWithId<PatternPinwheel>("Pinwheel") {}
+    PatternPinwheel() : EffectWithId<PatternPinwheel>("Pinwheel") {
+    }
 
-    PatternPinwheel(const JsonObjectConst& jsonObject) : EffectWithId<PatternPinwheel>(jsonObject) {}
+    PatternPinwheel(const JsonObjectConst& jsonObject) : EffectWithId<PatternPinwheel>(jsonObject) {
+    }
 
     void Start() override
     {
@@ -185,10 +191,12 @@ class PatternPinwheel : public EffectWithId<PatternPinwheel>
 
 class PatternInfinity : public EffectWithId<PatternInfinity>
 {
-public:
+  public:
 
-    PatternInfinity() : EffectWithId<PatternInfinity>("Infinity") {}
-    PatternInfinity(const JsonObjectConst& jsonObject) : EffectWithId<PatternInfinity>(jsonObject) {}
+    PatternInfinity() : EffectWithId<PatternInfinity>("Infinity") {
+    }
+    PatternInfinity(const JsonObjectConst& jsonObject) : EffectWithId<PatternInfinity>(jsonObject) {
+    }
 
     virtual size_t DesiredFramesPerSecond() const override
     {
@@ -240,17 +248,19 @@ public:
 
 class PatternMunch : public EffectWithId<PatternMunch>
 {
-private:
+  private:
 
     uint8_t count = 0;
     uint8_t dir = 1;
     uint8_t flip = 0;
     uint8_t generation = 0;
 
-public:
+  public:
 
-    PatternMunch() : EffectWithId<PatternMunch>("Munch") {}
-    PatternMunch(const JsonObjectConst& jsonObject) : EffectWithId<PatternMunch>(jsonObject) {}
+    PatternMunch() : EffectWithId<PatternMunch>("Munch") {
+    }
+    PatternMunch(const JsonObjectConst& jsonObject) : EffectWithId<PatternMunch>(jsonObject) {
+    }
 
     virtual size_t DesiredFramesPerSecond() const override
     {

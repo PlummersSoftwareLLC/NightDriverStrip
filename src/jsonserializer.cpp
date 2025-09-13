@@ -34,37 +34,31 @@
 #include "systemcontainer.h"
 #include "taskmgr.h"
 
-bool BoolFromText(const String& text)
+bool BoolFromText(const String&text)
 {
     return text == "true" || strtol(text.c_str(), nullptr, 10);
 }
 
-bool LoadJSONFile(const String & fileName, JsonDocument& jsonDoc)
+bool LoadJSONFile(const String&fileName, JsonDocument&jsonDoc)
 {
     bool jsonReadSuccessful = false;
 
-    File file = SPIFFS.open(fileName);
+    File file               = SPIFFS.open(fileName);
 
-    if (file)
+    if(file)
     {
-        if (file.size() > 0)
+        if(file.size() > 0)
         {
             debugI("Attempting to read JSON file %s", fileName.c_str());
 
             DeserializationError error = deserializeJson(jsonDoc, file);
 
-            if (error == DeserializationError::NoMemory)
-            {
+            if(error == DeserializationError::NoMemory)
                 debugW("Out of memory reading JSON from file %s", fileName.c_str());
-            }
-            else if (error == DeserializationError::Ok)
-            {
+            else if(error == DeserializationError::Ok)
                 jsonReadSuccessful = true;
-            }
             else
-            {
                 debugW("Error with code %d occurred while deserializing JSON from file %s", to_value(error.code()), fileName.c_str());
-            }
         }
 
         file.close();
@@ -73,14 +67,15 @@ bool LoadJSONFile(const String & fileName, JsonDocument& jsonDoc)
     return jsonReadSuccessful;
 }
 
-bool SaveToJSONFile(const String & fileName, IJSONSerializable& object)
+bool SaveToJSONFile(const String&fileName, IJSONSerializable&object)
 {
-    auto jsonDoc = CreateJsonDocument();
+    auto jsonDoc    = CreateJsonDocument();
     auto jsonObject = jsonDoc.to<JsonObject>();
 
-    if (!object.SerializeToJSON(jsonObject))
+    if(!object.SerializeToJSON(jsonObject))
     {
         debugE("Could not serialize object to JSON, skipping write to %s!", fileName.c_str());
+
         return false;
     }
 
@@ -88,9 +83,10 @@ bool SaveToJSONFile(const String & fileName, IJSONSerializable& object)
 
     File file = SPIFFS.open(fileName, FILE_WRITE);
 
-    if (!file)
+    if(!file)
     {
         debugE("Unable to open file %s to write JSON!", fileName.c_str());
+
         return false;
     }
 
@@ -100,32 +96,34 @@ bool SaveToJSONFile(const String & fileName, IJSONSerializable& object)
     file.flush();
     file.close();
 
-    if (bytesWritten == 0)
+    if(bytesWritten == 0)
     {
         debugE("Unable to write JSON to file %s!", fileName.c_str());
         SPIFFS.remove(fileName);
+
         return false;
     }
 
     return true;
 }
 
-bool RemoveJSONFile(const String & fileName)
+bool RemoveJSONFile(const String&fileName)
 {
     return SPIFFS.remove(fileName);
 }
 
-size_t JSONWriter::RegisterWriter(const std::function<void()>& writer)
+size_t JSONWriter::RegisterWriter(const std::function<void()>&writer)
 {
     // Add the writer with its flag unset
     writers.emplace_back(writer);
+
     return writers.size() - 1;
 }
 
 void JSONWriter::FlagWriter(size_t index)
 {
     // Check if we received a valid writer index
-    if (index >= writers.size())
+    if(index >= writers.size())
         return;
 
     writers[index].flag.store(true);
@@ -145,51 +143,51 @@ void JSONWriter::FlushWrites(bool halt)
 // JSONWriterTaskEntry
 //
 // Invoke functions that write serialized JSON objects to SPIFFS at request, with some delay
-void IRAM_ATTR JSONWriterTaskEntry(void *)
+void IRAM_ATTR JSONWriterTaskEntry(void*)
 {
     for(;;)
     {
         TickType_t notifyWait = portMAX_DELAY;
 
-        for (;;)
+        for(;;)
         {
             // Wait until we're woken up by a writer being flagged, or until we've reached the hold point
             ulTaskNotifyTake(pdTRUE, notifyWait);
 
-            if (!g_ptrSystem->HasJSONWriter())
+            if(!g_ptrSystem->HasJSONWriter())
                 continue;
 
-            auto& jsonWriter = g_ptrSystem->JSONWriter();
+            auto&jsonWriter = g_ptrSystem->JSONWriter();
 
             // If a flush was requested then we execute pending writes now
-            if (jsonWriter.flushRequested.load())
+            if(jsonWriter.flushRequested.load())
             {
                 jsonWriter.flushRequested.store(false);
                 break;
             }
 
             // If writes are halted, we don't do anything
-            if (jsonWriter.haltWrites.load())
+            if(jsonWriter.haltWrites.load())
                 continue;
 
             unsigned long holdUntil = jsonWriter.latestFlagMs.load() + JSON_WRITER_DELAY;
-            unsigned long now = millis();
-            if (now >= holdUntil)
+            unsigned long now       = millis();
+            if(now >= holdUntil)
                 break;
 
             notifyWait = pdMS_TO_TICKS(holdUntil - now);
         }
 
-        for (auto &entry : g_ptrSystem->JSONWriter().writers)
+        for(auto&entry : g_ptrSystem->JSONWriter().writers)
         {
             // Unset flag before we do the actual write. This makes that we don't miss another flag raise if it happens while writing
-            if (entry.flag.exchange(false))
+            if(entry.flag.exchange(false))
                 entry.writer();
         }
     }
 }
 
-uint32_t toUint32(const CRGB& color)
+uint32_t toUint32(const CRGB&color)
 {
-    return (uint32_t)((color.r << 16) | (color.g << 8) | color.b);
+    return (uint32_t) ((color.r << 16) | (color.g << 8) | color.b);
 }

@@ -98,8 +98,10 @@ class PatternPongClock : public EffectWithId<PatternPongClock>
 
   public:
 
-    PatternPongClock() : EffectWithId<PatternPongClock>("PongClock") {}
-    PatternPongClock(const JsonObjectConst& jsonObject) : EffectWithId<PatternPongClock>(jsonObject) {}
+    PatternPongClock() : EffectWithId<PatternPongClock>("PongClock") {
+    }
+    PatternPongClock(const JsonObjectConst& jsonObject) : EffectWithId<PatternPongClock>(jsonObject) {
+    }
 
     virtual size_t DesiredFramesPerSecond() const override
     {
@@ -390,25 +392,25 @@ class PatternPongClock : public EffectWithId<PatternPongClock>
 
                 switch (flick)
                 {
-                // flick up
-                case 0:
-                    bat1_target_y = bat1_target_y + random(1, 3);
-                    ballvel_x = ballvel_x * -1;
-                    if (ballvel_y < 2)
-                    {
-                        ballvel_y = ballvel_y + 0.5;
-                    }
-                    break;
+                    // flick up
+                    case 0:
+                        bat1_target_y = bat1_target_y + random(1, 3);
+                        ballvel_x = ballvel_x * -1;
+                        if (ballvel_y < 2)
+                        {
+                            ballvel_y = ballvel_y + 0.5;
+                        }
+                        break;
 
                     // flick down
-                case 1:
-                    bat1_target_y = bat1_target_y - random(1, 3);
-                    ballvel_x = ballvel_x * -1;
-                    if (ballvel_y > 0.5)
-                    {
-                        ballvel_y = ballvel_y - 0.5;
-                    }
-                    break;
+                    case 1:
+                        bat1_target_y = bat1_target_y - random(1, 3);
+                        ballvel_x = ballvel_x * -1;
+                        if (ballvel_y > 0.5)
+                        {
+                            ballvel_y = ballvel_y - 0.5;
+                        }
+                        break;
                 }
             }
         }
@@ -447,21 +449,21 @@ class PatternPongClock : public EffectWithId<PatternPongClock>
 
                 switch (flick)
                 {
-                // flick up
-                case 0:
-                    bat2_target_y = bat2_target_y + random(1, 3);
-                    ballvel_x = ballvel_x * -1;
-                    if (ballvel_y < 2)
-                        ballvel_y = ballvel_y + random(1.0) + 0.5;
-                    break;
+                    // flick up
+                    case 0:
+                        bat2_target_y = bat2_target_y + random(1, 3);
+                        ballvel_x = ballvel_x * -1;
+                        if (ballvel_y < 2)
+                            ballvel_y = ballvel_y + random(1.0) + 0.5;
+                        break;
 
                     // flick down
-                case 1:
-                    bat2_target_y = bat2_target_y - random(1, 3);
-                    ballvel_x = ballvel_x * -1;
-                    if (ballvel_y > 0.5)
-                        ballvel_y = ballvel_y - random(1.0) - 0.5;
-                    break;
+                    case 1:
+                        bat2_target_y = bat2_target_y - random(1, 3);
+                        ballvel_x = ballvel_x * -1;
+                        if (ballvel_y > 0.5)
+                            ballvel_y = ballvel_y - random(1.0) - 0.5;
+                        break;
                 }
             }
         }

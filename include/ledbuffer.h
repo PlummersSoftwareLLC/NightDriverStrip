@@ -43,7 +43,7 @@ class LEDBuffer
 {
   public:
 
-     std::shared_ptr<GFXBase> _pStrand;
+    std::shared_ptr<GFXBase> _pStrand;
 
   private:
 
@@ -55,10 +55,10 @@ class LEDBuffer
   public:
 
     explicit LEDBuffer(std::shared_ptr<GFXBase> pStrand) :
-                 _pStrand(std::move(pStrand)),
-                 _pixelCount(0),
-                 _timeStampMicroseconds(0),
-                 _timeStampSeconds(0)
+        _pStrand(std::move(pStrand)),
+        _pixelCount(0),
+        _timeStampMicroseconds(0),
+        _timeStampSeconds(0)
     {
         _leds.reset(psram_allocator<CRGB>().allocate(NUM_LEDS));
     }
@@ -66,9 +66,18 @@ class LEDBuffer
     ~LEDBuffer()
     = default;
 
-    uint64_t Seconds()      const  { return _timeStampSeconds;      }
-    uint64_t MicroSeconds() const  { return _timeStampMicroseconds; }
-    uint32_t Length()       const  { return _pixelCount;            }
+    uint64_t Seconds()      const
+    {
+        return _timeStampSeconds;
+    }
+    uint64_t MicroSeconds() const
+    {
+        return _timeStampMicroseconds;
+    }
+    uint32_t Length()       const
+    {
+        return _pixelCount;
+    }
 
     double TimeTillDue() const
     {
@@ -157,19 +166,19 @@ class LEDBuffer
 
 class LEDBufferManager
 {
-    std::unique_ptr<std::vector<std::shared_ptr<LEDBuffer>>> _ppBuffers;          // The circular array of buffer ptrs
-    std::shared_ptr<LEDBuffer> _pLastBufferAdded;   // Keeps track of the MRU buffer
-    size_t                                               _iNextBuffer;        // Head pointer index
-    size_t                                               _iLastBuffer;        // Tail pointer index
-    uint32_t                                             _cBuffers;           // Number of buffers
+    std::unique_ptr<std::vector<std::shared_ptr<LEDBuffer> > > _ppBuffers;          // The circular array of buffer ptrs
+    std::shared_ptr<LEDBuffer>                                 _pLastBufferAdded; // Keeps track of the MRU buffer
+    size_t                                                     _iNextBuffer;  // Head pointer index
+    size_t                                                     _iLastBuffer;  // Tail pointer index
+    uint32_t                                                   _cBuffers;     // Number of buffers
 
   public:
 
     LEDBufferManager(uint32_t cBuffers, const std::shared_ptr<GFXBase>& pGFX)
-     : _ppBuffers(std::make_unique<std::vector<std::shared_ptr<LEDBuffer>>>()), // Create the circular array of ptrs
-       _iNextBuffer(0),
-       _iLastBuffer(0),
-       _cBuffers(cBuffers)
+        : _ppBuffers(std::make_unique<std::vector<std::shared_ptr<LEDBuffer> > >()), // Create the circular array of ptrs
+        _iNextBuffer(0),
+        _iLastBuffer(0),
+        _cBuffers(cBuffers)
     {
         // The initializer creates a uniquely owned table of shared pointers.
         // We exclusively can see the table, but the buffer objects it contains

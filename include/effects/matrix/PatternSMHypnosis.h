@@ -9,8 +9,10 @@ class PatternSMHypnosis : public EffectWithId<PatternSMHypnosis>
 {
   public:
 
-    PatternSMHypnosis() : EffectWithId<PatternSMHypnosis>("Hypnosis") {}
-    PatternSMHypnosis(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMHypnosis>(jsonObject) {}
+    PatternSMHypnosis() : EffectWithId<PatternSMHypnosis>("Hypnosis") {
+    }
+    PatternSMHypnosis(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMHypnosis>(jsonObject) {
+    }
 
     size_t DesiredFramesPerSecond() const override
     {

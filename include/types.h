@@ -124,7 +124,8 @@ struct EmbeddedFile
     EmbeddedFile(const uint8_t start[], const uint8_t end[]) :
         length(end - start),
         contents(start)
-    {}
+    {
+    }
 };
 
 struct SettingSpec
@@ -194,7 +195,7 @@ struct SettingSpec
     }
 
     SettingSpec(const char* name, const char* friendlyName, const char* description, SettingType type)
-      : Name(name),
+        : Name(name),
         FriendlyName(friendlyName),
         Description(description),
         Type(type)
@@ -203,11 +204,12 @@ struct SettingSpec
     }
 
     SettingSpec(const char* name, const char* friendlyName, SettingType type) : SettingSpec(name, friendlyName, nullptr, type)
-    {}
+    {
+    }
 
     // Constructor that sets both minimum and maximum values
     SettingSpec(const char* name, const char* friendlyName, const char* description, SettingType type, double min, double max)
-      : Name(name),
+        : Name(name),
         FriendlyName(friendlyName),
         Description(description),
         Type(type),
@@ -219,8 +221,9 @@ struct SettingSpec
 
     // Constructor that sets both minimum and maximum values
     SettingSpec(const char* name, const char* friendlyName, SettingType type, double min, double max)
-      : SettingSpec(name, friendlyName, nullptr, type, min, max)
-    {}
+        : SettingSpec(name, friendlyName, nullptr, type, min, max)
+    {
+    }
 
     SettingSpec()
     = default;
@@ -241,8 +244,8 @@ inline void * PreferPSRAMAlloc(size_t s)
 {
     // Compute PSRAM availability once in a thread-safe way (I believe C++11+ guarantees thread-safe initialization of function-local statics).
     static const int s_psramAvailable = []() noexcept -> int {
-        return psramInit() ? 1 : 0;
-    }();
+                                            return psramInit() ? 1 : 0;
+                                        }();
 
     if (s_psramAvailable)
     {
@@ -283,7 +286,7 @@ inline void * PreferPSRAMAlloc(size_t s)
 template <typename T>
 class psram_allocator
 {
-public:
+  public:
     typedef size_t size_type;
     typedef ptrdiff_t difference_type;
     typedef T* pointer;
@@ -292,13 +295,16 @@ public:
     typedef const T& const_reference;
     typedef T value_type;
 
-    psram_allocator()= default;
-    ~psram_allocator()= default;
+    psram_allocator() = default;
+    ~psram_allocator() = default;
 
     template <class U> struct rebind { typedef psram_allocator<U> other; };
-    template <class U> explicit psram_allocator(const psram_allocator<U>&){}
+    template <class U> explicit psram_allocator(const psram_allocator<U>&){
+    }
 
-    size_type max_size() const noexcept { return size_t(-1) / sizeof(value_type); }
+    size_type max_size() const noexcept {
+        return size_t(-1) / sizeof(value_type);
+    }
 
     pointer allocate(size_type n, const void * hint = 0)
     {
@@ -306,7 +312,7 @@ public:
         if (n > max_size())
             throw std::bad_array_new_length();
         void * pmem = PreferPSRAMAlloc(n * sizeof(T));
-        return static_cast<pointer>(pmem) ;
+        return static_cast<pointer>(pmem);
     }
 
     void deallocate(pointer p, size_type /*n*/)
@@ -314,7 +320,7 @@ public:
         free(p);
     }
 
-    template< class U, class... Args >
+    template< class U, class ... Args >
     void construct( U* p, Args&&... args )
     {
         ::new((void *) p ) U(std::forward<Args>(args)...);
@@ -347,24 +353,24 @@ struct psram_deleter
 // special handling.
 
 // Overload for single objects (non-array types)
-template<typename T, typename... Args>
-std::enable_if_t<!std::is_array<T>::value, std::unique_ptr<T>>
+template<typename T, typename ... Args>
+std::enable_if_t<!std::is_array<T>::value, std::unique_ptr<T> >
 make_unique_psram(Args&&... args)
 {
     psram_allocator<T> allocator;
-    T* ptr = allocator.allocate(1);
+    T*                 ptr = allocator.allocate(1);
     allocator.construct(ptr, std::forward<Args>(args)...);
     return std::unique_ptr<T>(ptr);
 }
 
 // Overload for unknown-bound arrays: make_unique_psram<U[]>(n)
 template<typename T>
-std::enable_if_t<std::is_array<T>::value && std::extent<T>::value == 0, std::unique_ptr<T>>
+std::enable_if_t<std::is_array<T>::value && std::extent<T>::value == 0, std::unique_ptr<T> >
 make_unique_psram(size_t size)
 {
     using U = typename std::remove_extent<T>::type; // element type
     psram_allocator<U> allocator;
-    U* ptr = allocator.allocate(size);
+    U*                 ptr = allocator.allocate(size);
     // NOTE: This returns a std::unique_ptr with the default deleter which will call delete[].
     // On our toolchain, delete[] ultimately routes to free() and is compatible with ps_malloc().
     // If that ever changes, consider introducing a custom deleter and updating call sites to use it.
@@ -373,13 +379,13 @@ make_unique_psram(size_t size)
 
 // Overload for 2D arrays
 template<typename T>
-std::enable_if_t<std::rank<T>::value == 2, std::unique_ptr<T>>
+std::enable_if_t<std::rank<T>::value == 2, std::unique_ptr<T> >
 make_unique_psram()
 {
     using U = typename std::remove_all_extents<T>::type;
-    size_t size = std::extent<T, 0>::value * std::extent<T, 1>::value;
+    size_t             size = std::extent<T, 0>::value * std::extent<T, 1>::value;
     psram_allocator<U> allocator;
-    U* ptr = allocator.allocate(size);
+    U*                 ptr = allocator.allocate(size);
     return std::unique_ptr<T>(reinterpret_cast<T*>(ptr));
 }
 
@@ -387,7 +393,7 @@ make_unique_psram()
 //
 // Same as std::make_shared except allocates preferentially from the PSRAM pool
 
-template<typename T, typename... Args>
+template<typename T, typename ... Args>
 std::shared_ptr<T> make_shared_psram(Args&&... args)
 {
     psram_allocator<T> allocator;
