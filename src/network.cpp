@@ -28,18 +28,22 @@
 //
 //---------------------------------------------------------------------------
 
-#include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
+#include <algorithm>
+#include <atomic>
+
+#include <ArduinoOTA.h>
+#include <DNSServer.h>
 #include <ESPmDNS.h>
 #include <nvs.h>
-#include <algorithm>
 
 #include "globals.h"
 #include "ledviewer.h"                          // For the LEDViewer task and object
 #include "network.h"
-#include "systemcontainer.h"
 #include "soundanalyzer.h"
+#include "systemcontainer.h"
 
 extern DRAM_ATTR std::mutex g_buffer_mutex;
+static std::atomic<bool> servicesStarted = false;
 
 static DRAM_ATTR WiFiUDP l_Udp;              // UDP object used for NNTP, etc
 
@@ -133,13 +137,31 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
 
 #endif
 
+void StartCaptivePortal()
+{
+    if (g_ptrSystem->WebServer().IsCaptivePortalActive())
+    {
+        return;
+    }
+    servicesStarted = false;
+
+    // Disconnect and erase credentials from memory.
+    debugI("Stopping WiFi station mode to start Captive Portal.");
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
+    delay(100);
+
+    g_ptrSystem->WebServer().Begin(true);
+    debugA("Web server started for captive portal.");
+}
+
 // processRemoteDebugCmd
 //
 // Callback function that the debug library (which exposes a little console over telnet and serial) calls
 // in order to allow us to add custom commands.  I've added a clock reset and stats command, for example.
 
 #if ENABLE_WIFI
-    void processRemoteDebugCmd()
+    void ProcessRemoteDebugCmd()
     {
         String str = Debug.getLastCommand();
         if (str.equalsIgnoreCase("clock"))
@@ -170,10 +192,59 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
             debugA("Removing persisted settings....");
             g_ptrSystem->DeviceConfig().RemovePersisted();
             RemoveEffectManagerConfig();
+            ClearWiFiConfig(WifiCredSource::CompileTimeCreds);
+            ClearWiFiConfig(WifiCredSource::ImprovCreds);
+            ClearWiFiConfig(WifiCredSource::CaptivePortal);
         }
         else if (str.equalsIgnoreCase("uptime"))
         {
              NTPTimeClient::ShowUptime();
+        }
+        else if (str.equalsIgnoreCase("showWificreds"))
+        {
+            debugA("--- WiFi Credentials in NVS ---");
+
+            struct WifiCredSourceInfo {
+                WifiCredSource source;
+                const char* label;
+            };
+
+            static const WifiCredSourceInfo credSources[] = {
+                { WifiCredSource::CaptivePortal, "CaptivePortal" },
+                { WifiCredSource::ImprovCreds, "ImprovCreds" },
+                { WifiCredSource::CompileTimeCreds, "Persisted CompileTimeCreds" }
+            };
+
+            String ssid, password;
+            bool persistedCompileTimeCreds = false;
+
+            for (const auto& sourceInfo : credSources)
+            {
+                if (ReadWiFiConfig(sourceInfo.source, ssid, password))
+                {
+                    debugA("%s SSID: \"%s\"", sourceInfo.label, ssid.c_str());
+                    if (sourceInfo.source == WifiCredSource::CompileTimeCreds)
+                    {
+                        persistedCompileTimeCreds = true;
+                    }
+                }
+                else
+                {
+                    debugA("%s: No credentials found.", sourceInfo.label);
+                }
+            }
+
+            if (!persistedCompileTimeCreds)
+            {
+                 debugA("Using compiled-in SSID: \"%s\"", cszSSID);
+            }
+
+            debugA("-----------------------------");
+        }
+        else if (str.equalsIgnoreCase("reboot"))
+        {
+            debugA("Reboot command received via Telnet. Requesting restart...");
+            g_ptrSystem->WebServer().RequestReboot(0);
         }
         else
         {
@@ -302,7 +373,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
     #define WIFI_WAIT_BASE      4000    // Initial time to wait for WiFi to come up, in ms
     #define WIFI_WAIT_INCREASE  1000    // Increase of WiFi waiting time per cycle, in ms
-    #define WIFI_WAIT_MAX       60000   // Maximum gap between retries, in ms
+    #define WIFI_WAIT_MAX       10000   // Maximum gap between retries, in ms
 
     #define WIFI_WAIT_INIT      (WIFI_WAIT_BASE - WIFI_WAIT_INCREASE)
 
@@ -320,7 +391,6 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     // that were saved from an earlier call if no/nullptr arguments are passed.
     WiFiConnectResult ConnectToWiFi(const String* ssid = nullptr, const String* password = nullptr)
     {
-        static bool bPreviousConnection = false;
         static unsigned long millisAtLastAttempt = 0;
         static unsigned long retryDelay = WIFI_WAIT_INIT;
         static String WiFi_ssid;
@@ -335,11 +405,6 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             WiFi_password = *password;
             retryDelay = WIFI_WAIT_INIT;
             debugI("WiFi credentials passed for SSID \"%s\"", WiFi_ssid.c_str());
-        }
-        // If we're already connected and services are running then go no further
-        else if (bPreviousConnection && WiFi.isConnected())
-        {
-            return WiFiConnectResult::Connected;
         }
 
         // (Re)connect if credentials have changed, or our last attempt was long enough ago
@@ -391,41 +456,50 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             return WiFiConnectResult::Disconnected;
         }
 
-        // If we were connected before, network-dependent services will have been started already
-        if (bPreviousConnection)
-            return WiFiConnectResult::Connected;
-
-        bPreviousConnection = true;
-
-        #if INCOMING_WIFI_ENABLED
-            auto& socketServer = g_ptrSystem->SocketServer();
-
-            // Start listening for incoming data
-            debugI("Starting/restarting Socket Server...");
-            socketServer.release();
-            if (false == socketServer.begin())
-                throw std::runtime_error("Could not start socket server!");
-
-            debugI("Socket server started.");
-        #endif
-
-        #if ENABLE_OTA
-            debugI("Publishing OTA...");
-            SetupOTA(String(WiFi.getHostname()));
-        #endif
-
-        #if ENABLE_NTP
-            debugI("Setting Clock...");
-            NTPTimeClient::UpdateClockFromWeb(&l_Udp);
-        #endif
-
-        #if ENABLE_WEBSERVER
-            debugI("Starting Web Server...");
-            g_ptrSystem->WebServer().begin();
-            debugI("Web Server begin called!");
-        #endif
-
         return WiFiConnectResult::Connected;
+    }
+
+    WiFiConnectResult LoadAndConnectToWiFiWithPriority()
+    {
+        if (WiFi.isConnected())
+        {
+            return WiFiConnectResult::Connected;
+        }
+
+        String current_ssid;
+        String current_password;
+        bool creds_loaded = false;
+
+        // Priority 1: Captive Portal credentials
+        if (ReadWiFiConfig(WifiCredSource::CaptivePortal, current_ssid, current_password))
+            {
+            debugI("Using Captive Portal credentials for connection attempt.");
+            creds_loaded = true;
+        }
+        // Priority 2: Improv credentials
+        else if (ReadWiFiConfig(WifiCredSource::ImprovCreds, current_ssid, current_password))
+        {
+            debugI("Using Improv credentials for connection attempt.");
+            creds_loaded = true;
+        }
+        // Priority 3: Compile-time credentials
+        else if (cszSSID && strlen(cszSSID) > 0 && cszPassword && strlen(cszPassword) > 0)
+        {
+            debugI("Using compile-time credentials for connection attempt.");
+            current_ssid = cszSSID;
+            current_password = cszPassword;
+            creds_loaded = true;
+        }
+        else
+        {
+            debugE("No WiFi credentials found. Cannot connect.");
+        }
+
+        if (creds_loaded)
+        {
+            return ConnectToWiFi(current_ssid, current_password);
+        }
+        return WiFiConnectResult::NoCredentials;
     }
 
     #if ENABLE_NTP
@@ -870,7 +944,8 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         static unsigned long millisAtLastConnected = millis();
 
         //debugI(">> NetworkHandlingLoopEntry\n");
-        if(!MDNS.begin("esp32")) {
+        if (!MDNS.begin("esp32"))
+        {
             Serial.println("Error starting mDNS");
         }
 
@@ -878,6 +953,13 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         for (;;)
         {
+            if (g_ptrSystem->WebServer().IsCaptivePortalActive())
+                {
+                g_ptrSystem->WebServer().ProcessDnsRequests();
+                delay(50); // Small delay to prevent tight loop
+                continue; // Don't do any of the STA stuff
+            }
+
             // Wait until we're woken up by a reader being flagged, or until we've reached the hold point
             ulTaskNotifyTake(pdTRUE, notifyWait);
 
@@ -886,11 +968,42 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
             EVERY_N_SECONDS(1)
             {
-                auto connectResult = ConnectToWiFi();
+                auto connectResult = LoadAndConnectToWiFiWithPriority();
 
                 if (connectResult == WiFiConnectResult::Connected)
                 {
                     millisAtLastConnected = millis();
+
+                    if (!servicesStarted)
+                    {
+                        #if INCOMING_WIFI_ENABLED
+                            auto& socketServer = g_ptrSystem->SocketServer();
+
+                            // Start listening for incoming data
+                            debugI("Starting/restarting Socket Server...");
+                            socketServer.release();
+                            if (false == socketServer.begin())
+                                throw std::runtime_error("Could not start socket server!");
+
+                            debugI("Socket server started.");
+                        #endif
+
+                        #if ENABLE_OTA
+                            debugI("Publishing OTA...");
+                            SetupOTA(String(WiFi.getHostname()));
+                        #endif
+
+                        #if ENABLE_NTP
+                            debugI("Setting Clock...");
+                            NTPTimeClient::UpdateClockFromWeb(&l_Udp);
+                        #endif
+
+                        #if ENABLE_WEBSERVER
+                            debugI("Starting Web Server...");
+                            g_ptrSystem->WebServer().Begin();
+                        #endif
+                        servicesStarted = true;
+                    }
 
                     #if WEB_SOCKETS_ANY_ENABLED
                         // It's recommended to clean up any stale web socket clients every second or so
@@ -901,13 +1014,14 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                 {
                     debugV("Still waiting for WiFi to connect.");
                     #if WAIT_FOR_WIFI
-                        // Reboot if we've been waiting for a connection for more than the maximum delay between
-                        // connection retries and we _do_ have credentials
-                        if (connectResult != WiFiConnectResult::NoCredentials && millis() - millisAtLastConnected > WIFI_WAIT_MAX)
+                        if (connectResult != WiFiConnectResult::NoCredentials)
                         {
-                            debugE("Rebooting in 5 seconds due to no Wifi available.");
-                            delay(5000);
-                            throw new std::runtime_error("Rebooting due to no Wifi available.");
+                            unsigned long waitTime = millis() - millisAtLastConnected;
+                            debugI("WiFi wait time: %lu ms", waitTime);
+                            if (waitTime > WIFI_WAIT_MAX)
+                            {
+                                StartCaptivePortal();
+                            }
                         }
                     #endif
                 }
@@ -917,7 +1031,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             if (!g_ptrSystem->HasNetworkReader() || !WiFi.isConnected())
             {
                 notifyWait = pdMS_TO_TICKS(1000);
-                continue;
+                continue; // Don't do any of the STA stuff
             }
 
             auto& networkReader = g_ptrSystem->NetworkReader();

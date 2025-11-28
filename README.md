@@ -72,6 +72,7 @@ More recently, a web installer has been added to the project with which most of 
 - Display support (OLED, TFT, LCD) for status information
 - NTP time synchronization so effects can span multiple ESP32s in sync
 - Configurable via web interface that runs on the ESP32
+- Easy WiFi configuration via a web-based Captive Portal
 
 ## Using the Web Installer
 
@@ -167,18 +168,38 @@ I recommend you do the following:
 - Start enabling features in the `globals.h` or platformio.ini file like WiFi and WebServer. See [Feature Defines](#feature-defines) below.
 - Connect to the ESP32's web user interface with a browser to its IP address
 
-## Wifi setup
+## WiFi Configuration
 
-Ensure your WiFi SSID and password are set in include/secrets.h, which can be created by making a copy of include/secrets.example.h.<br/>
-Please do make sure you set them in include/secrets.h, NOT in include/secrets.example.h!
+NightDriver now features a captive portal to make WiFi setup simple and easy.
 
-Enable WiFi by setting the ENABLE_WIFI define to 1 in globals.h.
+#### Recommended Method: Captive Portal
 
-```C++
-#define ENABLE_WIFI 1
-```
+If your device is not configured with WiFi credentials or cannot connect to its last known network, it will automatically create its own WiFi Access Point (AP) that can be accessed from your phone or computer to configure the credentials of the device.
 
-This can also be configured in the platformio.ini file, as described in the [Feature Defines](#feature-defines) section below.
+1.  Look for a WiFi network with a name (SSID) like `NightDriver-Setup-XXXXXX` (the `XXXXXX` will be unique to your device).
+2.  Connect to this network with your phone or computer.
+3.  A configuration page should pop up automatically on your device. If it doesn't, open a web browser and navigate to `http://192.168.4.1`.
+4.  On this page, you can scan for local WiFi networks, select your home network, and enter the password.
+5.  Once you save the credentials, the device will reboot and attempt to connect to your network. If it fails to connect, it will restart the captive portal process.
+
+#### Credential Priority
+
+The device prioritizes WiFi credentials in the following order, using the first valid set it finds:
+1.  **Captive Portal:** Credentials saved via the web-based setup portal.
+2.  **Improv Protocol:** Credentials sent from a tool like the official [Web Installer](https://plummerssoftwarellc.github.io/NightDriverStrip).
+3.  **Compile-Time:** Credentials hard-coded in the `include/secrets.h` file.
+
+#### Note for Multiple Devices
+
+If you are setting up multiple new devices at the same time, it is recommended to **power on and configure them one at a time.** While each device creates a unique WiFi network name, they all use the same default IP address (`192.168.4.1`) for their configuration page. Configuring them individually will prevent IP address conflicts.
+
+#### Legacy Method (For Developers)
+
+For development purposes, you can still hard-code credentials by copying `include/secrets.example.h` to `include/secrets.h` and filling in your details. Note that these credentials are the lowest priority and will be ignored if credentials from the Captive Portal or Improv exist.
+
+#### Clearing WiFi Credentials
+
+For development and testing, you may need to clear all stored WiFi credentials to force the device into the captive portal mode on the next boot, or to force the device back to using the compiled-in credentials from `secrets.h`. You can do this by connecting to the device's debug console (via Telnet or serial) and issuing the `clearsettings` command. This will erase all WiFi credentials from the device's non-volatile storage.
 
 ## Feature defines
 

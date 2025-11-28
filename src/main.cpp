@@ -328,51 +328,6 @@ void setup()
     #endif
 
     #if ENABLE_WIFI
-        String WiFi_ssid;
-        String WiFi_password;
-        bool ct_creds_selected = false;
-
-        // if we have valid compile-time creds and they differ from what was persisted as
-        // compile-time creds, adopt them as the new WiFi creds reality.
-        if (cszSSID && strlen(cszSSID) > 0 && cszPassword)
-        {
-            String ct_ssid;
-            String ct_password;
-            if (!ReadWiFiConfig(WifiCredSource::CompileTimeCreds, ct_ssid, ct_password)
-                || ct_ssid != cszSSID || ct_password != cszPassword)
-            {
-                debugI("Compile-time WiFi credentials differ from stored credentials, adopting new credentials");
-                ct_creds_selected = true;
-
-                // Clear any Improv creds as they are now stale
-                if (!ClearWiFiConfig(WifiCredSource::ImprovCreds))
-                    debugW("Failed clearing Improv WiFi config from NVS");
-            }
-        }
-
-        // If we didn't decide to use current compile-time credentials, then try to fetch Improv creds
-        if (!ct_creds_selected && !ReadWiFiConfig(WifiCredSource::ImprovCreds, WiFi_ssid, WiFi_password))
-        {
-            debugW("Could not read Improv WiFI credentials, falling back to persisted compile-time credentials");
-
-            // We don't have Improv creds, so read presisted compile-time creds instead.
-            if (!ReadWiFiConfig(WifiCredSource::CompileTimeCreds, WiFi_ssid, WiFi_password))
-            {
-                // No persisted compile-time credentials either, so we just go with what we have
-                debugW("Could not read persisted compile-time WiFI credentials either, falling back to what's compiled in");
-                ct_creds_selected = true;
-            }
-        }
-
-        // If we decided to use current compile-time credentials, then make them the current config and write them to NVS
-        if (ct_creds_selected)
-        {
-            WiFi_ssid = cszSSID;
-            WiFi_password = cszPassword;
-            if (!WriteWiFiConfig(WifiCredSource::CompileTimeCreds, WiFi_ssid, WiFi_password))
-                debugW("Failed writing compile-time WiFi config to NVS");
-        }
-
         // This chip alone is special-cased by Improv, so we pull it
         // from build flags. CONFIG_IDF_TARGET will be "esp32s3".
         #if CONFIG_IDF_TARGET_ESP32S3
@@ -540,7 +495,7 @@ void setup()
 
     #if ENABLE_WIFI
         debugI("Making initial attempt to connect to WiFi.");
-        ConnectToWiFi(WiFi_ssid, WiFi_password);
+        LoadAndConnectToWiFiWithPriority();
         Debug.setSerialEnabled(true);
     #endif
 
@@ -567,7 +522,15 @@ void loop()
         #if ENABLE_WIFI
             EVERY_N_MILLIS(20)
             {
-                g_pImprovSerial->loop();
+                if (!g_ptrSystem->WebServer().IsCaptivePortalActive())
+                    g_pImprovSerial->loop();
+            }
+            // Keep low-priority tasks out of the high-running path. Tasks
+            // should be brief and non-blocking. Can't really justify another
+            // thread.
+            EVERY_N_MILLIS(250)
+            {
+                g_ptrSystem->WebServer().SlowTick();
             }
         #endif
 
@@ -627,3 +590,5 @@ void loop()
             delay(1);
     }
 }
+
+

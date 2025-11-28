@@ -64,13 +64,15 @@
     enum WifiCredSource
     {
       ImprovCreds = 0,
-      CompileTimeCreds = 1
+      CompileTimeCreds = 1,
+      CaptivePortal = 2
     };
 
-    void processRemoteDebugCmd();
+    void ProcessRemoteDebugCmd();
 
     WiFiConnectResult ConnectToWiFi(const String& ssid, const String& password);
     WiFiConnectResult ConnectToWiFi(const String* ssid, const String* password);
+    WiFiConnectResult LoadAndConnectToWiFiWithPriority();
     void UpdateNTPTime();
     void SetupOTA(const String & strHostname);
     bool ReadWiFiConfig(WifiCredSource source, String& WiFi_ssid, String& WiFi_password);

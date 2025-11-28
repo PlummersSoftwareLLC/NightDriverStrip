@@ -36,6 +36,64 @@
 #include "soundanalyzer.h"
 #include "improvserial.h"
 
+// Captive Portal HTML
+// Intentionally simple/small and thus, a bit homely. Viva le Mosaic 1.0!
+const char captivePortalHtml[] PROGMEM = R"rawliteral(
+<!DOCTYPE HTML><html><head>
+<title>NightDriver WiFi Setup</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+function get_strength_bar(rssi) {
+    if (rssi > -55) return '▇';
+    if (rssi > -65) return '▆';
+    if (rssi > -75) return '▅';
+    if (rssi > -85) return '▄';
+    return '▃';
+}
+function scan_ssids() {
+    var sel = document.getElementById('ssid_select');
+    sel.innerHTML = ''; // Clear existing options
+    var opt = document.createElement('option');
+    opt.innerHTML = 'Scanning...';
+    opt.disabled = true;
+    sel.appendChild(opt);
+    fetch('/scan.json')
+    .then(response => response.json())
+    .then(data => {
+        data.sort((a, b) => b.rssi - a.rssi);
+        sel.innerHTML = ''; // Clear existing options
+        var opt = document.createElement('option');
+        opt.innerHTML = 'Select a Network';
+        opt.disabled = true;
+        opt.selected = true;
+        sel.appendChild(opt);
+        for (var i = 0; i < data.length; i++) {
+            var opt = document.createElement('option');
+            opt.value = data[i].ssid;
+            opt.innerHTML = get_strength_bar(data[i].rssi) + ' ' + data[i].ssid;
+            sel.appendChild(opt);
+        }
+    });
+}
+function set_ssid_text(value) {
+    document.getElementById('ssid_text').value = value;
+}
+window.onload = scan_ssids;
+</script>
+</head><body>
+<h1>NightDriver WiFi Setup</h1>
+<p>Please enter your WiFi credentials.</p>
+<form method="POST" action="/wifi">
+<p>SSID: <br>
+<select id="ssid_select" onchange="set_ssid_text(this.value)"></select><br>
+<input type="text" id="ssid_text" name="ssid" placeholder="Or type SSID manually">
+</p>
+<p>Password: <br><input type="password" name="password"></p>
+<p><input type="submit" value="Save"></p>
+</form>
+</body></html>
+)rawliteral";
+
 // Static member initializers
 
 // Maps settings for which a validator is available to the invocation thereof
@@ -101,8 +159,7 @@ void CWebServer::AddCORSHeaderAndSendResponse<AsyncJsonResponse>(AsyncWebServerR
 
 // Member function implementations
 
-// begin - register page load handlers and start serving pages
-void CWebServer::begin()
+void CWebServer::SetupStationMode()
 {
     [[maybe_unused]] extern const uint8_t html_start[] asm("_binary_site_dist_index_html_gz_start");
     [[maybe_unused]] extern const uint8_t html_end[] asm("_binary_site_dist_index_html_gz_end");
@@ -195,13 +252,83 @@ void CWebServer::begin()
 
     _server.onNotFound([](AsyncWebServerRequest *request)
     {
-        if (request->method() == HTTP_OPTIONS) {
+        if (request->method() == HTTP_OPTIONS)
+        {
             request->send(HTTP_CODE_OK);                                     // Apparently needed for CORS: https://github.com/me-no-dev/ESPAsyncWebServer
-        } else {
+        }
+        else
+        {
                 debugW("Failed GET for %s\n", request->url().c_str() );
             request->send(HTTP_CODE_NOT_FOUND);
         }
     });
+}
+
+void CWebServer::SetupCaptivePortalMode()
+{
+    debugW("Starting Captive Portal AP setup.");
+    SetCaptivePortalActive(true);
+
+    WiFi.persistent(false);
+    WiFi.mode(WIFI_AP);
+
+    String mac = WiFi.macAddress();
+    mac.replace(":", "");
+    String unique_id = mac.substring(mac.length() - 6);
+    unique_id.toUpperCase();
+    String ap_name = "NightDriver-Setup-" + unique_id;
+
+    debugW("Calling softAP() for '%s'...", ap_name.c_str());
+    if (!WiFi.softAP(ap_name.c_str()))
+    {
+        debugE("Failed to start softAP");
+        SetCaptivePortalActive(false);
+        return;
+    }
+    debugW("softAP() call succeeded.");
+
+    IPAddress apIP = WiFi.softAPIP();
+    debugW("AP IP address: %s", apIP.toString().c_str());
+
+    // Perform synchronous scan once at startup of captive portal.
+    // In fantasy land, this would dynamically refresh, but it's a slow
+    // operation that we can't perform on a network callback, such as
+    // from a JSON refresh request from the browser. Simplicity.
+    debugW("Scanning for networks...");
+    int n = WiFi.scanNetworks();
+    _availableNetworks.clear();
+    _availableNetworks.reserve(n);
+    for (int i = 0; i < n; ++i)
+    {
+        _availableNetworks.push_back({WiFi.SSID(i), WiFi.RSSI(i)});
+    }
+    debugW("Found %d networks.", n);
+
+    // Required for a strategic lie that ALL dns requests return the above IP.
+    _dnsServer = std::make_unique<DNSServer>();
+    _dnsServer->start(53, "*", apIP);
+    debugW("DNS server started.");
+
+    RegisterCaptivePortalHandlers();
+}
+
+// begin - register page load handlers and start serving pages
+void CWebServer::Begin(bool captivePortalMode)
+{
+    if (_isInitialized.exchange(true))
+    {
+        _server.begin(); // Ensure the server is listening even if already configured
+        return;
+    }
+
+    if (captivePortalMode)
+    {
+        SetupCaptivePortalMode();
+    }
+    else
+    {
+        SetupStationMode();
+    }
 
     _server.begin();
 
@@ -726,5 +853,150 @@ void CWebServer::Reset(AsyncWebServerRequest * pRequest)
     {
         debugW("Resetting device at API request!");
         throw std::runtime_error("Resetting device at API request");
+    }
+}
+
+void CWebServer::RequestReboot(uint32_t in_ms)
+{
+    _reboot_requested = true;
+    _reboot_at_millis = millis() + in_ms;
+}
+
+// We need a DNS server for captive portal. Browsers, etc. attempt to
+// first fetch URLs like captive.apple.com or connectivitycheck.gstatic.com
+// upon a connectivity check. We need to hijack all those requests
+// and deliver our own captive portal page. Those hijacked requests
+// will succeed and not give the "304" or whatever the 'real' sites use.
+void CWebServer::ProcessDnsRequests()
+{
+    if (_dnsServer)
+    {
+        _dnsServer->processNextRequest();
+    }
+}
+
+void CWebServer::SlowTick()
+{
+    if (_reboot_requested && millis() >= _reboot_at_millis)
+    {
+        debugI("Rebooting as requested...");
+        g_ptrSystem->JSONWriter().FlushWrites(true); // Graceful shutdown
+        ESP.restart();
+    }
+}
+
+void CWebServer::RegisterCaptivePortalHandlers()
+{
+    _server.on("/scan.json", HTTP_GET, [this](AsyncWebServerRequest *request)
+    {
+        String json = "[";
+        for (size_t i = 0; i < _availableNetworks.size(); ++i)
+        {
+            if (i) json += ",";
+            json += "{\"ssid\":\"" + _availableNetworks[i].ssid + "\",\"rssi\":" + String(_availableNetworks[i].rssi) + "}";
+        }
+        json += "]";
+
+        request->send(200, "application/json", json);
+    });
+
+    // Handler for saving wifi credentials
+    _server.on("/wifi", HTTP_POST, [this](AsyncWebServerRequest *request)
+    {
+        HandleWifiSave(request);
+    });
+
+    // Redirect all other requests to the captive portal page.
+    _server.onNotFound([](AsyncWebServerRequest *request)
+    {
+        AsyncWebServerResponse *response = request->beginResponse(200, "text/html", captivePortalHtml);
+        response->addHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+        response->addHeader("Pragma", "no-cache");
+        response->addHeader("Expires", "Fri, 01 Jan 1990 00:00:00 GMT");
+        request->send(response);
+    });
+}
+
+void CWebServer::HandleWifiSave(AsyncWebServerRequest *request)
+{
+    debugI("Received POST on /wifi from MAC: %s", get_mac_address_pretty().c_str()); // Added MAC address
+    const int params = request->params();
+    for (int i = 0; i < params; ++i)
+    {
+        const auto* p = request->getParam(i);
+        if (p->isFile())
+        {
+            // How the heck did the user upload a file from that form?
+            debugI("PARAM[FILE][%s]: %s, size: %u", p->name().c_str(), p->value().c_str(), p->size());
+        }
+        else
+        {
+            // It must be a regular POST parameter
+            if (strcmp(p->name().c_str(), "password") == 0)
+            {
+                debugI("PARAM[POST][%s]: ********", p->name().c_str());
+            }
+            else
+            {
+                debugI("PARAM[POST][%s]: %s", p->name().c_str(), p->value().c_str());
+            }
+        }
+    }
+
+    String ssid = request->hasParam("ssid", true) ? request->getParam("ssid", true)->value() : String();
+    String password = request->hasParam("password", true) ? request->getParam("password", true)->value() : String();
+
+    if (ssid.length() > 0)
+    {
+        debugI("Captive portal received new WiFi credentials for SSID: %s", ssid.c_str());
+
+        // Clear old credentials to make space
+        ClearWiFiConfig(WifiCredSource::CompileTimeCreds);
+        ClearWiFiConfig(WifiCredSource::ImprovCreds);
+
+        if (WriteWiFiConfig(WifiCredSource::CaptivePortal, ssid, password))
+        {
+            String hostname = g_ptrSystem->DeviceConfig().GetHostname();
+            if (hostname.isEmpty())
+            {
+                // Fallback hostname for the URL
+                String mac = WiFi.macAddress();
+                mac.replace(":", "");
+                hostname = "NightDriver-" + mac.substring(mac.length() - 6);
+                hostname.toUpperCase();
+            }
+
+            String redirectUrl = "http://" + hostname + ".local/";
+            int refresh_delay = 15;
+
+            AsyncResponseStream *response = request->beginResponseStream("text/html");
+            response->print(F("<html><head><title>Rebooting...</title>"));
+            response->printf(PSTR("<meta http-equiv=\"refresh\" content=\"%d; url=%s\">"), refresh_delay, redirectUrl.c_str());
+            response->print(F("</head><body style=\"font-family: sans-serif;\">"));
+            response->print(F("<h1>Credentials Saved. Rebooting...</h1>"));
+            response->printf(PSTR("<p>Your device is now rebooting and will attempt to connect to the <b>%s</b> network.</p>"), ssid.c_str());
+            response->printf(PSTR("<p>Please reconnect your client device (phone/computer) to the <b>%s</b> network.</p>"), ssid.c_str());
+            response->print(F("<p>Once reconnected, you should be able to reach your NightDriver device at: "));
+            response->printf(PSTR("<b><a href=\"%s\">%s</a></b> (using mDNS).</p>"), redirectUrl.c_str(), redirectUrl.c_str());
+            response->print(F("<p>If the mDNS address doesn't work, you may need to find the device's IP address "));
+            response->print(F("from your router's connected devices list.</p>"));
+            response->printf(PSTR("<p>This page will attempt to refresh in %d seconds.</p>"), refresh_delay);
+            response->print(F("</body></html>"));
+
+            response->addHeader("Connection", "close");
+            request->send(response);
+
+            this->RequestReboot();
+        }
+        else
+        {
+            debugE("Failed to write WiFi credentials to NVS.");
+            request->send(500, "text/plain", "Failed to save credentials. NVS full?");
+        }
+    }
+    else
+    {
+        debugE("Received empty SSID in /wifi POST.");
+        request->send(400, "text/plain", "SSID cannot be empty.");
     }
 }

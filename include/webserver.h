@@ -42,16 +42,20 @@
 #include "deviceconfig.h"
 #include "network.h"
 
+#include <atomic>
+#include <map>
+#include <memory>
+
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <AsyncJson.h>
 #include <AsyncTCP.h>
+#include <DNSServer.h>
 #include <ESPAsyncWebServer.h>
 #include <FS.h>
 #include <HTTPClient.h>
 #include <SPIFFS.h>
 #include <WiFi.h>
-#include <map>
 
 class CWebServer
 {
@@ -66,6 +70,12 @@ class CWebServer
     };
 
   private:
+    struct WifiNetwork {
+        String ssid;
+        int32_t rssi;
+    };
+    std::vector<WifiNetwork> _availableNetworks;
+
     // Template for param to value converter function, used by PushPostParamIfPresent()
     template<typename Tv>
     using ParamValueGetter = std::function<Tv(const AsyncWebParameter *param)>;
@@ -110,6 +120,15 @@ class CWebServer
 
     AsyncWebServer _server;
     StaticStatistics _staticStats;
+    std::atomic<bool> _isInitialized = false;
+    std::atomic<bool> _captivePortalActive = false;
+    std::unique_ptr<DNSServer> _dnsServer;
+    std::atomic<bool> _reboot_requested = false;
+    std::atomic<unsigned long> _reboot_at_millis = 0;
+
+    void HandleWifiSave(AsyncWebServerRequest *request);
+    void SetupStationMode();
+    void SetupCaptivePortalMode();
 
     // Helper functions/templates
 
@@ -214,11 +233,39 @@ class CWebServer
     {}
 
     // begin - register page load handlers and start serving pages
-    void begin();
+    void Begin(bool captivePortalMode = false);
+    void RegisterCaptivePortalHandlers();
+    void ProcessDnsRequests();
+    void SlowTick();
 
     void AddWebSocket(AsyncWebSocket& webSocket)
     {
         _server.addHandler(&webSocket);
+    }
+
+    void SetCaptivePortalActive(bool active)
+    {
+        _captivePortalActive = active;
+    }
+
+    bool IsCaptivePortalActive() const
+    {
+        return _captivePortalActive;
+    }
+
+    // Request a full boot, called from a safe context and performing
+    // some amount of shutdown, at least in_ms points in the future.
+    // The timing on this is coarse; a precisely timed reboot is silly.
+    void RequestReboot(uint32_t in_ms = 3000);
+
+    bool IsRebootRequested() const
+    {
+        return _reboot_requested;
+    }
+
+    unsigned long GetRebootTargetTime() const
+    {
+        return _reboot_at_millis;
     }
 };
 
