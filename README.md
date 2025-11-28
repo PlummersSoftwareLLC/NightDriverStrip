@@ -201,6 +201,13 @@ For development purposes, you can still hard-code credentials by copying `includ
 
 For development and testing, you may need to clear all stored WiFi credentials to force the device into the captive portal mode on the next boot, or to force the device back to using the compiled-in credentials from `secrets.h`. You can do this by connecting to the device's debug console (via Telnet or serial) and issuing the `clearsettings` command. This will erase all WiFi credentials from the device's non-volatile storage.
 
+#### Advanced Configuration
+
+For advanced users, the behavior of the captive portal can be fine-tuned via the `portalTimeoutSeconds` device setting (see the [REST API documentation](REST_API.md#device-settings) for how to change settings).
+
+*   **AUTO Mode (default):** By default, `portalTimeoutSeconds` is `0`, which enables an automatic mode. In this mode, the device is "patient" during a temporary network outage (waiting ~15 minutes before starting the portal), but "impatient" if the configured WiFi network is not found (starting the portal in ~30 seconds). This provides a good experience for both temporary outages and for when the device is moved to a new location.
+*   **Fixed Timeout:** Setting `portalTimeoutSeconds` to a value greater than `0` will cause the device to always wait that specific number of seconds after a connection failure before starting the captive portal.
+
 ## Feature defines
 
 These defines enable the major features of NightDriverStrip. Define them in platformio.ini's build_flags or in globals.h.

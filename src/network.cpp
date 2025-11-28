@@ -246,6 +246,76 @@ void StartCaptivePortal()
             debugA("Reboot command received via Telnet. Requesting restart...");
             g_ptrSystem->WebServer().RequestReboot(0);
         }
+        else if (str.equalsIgnoreCase("showWiFiState"))
+        {
+            uint32_t timeout = g_ptrSystem->DeviceConfig().GetPortalTimeoutSeconds();
+            if (timeout == 0)
+            {
+                debugA("WiFi Mode: AUTO");
+            }
+            else
+            {
+                debugA("WiFi Mode: Fixed timeout of %u seconds", timeout);
+            }
+        }
+        else if (str.toLowerCase().startsWith("forcewifistate"))
+        {
+            struct WiFiStateMap
+            {
+                const char* name;
+                uint32_t timeout;
+            };
+
+            static const WiFiStateMap stateMap[] = {
+                { "auto", 0 },
+                { "patient", 900 },
+                { "impatient", 30 }
+            };
+
+            int spaceIndex = str.indexOf(' ');
+            if (spaceIndex != -1)
+            {
+                String mode = str.substring(spaceIndex + 1);
+                mode.trim();
+                bool found = false;
+                for (const auto& entry : stateMap)
+                {
+                    if (mode.equalsIgnoreCase(entry.name))
+                    {
+                        g_ptrSystem->DeviceConfig().SetPortalTimeoutSeconds(entry.timeout);
+                        debugA("WiFi Mode set to %s (%us)", entry.name, entry.timeout);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    // If not a named mode, treat it as a raw number
+                    uint32_t timeout = mode.toInt();
+                    g_ptrSystem->DeviceConfig().SetPortalTimeoutSeconds(timeout);
+                    debugA("WiFi Mode set to fixed timeout of %u seconds", timeout);
+                }
+            }
+            else
+            {
+                String help = "Usage: forceWiFiState <";
+                for (size_t i = 0; i < std::size(stateMap); ++i)
+                {
+                    help += stateMap[i].name;
+                    if (i < std::size(stateMap) - 1)
+                    {
+                        help += "|";
+                    }
+                }
+                help += "|seconds>";
+                debugA(help.c_str());
+            }
+        }
+        else if (str.equalsIgnoreCase("startPortal"))
+        {
+            debugA("Forcing captive portal to start...");
+            StartCaptivePortal();
+        }
         else
         {
             debugA("Unknown Command.  Extended Commands:");
@@ -253,6 +323,11 @@ void StartCaptivePortal()
             debugA("stats               Display buffers, memory, etc");
             debugA("clearsettings       Reset persisted user settings");
             debugA("uptime              Show system uptime, reset reason");
+            debugA("reboot              Reboot the device");
+            debugA("showWificreds       Show stored WiFi credentials");
+            debugA("showWiFiState       Show current WiFi connection behavior");
+            debugA("forceWiFiState ...  Set WiFi behavior (run command for options)");
+            debugA("startPortal         Immediately start the captive portal");
         }
     }
 #endif
@@ -1017,8 +1092,31 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                         if (connectResult != WiFiConnectResult::NoCredentials)
                         {
                             unsigned long waitTime = millis() - millisAtLastConnected;
-                            debugI("WiFi wait time: %lu ms", waitTime);
-                            if (waitTime > WIFI_WAIT_MAX)
+                            uint32_t configuredTimeout = g_ptrSystem->DeviceConfig().GetPortalTimeoutSeconds();
+                            uint32_t actualTimeoutMs;
+
+                            if (configuredTimeout == 0) // AUTO mode
+                            {
+                                const uint32_t AUTO_MODE_SHORT_TIMEOUT_SECONDS = 30; // For Harrie's case
+                                const uint32_t AUTO_MODE_LONG_TIMEOUT_SECONDS = 900; // 15 minutes for Dave's temporary outage
+
+                                wl_status_t currentWifiStatus = WiFi.status();
+                                if (currentWifiStatus == WL_NO_SSID_AVAIL)
+                                {
+                                    actualTimeoutMs = AUTO_MODE_SHORT_TIMEOUT_SECONDS * 1000;
+                                }
+                                else
+                                {
+                                    actualTimeoutMs = AUTO_MODE_LONG_TIMEOUT_SECONDS * 1000;
+                                }
+                            }
+                            else
+                            { // Fixed timeout mode
+                                actualTimeoutMs = configuredTimeout * 1000;
+                            }
+
+                            debugI("WiFi wait time: %lu ms, timeout: %u ms", waitTime, actualTimeoutMs);
+                            if (actualTimeoutMs > 0 && waitTime > actualTimeoutMs)
                             {
                                 StartCaptivePortal();
                             }

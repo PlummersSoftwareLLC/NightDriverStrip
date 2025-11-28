@@ -34,6 +34,7 @@
 #include <tuple>
 #include "jsonserializer.h"
 #include "types.h"
+#include "network.h"
 
 #if ENABLE_WIFI
 // Make sure we have a secrets.h and that it contains everything we need.
@@ -138,6 +139,8 @@ class DeviceConfig : public IJSONSerializable
     bool    applyGlobalColors = false;
     CRGB    secondColor = CRGB::Red;
 
+    uint32_t portalTimeoutSeconds = 0; // 0 for AUTO mode, otherwise fixed seconds
+
     std::vector<SettingSpec, psram_allocator<SettingSpec>> settingSpecs;
     std::vector<std::reference_wrapper<SettingSpec>> settingSpecReferences;
     size_t writerIndex;
@@ -179,6 +182,7 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * RememberCurrentEffectTag = NAME_OF(rememberCurrentEffect);
     static constexpr const char * PowerLimitTag = NAME_OF(powerLimit);
     static constexpr const char * BrightnessTag = NAME_OF(brightness);
+    static constexpr const char * PortalTimeoutSecondsTag = NAME_OF(portalTimeoutSeconds);
     // No need to publish the show VU meter tag unless we're also publishing the setting
     #if SHOW_VU_METER
     static constexpr const char * ShowVUMeterTag = NAME_OF(showVUMeter);
@@ -195,35 +199,7 @@ class DeviceConfig : public IJSONSerializable
         return SerializeToJSON(jsonObject, true);
     }
 
-    bool SerializeToJSON(JsonObject& jsonObject, bool includeSensitive)
-    {
-        auto jsonDoc = CreateJsonDocument();
-
-        // Add serialization logic for additional settings to this code
-        jsonDoc[HostnameTag] = hostname;
-        jsonDoc[LocationTag] = location;
-        jsonDoc[LocationIsZipTag] = locationIsZip;
-        jsonDoc[CountryCodeTag] = countryCode;
-        jsonDoc[TimeZoneTag] = timeZone;
-        jsonDoc[Use24HourClockTag] = use24HourClock;
-        jsonDoc[UseCelsiusTag] = useCelsius;
-        jsonDoc[NTPServerTag] = ntpServer;
-        jsonDoc[RememberCurrentEffectTag] = rememberCurrentEffect;
-        jsonDoc[PowerLimitTag] = powerLimit;
-        // Only serialize showVUMeter if the VU meter is enabled in the build
-        #if SHOW_VU_METER
-        jsonDoc[ShowVUMeterTag] = showVUMeter;
-        #endif
-        jsonDoc[BrightnessTag] = brightness;
-        jsonDoc[GlobalColorTag] = globalColor;
-        jsonDoc[ApplyGlobalColorsTag] = applyGlobalColors;
-        jsonDoc[SecondColorTag] = secondColor;
-
-        if (includeSensitive)
-            jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
-
-        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
-    }
+    bool SerializeToJSON(JsonObject& jsonObject, bool includeSensitive);
 
     bool DeserializeFromJSON(const JsonObjectConst& jsonObject) override
     {
@@ -255,6 +231,18 @@ class DeviceConfig : public IJSONSerializable
         SetIfPresentIn(jsonObject, globalColor, GlobalColorTag);
         SetIfPresentIn(jsonObject, applyGlobalColors, ApplyGlobalColorsTag);
         SetIfPresentIn(jsonObject, secondColor, SecondColorTag);
+
+        bool portalTimeoutPresent = jsonObject.containsKey(PortalTimeoutSecondsTag);
+        SetIfPresentIn(jsonObject, portalTimeoutSeconds, PortalTimeoutSecondsTag);
+
+        if (!portalTimeoutPresent) {
+            String ssid, password;
+            if (ReadWiFiConfig(WifiCredSource::CaptivePortal, ssid, password) ||
+                ReadWiFiConfig(WifiCredSource::ImprovCreds, ssid, password) ||
+                ReadWiFiConfig(WifiCredSource::CompileTimeCreds, ssid, password)) {
+                portalTimeoutSeconds = 0; // AUTO mode for migrated devices
+            }
+        }
 
         if (ntpServer.isEmpty())
             ntpServer = NTP_SERVER_DEFAULT;
@@ -400,6 +388,13 @@ class DeviceConfig : public IJSONSerializable
                 "Second color that is used to create a global palette in combination with the current global color. That palette is used "
                 "by some effects. Defaults to the <em>previous</em> global color if not explicitly set.",
                 SettingSpec::SettingType::Color
+            );
+
+            settingSpecs.emplace_back(
+                PortalTimeoutSecondsTag,
+                "Portal Timeout",
+                "Timeout (seconds) before starting captive portal if connection to a configured WiFi AP fails. 0 enables AUTO mode (patient for outages, impatient for new locations).",
+                SettingSpec::SettingType::Integer
             );
 
             settingSpecReferences.insert(settingSpecReferences.end(), settingSpecs.begin(), settingSpecs.end());
@@ -564,6 +559,16 @@ class DeviceConfig : public IJSONSerializable
             SetAndSave(powerLimit, newPowerLimit);
     }
 
+    uint32_t GetPortalTimeoutSeconds() const
+    {
+        return portalTimeoutSeconds;
+    }
+
+    void SetPortalTimeoutSeconds(uint32_t newPortalTimeoutSeconds)
+    {
+        SetAndSave(portalTimeoutSeconds, newPortalTimeoutSeconds);
+    }
+
     const CRGB& GlobalColor() const
     {
         return globalColor;
@@ -573,6 +578,8 @@ class DeviceConfig : public IJSONSerializable
     {
         SetAndSave(applyGlobalColors, true);
     }
+
+
 
     void ClearApplyGlobalColors()
     {

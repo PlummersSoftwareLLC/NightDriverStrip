@@ -40,6 +40,37 @@ void DeviceConfig::SaveToJSON() const
     g_ptrSystem->JSONWriter().FlagWriter(writerIndex);
 }
 
+bool DeviceConfig::SerializeToJSON(JsonObject& jsonObject, bool includeSensitive)
+{
+    auto jsonDoc = CreateJsonDocument();
+
+    // Add serialization logic for additional settings to this code
+    jsonDoc[HostnameTag] = hostname;
+    jsonDoc[LocationTag] = location;
+    jsonDoc[LocationIsZipTag] = locationIsZip;
+    jsonDoc[CountryCodeTag] = countryCode;
+    jsonDoc[TimeZoneTag] = timeZone;
+    jsonDoc[Use24HourClockTag] = use24HourClock;
+    jsonDoc[UseCelsiusTag] = useCelsius;
+    jsonDoc[NTPServerTag] = ntpServer;
+    jsonDoc[RememberCurrentEffectTag] = rememberCurrentEffect;
+    jsonDoc[PowerLimitTag] = powerLimit;
+    // Only serialize showVUMeter if the VU meter is enabled in the build
+    #if SHOW_VU_METER
+    jsonDoc[ShowVUMeterTag] = showVUMeter;
+    #endif
+    jsonDoc[BrightnessTag] = brightness;
+    jsonDoc[GlobalColorTag] = globalColor;
+    jsonDoc[ApplyGlobalColorsTag] = applyGlobalColors;
+    jsonDoc[SecondColorTag] = secondColor;
+    jsonDoc[PortalTimeoutSecondsTag] = portalTimeoutSeconds;
+
+    if (includeSensitive)
+        jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
+
+    return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
+}
+
 DeviceConfig::DeviceConfig()
 {
     writerIndex = g_ptrSystem->JSONWriter().RegisterWriter(

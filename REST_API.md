@@ -232,7 +232,7 @@ When changing settings:
 |-|-|-|
 | URL | `/settings` | |
 | Method | POST | |
-| Parameters | | One or more settings that have been returned by the [Get device setting specifications endpoint](#get-device-setting-specifications). |
+| Parameters | | One or more settings that have been returned by the [Get device setting specifications endpoint](#get-device-setting-specifications).<br><br>This includes `portalTimeoutSeconds` (integer), which controls the timeout in seconds before starting the **Captive Portal** if the device fails to connect to a configured WiFi Access Point (AP). This allows you to enter new WiFi credentials.<br>- A value of `0` (the default) enables **AUTO mode**: the device is "patient" during a temporary network outage (long timeout, ~15min), but "impatient" if the configured AP is not visible (short timeout, ~30s), allowing for quick reconfiguration in a new location.<br>- A value `> 0` sets a **fixed timeout** in seconds. |
 | Response | 200 (OK) | A JSON blob with the current values for the device's configuration settings, after applying the values in the request's POST parameters. |
 
 ### Set setting with validation
