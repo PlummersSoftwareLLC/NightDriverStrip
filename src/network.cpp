@@ -42,6 +42,7 @@
 #include "soundanalyzer.h"
 #include "systemcontainer.h"
 #include "wifi_test_config.h"
+#include "network_config.h"
 
 extern DRAM_ATTR std::mutex g_buffer_mutex;
 static std::atomic<bool> servicesStarted = false;
@@ -1137,9 +1138,6 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
                         if (configuredTimeout == 0) // AUTO mode
                         {
-                            const uint32_t AUTO_MODE_SHORT_TIMEOUT_SECONDS = 30; // For Harrie's case
-                            const uint32_t AUTO_MODE_LONG_TIMEOUT_SECONDS = 900; // 15 minutes for Dave's temporary outage
-
                             wl_status_t currentWifiStatus = WiFi.status();
                             if (currentWifiStatus == 1 /* WL_NO_SSID_AVAIL */ || currentWifiStatus == 4 /* WL_CONNECT_FAILED */)
                             {

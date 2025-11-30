@@ -6,7 +6,50 @@
 
 #ifdef ENABLE_WIFI_TEST_MODE
 
+// --- Globals for credential backup/restore ---
+static String g_backup_ssid;
+static String g_backup_password;
+static WifiCredSource g_backup_source = WifiCredSource::CaptivePortal; // Default
+static bool g_credentials_backed_up = false;
+
 // --- Helper Functions for Test Execution ---
+
+// Backup existing WiFi credentials before running tests
+void backupWiFiCredentials() {
+    g_credentials_backed_up = false;
+    const WifiCredSource sources[] = {
+        WifiCredSource::CaptivePortal,
+        WifiCredSource::ImprovCreds,
+        WifiCredSource::CompileTimeCreds
+    };
+
+    for (const auto& source : sources) {
+        if (ReadWiFiConfig(source, g_backup_ssid, g_backup_password)) {
+            g_backup_source = source;
+            g_credentials_backed_up = true;
+            debugI("TEST: Backed up credentials from source %d for SSID '%s'", (int)source, g_backup_ssid.c_str());
+            return;
+        }
+    }
+    debugI("TEST: No existing credentials found to back up.");
+}
+
+// Restore WiFi credentials after tests are complete
+void restoreWiFiCredentials() {
+    if (g_credentials_backed_up) {
+        debugI("TEST: Restoring credentials for SSID '%s' to source %d", g_backup_ssid.c_str(), (int)g_backup_source);
+        // Clear any test credentials first
+        ClearWiFiConfig(WifiCredSource::CaptivePortal);
+        ClearWiFiConfig(WifiCredSource::ImprovCreds);
+        ClearWiFiConfig(WifiCredSource::CompileTimeCreds);
+        if (!WriteWiFiConfig(g_backup_source, g_backup_ssid, g_backup_password)) {
+            debugE("TEST: FAILED to restore WiFi credentials.");
+        }
+    } else {
+        debugI("TEST: No credentials to restore. Starting captive portal for configuration.");
+        StartCaptivePortal();
+    }
+}
 
 // Set WiFi Credentials
 bool setWiFiCredentials(const char* ssid, const char* password) {
@@ -180,6 +223,8 @@ void WiFiTestLoopEntry(void* pvParameters) {
     // Give some time for system to fully initialize
     delay(TEST_BOOT_STABILIZE_MS); 
 
+    backupWiFiCredentials();
+
     size_t passedCases = 0;
     size_t failedCases = 0;
 
@@ -272,11 +317,10 @@ void WiFiTestLoopEntry(void* pvParameters) {
     }
 
     debugI("===== All WiFi Tests Completed: %u PASSED, %u FAILED of %u =====", passedCases, failedCases, g_numWiFiTestCases);
-    debugI("TEST: All tests finished. Starting captive portal for configuration.");
     
-    StartCaptivePortal();
+    restoreWiFiCredentials();
 
-    debugI("TEST: Starting main network loop to manage captive portal.");
+    debugI("TEST: Starting main network loop to connect with restored credentials or run captive portal.");
     g_ptrSystem->TaskManager().StartNetworkThread();
 
     debugI("TEST: Test task complete. Exiting.");
