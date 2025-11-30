@@ -463,87 +463,20 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
     #define WIFI_WAIT_INIT      (WIFI_WAIT_BASE - WIFI_WAIT_INCREASE)
 
-    // ConnectToWiFi
-    //
-    // Try to connect to WiFi using the SSID and password passed as arguments
-    WiFiConnectResult ConnectToWiFi(const String& ssid, const String& password)
-    {
-        return ConnectToWiFi(&ssid, &password);
-    }
+    static std::atomic<bool> g_isConnecting = false;
 
-    // ConnectToWiFi
-    //
-    // Try to connect to WiFi using either the SSID and password pointed to by arguments, or the credentials
-    // that were saved from an earlier call if no/nullptr arguments are passed.
-    WiFiConnectResult ConnectToWiFi(const String* ssid = nullptr, const String* password = nullptr)
-    {
-        static unsigned long millisAtLastAttempt = 0;
-        static unsigned long retryDelay = WIFI_WAIT_INIT;
-        static String WiFi_ssid;
-        static String WiFi_password;
+    // A retained copy of the credentials last used to start a connection.
+    // Used to detect if we need to start a new connection attempt because
+    // the credentials have changed.
+    static String g_lastConnectedSsid;
+    static String g_lastConnectedPassword;
 
-        bool haveNewCredentials = (ssid != nullptr && password != nullptr && (WiFi_ssid != *ssid || WiFi_password != *password));
-
-        // If we have new credentials then always reconnect using them
-        if (haveNewCredentials)
-        {
-            WiFi_ssid = *ssid;
-            WiFi_password = *password;
-            retryDelay = WIFI_WAIT_INIT;
-            debugI("WiFi credentials passed for SSID \"%s\"", WiFi_ssid.c_str());
-        }
-
-        // (Re)connect if credentials have changed, or our last attempt was long enough ago
-        if (haveNewCredentials || millisAtLastAttempt == 0 || millis() - millisAtLastAttempt >= retryDelay)
-        {
-            millisAtLastAttempt = millis();
-            retryDelay = std::min<unsigned long>(retryDelay + WIFI_WAIT_INCREASE, WIFI_WAIT_MAX);
-
-            if (WiFi_ssid.length() == 0)
-            {
-                debugW("WiFi credentials not set, cannot connect.");
-                return WiFiConnectResult::NoCredentials;
-            }
-            else
-            {
-                auto hostname = g_ptrSystem->DeviceConfig().GetHostname().c_str();
-
-                if (hostname[0] == '\0')
-                {
-                    debugI("No hostname configured, so skipping setting it.");
-                }
-                else
-                {
-                    debugI("Setting host name to %s...", hostname);
-                    WiFi.setHostname(hostname);
-                }
-
-                SetWiFiMode(WIFI_STA);
-                debugW("Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
-                       WiFi_ssid.c_str(), ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
-
-                WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
-            }
-        }
-
-        if (WiFi.isConnected())
-        {
-            debugW("Connected to AP with BSSID: \"%s\", received IP: %s", WiFi.BSSIDstr().c_str(), WiFi.localIP().toString().c_str());
-        }
-        else
-        // Additional services onwards are reliant on network so return if WiFi is not up (yet)
-        {
-            debugW("Not yet connected to WiFi, waiting...");
-            return WiFiConnectResult::Disconnected;
-        }
-
-        return WiFiConnectResult::Connected;
-    }
 
     WiFiConnectResult LoadAndConnectToWiFiWithPriority()
     {
         if (WiFi.isConnected())
         {
+            g_isConnecting = false;
             return WiFiConnectResult::Connected;
         }
 
@@ -553,7 +486,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         // Priority 1: Captive Portal credentials
         if (ReadWiFiConfig(WifiCredSource::CaptivePortal, current_ssid, current_password))
-            {
+        {
             debugI("Using Captive Portal credentials for connection attempt.");
             creds_loaded = true;
         }
@@ -574,13 +507,53 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         else
         {
             debugE("No WiFi credentials found. Cannot connect.");
+            return WiFiConnectResult::NoCredentials;
         }
 
-        if (creds_loaded)
+        // Check if we need to start a new connection attempt.
+        // A new attempt is started if we are not currently trying to connect,
+        // or if the credentials have changed since the last attempt.
+        bool newCredentials = (current_ssid != g_lastConnectedSsid || current_password != g_lastConnectedPassword);
+        if (!g_isConnecting || newCredentials)
         {
-            return ConnectToWiFi(current_ssid, current_password);
+            debugI("Starting a new WiFi connection process.");
+            if (newCredentials)
+            {
+                debugI("Credentials have changed. Old: '%s', New: '%s'", g_lastConnectedSsid.c_str(), current_ssid.c_str());
+            }
+
+            g_lastConnectedSsid = current_ssid;
+            g_lastConnectedPassword = current_password;
+
+            auto hostname = g_ptrSystem->DeviceConfig().GetHostname().c_str();
+            if (hostname[0] != '\0')
+            {
+                debugI("Setting host name to %s...", hostname);
+                WiFi.setHostname(hostname);
+            }
+
+            // Set the mode to STA. This is a "heavy" operation, so we only
+            // do it when starting a new connection cycle.
+            if (SetWiFiMode(WIFI_STA))
+            {
+                debugW("Attempting to connect to SSID: \"%s\"", current_ssid.c_str());
+                WiFi.begin(current_ssid.c_str(), current_password.c_str());
+                g_isConnecting = true; // We have now started the connection process.
+            }
+            else
+            {
+                debugE("Failed to set WiFi mode to STA. Aborting connection attempt.");
+                // If we can't even set the mode, something is wrong.
+                // We'll return NoCredentials to prevent an endless loop of trying.
+                return WiFiConnectResult::NoCredentials;
+            }
         }
-        return WiFiConnectResult::NoCredentials;
+        else
+        {
+            debugW("Not yet connected to WiFi, waiting for background process to complete...");
+        }
+
+        return WiFiConnectResult::Disconnected;
     }
 
     #if ENABLE_NTP
