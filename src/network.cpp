@@ -37,10 +37,11 @@
 #include <nvs.h>
 
 #include "globals.h"
-#include "ledviewer.h"                          // For the LEDViewer task and object
+#include "ledviewer.h" // For the LEDViewer task and object
 #include "network.h"
 #include "soundanalyzer.h"
 #include "systemcontainer.h"
+#include "wifi_test_config.h"
 
 extern DRAM_ATTR std::mutex g_buffer_mutex;
 static std::atomic<bool> servicesStarted = false;
@@ -75,7 +76,7 @@ public:
     {
     }
 
-    constexpr Message()
+    constexpr Message() 
         : cbSize(sizeof(Message)), command(ESPNowCommand::ESPNOW_INVALID), arg1(0)
     {
     }
@@ -121,7 +122,7 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
 
         case ESPNowCommand::ESPNOW_PREVEFFECT:
             debugI("ESPNOW Previous effect");
-            g_ptrSystem->EffectManager().PreviousEffect();
+            g_ptrSystem->EffectManager().EffectManager().PreviousEffect();
             break;
 
         case ESPNowCommand::ESPNOW_SETEFFECT:
@@ -143,16 +144,17 @@ void StartCaptivePortal()
     {
         return;
     }
-    servicesStarted = false;
+    servicesStarted = false; // Reset servicesStarted when entering captive portal
 
-    // Disconnect and erase credentials from memory.
     debugI("Stopping WiFi station mode to start Captive Portal.");
-    WiFi.disconnect(true);
-    WiFi.mode(WIFI_OFF);
-    delay(100);
+    // Use the robust function to set AP mode
+    if (!SetWiFiModeRobustly(WIFI_AP))
+    {
+        debugE("Failed to robustly set WiFi mode to WIFI_AP for Captive Portal.");
+        return; // Early exit if we can't get into AP mode
+    }
 
     g_ptrSystem->WebServer().Begin(true);
-    debugA("Web server started for captive portal.");
 }
 
 // processRemoteDebugCmd
@@ -189,12 +191,17 @@ void StartCaptivePortal()
         }
         else if (str.equalsIgnoreCase("clearsettings"))
         {
-            debugA("Removing persisted settings....");
+            debugA("Removing persisted settings and rebooting to clear WiFi state....");
             g_ptrSystem->DeviceConfig().RemovePersisted();
             RemoveEffectManagerConfig();
             ClearWiFiConfig(WifiCredSource::CompileTimeCreds);
             ClearWiFiConfig(WifiCredSource::ImprovCreds);
             ClearWiFiConfig(WifiCredSource::CaptivePortal);
+            // Explicitly de-initialize WiFi and force a reboot to ensure a clean state
+            WiFi.mode(WIFI_OFF);
+            WiFi.disconnect(true, true); // Disconnect and erase all credentials (if any remain)
+            delay(100); // Give time for operations to complete
+            ESP.restart(); // Force a hard reset to clear all state
         }
         else if (str.equalsIgnoreCase("uptime"))
         {
@@ -258,7 +265,9 @@ void StartCaptivePortal()
                 debugA("WiFi Mode: Fixed timeout of %u seconds", timeout);
             }
         }
-        else if (str.toLowerCase().startsWith("forcewifistate"))
+        else {
+            str.toLowerCase();
+            if (str.startsWith("forcewifistate"))
         {
             struct WiFiStateMap
             {
@@ -308,7 +317,7 @@ void StartCaptivePortal()
                     }
                 }
                 help += "|seconds>";
-                debugA(help.c_str());
+                debugA("%s", help.c_str());
             }
         }
         else if (str.equalsIgnoreCase("startPortal"))
@@ -329,6 +338,7 @@ void StartCaptivePortal()
             debugA("forceWiFiState ...  Set WiFi behavior (run command for options)");
             debugA("startPortal         Immediately start the captive portal");
         }
+    }
     }
 #endif
 
@@ -507,16 +517,12 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                     WiFi.setHostname(hostname);
                 }
 
-                debugV("Wifi.disconnect");
                 WiFi.disconnect();
-                debugV("Wifi.mode");
                 WiFi.mode(WIFI_STA);
                 debugW("Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
                        WiFi_ssid.c_str(), ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
 
                 WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
-
-                debugV("Done Wifi.begin, waiting for connection...");
             }
         }
 
@@ -873,6 +879,42 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         return success;
     }
 
+    // SetWiFiModeRobustly
+    //
+    // Attempts to set the WiFi mode robustly by first disconnecting,
+    // applying a delay, setting the new mode, and then polling to
+    // confirm the mode change within a timeout.
+    bool SetWiFiModeRobustly(WiFiMode_t mode)
+    {
+        debugI("Attempting to set WiFi mode to %s", mode == WIFI_AP ? "WIFI_AP" : (mode == WIFI_STA ? "WIFI_STA" : "WIFI_OFF"));
+        
+        // Ensure previous STA connections and APs are down for a clean state before changing mode
+        WiFi.disconnect(true, true); 
+        WiFi.softAPdisconnect(true); // Explicitly disconnect from any existing AP
+        delay(200); // Give some time for disconnect to process
+
+        bool success = WiFi.mode(mode);
+        if (!success) {
+            debugE("Failed to set WiFi mode to %s", mode == WIFI_AP ? "WIFI_AP" : (mode == WIFI_STA ? "WIFI_STA" : "WIFI_OFF"));
+            return false;
+        }
+
+        // Wait for the mode to stabilize
+        unsigned long startTime = millis();
+        // Wait up to TEST_AP_STABILIZE_MS for the mode to change
+        while (WiFi.getMode() != mode && (millis() - startTime < TEST_AP_STABILIZE_MS)) { 
+            delay(50);
+        }
+
+        if (WiFi.getMode() != mode) {
+            debugW("WiFi mode did not stabilize to %s within timeout.", mode == WIFI_AP ? "WIFI_AP" : (mode == WIFI_STA ? "WIFI_STA" : "WIFI_OFF"));
+            return false;
+        }
+        debugI("Successfully set WiFi mode to %s", mode == WIFI_AP ? "WIFI_AP" : (mode == WIFI_STA ? "WIFI_STA" : "WIFI_OFF"));
+        delay(1000); // Another short delay after mode set for good measure
+        return true;
+    }
+
     // DebugLoopTaskEntry
     //
     // Entry point for the Debug task, pumps the Debug handler
@@ -888,7 +930,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         Debug.setResetCmdEnabled(true);                         // Enable the reset command
         Debug.showProfiler(false);                              // Profiler (Good to measure times, to optimize codes)
         Debug.showColors(false);                                // Colors
-        Debug.setCallBackProjectCmds(&processRemoteDebugCmd);   // Func called to handle any debug extensions we add
+        Debug.setCallBackProjectCmds(&ProcessRemoteDebugCmd);   // Func called to handle any debug extensions we add
 
         while (!WiFi.isConnected())                             // Wait for wifi, no point otherwise
             delay(100);
@@ -910,7 +952,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
     void IRAM_ATTR SocketServerTaskEntry(void *)
     {
-        for (;;)
+        for (;;) 
         {
             if (WiFi.isConnected())
             {
@@ -1088,40 +1130,38 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                 else
                 {
                     debugV("Still waiting for WiFi to connect.");
-                    #if WAIT_FOR_WIFI
-                        if (connectResult != WiFiConnectResult::NoCredentials)
+                    if (connectResult != WiFiConnectResult::NoCredentials)
+                    {
+                        unsigned long waitTime = millis() - millisAtLastConnected;
+                        uint32_t configuredTimeout = g_ptrSystem->DeviceConfig().GetPortalTimeoutSeconds();
+                        uint32_t actualTimeoutMs;
+
+                        if (configuredTimeout == 0) // AUTO mode
                         {
-                            unsigned long waitTime = millis() - millisAtLastConnected;
-                            uint32_t configuredTimeout = g_ptrSystem->DeviceConfig().GetPortalTimeoutSeconds();
-                            uint32_t actualTimeoutMs;
+                            const uint32_t AUTO_MODE_SHORT_TIMEOUT_SECONDS = 30; // For Harrie's case
+                            const uint32_t AUTO_MODE_LONG_TIMEOUT_SECONDS = 900; // 15 minutes for Dave's temporary outage
 
-                            if (configuredTimeout == 0) // AUTO mode
+                            wl_status_t currentWifiStatus = WiFi.status();
+                            if (currentWifiStatus == 1 /* WL_NO_SSID_AVAIL */ || currentWifiStatus == 4 /* WL_CONNECT_FAILED */)
                             {
-                                const uint32_t AUTO_MODE_SHORT_TIMEOUT_SECONDS = 30; // For Harrie's case
-                                const uint32_t AUTO_MODE_LONG_TIMEOUT_SECONDS = 900; // 15 minutes for Dave's temporary outage
-
-                                wl_status_t currentWifiStatus = WiFi.status();
-                                if (currentWifiStatus == WL_NO_SSID_AVAIL)
-                                {
-                                    actualTimeoutMs = AUTO_MODE_SHORT_TIMEOUT_SECONDS * 1000;
-                                }
-                                else
-                                {
-                                    actualTimeoutMs = AUTO_MODE_LONG_TIMEOUT_SECONDS * 1000;
-                                }
+                                actualTimeoutMs = AUTO_MODE_SHORT_TIMEOUT_SECONDS * 1000;
                             }
                             else
-                            { // Fixed timeout mode
-                                actualTimeoutMs = configuredTimeout * 1000;
-                            }
-
-                            debugI("WiFi wait time: %lu ms, timeout: %u ms", waitTime, actualTimeoutMs);
-                            if (actualTimeoutMs > 0 && waitTime > actualTimeoutMs)
                             {
-                                StartCaptivePortal();
+                                actualTimeoutMs = AUTO_MODE_LONG_TIMEOUT_SECONDS * 1000;
                             }
                         }
-                    #endif
+                        else
+                        { // Fixed timeout mode
+                            actualTimeoutMs = configuredTimeout * 1000;
+                        }
+
+                        debugI("WiFi wait time: %lu ms, timeout: %u ms", waitTime, actualTimeoutMs);
+                        if (actualTimeoutMs > 0 && waitTime > actualTimeoutMs)
+                        {
+                            StartCaptivePortal();
+                        }
+                    }
                 }
             }
 

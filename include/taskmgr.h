@@ -48,6 +48,7 @@
 
 #include <utility>
 #include "ledstripeffect.h"
+#include "wifi_test.h" // For WiFiTestLoopEntry
 
 // Stack size for the taskmgr's idle threads
 #define DEFAULT_STACK_SIZE (2048 + 512)
@@ -241,6 +242,7 @@ private:
     TaskHandle_t _taskSerial        = nullptr;
     TaskHandle_t _taskColorData     = nullptr;
     TaskHandle_t _taskJSONWriter    = nullptr;
+    TaskHandle_t _taskWiFiTest      = nullptr; // New WiFi Test Task Handle
 
     std::vector<TaskHandle_t> _vEffectTasks;
 
@@ -361,6 +363,15 @@ public:
         xTaskCreatePinnedToCore(JSONWriterTaskEntry, "JSON Writer Loop", JSON_STACK_SIZE, nullptr, JSONWRITER_PRIORITY, &_taskJSONWriter, JSONWRITER_CORE);
         CheckHeap();
     }
+
+    #ifdef ENABLE_WIFI_TEST_MODE
+    void StartWiFiTestThread()
+    {
+        Serial.print( str_sprintf(">> Launching WiFi Test Thread.  Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(),ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getFreePsram()) );
+        xTaskCreatePinnedToCore(WiFiTestLoopEntry, "WiFi Test Loop", NET_STACK_SIZE, nullptr, NET_PRIORITY, &_taskWiFiTest, NET_CORE);
+        CheckHeap();
+    }
+    #endif
 
     void NotifyJSONWriterThread()
     {

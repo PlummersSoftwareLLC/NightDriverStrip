@@ -166,6 +166,7 @@
 #include "improvserial.h"                       // ImprovSerial impl for setting WiFi credentials over the serial port
 #include <TJpg_Decoder.h>
 #include <esp_now.h>
+#include "wifi_test.h" // For WiFiTestLoopEntry task
 
 #if defined(TOGGLE_BUTTON_0) || defined(TOGGLE_BUTTON_1)
   #include "Bounce2.h"                            // For Bounce button class
@@ -494,15 +495,22 @@ void setup()
     taskManager.StartRemoteThread();
 
     #if ENABLE_WIFI
-        debugI("Making initial attempt to connect to WiFi.");
-        LoadAndConnectToWiFiWithPriority();
-        Debug.setSerialEnabled(true);
+        #ifdef ENABLE_WIFI_TEST_MODE
+            debugI("WiFi Test Mode: Starting WiFi Test Thread.");
+            taskManager.StartWiFiTestThread();
+        #else // ENABLE_WIFI_TEST_MODE
+            debugI("Making initial attempt to connect to WiFi.");
+            LoadAndConnectToWiFiWithPriority();
+            Debug.setSerialEnabled(true);
+        #endif // ENABLE_WIFI_TEST_MODE
     #endif
 
     // Start the network-dependent services.  These will be NOPs on a non-wifi build.
 
     taskManager.StartSerialThread();
+    #ifndef ENABLE_WIFI_TEST_MODE
     taskManager.StartNetworkThread();
+    #endif
     taskManager.StartColorDataThread();
     taskManager.StartSocketThread();
 

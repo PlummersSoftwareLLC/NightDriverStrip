@@ -205,7 +205,7 @@ For development and testing, you may need to clear all stored WiFi credentials t
 
 For advanced users, the behavior of the captive portal can be fine-tuned via the `portalTimeoutSeconds` device setting (see the [REST API documentation](REST_API.md#device-settings) for how to change settings).
 
-*   **AUTO Mode (default):** By default, `portalTimeoutSeconds` is `0`, which enables an automatic mode. In this mode, the device is "patient" during a temporary network outage (waiting ~15 minutes before starting the portal), but "impatient" if the configured WiFi network is not found (starting the portal in ~30 seconds). This provides a good experience for both temporary outages and for when the device is moved to a new location.
+*   **AUTO Mode (default):** By default, `portalTimeoutSeconds` is `0`, which enables an automatic mode with smart timeouts. In this mode, the device is "patient" (waiting ~15 minutes before starting the portal) during a temporary network outage, such as when your router reboots or the signal is temporarily lost. It is "impatient" (starting the portal in ~30 seconds) in situations where immediate user action is needed, such as when the configured WiFi network is not found or when the password is incorrect. This provides a good experience for both temporary outages and for initial setup or configuration changes.
 *   **Fixed Timeout:** Setting `portalTimeoutSeconds` to a value greater than `0` will cause the device to always wait that specific number of seconds after a connection failure before starting the captive portal.
 
 ## Feature defines

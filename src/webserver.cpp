@@ -78,18 +78,54 @@ function scan_ssids() {
 function set_ssid_text(value) {
     document.getElementById('ssid_text').value = value;
 }
+function handle_submit(event) {
+    event.preventDefault();
+    const form = event.target;
+    const data = new FormData(form);
+    const ssid = data.get('ssid');
+    const password = data.get('password');
+
+    document.getElementById('submit_btn').disabled = true;
+    document.getElementById('submit_btn').value = 'Saving...';
+
+    fetch('/wifi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ ssid, password }).toString()
+    }).then(response => {
+        if (response.ok) {
+            // The server will send a success page with a meta refresh
+            // We just need to load the response's content into the current page
+            response.text().then(html => {
+                document.open();
+                document.write(html);
+                document.close();
+            });
+        } else {
+            response.text().then(text => {
+                alert('Failed to save credentials: ' + text + '\nPlease try again.');
+                document.getElementById('submit_btn').disabled = false;
+                document.getElementById('submit_btn').value = 'Save';
+            });
+        }
+    }).catch(error => {
+        alert('An error occurred: ' + error + '\nPlease check your connection and try again.');
+        document.getElementById('submit_btn').disabled = false;
+        document.getElementById('submit_btn').value = 'Save';
+    });
+}
 window.onload = scan_ssids;
 </script>
 </head><body>
 <h1>NightDriver WiFi Setup</h1>
 <p>Please enter your WiFi credentials.</p>
-<form method="POST" action="/wifi">
+<form method="POST" action="/wifi" onsubmit="handle_submit(event)">
 <p>SSID: <br>
 <select id="ssid_select" onchange="set_ssid_text(this.value)"></select><br>
 <input type="text" id="ssid_text" name="ssid" placeholder="Or type SSID manually">
 </p>
 <p>Password: <br><input type="password" name="password"></p>
-<p><input type="submit" value="Save"></p>
+<p><input type="submit" id="submit_btn" value="Save"></p>
 </form>
 </body></html>
 )rawliteral";
@@ -270,7 +306,15 @@ void CWebServer::SetupCaptivePortalMode()
     SetCaptivePortalActive(true);
 
     WiFi.persistent(false);
-    WiFi.mode(WIFI_AP);
+
+    // Use the robust function to set AP mode
+    bool setModeSuccess = SetWiFiModeRobustly(WIFI_AP);
+    if (!setModeSuccess)
+    {
+        debugE("Failed to robustly set WiFi mode to WIFI_AP for Captive Portal setup.");
+        SetCaptivePortalActive(false);
+        return;
+    }
 
     String mac = WiFi.macAddress();
     mac.replace(":", "");
@@ -279,13 +323,15 @@ void CWebServer::SetupCaptivePortalMode()
     String ap_name = "NightDriver-Setup-" + unique_id;
 
     debugW("Calling softAP() for '%s'...", ap_name.c_str());
-    if (!WiFi.softAP(ap_name.c_str()))
+    bool softAPSuccess = WiFi.softAP(ap_name.c_str());
+    if (!softAPSuccess)
     {
-        debugE("Failed to start softAP");
+        debugE("Failed to start softAP (returned false)");
         SetCaptivePortalActive(false);
         return;
     }
     debugW("softAP() call succeeded.");
+    delay(200); // Small delay for AP to stabilize
 
     IPAddress apIP = WiFi.softAPIP();
     debugW("AP IP address: %s", apIP.toString().c_str());
@@ -304,6 +350,11 @@ void CWebServer::SetupCaptivePortalMode()
     }
     debugW("Found %d networks.", n);
 
+    if (WiFi.getMode() != WIFI_AP) {
+        debugW("CWebServer::SetupCaptivePortalMode: WiFi mode changed during scan, attempting to reset to WIFI_AP.");
+        SetWiFiModeRobustly(WIFI_AP);
+    }
+
     // Required for a strategic lie that ALL dns requests return the above IP.
     _dnsServer = std::make_unique<DNSServer>();
     _dnsServer->start(53, "*", apIP);
@@ -315,9 +366,12 @@ void CWebServer::SetupCaptivePortalMode()
 // begin - register page load handlers and start serving pages
 void CWebServer::Begin(bool captivePortalMode)
 {
+    debugI("CWebServer::Begin() - _isInitialized: %d, captivePortalMode: %d", _isInitialized.load(), captivePortalMode);
+
     if (_isInitialized.exchange(true))
     {
         _server.begin(); // Ensure the server is listening even if already configured
+        debugI("CWebServer::Begin() - Server already initialized, ensuring listen.");
         return;
     }
 
@@ -954,6 +1008,7 @@ void CWebServer::HandleWifiSave(AsyncWebServerRequest *request)
         // Clear old credentials to make space
         ClearWiFiConfig(WifiCredSource::CompileTimeCreds);
         ClearWiFiConfig(WifiCredSource::ImprovCreds);
+        ClearWiFiConfig(WifiCredSource::CaptivePortal);
 
         if (WriteWiFiConfig(WifiCredSource::CaptivePortal, ssid, password))
         {

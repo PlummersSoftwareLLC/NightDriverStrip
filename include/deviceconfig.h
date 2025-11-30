@@ -232,7 +232,7 @@ class DeviceConfig : public IJSONSerializable
         SetIfPresentIn(jsonObject, applyGlobalColors, ApplyGlobalColorsTag);
         SetIfPresentIn(jsonObject, secondColor, SecondColorTag);
 
-        bool portalTimeoutPresent = jsonObject.containsKey(PortalTimeoutSecondsTag);
+        bool portalTimeoutPresent = jsonObject[PortalTimeoutSecondsTag].is<uint32_t>();
         SetIfPresentIn(jsonObject, portalTimeoutSeconds, PortalTimeoutSecondsTag);
 
         if (!portalTimeoutPresent) {

@@ -79,32 +79,35 @@
     bool WriteWiFiConfig(WifiCredSource source, const String& WiFi_ssid, const String& WiFi_password);
     bool ClearWiFiConfig(WifiCredSource source);
 
+    bool SetWiFiModeRobustly(WiFiMode_t mode);
+    void StartCaptivePortal(); // Declaration for StartCaptivePortal function.
+
     // Static Helpers
     //
     // Simple utility functions
 
-    #define WL_NO_SHIELD        "WL_NO_SHIELD"
-    #define WL_IDLE_STATUS      "WL_IDLE_STATUS"
-    #define WL_NO_SSID_AVAIL    "WL_NO_SSID_AVAIL"
-    #define WL_SCAN_COMPLETED   "WL_SCAN_COMPLETED"
-    #define WL_CONNECTED        "WL_CONNECTED"
-    #define WL_CONNECT_FAILED   "WL_CONNECT_FAILED"
-    #define WL_CONNECTION_LOST  "WL_CONNECTION_LOST"
-    #define WL_DISCONNECTED     "WL_DISCONNECTED"
-    #define WL_UNKNOWN_STATUS   "WL_UNKNOWN_STATUS"
+    static const char* WL_NO_SHIELD_STR        = "WL_NO_SHIELD";
+    static const char* WL_IDLE_STATUS_STR      = "WL_IDLE_STATUS";
+    static const char* WL_NO_SSID_AVAIL_STR    = "WL_NO_SSID_AVAIL";
+    static const char* WL_SCAN_COMPLETED_STR   = "WL_SCAN_COMPLETED";
+    static const char* WL_CONNECTED_STR        = "WL_CONNECTED";
+    static const char* WL_CONNECT_FAILED_STR   = "WL_CONNECT_FAILED";
+    static const char* WL_CONNECTION_LOST_STR  = "WL_CONNECTION_LOST";
+    static const char* WL_DISCONNECTED_STR     = "WL_DISCONNECTED";
+    static const char* WL_UNKNOWN_STATUS_STR   = "WL_UNKNOWN_STATUS";
 
     inline static const char* WLtoString(wl_status_t status)
     {
       switch (status) {
-        case 255: return WL_NO_SHIELD;
-        case 0: return   WL_IDLE_STATUS;
-        case 1: return   WL_NO_SSID_AVAIL;
-        case 2: return   WL_SCAN_COMPLETED;
-        case 3: return   WL_CONNECTED;
-        case 4: return   WL_CONNECT_FAILED;
-        case 5: return   WL_CONNECTION_LOST;
-        case 6: return   WL_DISCONNECTED;
-        default: return  WL_UNKNOWN_STATUS;
+        case 255: return WL_NO_SHIELD_STR;
+        case 0: return   WL_IDLE_STATUS_STR;
+        case 1: return   WL_NO_SSID_AVAIL_STR;
+        case 2: return   WL_SCAN_COMPLETED_STR;
+        case 3: return   WL_CONNECTED_STR;
+        case 4: return   WL_CONNECT_FAILED_STR;
+        case 5: return   WL_CONNECTION_LOST_STR;
+        case 6: return   WL_DISCONNECTED_STR;
+        default: return  WL_UNKNOWN_STATUS_STR;
       }
     }
 
