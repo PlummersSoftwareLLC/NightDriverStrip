@@ -308,7 +308,7 @@ void CWebServer::SetupCaptivePortalMode()
     WiFi.persistent(false);
 
     // Use the robust function to set AP mode
-    bool setModeSuccess = SetWiFiModeRobustly(WIFI_AP);
+    bool setModeSuccess = SetWiFiMode(WIFI_AP);
     if (!setModeSuccess)
     {
         debugE("Failed to robustly set WiFi mode to WIFI_AP for Captive Portal setup.");
@@ -352,7 +352,7 @@ void CWebServer::SetupCaptivePortalMode()
 
     if (WiFi.getMode() != WIFI_AP) {
         debugW("CWebServer::SetupCaptivePortalMode: WiFi mode changed during scan, attempting to reset to WIFI_AP.");
-        SetWiFiModeRobustly(WIFI_AP);
+        SetWiFiMode(WIFI_AP);
     }
 
     // Required for a strategic lie that ALL dns requests return the above IP.

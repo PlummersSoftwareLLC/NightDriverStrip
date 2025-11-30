@@ -148,7 +148,7 @@ void StartCaptivePortal()
 
     debugI("Stopping WiFi station mode to start Captive Portal.");
     // Use the robust function to set AP mode
-    if (!SetWiFiModeRobustly(WIFI_AP))
+    if (!SetWiFiMode(WIFI_AP))
     {
         debugE("Failed to robustly set WiFi mode to WIFI_AP for Captive Portal.");
         return; // Early exit if we can't get into AP mode
@@ -517,8 +517,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                     WiFi.setHostname(hostname);
                 }
 
-                WiFi.disconnect();
-                WiFi.mode(WIFI_STA);
+                SetWiFiMode(WIFI_STA);
                 debugW("Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
                        WiFi_ssid.c_str(), ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
 
@@ -884,7 +883,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     // Attempts to set the WiFi mode robustly by first disconnecting,
     // applying a delay, setting the new mode, and then polling to
     // confirm the mode change within a timeout.
-    bool SetWiFiModeRobustly(WiFiMode_t mode)
+    bool SetWiFiMode(WiFiMode_t mode)
     {
         debugI("Attempting to set WiFi mode to %s", mode == WIFI_AP ? "WIFI_AP" : (mode == WIFI_STA ? "WIFI_STA" : "WIFI_OFF"));
         

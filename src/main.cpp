@@ -319,7 +319,7 @@ void setup()
     ESP_ERROR_CHECK(err);
 
     #if ENABLE_ESPNOW
-        WiFi.mode(WIFI_STA);  // or WIFI_AP if applicable
+        SetWiFiMode(WIFI_STA);  // or WIFI_AP if applicable
 
         if (esp_now_init() != ESP_OK)
             throw std::runtime_error("Error initializing ESP-NOW");

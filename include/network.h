@@ -79,7 +79,7 @@
     bool WriteWiFiConfig(WifiCredSource source, const String& WiFi_ssid, const String& WiFi_password);
     bool ClearWiFiConfig(WifiCredSource source);
 
-    bool SetWiFiModeRobustly(WiFiMode_t mode);
+    bool SetWiFiMode(WiFiMode_t mode);
     void StartCaptivePortal(); // Declaration for StartCaptivePortal function.
 
     // Static Helpers
