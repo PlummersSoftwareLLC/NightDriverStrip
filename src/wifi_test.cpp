@@ -80,7 +80,7 @@ bool expectAPMode(uint32_t timeoutMs) {
 
         if (currentMode == WIFI_AP_STA) {
             debugW("TEST: Detected WIFI_AP_STA, attempting to force to WIFI_AP.");
-            SetWiFiModeRobustly(WIFI_AP);
+            SetWiFiMode(WIFI_AP);
             currentMode = WiFi.getMode(); // Re-check mode after attempting to force
             debugI("TEST: Mode after force attempt: %d", currentMode);
         }
@@ -103,7 +103,7 @@ bool expectAPMode(uint32_t timeoutMs) {
 // Disable AP Mode (e.g., after a test that uses AP mode)
 bool disableAPMode() {
     debugI("TEST: Disabling AP mode.");
-    if (SetWiFiModeRobustly(WIFI_STA)) { // Attempt to switch to STA to disable AP
+    if (SetWiFiMode(WIFI_STA)) { // Attempt to switch to STA to disable AP
         debugI("TEST: AP mode successfully disabled (switched to STA).");
         return true;
     }
@@ -272,12 +272,15 @@ void WiFiTestLoopEntry(void* pvParameters) {
     }
 
     debugI("===== All WiFi Tests Completed: %u PASSED, %u FAILED of %u =====", passedCases, failedCases, g_numWiFiTestCases);
-    debugI("TEST: Performing final cleanup: Setting WiFi mode to WIFI_OFF.");
-    SetWiFiModeRobustly(WIFI_OFF); // Ensure WiFi is turned off after tests
-    debugI("Looping indefinitely.");
-    while (true) {
-        delay(1000);
-    }
+    debugI("TEST: All tests finished. Starting captive portal for configuration.");
+    
+    StartCaptivePortal();
+
+    debugI("TEST: Starting main network loop to manage captive portal.");
+    g_ptrSystem->TaskManager().StartNetworkThread();
+
+    debugI("TEST: Test task complete. Exiting.");
+    vTaskDelete(NULL); // Delete the current task
 }
 
 #endif // ENABLE_WIFI_TEST_MODE
