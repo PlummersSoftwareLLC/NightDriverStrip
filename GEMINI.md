@@ -7,7 +7,7 @@ This project aimed to significantly improve the stability and reliability of the
 1.  **Long Captive Portal Timeout:** When a previously configured WiFi network was temporarily unavailable, the device would try to reconnect for up to 15 minutes (`900` seconds) before starting the captive portal, leading to a poor user experience. This is referred to as the "Dave Case".
 2.  **Quick Feedback for Wrong Credentials:** When a user entered the wrong password for a known SSID, the device would also wait for the long timeout. It should fail fast and allow the user to re-enter credentials. This is the "Mistyped Password Case".
 3.  **No Credentials / SSID Not Found:** On first-time setup or when no known SSIDs are found, the device should quickly enter captive portal mode. This is the "Harrie Case".
-4.  **System Instability:** Rapidly forcing the device into AP mode (e.g., using `clearsettings` then `startportal` debug commands) could cause the WiFi stack to become unresponsive.
+4.  **System Instability and Memory Leaks:** Rapidly or repeatedly attempting to force the device into AP mode (e.g., using `clearsettings` then `startportal`, or after repeated connection failures) could cause the WiFi stack to become unresponsive and lead to significant memory leaks, eventually crashing the device.
 
 ### Solutions Implemented:
 
@@ -17,6 +17,10 @@ To address these issues, the following changes were made:
 2.  **Robust WiFi Mode Switching:** A new function, `SetWiFiModeRobustly()`, was implemented in `include/network.h` and `src/network.cpp`. This function ensures clean transitions between WiFi modes by explicitly disconnecting, setting the new mode, and polling to confirm the change. It is now used by all functions that initiate the captive portal.
 3.  **Fixes for AP Mode Activation:** Several specific bugs were fixed, including handling implicit mode changes caused by `WiFi.scanNetworks()` and ensuring the device reliably enters `WIFI_AP` mode.
 4.  **Automated Testing Framework:** A comprehensive, on-device automated testing framework was created (`src/wifi_test.cpp`, `include/wifi_test.h`, `include/wifi_test_config.h`) to continuously verify the correctness of the WiFi state machine and prevent regressions. These tests cover all the cases mentioned above.
+5.  **Memory Leak and Stability Fixes:**
+    *   Resolved a memory leak caused by repeated, failing attempts to start the captive portal. The fix ensures that the "captive portal active" state is set *before* attempting to change the WiFi mode, preventing a loop of failed attempts that exhausted memory.
+    *   Ensured thread safety by confirming the use of `std::atomic<bool>` for the `servicesStarted` flag, which is accessed by multiple tasks.
+    *   Optimized memory by pre-allocating capacity for the `_availableNetworks` vector before scanning for WiFi networks, preventing multiple reallocations.
 
 As a result of these changes, all automated WiFi test cases now pass, ensuring reliable WiFi mode transitions and a more robust captive portal experience.
 

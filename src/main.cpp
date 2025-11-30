@@ -340,7 +340,7 @@ void setup()
         debugW("Starting ImprovSerial for %s", family.c_str());
         String name = "NDESP32" + get_mac_address().substring(6);
         g_pImprovSerial = make_unique_psram<ImprovSerial<typeof(Serial)>>();
-        g_pImprovSerial->setup(PROJECT_NAME, FLASH_VERSION_NAME, family, name.c_str(), &Serial);
+        g_pImprovSerial->Setup(PROJECT_NAME, FLASH_VERSION_NAME, family, name.c_str(), &Serial);
 
     #endif
 

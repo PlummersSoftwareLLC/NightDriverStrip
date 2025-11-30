@@ -170,17 +170,21 @@ I recommend you do the following:
 
 ## WiFi Configuration
 
-NightDriver now features a captive portal to make WiFi setup simple and easy.
+NightDriver now features a robust captive portal to make WiFi setup simple and easy.
 
 #### Recommended Method: Captive Portal
 
-If your device is not configured with WiFi credentials or cannot connect to its last known network, it will automatically create its own WiFi Access Point (AP) that can be accessed from your phone or computer to configure the credentials of the device.
+If your device is not configured with WiFi credentials or cannot connect to its last known network, it will automatically create its own WiFi Access Point (AP). You can connect to this AP from your phone or computer to configure the device's credentials.
 
 1.  Look for a WiFi network with a name (SSID) like `NightDriver-Setup-XXXXXX` (the `XXXXXX` will be unique to your device).
 2.  Connect to this network with your phone or computer.
 3.  A configuration page should pop up automatically on your device. If it doesn't, open a web browser and navigate to `http://192.168.4.1`.
 4.  On this page, you can scan for local WiFi networks, select your home network, and enter the password.
-5.  Once you save the credentials, the device will reboot and attempt to connect to your network. If it fails to connect, it will restart the captive portal process.
+5.  Once you save the credentials, the device will reboot and attempt to connect to your network.
+
+The system uses smart timeouts to decide when to start the captive portal:
+*   **Impatient Mode (30 seconds):** If you are setting up the device for the first time, or if it fails to connect due to an incorrect password or because the SSID isn't found, the captive portal will start quickly (within ~30 seconds) to allow for immediate configuration.
+*   **Patient Mode (15 minutes):** If the device has a known, working WiFi configuration but temporarily loses connection (e.g., your router reboots), it will patiently try to reconnect for ~15 minutes before starting the captive portal. This prevents the device from falling into setup mode during a brief network outage.
 
 #### Credential Priority
 
@@ -199,14 +203,11 @@ For development purposes, you can still hard-code credentials by copying `includ
 
 #### Clearing WiFi Credentials
 
-For development and testing, you may need to clear all stored WiFi credentials to force the device into the captive portal mode on the next boot, or to force the device back to using the compiled-in credentials from `secrets.h`. You can do this by connecting to the device's debug console (via Telnet or serial) and issuing the `clearsettings` command. This will erase all WiFi credentials from the device's non-volatile storage.
+For development and testing, you may need to clear all stored WiFi credentials to force the device into captive portal mode on the next boot. You can do this by connecting to the device's debug console (via Telnet or serial) and issuing the `clearsettings` command. This erases all WiFi credentials from the device's non-volatile storage, which is useful for testing the "first-time setup" experience.
 
 #### Advanced Configuration
 
-For advanced users, the behavior of the captive portal can be fine-tuned via the `portalTimeoutSeconds` device setting (see the [REST API documentation](REST_API.md#device-settings) for how to change settings).
-
-*   **AUTO Mode (default):** By default, `portalTimeoutSeconds` is `0`, which enables an automatic mode with smart timeouts. In this mode, the device is "patient" (waiting ~15 minutes before starting the portal) during a temporary network outage, such as when your router reboots or the signal is temporarily lost. It is "impatient" (starting the portal in ~30 seconds) in situations where immediate user action is needed, such as when the configured WiFi network is not found or when the password is incorrect. This provides a good experience for both temporary outages and for initial setup or configuration changes.
-*   **Fixed Timeout:** Setting `portalTimeoutSeconds` to a value greater than `0` will cause the device to always wait that specific number of seconds after a connection failure before starting the captive portal.
+For advanced users, the behavior of the captive portal can be fine-tuned via the `portalTimeoutSeconds` device setting (see the [REST API documentation](REST_API.md#device-settings) for how to change settings). Setting this to `0` enables the smart timeout "AUTO Mode" described above. Setting it to a non-zero value will force a fixed timeout of that many seconds before the portal starts.
 
 ## Feature defines
 

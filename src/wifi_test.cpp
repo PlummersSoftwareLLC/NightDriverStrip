@@ -36,6 +36,7 @@ void backupWiFiCredentials() {
 
 // Restore WiFi credentials after tests are complete
 void restoreWiFiCredentials() {
+    g_ptrSystem->WebServer().SetCaptivePortalActive(false); // Ensure portal is considered inactive
     if (g_credentials_backed_up) {
         debugI("TEST: Restoring credentials for SSID '%s' to source %d", g_backup_ssid.c_str(), (int)g_backup_source);
         // Clear any test credentials first
@@ -46,8 +47,8 @@ void restoreWiFiCredentials() {
             debugE("TEST: FAILED to restore WiFi credentials.");
         }
     } else {
-        debugI("TEST: No credentials to restore. Starting captive portal for configuration.");
-        StartCaptivePortal();
+        debugI("TEST: No credentials to restore. Leaving system to start captive portal via main loop.");
+        // Main loop will handle starting the portal now.
     }
 }
 

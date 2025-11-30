@@ -303,7 +303,6 @@ void CWebServer::SetupStationMode()
 void CWebServer::SetupCaptivePortalMode()
 {
     debugW("Starting Captive Portal AP setup.");
-    SetCaptivePortalActive(true);
 
     WiFi.persistent(false);
 
@@ -351,8 +350,8 @@ void CWebServer::SetupCaptivePortalMode()
     debugW("Found %d networks.", n);
 
     if (WiFi.getMode() != WIFI_AP) {
-        debugW("CWebServer::SetupCaptivePortalMode: WiFi mode changed during scan, attempting to reset to WIFI_AP.");
-        SetWiFiMode(WIFI_AP);
+        debugW("CWebServer::SetupCaptivePortalMode: WiFi mode changed during scan, resetting to WIFI_AP.");
+        WiFi.mode(WIFI_AP);
     }
 
     // Required for a strategic lie that ALL dns requests return the above IP.

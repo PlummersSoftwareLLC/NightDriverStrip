@@ -145,6 +145,7 @@ void StartCaptivePortal()
     {
         return;
     }
+    g_ptrSystem->WebServer().SetCaptivePortalActive(true);
     servicesStarted = false; // Reset servicesStarted when entering captive portal
 
     debugI("Stopping WiFi station mode to start Captive Portal.");
@@ -152,6 +153,7 @@ void StartCaptivePortal()
     if (!SetWiFiMode(WIFI_AP))
     {
         debugE("Failed to robustly set WiFi mode to WIFI_AP for Captive Portal.");
+        g_ptrSystem->WebServer().SetCaptivePortalActive(false);
         return; // Early exit if we can't get into AP mode
     }
 
@@ -1032,6 +1034,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     void IRAM_ATTR NetworkHandlingLoopEntry(void *)
     {
         static unsigned long millisAtLastConnected = millis();
+        static bool hasEverConnected = false;
 
         //debugI(">> NetworkHandlingLoopEntry\n");
         if (!MDNS.begin("esp32"))
@@ -1044,18 +1047,14 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         for (;;)
         {
             if (g_ptrSystem->WebServer().IsCaptivePortalActive())
-                {
+            {
                 g_ptrSystem->WebServer().ProcessDnsRequests();
-                delay(50); // Small delay to prevent tight loop
-                continue; // Don't do any of the STA stuff
+                delay(50);
+                continue;
             }
 
-            // Wait until we're woken up by a reader being flagged, or until we've reached the hold point
-            ulTaskNotifyTake(pdTRUE, notifyWait);
-
-            // Every second we check WiFi, and reconnect if we've lost the connection. If we are unable to restart
-            // it for any reason, we reboot the chip in cases where its required, which we assume from WAIT_FOR_WIFI.
-
+            // This block handles WiFi connection and starting the captive portal.
+            // It should run every second regardless of connection state.
             EVERY_N_SECONDS(1)
             {
                 auto connectResult = LoadAndConnectToWiFiWithPriority();
@@ -1063,6 +1062,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                 if (connectResult == WiFiConnectResult::Connected)
                 {
                     millisAtLastConnected = millis();
+                    hasEverConnected = true;
 
                     if (!servicesStarted)
                     {
@@ -1103,104 +1103,101 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                 else
                 {
                     debugV("Still waiting for WiFi to connect.");
-                    if (connectResult != WiFiConnectResult::NoCredentials)
+
+                    unsigned long waitTime = millis() - millisAtLastConnected;
+                    uint32_t configuredTimeout = g_ptrSystem->DeviceConfig().GetPortalTimeoutSeconds();
+                    uint32_t actualTimeoutMs;
+
+                    wl_status_t currentWifiStatus = WiFi.status();
+
+                    if (connectResult == WiFiConnectResult::NoCredentials || !hasEverConnected || currentWifiStatus == WL_NO_SSID_AVAIL || currentWifiStatus == WL_CONNECT_FAILED)
                     {
-                        unsigned long waitTime = millis() - millisAtLastConnected;
-                        uint32_t configuredTimeout = g_ptrSystem->DeviceConfig().GetPortalTimeoutSeconds();
-                        uint32_t actualTimeoutMs;
+                        actualTimeoutMs = AUTO_MODE_SHORT_TIMEOUT_SECONDS * 1000;
+                    }
+                    else if (configuredTimeout == 0) // AUTO mode
+                    {
+                        actualTimeoutMs = AUTO_MODE_LONG_TIMEOUT_SECONDS * 1000;
+                    }
+                    else
+                    { // Fixed timeout mode
+                        actualTimeoutMs = configuredTimeout * 1000;
+                    }
 
-                        if (configuredTimeout == 0) // AUTO mode
-                        {
-                            wl_status_t currentWifiStatus = WiFi.status();
-                            if (currentWifiStatus == 1 /* WL_NO_SSID_AVAIL */ || currentWifiStatus == 4 /* WL_CONNECT_FAILED */)
-                            {
-                                actualTimeoutMs = AUTO_MODE_SHORT_TIMEOUT_SECONDS * 1000;
-                            }
-                            else
-                            {
-                                actualTimeoutMs = AUTO_MODE_LONG_TIMEOUT_SECONDS * 1000;
-                            }
-                        }
-                        else
-                        { // Fixed timeout mode
-                            actualTimeoutMs = configuredTimeout * 1000;
-                        }
-
-                        debugI("WiFi wait time: %lu ms, timeout: %u ms", waitTime, actualTimeoutMs);
-                        if (actualTimeoutMs > 0 && waitTime > actualTimeoutMs)
-                        {
-                            StartCaptivePortal();
-                        }
+                    debugI("WiFi wait time: %lu ms, timeout: %u ms", waitTime, actualTimeoutMs);
+                    if (actualTimeoutMs > 0 && waitTime > actualTimeoutMs)
+                    {
+                        StartCaptivePortal();
                     }
                 }
             }
 
-            // If the reader container isn't available yet or WiFi isn't up yet, we'll sleep for a second before we check again
-            if (!g_ptrSystem->HasNetworkReader() || !WiFi.isConnected())
+            // This block handles the network readers and should only run when connected.
+            if (WiFi.isConnected() && g_ptrSystem->HasNetworkReader())
             {
-                notifyWait = pdMS_TO_TICKS(1000);
-                continue; // Don't do any of the STA stuff
+                ulTaskNotifyTake(pdTRUE, notifyWait);
+                auto& networkReader = g_ptrSystem->NetworkReader();
+                unsigned long now = millis();
+
+                // Flag entries of which the read interval has passed
+                for (auto& entry : networkReader.readers)
+                {
+                    if (entry.canceled.load())
+                        continue;
+
+                    auto interval = entry.readInterval.load();
+                    unsigned long targetMs = entry.lastReadMs.load() + interval;
+
+                    // The last check captures cases where millis() returns bogus data; if the delta between now and lastReadMs is greater
+                    //   than the interval then something's up with our timekeeping, so we trigger the reader just to be sure
+                    if (interval && (targetMs <= now || (std::max(now, targetMs) - std::min(now, targetMs)) > interval))
+                        entry.flag.store(true);
+
+                    // Unset flag before we do the actual read. This makes that we don't miss another flag raise if it happens while reading
+                    if (entry.flag.exchange(false))
+                    {
+                        entry.reader();
+                        entry.lastReadMs.store(millis());
+                    }
+                }
+
+                // We wake up at least once every second
+                unsigned long holdMs = 1000;
+                now = millis();
+
+                // Calculate how long we can sleep. This is determined by the reader that is closest to its interval passing.
+                for (auto& entry : networkReader.readers)
+                {
+                    if (entry.canceled.load())
+                        continue;
+
+                    auto interval = entry.readInterval.load();
+                    auto lastReadMs = entry.lastReadMs.load();
+
+                    if (!interval)
+                        continue;
+
+                    // If one of the reader intervals passed then we're up for another read cycle right away, so we can stop looking further
+                    if (lastReadMs + interval <= now)
+                    {
+                        holdMs = 0;
+                        break;
+                    }
+                    else
+                    {
+                        unsigned long entryHoldMs = std::min(interval, interval - (now - lastReadMs));
+                        if (entryHoldMs < holdMs)
+                            holdMs = entryHoldMs;
+                    }
+                }
+                notifyWait = pdMS_TO_TICKS(holdMs);
             }
-
-            auto& networkReader = g_ptrSystem->NetworkReader();
-            unsigned long now = millis();
-
-            // Flag entries of which the read interval has passed
-            for (auto& entry : networkReader.readers)
+            else
             {
-                if (entry.canceled.load())
-                    continue;
-
-                auto interval = entry.readInterval.load();
-                unsigned long targetMs = entry.lastReadMs.load() + interval;
-
-                // The last check captures cases where millis() returns bogus data; if the delta between now and lastReadMs is greater
-                //   than the interval then something's up with our timekeeping, so we trigger the reader just to be sure
-                if (interval && (targetMs <= now || (std::max(now, targetMs) - std::min(now, targetMs)) > interval))
-                    entry.flag.store(true);
-
-                // Unset flag before we do the actual read. This makes that we don't miss another flag raise if it happens while reading
-                if (entry.flag.exchange(false))
-                {
-                    entry.reader();
-                    entry.lastReadMs.store(millis());
-                }
+                // If not connected, don't busy-wait.
+                delay(250);
             }
-
-            // We wake up at least once every second
-            unsigned long holdMs = 1000;
-            now = millis();
-
-            // Calculate how long we can sleep. This is determined by the reader that is closest to its interval passing.
-            for (auto& entry : networkReader.readers)
-            {
-                if (entry.canceled.load())
-                    continue;
-
-                auto interval = entry.readInterval.load();
-                auto lastReadMs = entry.lastReadMs.load();
-
-                if (!interval)
-                    continue;
-
-                // If one of the reader intervals passed then we're up for another read cycle right away, so we can stop looking further
-                if (lastReadMs + interval <= now)
-                {
-                    holdMs = 0;
-                    break;
-                }
-                else
-                {
-                    unsigned long entryHoldMs = std::min(interval, interval - (now - lastReadMs));
-                    if (entryHoldMs < holdMs)
-                        holdMs = entryHoldMs;
-                }
-            }
-
-            notifyWait = pdMS_TO_TICKS(holdMs);
         }
     }
-
     size_t NetworkReader::RegisterReader(const std::function<void()>& reader, unsigned long interval, bool flag)
     {
         // Add the reader with its flag unset
