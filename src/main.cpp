@@ -164,7 +164,6 @@
 #include "soundanalyzer.h"
 #include "values.h"
 #include "improvserial.h"                       // ImprovSerial impl for setting WiFi credentials over the serial port
-#include <TJpg_Decoder.h>
 #include <esp_now.h>
 
 #if defined(TOGGLE_BUTTON_0) || defined(TOGGLE_BUTTON_1)
@@ -514,14 +513,6 @@ void setup()
     #endif
 
     g_ptrSystem->SetupBufferManagers();
-
-    TJpgDec.setJpgScale(1);
-    TJpgDec.setCallback([](int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
-    {
-        auto pgfx = g_ptrSystem->EffectManager().g();
-        pgfx->drawRGBBitmap(x, y, bitmap, w, h);
-        return true;
-    });
 
     // Show splash effect on matrix
     #if USE_HUB75
