@@ -193,4 +193,6 @@
       void CancelReader(size_t index);
   };
 
+  void InitNetworkCLI();
+
 #endif

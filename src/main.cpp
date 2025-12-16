@@ -159,20 +159,25 @@
 #include <nvs.h>
 
 #include "globals.h"
+
+#include "debug_cli.h"
 #include "deviceconfig.h"
-#include "systemcontainer.h"
-#include "soundanalyzer.h"
-#include "values.h"
 #include "improvserial.h"                       // ImprovSerial impl for setting WiFi credentials over the serial port
+#include "soundanalyzer.h"
+#include "systemcontainer.h"
+#include "values.h"
 #include <TJpg_Decoder.h>
-#include <esp_now.h>
 
 #if defined(TOGGLE_BUTTON_0) || defined(TOGGLE_BUTTON_1)
   #include "Bounce2.h"                            // For Bounce button class
 #endif
 
 void IRAM_ATTR ScreenUpdateLoopEntry(void *);
+
+#if ENABLE_ESPNOW
+#include <esp_now.h>
 void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen);
+#endif
 
 //
 // Global Variables
@@ -222,6 +227,9 @@ void PrintOutputHeader()
     debugI("Version %u: Wifi SSID: \"%s\" - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u",
             FLASH_VERSION, cszSSID, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
     debugI("ESP32 Clock Freq : %d MHz", ESP.getCpuFreqMHz());
+
+    // Initial CLI prompt
+    RunCommand("");
 }
 
 // TerminateHandler
@@ -385,7 +393,57 @@ void setup()
         String name = "NDESP32" + get_mac_address().substring(6);
         g_pImprovSerial = make_unique_psram<ImprovSerial<typeof(Serial)>>();
         g_pImprovSerial->setup(PROJECT_NAME, FLASH_VERSION_NAME, family, name.c_str(), &Serial);
+        g_pImprovSerial->set_on_unknown_byte([](uint8_t byte)
+        {
+             // Essentially a global that never shrinks. We quickly reach
+             // the size of the length that people type, but it's free if
+             // never used.
+             static std::string cmd;
 
+             switch (byte) {
+                case '\t': {
+                    std::string_view suffix = TabComplete(cmd);
+                    if (!suffix.empty()) {
+                        cmd += suffix;
+                        cmd += " ";
+                        Serial.print(suffix.data());
+                        Serial.print(" ");
+                    }
+                    break;
+                }
+                case '\b':
+                case 0x7f:
+                    if (!cmd.empty()) {
+                        cmd.pop_back();
+                        cli_printf("\b \b");
+                    }
+                    else {
+                         // Optional: Ring bell or ignore if buffer empty
+                    }
+                    break;
+
+                case '\r':
+                case '\n':
+                    if (byte == '\r') Serial.println(); // Correctly handle CRLF for local echo
+                    if (cmd.empty()) {
+                        // If buffer was empty (just Enter), RunCommand("") handles the prompt
+                        RunCommand("");
+                        cmd.clear();
+                    }
+                    else {
+                        // User entered a command
+                        cli_printf("\n");
+                        RunCommand(cmd.c_str());
+                        cmd.clear();
+                    }
+                    break;
+
+                default:
+                    Serial.write(byte);
+                    cmd += (char)byte;
+                    break;
+             }
+        });
     #endif
 
     // Setup config objects
@@ -550,6 +608,9 @@ void setup()
     taskManager.StartNetworkThread();
     taskManager.StartColorDataThread();
     taskManager.StartSocketThread();
+
+    InitDebugCLI();
+    InitNetworkCLI();
 
     SaveEffectManagerConfig();
     // Start the main loop
