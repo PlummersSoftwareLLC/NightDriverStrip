@@ -1016,5 +1016,9 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         entry.readInterval.store(0);
         entry.reader = nullptr;
     }
+#else
+
+    void InitNetworkCLI() {
+    }
 
 #endif // ENABLE_WIFI
