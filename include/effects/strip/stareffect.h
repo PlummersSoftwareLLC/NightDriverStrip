@@ -434,28 +434,33 @@ class StarEffectBase : public EffectWithId<StarEffectBase<StarType, TEffect>>
 
     virtual void CreateStars()
     {
-    #if ENABLE_AUDIO
-
         for (int i = 0; i < cMaxNewStarsPerFrame; i++)
         {
-            double prob = _newStarProbability;
+            double prob = _newStarProbability / 100.0;
+            float speedMultiplier = 1.0f;
 
-            prob = (prob / 100) + (g_Analyzer.VURatio() - 1.0) * _musicFactor;
+            #if ENABLE_AUDIO
+                // If we have audio enabled, we modulate the probability and speed based on the music.
+                // However, we only do this if there is actual sound (VU > 0), otherwise we fall through
+                // to the base probability so that stars still appear in silence.
+                if (g_Analyzer.VU() > 0)
+                {
+                    prob += (g_Analyzer.VURatio() - 1.0) * _musicFactor;
+                    speedMultiplier = _musicFactor;
+                }
+            #endif
 
             constexpr auto kProbabilitySpan = 1.0;
 
-            if (g_Analyzer.VU() > 0)
+            // Ensure probability is positive before rolling dice
+            if (prob > 0.0 && (random_range(0.0, kProbabilitySpan) < g_Values.AppTime.LastFrameTime() * prob))
             {
-                if (random_range(0.0, kProbabilitySpan) < g_Values.AppTime.LastFrameTime() * prob)
-                {
-                    StarType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
-                    // This always starts stars on even pixel boundaries so they look like the desired width if not moving
-                    newstar._iPos = (int) random_range(0U, LEDStripEffect::_cLEDs - 1 - starWidth);
-                    _allParticles.push_back(newstar);
-                }
+                StarType newstar(_palette, _blendType, _maxSpeed * speedMultiplier, _starSize);
+                // This always starts stars on even pixel boundaries so they look like the desired width if not moving
+                newstar._iPos = (int) random_range(0U, LEDStripEffect::_cLEDs - 1 - starWidth);
+                _allParticles.push_back(newstar);
             }
         }
-    #endif
     }
 
     virtual void Update()
