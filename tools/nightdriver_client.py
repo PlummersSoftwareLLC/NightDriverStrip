@@ -172,14 +172,13 @@ class ColorClient:
         self.verbose = verbose
         self.frames_captured = 0
         self.frames_in_error = 0
-        self.internal_buffer = b'' # RJL internal buffer for partial frames
+        self.internal_buffer = b'' # Internal buffer for partial frames
 
 
     def __enter__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(5.0) # Increased timeout for initial read
         self.sock.connect((self.host, self.port))
-        # RJL try to switch to a shorter timeout for SocketReader
         self.sock.settimeout(0.1)
 
         self.reader_thread = SocketReader(self.sock, self.data_queue, self.stop_event, verbose=self.verbose)
@@ -492,15 +491,17 @@ def save_raw_frames(frames, output_filename, verbose=False):
 
     if verbose: print(f"save_raw_frames: Saved raw frames to {output_filename}")
 
-def live_view(host, layout="flat", verbose=False, gain=1.0):
+def live_view(host, layout="flat", verbose=False, gain=1.0, scale=None):
     """
     Displays a live, real-time view of the device output.
     """
     import pygame
     import math
+    import collections
+
 
     PIXEL_GAP = 1
-    DEFAULT_PIXEL_SCALE = 10
+    DEFAULT_PIXEL_SCALE = scale if scale is not None else 10
 
     with ColorClient(host, verbose=verbose) as client:
         # Get the first frame to determine the matrix size
@@ -603,6 +604,11 @@ def live_view(host, layout="flat", verbose=False, gain=1.0):
         pygame.display.set_caption("NightDriver Live View")
         clock = pygame.time.Clock()
 
+        # Stats for auto-brightness warning
+        frame_count = 0
+        brightness_history = collections.deque(maxlen=10) # 10 samples
+        has_warned_brightness = False
+
         running = True
         while running:
             for event in pygame.event.get():
@@ -614,6 +620,28 @@ def live_view(host, layout="flat", verbose=False, gain=1.0):
                 continue
 
             frame = latest_frames[-1]
+
+            # Check brightness stats every 30 frames (approx 0.5 - 1.0 sec depending on framerate)
+            frame_count += 1
+            if not has_warned_brightness and frame_count % 30 == 0:
+                # Find the peak brightness of any channel in any pixel in this frame
+                # This is O(N) but we only do it rarely.
+                if frame['pixels']:
+                    peak_brightness = max(max(p) for p in frame['pixels'])
+                    brightness_history.append(peak_brightness)
+                    print(f"Peak brightness: {peak_brightness}")
+
+                    # If we have a full history and ALL samples are dim (< 40) but not black (> 0)
+                    if len(brightness_history) == brightness_history.maxlen:
+                        # Logic: If the brightest pixel in the last N samples never exceeded 40/255
+                        # AND we saw at least some light (max > 0), then it's likely just too dim to see well.
+                        max_history_brightness = max(brightness_history)
+                        if 0 < max_history_brightness < 40:
+                            # if max_history_brightness < 40:
+                            print("\n[TIP] The live view seems very dark. Increase display brightness or ")
+                            print("      try increasing visibility with: --preview-gain 5.0")
+                            has_warned_brightness = True
+
             screen.fill((0, 0, 0))
 
             if is_hex_display:
@@ -869,8 +897,14 @@ def main():
                     save_raw_frames(frames, raw_filename, verbose=args.verbose)
                     captured_files.append(output_filename)
 
+    args = parser.parse_args()
+
+    client = NightDriver(args.host, port=args.rest_port)
+
+    # ... (skipping captured_files init)
+
     if args.live_view:
-        live_view(args.host, args.hex_layout, verbose=args.verbose, gain=args.preview_gain)
+        live_view(args.host, args.hex_layout, verbose=args.verbose, gain=args.preview_gain, scale=args.scale)
 
     if args.backup:
         backup_configuration(client, args.backup)
