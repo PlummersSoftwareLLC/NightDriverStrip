@@ -345,15 +345,6 @@ static void DoCat(const cli_argv &argv)
 static const command core_commands[] = {
     {"cat", "Display file content", "Printing file...", DoCat},
     {"reboot", "Reboot system", "Rebooting. Please stand by...", [](const cli_argv &) { esp_restart(); }},
-    {"stats", "Display system statistics", "Displaying statistics",
-     [](const cli_argv &) {
-         // This needs implementation or extern.
-         // DoStatsCommand used to be in network.cpp.
-         // Ideally moved here if it's generic, or exposed in a header.
-         // For now, assuming extern void DoStatsCommand();
-         extern void DoStatsCommand();
-         DoStatsCommand();
-     }},
     {"clearsettings", "Reset persisted user settings", "Removing persisted settings",
      [](const cli_argv &) {
          g_ptrSystem->DeviceConfig().RemovePersisted();
@@ -366,7 +357,7 @@ static const command core_commands[] = {
          vTaskList(buf);
          cli_printf("\nName          State      Prio  Stack  Num Core\n%s", buf);
 #else
-         cli_printf("Task list not enabled in FreeRTOS config");
+         cli_printf("Task list not enabled in FreeRTOS config\n");
 #endif
      }},
     {"heap", "Display heap memory info",

@@ -52,6 +52,7 @@ DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                
 
 
 
+#if ENABLE_WIFI
 void DoStatsCommand()
 {
     auto& bufferManager = g_ptrSystem->BufferManagers()[0];
@@ -82,6 +83,7 @@ static const command network_commands[] = {
 void InitNetworkCLI() {
     RegisterCommands(network_commands, sizeof(network_commands)/sizeof(network_commands[0]));
 }
+#endif // ENABLE_WIFI
 
 #if ENABLE_ESPNOW
 
