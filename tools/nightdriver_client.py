@@ -186,33 +186,14 @@ class ColorClient:
         self.reader_thread.start()
         return self
 
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.stop_event.set() # Signal the reader thread to stop
         if self.reader_thread and self.reader_thread.is_alive():
             self.reader_thread.join(timeout=1.0) # Wait for the thread to finish
         if self.sock:
             self.sock.close()
-    # RJL
-    def OLD_get_data_from_queue(self, n_bytes, timeout_seconds=1.0):
-        data = b''
-        start_time = time.time()
-        while len(data) < n_bytes:
-            remaining_timeout = timeout_seconds - (time.time() - start_time)
-            if remaining_timeout <= 0:
-                if self.verbose: print(f"_get_data_from_queue: Timeout reached. Requested {n_bytes}, got {len(data)}")
-                return None # Overall timeout
-            try:
-                # Try to get a chunk from the queue, waiting up to 0.1 seconds
-                chunk = self.data_queue.get(timeout=min(remaining_timeout, 0.1))
-                if chunk is None:
-                    if self.verbose: print("_get_data_from_queue: Reader thread stopped (chunk is None).")
-                    return None
-                data += chunk
-                if self.verbose: print(f"_get_data_from_queue: Received {len(chunk)} bytes. Total {len(data)}/{n_bytes}")
-            except queue.Empty:
-                if self.verbose: print("_get_data_from_queue: Queue empty, continuing.")
-                continue
-        return data
+
 
     def _get_data_from_queue(self, n_bytes, timeout_seconds=1.0):
         data = b''
@@ -250,50 +231,54 @@ class ColorClient:
 
     def _find_header(self, timeout_seconds=None):
         header_bytes = b'DRLC'
-        buffer = b''
         start_time = time.time()
 
         while True:
             if timeout_seconds is not None and (time.time() - start_time) > timeout_seconds:
-                if self.verbose: print(f"_find_header: Timeout reached. Buffer size: {len(buffer)}")
-                return None, buffer # Overall timeout
+                if self.verbose: print(f"_find_header: Timeout reached. Buffer size: {len(self.internal_buffer)}")
+                return None, self.internal_buffer # Overall timeout
 
-            # Try to get a chunk from the queue
+            # Try to get a chunk from the queue if we don't have enough data or just to check for more
             try:
-                chunk = self.data_queue.get(timeout=0.1) # Small timeout for queue.get
+                # Only wait if we don't have enough for a header
+                wait_time = 0.1 if len(self.internal_buffer) < 12 else 0.001
+                chunk = self.data_queue.get(timeout=wait_time)
                 if chunk is None: # Reader thread has stopped
                     if self.verbose: print("_find_header: Reader thread stopped (chunk is None).")
-                    return None, buffer
-                buffer += chunk
-                if self.verbose: print(f"_find_header: Received {len(chunk)} bytes. Current buffer size: {len(buffer)}")
+                    return None, self.internal_buffer
+                self.internal_buffer += chunk
+                if self.verbose: print(f"_find_header: Received {len(chunk)} bytes. Current buffer size: {len(self.internal_buffer)}")
             except queue.Empty:
-                if self.verbose: print("_find_header: Queue empty, continuing.")
-                continue # No data yet, try again
+                if len(self.internal_buffer) == 0:
+                     if self.verbose: print("_find_header: Queue empty, continuing.")
+                     continue # No data yet, try again
+                # If we have data, fall through to try and find header
+                pass
 
             # Search for the header in the buffer
-            header_index = buffer.find(header_bytes)
+            header_index = self.internal_buffer.find(header_bytes)
             if header_index != -1:
                 # Found the header, now extract the full 12 bytes (header + width + height)
-                if len(buffer) - header_index >= 12:
-                    full_header_data = buffer[header_index : header_index + 12]
-                    remaining_buffer = buffer[header_index + 12:] # Consume the header from the buffer
+                if len(self.internal_buffer) - header_index >= 12:
+                    full_header_data = self.internal_buffer[header_index : header_index + 12]
+                    self.internal_buffer = self.internal_buffer[header_index + 12:] # Consume the header from the buffer
                     self.invalid_header_message_count = 0 # Reset count on successful sync
-                    if self.verbose: print(f"_find_header: Header found. Full header data size: {len(full_header_data)}, Remaining buffer size: {len(remaining_buffer)}")
-                    return full_header_data, remaining_buffer
+                    if self.verbose: print(f"_find_header: Header found. Full header data size: {len(full_header_data)}, Remaining buffer size: {len(self.internal_buffer)}")
+                    return full_header_data, self.internal_buffer
                 else:
                     # Not enough bytes for the full header yet, keep what we have and wait for more
-                    if self.verbose: print(f"_find_header: Partial header found. Waiting for more data. Current buffer size: {len(buffer)}")
-                    buffer = buffer[header_index:]
-                    # Continue to the outer loop to get more data
+                    if self.verbose: print(f"_find_header: Partial header found. Waiting for more data. Current buffer size: {len(self.internal_buffer)}")
+                    # self.internal_buffer is already set, just continue to get more data
                     continue
             else:
                 # Header not found, discard bytes before the last possible start of header
                 # This prevents the buffer from growing indefinitely with junk data
-                if len(buffer) > len(header_bytes) - 1:
-                    if self.verbose: print(f"_find_header: Header not found. Discarding {len(buffer) - (len(header_bytes) - 1)} bytes. New buffer size: {len(header_bytes) - 1}")
-                    buffer = buffer[-(len(header_bytes) - 1):]
+                if len(self.internal_buffer) > len(header_bytes) - 1:
+                    discard_amt = len(self.internal_buffer) - (len(header_bytes) - 1)
+                    if self.verbose: print(f"_find_header: Header not found. Discarding {discard_amt} bytes. New buffer size: {len(header_bytes) - 1}")
+                    self.internal_buffer = self.internal_buffer[-(len(header_bytes) - 1):]
                 else:
-                    if self.verbose: print(f"_find_header: Header not found. Buffer size: {len(buffer)}")
+                    if self.verbose: print(f"_find_header: Header not found. Buffer size: {len(self.internal_buffer)}")
                 # Continue to the outer loop to get more data
                 continue
 
@@ -331,8 +316,6 @@ class ColorClient:
         pixel_data_size = num_leds * 3 # 3 bytes per RGB pixel
         if self.verbose: print(f"capture_frames: Initial frame dimensions: {width}x{height}, pixel data size: {pixel_data_size}")
 
-        self.internal_buffer = b''  # Reset buffer before capture RJL
-
         while time.time() - start_time < duration_seconds:
             remaining_time = duration_seconds - (time.time() - start_time)
             if remaining_time <= 0:
@@ -341,7 +324,12 @@ class ColorClient:
 
             try:
                 # Pre-fill pixel_data with any remaining buffer from _find_header
-                pixel_data = current_buffer
+                # NOTE: _find_header already updated self.internal_buffer to point to the data after header
+                pixel_data = self.internal_buffer
+                # We need to detach pixel_data from internal_buffer for now, or just consume it
+                # Logic below expects 'pixel_data' to be the working buffer for this frame
+                self.internal_buffer = b'' # Temporarily clear, we will append to 'pixel_data' which acts as frame buffer
+
                 bytes_needed = pixel_data_size - len(pixel_data)
 
                 if bytes_needed > 0:
@@ -351,6 +339,11 @@ class ColorClient:
                         if self.verbose: print("capture_frames: Not enough pixel data received or timeout.")
                         break
                     pixel_data += additional_pixel_data
+
+                # If we read too much, put it back
+                if len(pixel_data) > pixel_data_size:
+                    self.internal_buffer = pixel_data[pixel_data_size:] + self.internal_buffer
+                    pixel_data = pixel_data[:pixel_data_size]
 
                 if len(pixel_data) < pixel_data_size:
                     if self.verbose: print(f"capture_frames: Incomplete pixel data. Expected {pixel_data_size}, got {len(pixel_data)}")
@@ -499,7 +492,7 @@ def save_raw_frames(frames, output_filename, verbose=False):
 
     if verbose: print(f"save_raw_frames: Saved raw frames to {output_filename}")
 
-def live_view(host, layout="flat"):
+def live_view(host, layout="flat", verbose=False, gain=1.0):
     """
     Displays a live, real-time view of the device output.
     """
@@ -509,7 +502,7 @@ def live_view(host, layout="flat"):
     PIXEL_GAP = 1
     DEFAULT_PIXEL_SCALE = 10
 
-    with ColorClient(host) as client:
+    with ColorClient(host, verbose=verbose) as client:
         # Get the first frame to determine the matrix size
         print("Waiting for first frame to determine matrix size...")
         frames = client.capture_frames(duration_seconds=1) # Capture a short moment to get a frame
@@ -520,6 +513,7 @@ def live_view(host, layout="flat"):
         first_frame = frames[0]
         matrix_width = first_frame['width']
         matrix_height = first_frame['height']
+        print(f"Detected matrix size: {matrix_width}x{matrix_height}")
 
         is_hex_display = (matrix_width * matrix_height == 271)
         hex_n = 10 # For 271 pixels, the hexagon side length is 10
@@ -579,6 +573,7 @@ def live_view(host, layout="flat"):
             max_x = max(c[0] for c in screen_coords)
             min_y = min(c[1] for c in screen_coords)
             max_y = max(c[1] for c in screen_coords)
+            # print(f"min_x: {min_x}, max_x: {max_x}, min_y: {min_y}, max_y: {max_y}")
 
             screen_width = int(max_x - min_x + 2.5 * HEX_RADIUS)
             screen_height = int(max_y - min_y + 2.5 * HEX_RADIUS)
@@ -587,6 +582,7 @@ def live_view(host, layout="flat"):
             offset_y = -min_y + 1.5 * HEX_RADIUS
 
         else: # Original rectangular layout logic
+            print("Using rectangular layout logic.")
             display_info = pygame.display.Info()
             max_screen_width = display_info.current_w - 50 # 50px buffer
 
@@ -603,6 +599,7 @@ def live_view(host, layout="flat"):
             screen_height = matrix_height * (pixel_scale_y + PIXEL_GAP) - PIXEL_GAP
 
         screen = pygame.display.set_mode((screen_width, screen_height))
+        print(f"Created pygame window: {screen_width}x{screen_height}")
         pygame.display.set_caption("NightDriver Live View")
         clock = pygame.time.Clock()
 
@@ -623,6 +620,11 @@ def live_view(host, layout="flat"):
                 if len(frame['pixels']) == 271:
                     for i, (q, r) in enumerate(hex_coords):
                         color = frame['pixels'][i]
+                        if gain != 1.0:
+                            r_val = min(255, int(color[0] * gain))
+                            g_val = min(255, int(color[1] * gain))
+                            b_val = min(255, int(color[2] * gain))
+                            color = (r_val, g_val, b_val)
                         x, y = axial_to_screen(q, r, HEX_RADIUS)
                         points = get_hex_points(x + offset_x, y + offset_y, HEX_RADIUS - PIXEL_GAP)
                         pygame.draw.polygon(screen, color, points)
@@ -632,6 +634,13 @@ def live_view(host, layout="flat"):
                         pixel_index = y * matrix_width + x
                         if pixel_index < len(frame['pixels']):
                             color = frame['pixels'][pixel_index]
+
+                            if gain != 1.0:
+                                r = min(255, int(color[0] * gain))
+                                g = min(255, int(color[1] * gain))
+                                b = min(255, int(color[2] * gain))
+                                color = (r, g, b)
+
                             rect = pygame.Rect(
                                 x * (pixel_scale_x + PIXEL_GAP),
                                 y * (pixel_scale_y + PIXEL_GAP),
@@ -774,6 +783,7 @@ def main():
     parser.add_argument("--capture-all", action="store_true", help="Capture all effects and save them as GIFs.")
     parser.add_argument("--live-view", action="store_true", help="Display a live, real-time view of the device output.")
     parser.add_argument("--hex-layout", type=str, default="flat", choices=["pointy", "flat"], help="Specify the hexagon layout for live view (pointy or flat). Default: flat.")
+    parser.add_argument("--preview-gain", type=float, default=1.0, help="Brightness gain for live view (e.g., 2.0 to double brightness). Useful for previewing low-brightness settings.")
     parser.add_argument("--backup", metavar="FILENAME", help="Save the device configuration to a JSON file.")
     parser.add_argument("--restore", metavar="FILENAME", help="Restore the device configuration from a JSON file.")
     parser.add_argument("--generate-gallery", action="store_true", help="Generate an HTML gallery from captured GIFs.")
@@ -860,7 +870,7 @@ def main():
                     captured_files.append(output_filename)
 
     if args.live_view:
-        live_view(args.host, args.hex_layout)
+        live_view(args.host, args.hex_layout, verbose=args.verbose, gain=args.preview_gain)
 
     if args.backup:
         backup_configuration(client, args.backup)
