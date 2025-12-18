@@ -82,6 +82,7 @@ class IdleTask
         counter = 0;
 
         // We need to whack the watchdog so we delay in smaller bites until we've used up all the time
+const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
 
         while (true)
         {
@@ -98,6 +99,11 @@ class IdleTask
                 // Burn a little time and update the counter
                 esp_task_wdt_reset();
                 delayMicroseconds(kMillisPerLoop*1000);
+//                        vTaskDelay( xDelay );
+//                        vTaskDelay(1);
+//                        vTaskDelay(1000*1000);
+//                        vTaskDelay(1000);
+
                 counter += kMillisPerLoop;
             }
         }
@@ -176,6 +182,8 @@ public:
 
     void begin()
     {
+Serial.printf("Bye Bye Idle Task Manager...\n");
+return;
         Serial.printf("Replacing Idle Tasks with TaskManager...\n");
         // The idle tasks get created with a priority just ABOVE idle so that they steal idle time but nothing else.  They then
         // measure how much time is "wasted" at that lower priority and deem it to have been free CPU
@@ -199,16 +207,16 @@ public:
 //
 // A superclass of the base TaskManager that knows how to start and track the tasks specific to this project
 
-void IRAM_ATTR ScreenUpdateLoopEntry(void *);
-void IRAM_ATTR AudioSerialTaskEntry(void *);
-void IRAM_ATTR DrawLoopTaskEntry(void *);
-void IRAM_ATTR AudioSamplerTaskEntry(void *);
-void IRAM_ATTR NetworkHandlingLoopEntry(void *);
-void IRAM_ATTR DebugLoopTaskEntry(void *);
-void IRAM_ATTR SocketServerTaskEntry(void *);
-void IRAM_ATTR RemoteLoopEntry(void *);
-void IRAM_ATTR JSONWriterTaskEntry(void *);
-void IRAM_ATTR ColorDataTaskEntry(void *);
+void ScreenUpdateLoopEntry(void *);
+void AudioSerialTaskEntry(void *);
+void DrawLoopTaskEntry(void *);
+void AudioSamplerTaskEntry(void *);
+void NetworkHandlingLoopEntry(void *);
+void DebugLoopTaskEntry(void *);
+void SocketServerTaskEntry(void *);
+void RemoteLoopEntry(void *);
+void JSONWriterTaskEntry(void *);
+void ColorDataTaskEntry(void *);
 
 #define DELETE_TASK(handle) if (handle != nullptr) vTaskDelete(handle)
 

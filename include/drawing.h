@@ -28,4 +28,4 @@
 //
 //---------------------------------------------------------------------------
 
-void IRAM_ATTR DrawLoopTaskEntry(void *);
+void DrawLoopTaskEntry(void *);

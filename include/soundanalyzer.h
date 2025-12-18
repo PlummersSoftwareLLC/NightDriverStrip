@@ -148,8 +148,8 @@ inline constexpr AudioInputParams kParamsI2SExternal{
   #define MIN_VU 0.05f
 #endif
 
-void IRAM_ATTR AudioSamplerTaskEntry(void *);
-void IRAM_ATTR AudioSerialTaskEntry(void *);
+void AudioSamplerTaskEntry(void *);
+void AudioSerialTaskEntry(void *);
 
 #ifndef GAINDAMPEN
     #define GAINDAMPEN 10      // How slowly brackets narrow in for spectrum bands

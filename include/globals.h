@@ -146,7 +146,7 @@
 // of the OLED/LCD is now controlled separately, but M5 is always equipped
 // with one (but it doesn't have to be used!).
 
-#if M5STICKC || M5STICKCPLUS || M5STICKCPLUS2 || M5STACKCORE2
+#if M5STICKC || M5STICKCPLUS || M5STICKCPLUS2 || M5STACKCORE2 || M5TAB
     #define USE_M5 1
 #endif
 
