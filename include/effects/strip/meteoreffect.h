@@ -38,78 +38,78 @@
 class MeteorChannel
 {
   private:
+    struct Meteor {
+        float hue;
+        float pos;
+        float speed;
+        bool  movingLeft;
+    };
 
-    std::vector<float> hue;
-    std::vector<float> iPos;
-    std::vector<bool>  bLeft;
-    std::vector<float> speed;
-    std::vector<float> lastBeat;
+    std::vector<Meteor> _meteors;
 
   public:
 
     size_t        meteorCount;
     uint8_t       meteorSize;
     uint8_t       meteorTrailDecay;
-    float        meteorSpeedMin;
-    float        meteorSpeedMax;
+    float         meteorSpeedMin;
+    float         meteorSpeedMax;
     bool          meteorRandomDecay = true;
-    const float  minTimeBetweenBeats = 0.6;
+    const float   minTimeBetweenBeats = 0.6;
 
     MeteorChannel() {}
 
-    virtual void Init(std::shared_ptr<GFXBase> pGFX, size_t meteors = 4, int size = 4, int decay = 3, float minSpeed = 0.5, float maxSpeed = 0.5)
+    virtual void Init(std::shared_ptr<GFXBase> pGFX, size_t count = 4, int size = 4, int decay = 3, float minSpeed = 0.5, float maxSpeed = 0.5)
     {
-        meteorCount = meteors;
+        meteorCount = count;
         meteorSize = size;
         meteorTrailDecay = decay;
         meteorSpeedMin = minSpeed;
         meteorSpeedMax = maxSpeed;
 
-        hue.resize(meteors);
-        iPos.resize(meteors);
-        bLeft.resize(meteors);
-        speed.resize(meteors);
-        lastBeat.resize(meteors);
+        _meteors.clear();
+        _meteors.reserve(meteorCount);
 
-        static int hueval = HUE_RED;
-        for (int i = 0; i < meteorCount; i++)
+        int hueval = HUE_RED;
+        for (size_t i = 0; i < meteorCount; i++)
         {
-            hueval = hueval + 48;
-            hueval %= 256;
-            hue[i] = hueval;
-            iPos[i] = meteorCount <= 1 ? 0 : (pGFX->GetLEDCount() / (meteorCount - 1) * i);
-            speed[i] = random_range(meteorSpeedMin, meteorSpeedMax);
-            if (i % 1)
-                speed[i] *= -1;
-            lastBeat[i] = g_Values.AppTime.FrameStartTime();
-            bLeft[i] = i & 2;
-        }
+            Meteor m;
+            hueval = (hueval + 48) % 256;
+            m.hue = static_cast<float>(hueval);
 
-        // Special case 2-meteor to be red on both ends
+            // Distribute start positions
+            m.pos = meteorCount <= 1 ? 0.0f : static_cast<float>(pGFX->GetLEDCount() / (meteorCount - 1) * i);
 
-        if (meteorCount == 2)
-        {
-            hue[0] = HUE_RED;
-            hue[1] = HUE_RED;
-            iPos[0] = 0;
-            iPos[1] = pGFX->GetLEDCount() - 1;
+            m.speed = random_range(meteorSpeedMin, meteorSpeedMax);
+
+            m.movingLeft = (i & 2); // Initial direction logic preserved from original (bit 1 checks 2,3,6,7...)
+
+            // Special case for exactly 2 meteors: Red endpoints
+            if (meteorCount == 2) {
+                m.hue = static_cast<float>(HUE_RED);
+                m.pos = (i == 0) ? 0.0f : static_cast<float>(pGFX->GetLEDCount() - 1);
+            }
+            _meteors.push_back(m);
         }
     }
 
     virtual void Reverse(int iMeteor)
     {
-        bLeft[iMeteor] = !bLeft[iMeteor];
+        if (iMeteor >= 0 && iMeteor < _meteors.size()) {
+            _meteors[iMeteor].movingLeft = !_meteors[iMeteor].movingLeft;
+        }
     }
 
     virtual void Draw(LEDStripEffect* owner)
     {
         auto pGFX = owner->g(0);
+        const int ledCount = static_cast<int>(pGFX->GetLEDCount());
         static CHSV hsv;
         hsv.val = 255;
         hsv.sat = 255;
 
         // Fade brightness on all channels
-        for (int j = 0; j < pGFX->GetLEDCount(); j++)
+        for (int j = 0; j < ledCount; j++)
         {
             if ((!meteorRandomDecay) || (random_range(0, 10) > 2))
             {
@@ -117,38 +117,40 @@ class MeteorChannel
             }
         }
 
-        for (int i = 0; i < meteorCount; i++)
+        // Hoist invariant constants out of the loop
+        const float minPos = static_cast<float>(meteorSize - 1);
+        const float maxPos = static_cast<float>(ledCount - 1);
+
+        for (auto& m : _meteors)
         {
-            float spd = speed[i];
+            float spd = m.speed;
 
             #if ENABLE_AUDIO
                 if (g_Analyzer.VURatio() > 1.0f)
                     spd *= g_Analyzer.VURatio();
             #endif
 
-            iPos[i] = (bLeft[i]) ? iPos[i] - spd : iPos[i] + spd;
-            if (iPos[i] < meteorSize)
-            {
-                bLeft[i] = false;
-                iPos[i] = meteorSize;
-            }
-            if (iPos[i] >= pGFX->GetLEDCount())
-            {
-                bLeft[i] = true;
-                iPos[i] = pGFX->GetLEDCount() - 1;
-            }
+            // Update position based on direction
+            m.pos += (m.movingLeft ? -spd : spd);
+
+            // Bounce/Clamp logic
+            // Change direction if we hit a wall.
+            if (m.pos < minPos) m.movingLeft = false;
+            else if (m.pos > maxPos) m.movingLeft = true;
+
+            m.pos = std::clamp(m.pos, minPos, maxPos);
 
             // Draw the meteor head across all channels
             for (int j = 0; j < meteorSize; j++)
             {
-                int x = static_cast<int>(iPos[i]) - j;
-                if ((x <= static_cast<int>(pGFX->GetLEDCount())) && (x >= 1))
+                int x = static_cast<int>(m.pos) - j;
+                if (x < ledCount && x >= 0)
                 {
                     CRGB rgb;
-                    hue[i] = hue[i] + 0.025f;
-                    if (hue[i] > 255.0f)
-                        hue[i] -= 255.0f;
-                    hsv.hue = static_cast<uint8_t>(hue[i]);
+                    m.hue += 0.025f;
+                    if (m.hue >= 255.0f) m.hue -= 255.0f;
+
+                    hsv.hue = static_cast<uint8_t>(m.hue);
                     hsv2rgb_rainbow(hsv, rgb);
 
                     // Blend with current pixel from primary device, then set on all channels
@@ -175,7 +177,7 @@ class MeteorEffect : public EffectWithId<MeteorEffect>
 
   public:
 
-    MeteorEffect(int cMeteors = 4, uint size = 4, uint decay = 3, float minSpeed = 0.2, float maxSpeed = 0.2)
+    MeteorEffect(int cMeteors = 4, unsigned int size = 4, unsigned int decay = 3, float minSpeed = 0.2, float maxSpeed = 0.2)
         : EffectWithId<MeteorEffect>("Color Meteors"),
           _Meteors(),
           _cMeteors(cMeteors),
