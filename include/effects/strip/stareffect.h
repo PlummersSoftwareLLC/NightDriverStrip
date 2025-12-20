@@ -47,7 +47,7 @@ class Star : public MovingFadingPaletteObject, public ObjectSize
 
     virtual float GetStarSize()
     {
-        return _object_size;
+        return _objectSize;
     }
 
     Star(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, float maxSpeed = 1.0, float starSize = 1.0)
@@ -63,7 +63,7 @@ class RandomPaletteColorStar : public MovingFadingPaletteObject, public ObjectSi
 
     virtual float GetStarSize()
     {
-        return _object_size;
+        return _objectSize;
     }
 
     RandomPaletteColorStar(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, float maxSpeed = 1.0, float starSize = 1.0)
@@ -79,7 +79,7 @@ class LongLifeSparkleStar : public MovingFadingPaletteObject, public ObjectSize
 
     virtual float GetStarSize()
     {
-        return _object_size;
+        return _objectSize;
     }
 
     LongLifeSparkleStar(const CRGBPalette16 & palette, TBlendType blendType = NOBLEND, float maxSpeed = 1.0, float starSize = 1.0)
@@ -100,7 +100,7 @@ class ColorStar : public MovingFadingColoredObject, public ObjectSize
 
     virtual float GetStarSize()
     {
-        return _object_size;
+        return _objectSize;
     }
 
     ColorStar(CRGB color, float maxSpeed = 1.0, float starSize = 1.0)
@@ -158,7 +158,7 @@ class MusicPulseStar : public Star
     virtual float IgnitionTime()    const { return 0.00f; }
     virtual float HoldTime()        const { return 1.00f;  }
     virtual float FadeTime()        const { return 2.00f; }
-    virtual float GetStarSize()    const { return 1 + _object_size * g_Analyzer.VURatio(); }
+    virtual float GetStarSize()    const { return 1 + _objectSize * g_Analyzer.VURatio(); }
 };
 
 #endif
@@ -184,7 +184,7 @@ class BubblyStar : public Star
     {
         float x = Age()/TotalLifetime();
         float ratio1 = -1 * (2*(x-.5)) * (2*(x-.5)) + 1;
-        float width = ratio1 * _object_size;
+        float width = ratio1 * _objectSize;
         return width;
     }
 
@@ -497,7 +497,7 @@ class StarEffectBase : public EffectWithId<StarEffectBase<StarType, TEffect>>
             i->UpdatePosition();
             float fPos = i->_iPos;
             CRGB c = i->ObjectColor();
-            LEDStripEffect::setPixelsFOnAllChannels(fPos - i->_object_size / 2.0, i->_object_size, c, true);
+            LEDStripEffect::setPixelsFOnAllChannels(fPos - i->_objectSize / 2.0, i->_objectSize, c, true);
         }
     }
 };
@@ -572,4 +572,3 @@ class TwinkleStarEffect : public EffectWithId<TwinkleStarEffect>
         buffer[NUM_TWINKLES - 1] = iNew;
     }
 };
-
