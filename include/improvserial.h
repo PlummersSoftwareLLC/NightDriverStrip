@@ -214,6 +214,14 @@ protected:
                 }
                 return false;
             }
+            else if (at == 6)
+            {
+                return byte == IMPROV_SERIAL_VERSION;
+            }
+            else if (at == 7)
+            {
+                return true;
+            }
 
             uint8_t type = raw[7];
 
