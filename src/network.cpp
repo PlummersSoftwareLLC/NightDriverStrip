@@ -63,7 +63,7 @@ void DoStatsCommand()
     cli_printf("DATA:%+04.2lf-%+04.2lf", bufferManager.AgeOfOldestBuffer(), bufferManager.AgeOfNewestBuffer());
 
     #if ENABLE_AUDIO
-        cli_printf("g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer._VU, g_Analyzer._MinVU, g_Analyzer._PeakVU, g_Analyzer._VURatio);
+        cli_printf("g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer.VU(), g_Analyzer.MinVU(), g_Analyzer.PeakVU(), g_Analyzer.VURatio());
     #endif
 
     #if INCOMING_WIFI_ENABLED
