@@ -200,63 +200,13 @@ protected:
             // There are many more elegant and less readable ways to do this, but... let's keep it simple.
 
             const uint8_t *raw = &this->rx_buffer_[0];
-            if (at == 0)
+
+            static constexpr char s_ImprovHeader[] = "IMPROV";
+            if (at < 6)
             {
-                if (byte == 'I')
+               if (byte == s_ImprovHeader[at])
                     return true;
-                // Not an 'I, so not Improv.
-                if (this->on_unknown_byte_)
-                    this->on_unknown_byte_(byte);
-                return false;
-            }
-            else if (at == 1)
-            {
-                if (byte == 'M')
-                    return true;
-                if (this->on_unknown_byte_)
-                {
-                    for (auto b : this->rx_buffer_)
-                        this->on_unknown_byte_(b);
-                }
-                return false;
-            }
-            else if (at == 2)
-            {
-                if (byte == 'P')
-                    return true;
-                if (this->on_unknown_byte_)
-                {
-                    for (auto b : this->rx_buffer_)
-                        this->on_unknown_byte_(b);
-                }
-                return false;
-            }
-            else if (at == 3)
-            {
-                if (byte == 'R')
-                    return true;
-                if (this->on_unknown_byte_)
-                {
-                    for (auto b : this->rx_buffer_)
-                        this->on_unknown_byte_(b);
-                }
-                return false;
-            }
-            else if (at == 4)
-            {
-                if (byte == 'O')
-                    return true;
-                if (this->on_unknown_byte_)
-                {
-                    for (auto b : this->rx_buffer_)
-                        this->on_unknown_byte_(b);
-                }
-                return false;
-            }
-            else if (at == 5)
-            {
-                if (byte == 'V')
-                    return true;
+
                 if (this->on_unknown_byte_)
                 {
                     for (auto b : this->rx_buffer_)
