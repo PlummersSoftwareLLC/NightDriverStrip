@@ -32,6 +32,7 @@
 #pragma once
 
 #include <deque>
+#include <algorithm>
 
 #include "particles.h"
 
@@ -434,28 +435,35 @@ class StarEffectBase : public EffectWithId<StarEffectBase<StarType, TEffect>>
 
     virtual void CreateStars()
     {
-    #if ENABLE_AUDIO
-
         for (int i = 0; i < cMaxNewStarsPerFrame; i++)
         {
-            double prob = _newStarProbability;
+            float prob = _newStarProbability / 100.0f;
+            float speedMultiplier = 1.0f;
 
-            prob = (prob / 100) + (g_Analyzer.VURatio() - 1.0) * _musicFactor;
-
-            constexpr auto kProbabilitySpan = 1.0;
-
-            if (g_Analyzer.VU() > 0)
-            {
-                if (random_range(0.0, kProbabilitySpan) < g_Values.AppTime.LastFrameTime() * prob)
+            #if ENABLE_AUDIO
+                // If we have audio enabled, modulate probability and speed based on the music.
+                // Only apply modulation when there is actual sound (VU > 0) — otherwise fall back to base probability.
+                if (g_Analyzer.VU() > 0)
                 {
-                    StarType newstar(_palette, _blendType, _maxSpeed * _musicFactor, _starSize);
-                    // This always starts stars on even pixel boundaries so they look like the desired width if not moving
-                    newstar._iPos = (int) random_range(0U, LEDStripEffect::_cLEDs - 1 - starWidth);
-                    _allParticles.push_back(newstar);
+                    prob += (g_Analyzer.VURatio() - 1.0f) * _musicFactor;
+                    speedMultiplier = _musicFactor;
                 }
+            #endif
+
+            // Clamp probability to a sane range to avoid negative or runaway values
+            prob = std::clamp(prob, 0.0f, 1.0f);
+
+            constexpr auto kProbabilitySpan = 1.0f;
+
+            // Ensure probability is positive before rolling dice
+            if (prob > 0.0f && (random_range(0.0f, kProbabilitySpan) < g_Values.AppTime.LastFrameTime() * prob))
+            {
+                StarType newstar(_palette, _blendType, _maxSpeed * speedMultiplier, _starSize);
+                // This always starts stars on even pixel boundaries so they look like the desired width if not moving
+                newstar._iPos = (int) random_range(0U, LEDStripEffect::_cLEDs - 1 - starWidth);
+                _allParticles.push_back(newstar);
             }
         }
-    #endif
     }
 
     virtual void Update()
