@@ -99,10 +99,10 @@ const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
                 // Burn a little time and update the counter
                 esp_task_wdt_reset();
                 delayMicroseconds(kMillisPerLoop*1000);
-//                        vTaskDelay( xDelay );
-//                        vTaskDelay(1);
-//                        vTaskDelay(1000*1000);
-//                        vTaskDelay(1000);
+                        vTaskDelay( xDelay );
+                        vTaskDelay(1);
+                        vTaskDelay(1000*1000);
+                        vTaskDelay(1000);
 
                 counter += kMillisPerLoop;
             }
@@ -182,8 +182,6 @@ public:
 
     void begin()
     {
-Serial.printf("Bye Bye Idle Task Manager...\n");
-return;
         Serial.printf("Replacing Idle Tasks with TaskManager...\n");
         // The idle tasks get created with a priority just ABOVE idle so that they steal idle time but nothing else.  They then
         // measure how much time is "wasted" at that lower priority and deem it to have been free CPU
