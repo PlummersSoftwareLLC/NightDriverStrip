@@ -192,5 +192,7 @@
       // Cancel a reader. After this, it will no longer be invoked.
       void CancelReader(size_t index);
   };
-
 #endif
+
+  void InitNetworkCLI();
+

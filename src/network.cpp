@@ -34,10 +34,13 @@
 #include <algorithm>
 
 #include "globals.h"
-#include "ledviewer.h"                          // For the LEDViewer task and object
+
+#include "debug_cli.h"
+#include "effectmanager.h"
+#include "ledviewer.h"              // For the LEDViewer task and object
 #include "network.h"
-#include "systemcontainer.h"
 #include "soundanalyzer.h"
+#include "systemcontainer.h"
 
 extern DRAM_ATTR std::mutex g_buffer_mutex;
 
@@ -46,6 +49,41 @@ static DRAM_ATTR WiFiUDP l_Udp;              // UDP object used for NNTP, etc
 // Static initializers
 DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
 DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
+
+
+
+#if ENABLE_WIFI
+void DoStatsCommand()
+{
+    auto& bufferManager = g_ptrSystem->BufferManagers()[0];
+
+    cli_printf("%s:%zux%d %uK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS, ESP.getFreeHeap() / 1024);
+    cli_printf("%sdB:%s",String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
+    cli_printf("BUFR:%02zu/%02zu [%dfps]", bufferManager.Depth(), bufferManager.BufferCount(), g_Values.FPS);
+    cli_printf("DATA:%+04.2lf-%+04.2lf", bufferManager.AgeOfOldestBuffer(), bufferManager.AgeOfNewestBuffer());
+
+    #if ENABLE_AUDIO
+        cli_printf("g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer.VU(), g_Analyzer.MinVU(), g_Analyzer.PeakVU(), g_Analyzer.VURatio());
+    #endif
+
+    #if INCOMING_WIFI_ENABLED
+        cli_printf("Socket Buffer _cbReceived: %zu", g_ptrSystem->SocketServer()._cbReceived);
+    #endif
+}
+
+static const command network_commands[] = {
+    { "clock", "Refresh time from server", "Refreshing Time from Server",
+        [](const cli_argv&) { NTPTimeClient::UpdateClockFromWeb(&l_Udp); } },
+    { "stats", "Display system statistics", "Displaying statistics",
+        [](const cli_argv&) { DoStatsCommand(); } },
+    { "uptime", "Display system run duration", "Displaying system uptime",
+        [](const cli_argv&) { NTPTimeClient::ShowUptime(); } }
+};
+
+void InitNetworkCLI() {
+    RegisterCommands(network_commands, sizeof(network_commands)/sizeof(network_commands[0]));
+}
+#endif // ENABLE_WIFI
 
 #if ENABLE_ESPNOW
 
@@ -139,50 +177,12 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
 // in order to allow us to add custom commands.  I've added a clock reset and stats command, for example.
 
 #if ENABLE_WIFI
+
     void processRemoteDebugCmd()
     {
         String str = Debug.getLastCommand();
-        if (str.equalsIgnoreCase("clock"))
-        {
-            debugA("Refreshing Time from Server...");
-            NTPTimeClient::UpdateClockFromWeb(&l_Udp);
-        }
-        else if (str.equalsIgnoreCase("stats"))
-        {
-            auto& bufferManager = g_ptrSystem->BufferManagers()[0];
+	RunCommand(str.c_str());
 
-            debugA("Displaying statistics....");
-            debugA("%s:%zux%d %uK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS, ESP.getFreeHeap() / 1024);
-            debugA("%sdB:%s",String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
-            debugA("BUFR:%02zu/%02zu [%dfps]", bufferManager.Depth(), bufferManager.BufferCount(), g_Values.FPS);
-            debugA("DATA:%+04.2lf-%+04.2lf", bufferManager.AgeOfOldestBuffer(), bufferManager.AgeOfNewestBuffer());
-
-            #if ENABLE_AUDIO
-                debugA("g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer.VU(), g_Analyzer.MinVU(), g_Analyzer.PeakVU(), g_Analyzer.VURatio());
-            #endif
-
-            #if INCOMING_WIFI_ENABLED
-                debugA("Socket Buffer _cbReceived: %zu", g_ptrSystem->SocketServer()._cbReceived);
-            #endif
-        }
-        else if (str.equalsIgnoreCase("clearsettings"))
-        {
-            debugA("Removing persisted settings....");
-            g_ptrSystem->DeviceConfig().RemovePersisted();
-            RemoveEffectManagerConfig();
-        }
-        else if (str.equalsIgnoreCase("uptime"))
-        {
-             NTPTimeClient::ShowUptime();
-        }
-        else
-        {
-            debugA("Unknown Command.  Extended Commands:");
-            debugA("clock               Refresh time from server");
-            debugA("stats               Display buffers, memory, etc");
-            debugA("clearsettings       Reset persisted user settings");
-            debugA("uptime              Show system uptime, reset reason");
-        }
     }
 #endif
 
@@ -1017,6 +1017,10 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         entry.canceled.store(true);
         entry.readInterval.store(0);
         entry.reader = nullptr;
+    }
+#else
+
+    void InitNetworkCLI() {
     }
 
 #endif // ENABLE_WIFI
