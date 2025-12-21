@@ -82,7 +82,6 @@ class IdleTask
         counter = 0;
 
         // We need to whack the watchdog so we delay in smaller bites until we've used up all the time
-const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
 
         while (true)
         {
@@ -99,11 +98,6 @@ const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
                 // Burn a little time and update the counter
                 esp_task_wdt_reset();
                 delayMicroseconds(kMillisPerLoop*1000);
-                        vTaskDelay( xDelay );
-                        vTaskDelay(1);
-                        vTaskDelay(1000*1000);
-                        vTaskDelay(1000);
-
                 counter += kMillisPerLoop;
             }
         }
