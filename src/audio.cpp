@@ -71,8 +71,8 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
         // Fade out the VU ratio
 
-        if (g_Analyzer._VURatio > lastVU)
-            lastVU = g_Analyzer._VURatio;
+        if (g_Analyzer.VURatio() > lastVU)
+            lastVU = g_Analyzer.VURatio();
         else
             lastVU -= frameDurationSeconds * VU_DECAY_PER_SECOND;
 
@@ -80,11 +80,11 @@ void IRAM_ATTR AudioSamplerTaskEntry(void *)
 
         // Instantaneous VURatio
 
-        assert(g_Analyzer._PeakVU >= g_Analyzer._MinVU);
+        assert(g_Analyzer.PeakVU() >= g_Analyzer.MinVU());
 
-        g_Analyzer._VURatio = (g_Analyzer._PeakVU == g_Analyzer._MinVU) ?
+        g_Analyzer._VURatio = (g_Analyzer.PeakVU() == g_Analyzer.MinVU()) ?
                                 0.0 :
-                                (g_Analyzer._VU - g_Analyzer._MinVU) / std::max(g_Analyzer._PeakVU - g_Analyzer._MinVU, (float) MIN_VU) * 2.0f;
+                                (g_Analyzer.VU() - g_Analyzer.MinVU()) / std::max(g_Analyzer.PeakVU() - g_Analyzer.MinVU(), (float) MIN_VU) * 2.0f;
 
         debugV("VU: %f\n", g_Analyzer.VU());
         debugV("PeakVU: %f\n", g_Analyzer.PeakVU());
@@ -269,7 +269,7 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
         data.header[0] = ((3 << 4) + 15);
 
         // Change the 0-2 range of the VURatioFade to 0-16 for the PET
-        data.vu = (uint8_t)((g_Analyzer._VURatioFade / 2.0f) * (float)MAXPET);
+        data.vu = (uint8_t)((g_Analyzer.VURatioFade() / 2.0f) * (float)MAXPET);
 
         // We treat 0 as a NUL terminator and so we don't want to send it in-band.  Since a band has to be 2 before
         // it is displayed, this has no effect on the display
@@ -277,8 +277,8 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
         for (int i = 0; i < 8; i++)
         {
             int iBand = map(i, 0, 7, 0, NUM_BANDS - 2);
-            uint8_t low = g_Analyzer._peak2Decay[iBand] * MAXPET;
-            uint8_t high = g_Analyzer._peak2Decay[iBand + 1] * MAXPET;
+            uint8_t low = g_Analyzer.Peak2Decay(iBand) * MAXPET;
+            uint8_t high = g_Analyzer.Peak2Decay(iBand + 1) * MAXPET;
             data.peaks[i] = (high << 4) + low;
         }
 
