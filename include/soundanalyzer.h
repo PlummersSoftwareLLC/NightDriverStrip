@@ -342,6 +342,9 @@ class SoundAnalyzer : public ISoundAnalyzer
     void SampleAudio()
     {
         size_t bytesRead = 0;
+#if INPUT_PIN < 0
+        return;
+#endif
         #if USE_M5
             // M5 path unchanged; fills ptrSampleBuffer with int16 samples
             constexpr auto bytesExpected = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
@@ -857,6 +860,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         // This block is for TTGO, MESMERIZER, SPECTRUM_WROVER_KIT and other projects that
         // use an analog mic connected to the input pin.
 
+#if defined(SOC_I2S_SUPPORTS_ADC)
         static_assert(SOC_I2S_SUPPORTS_ADC, "This ESP32 model does not support ADC built-in mode");
 
         i2s_config_t i2s_config;
@@ -879,6 +883,7 @@ class SoundAnalyzer : public ISoundAnalyzer
         ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_0));
         ESP_ERROR_CHECK(i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL));
         ESP_ERROR_CHECK(i2s_set_adc_mode(ADC_UNIT_1, ADC1_CHANNEL_0));
+#endif
 
 #endif
 
