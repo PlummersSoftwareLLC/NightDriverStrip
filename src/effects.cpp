@@ -139,7 +139,7 @@ INIT_EFFECT_SETTING_SPECS(LEDStripEffect, _baseSettingSpecs);
 
 // Apple5x7 font definition - needed for WiFi-enabled matrix patterns using Adafruit-style fonts
 // Define this unconditionally (guarded by ENABLE_WIFI) so the symbol is always available regardless of M5/LGFX usage.
-#if ENABLE_WIFI && USE_MATRIX
+#if USE_MATRIX
 #include <FontGfx_apple5x7.h>           // Requires the SmartMatrix dependency to pick up this font
 #endif
 
