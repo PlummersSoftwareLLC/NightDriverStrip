@@ -39,8 +39,16 @@
 #include <numeric>
 #include <array>
 #include <arduinoFFT.h>
-#include <driver/adc.h>
-#include <driver/i2s.h>
+#include <esp_idf_version.h>
+#define IS_IDF5 (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0))
+
+#if IS_IDF5
+    #include <driver/i2s_std.h>
+    #include <esp_adc/adc_continuous.h>
+#else
+    #include <driver/i2s.h>
+    #include <driver/adc.h>
+#endif
 #include <memory>
 
 #ifndef SPECTRUM_BAND_SCALE_MEL
@@ -247,6 +255,12 @@ class SoundAnalyzer : public ISoundAnalyzer // Non-audio case stub
     void SetPeakDecayRates(float, float) override
     {
     }
+
+    float BeatEnhance(float amt) { return 0.0f; }
+    void SetSimulateBeat(bool) {}
+    void SetSimulateBPM(int) {}
+    bool GetSimulateBeat() const { return false; }
+    int GetSimulateBPM() const { return 0; }
 };
 
 #else // Audio case
@@ -286,7 +300,12 @@ class SoundAnalyzer : public ISoundAnalyzer
     std::array<float, NUM_BANDS> _noiseFloor{}; // adaptive per-band noise floor
     std::array<float, NUM_BANDS> _rawPrev{};    // previous raw (noise-subtracted) power for smoothing
 
-    // Peak decay internals (private)
+    // --- Beat Simulation State ---
+    bool _simulateBeat = false;
+    int _simBPM = 120;
+
+    // --- Peak Decay State ---
+    // These track peaks over time with decay for visual effects
     std::array<unsigned long, NUM_BANDS> _lastPeak1Time{};
     std::array<float, NUM_BANDS> _peak1Decay{};
     std::array<float, NUM_BANDS> _peak2Decay{};
@@ -315,7 +334,258 @@ class SoundAnalyzer : public ISoundAnalyzer
     std::array<float, MAX_SAMPLES> _vReal{};
     std::array<float, MAX_SAMPLES> _vImaginary{};
     std::unique_ptr<int16_t[]> ptrSampleBuffer; // sample buffer storage
-    PeakData _Peaks; // cached last normalized peaks (moved earlier for inline method visibility)
+    PeakData _Peaks; // cached last normalized peaks
+
+    // --- Private Initialization Helpers ---
+
+    void InitM5()
+    {
+#if USE_M5
+        debugI("Audio: Initializing M5Stack Microphone");
+        // Can't use speaker and mic at the same time, and speaker defaults on, so turn it off
+        M5.Speaker.setVolume(255);
+        M5.Speaker.end();
+        auto cfg = M5.Mic.config();
+        cfg.sample_rate = SAMPLING_FREQUENCY;
+        cfg.noise_filter_level = 0;
+        cfg.magnification = 8;
+        M5.Mic.config(cfg);
+        M5.Mic.begin();
+#endif
+    }
+
+    void InitI2S_Modern()
+    {
+#if (USE_I2S_AUDIO || ELECROW) && IS_IDF5
+        debugI("Audio: Initializing I2S Digital Mic (Modern) on BCLK:%d WS:%d DIN:%d", I2S_BCLK_PIN, I2S_WS_PIN, INPUT_PIN);
+        // Digital Microphones (INMP441, etc.) - Standard I2S Mode
+        i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
+        ESP_ERROR_CHECK(i2s_new_channel(&chan_cfg, NULL, &_rx_handle));
+
+        i2s_std_config_t std_cfg = {
+            .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(SAMPLING_FREQUENCY),
+            .slot_cfg = I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_32BIT, I2S_SLOT_MODE_STEREO),
+            .gpio_cfg = {
+                .mclk = I2S_GPIO_UNUSED,
+                .bkt = I2S_BCLK_PIN,
+                .ws = I2S_WS_PIN,
+                .dout = I2S_GPIO_UNUSED,
+                .din = INPUT_PIN,
+            },
+        };
+
+        ESP_ERROR_CHECK(i2s_channel_init_std_mode(_rx_handle, &std_cfg));
+        ESP_ERROR_CHECK(i2s_channel_enable(_rx_handle));
+#endif
+    }
+
+    void InitI2S_Legacy()
+    {
+#if (USE_I2S_AUDIO || ELECROW) && !IS_IDF5
+        debugI("Audio: Initializing I2S Digital Mic (Legacy) on BCLK:%d WS:%d DIN:%d", I2S_BCLK_PIN, I2S_WS_PIN, INPUT_PIN);
+        const i2s_config_t i2s_config = {.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
+                                         .sample_rate = SAMPLING_FREQUENCY,
+                                         .bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT,
+                                         .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
+                                         .communication_format = I2S_COMM_FORMAT_STAND_I2S,
+                                         .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+                                         .dma_buf_count = 4,
+                                         .dma_buf_len = (int)MAX_SAMPLES,
+                                         .use_apll = false,
+                                         .tx_desc_auto_clear = false,
+                                         .fixed_mclk = 0};
+
+        pinMode(I2S_BCLK_PIN, OUTPUT);
+        pinMode(I2S_WS_PIN, OUTPUT);
+        pinMode(INPUT_PIN, INPUT);
+
+        const i2s_pin_config_t pin_config = {.bck_io_num = I2S_BCLK_PIN,
+                                             .ws_io_num = I2S_WS_PIN,
+                                             .data_out_num = I2S_PIN_NO_CHANGE,
+                                             .data_in_num = INPUT_PIN};
+
+        ESP_ERROR_CHECK(i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL));
+        ESP_ERROR_CHECK(i2s_set_pin(I2S_NUM_0, &pin_config));
+        ESP_ERROR_CHECK(i2s_zero_dma_buffer(I2S_NUM_0));
+        ESP_ERROR_CHECK(i2s_start(I2S_NUM_0));
+#endif
+    }
+
+    void InitADC_Modern()
+    {
+#if !USE_M5 && !USE_I2S_AUDIO && IS_IDF5
+        debugI("Audio: Initializing I2S ADC Analog Mic (Modern) on Channel 0");
+        adc_continuous_handle_cfg_t adc_config = {
+            .max_store_buf_size = 1024,
+            .conv_frame_size = MAX_SAMPLES * sizeof(uint16_t),
+        };
+        ESP_ERROR_CHECK(adc_continuous_new_handle(&adc_config, &_adc_handle));
+
+        adc_continuous_config_t dig_cfg = {
+            .sample_freq_hz = SAMPLING_FREQUENCY,
+            .conv_mode = ADC_CONV_SINGLE_UNIT_1, // Using ADC1
+            .format = ADC_DIGI_OUTPUT_FORMAT_TYPE2,
+        };
+
+        // Configure pattern: channel, attenuation, etc.
+        adc_digi_pattern_config_t adc_pattern[1] = {0};
+        adc_pattern[0].atten = ADC_ATTEN_DB_12; // 12dB (formerly 11dB) for full range ~3.3V
+        adc_pattern[0].channel = ADC_CHANNEL_0; // FIXED for now, ideally map from INPUT_PIN
+        adc_pattern[0].unit = ADC_UNIT_1;
+        adc_pattern[0].bit_width = ADC_BITWIDTH_12;
+
+        dig_cfg.adc_pattern = adc_pattern;
+        dig_cfg.pattern_num = 1;
+
+        ESP_ERROR_CHECK(adc_continuous_config(_adc_handle, &dig_cfg));
+        ESP_ERROR_CHECK(adc_continuous_start(_adc_handle));
+#endif
+    }
+
+    void InitADC_Legacy()
+    {
+#if !USE_M5 && !USE_I2S_AUDIO && !IS_IDF5 && defined(SOC_I2S_SUPPORTS_ADC)
+        debugI("Audio: Initializing I2S ADC Analog Mic (Legacy) on Channel 0");
+        static_assert(SOC_I2S_SUPPORTS_ADC, "This ESP32 model does not support ADC built-in mode");
+
+        const i2s_config_t i2s_config = {
+            .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN),
+            .sample_rate = SAMPLING_FREQUENCY,
+            .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
+            .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
+            .communication_format = I2S_COMM_FORMAT_STAND_I2S,
+            .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+            .dma_buf_count = 2,
+            .dma_buf_len = MAX_SAMPLES,
+            .use_apll = false,
+            .tx_desc_auto_clear = false,
+            .fixed_mclk = 0
+        };
+
+        ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_12));
+        ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_0));
+        ESP_ERROR_CHECK(i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL));
+        ESP_ERROR_CHECK(i2s_set_adc_mode(ADC_UNIT_1, ADC1_CHANNEL_0));
+#endif
+    }
+
+    // --- Private Sampling Helpers ---
+
+    size_t SampleM5()
+    {
+        size_t bytesRead = 0;
+#if USE_M5
+        constexpr auto bytesExpected = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
+        if (M5.Mic.record((int16_t *)ptrSampleBuffer.get(), MAX_SAMPLES, SAMPLING_FREQUENCY, false))
+            bytesRead = bytesExpected;
+#endif
+        return bytesRead;
+    }
+
+    size_t SampleI2S_Modern()
+    {
+        size_t bytesRead = 0;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+        constexpr size_t bytesExpected = MAX_SAMPLES * sizeof(int32_t);
+        esp_err_t err = i2s_channel_read(_rx_handle, (void *)ptrSampleBuffer.get(), bytesExpected, &bytesRead, 100 / portTICK_PERIOD_MS);
+
+        if (err != ESP_OK || bytesRead != bytesExpected) {
+            debugW("I2S Read Error: %s, read %u/%u\n", esp_err_to_name(err), bytesRead, bytesExpected);
+            return 0;
+        }
+
+        static int32_t tempBuffer[MAX_SAMPLES * 2];
+        constexpr int kChannels = 2;
+        size_t bytesToRead = MAX_SAMPLES * kChannels * sizeof(int32_t);
+        if (bytesToRead > sizeof(tempBuffer)) bytesToRead = sizeof(tempBuffer);
+
+        err = i2s_channel_read(_rx_handle, (void *)tempBuffer, bytesToRead, &bytesRead, 100 / portTICK_PERIOD_MS);
+        if (err != ESP_OK) return 0;
+
+        for (int i = 0; i < MAX_SAMPLES; i++)
+        {
+            if (i * kChannels >= (bytesRead / 4)) break;
+            int32_t s32 = tempBuffer[i * kChannels]; // Left channel
+            ptrSampleBuffer[i] = (int16_t)std::clamp(s32 >> 15, -32768, 32767);
+        }
+#endif
+        return bytesRead;
+    }
+
+    size_t SampleI2S_Legacy()
+    {
+        size_t bytesRead = 0;
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
+        constexpr int kChannels = 2; // RIGHT + LEFT
+        constexpr auto wordsToRead = MAX_SAMPLES * kChannels;
+        constexpr auto bytesExpected32 = wordsToRead * sizeof(int32_t);
+        static int32_t raw32[wordsToRead];
+
+        ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)raw32, bytesExpected32, &bytesRead, 100 / portTICK_PERIOD_MS));
+        if (bytesRead != bytesExpected32)
+        {
+            debugW("Only read %u of %u bytes from I2S\n", bytesRead, bytesExpected32);
+            return bytesRead;
+        }
+
+        static int s_chanIndex = -1;
+        if (s_chanIndex < 0)
+        {
+            long long sumAbs[2] = {0, 0};
+            for (int i = 0; i < MAX_SAMPLES; ++i)
+            {
+                int32_t r0 = raw32[i * kChannels + 0];
+                int32_t r1 = raw32[i * kChannels + 1];
+                sumAbs[0] += llabs((long long)r0);
+                sumAbs[1] += llabs((long long)r1);
+            }
+            s_chanIndex = (sumAbs[1] > sumAbs[0]) ? 1 : 0;
+        }
+
+        for (int i = 0; i < MAX_SAMPLES; i++)
+        {
+            int32_t v = raw32[i * kChannels + s_chanIndex];
+            int32_t scaled = (v >> 15);
+            ptrSampleBuffer[i] = (int16_t)std::clamp(scaled, (int32_t)INT16_MIN, (int32_t)INT16_MAX);
+        }
+        bytesRead = MAX_SAMPLES * sizeof(int16_t); // effectively valid now
+#endif
+        return bytesRead;
+    }
+
+    size_t SampleADC_Modern()
+    {
+        size_t ret_num = 0;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+        constexpr size_t bytesToRead = MAX_SAMPLES * sizeof(uint16_t);
+        esp_err_t err = adc_continuous_read(_adc_handle, (uint8_t*)ptrSampleBuffer.get(), bytesToRead, (uint32_t*)&ret_num, 0);
+
+        if (err == ESP_OK) {
+            for (int i = 0; i < MAX_SAMPLES; i++) {
+                if (i * 2 >= ret_num) break;
+                uint16_t val = ptrSampleBuffer[i];
+                uint16_t data = val & 0xFFF; // Keep 12 bits
+                ptrSampleBuffer[i] = (int16_t)((data - 2048) * 16);
+            }
+        }
+#endif
+        return ret_num;
+    }
+
+    size_t SampleADC_Legacy()
+    {
+        size_t bytesRead = 0;
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 0, 0)
+        constexpr auto bytesExpected16 = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
+        ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)ptrSampleBuffer.get(), bytesExpected16, &bytesRead, 100 / portTICK_PERIOD_MS));
+        if (bytesRead != bytesExpected16)
+        {
+            debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, bytesExpected16);
+            return bytesRead;
+        }
+#endif
+        return bytesRead;
+    }
 
     // Reset and clear the FFT buffers
 
@@ -342,71 +612,23 @@ class SoundAnalyzer : public ISoundAnalyzer
     void SampleAudio()
     {
         size_t bytesRead = 0;
-        #if USE_M5
-            // M5 path unchanged; fills ptrSampleBuffer with int16 samples
-            constexpr auto bytesExpected = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
-            if (M5.Mic.record((int16_t *)ptrSampleBuffer.get(), MAX_SAMPLES, SAMPLING_FREQUENCY, false))
-                bytesRead = bytesExpected;
-            if (bytesRead != bytesExpected)
-            {
-                debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, bytesExpected);
-                return;
-            }
-        #elif ELECROW || USE_I2S_AUDIO
-                // External I2S microphones like INMP441 produce 24-bit samples in 32-bit words.
-                // Read stereo frames (RIGHT_LEFT) and auto-select whichever channel carries the mic.
-                {
-                    constexpr int kChannels = 2; // RIGHT + LEFT
-                    constexpr auto wordsToRead = MAX_SAMPLES * kChannels;
-                    constexpr auto bytesExpected32 = wordsToRead * sizeof(int32_t);
-                    static int32_t raw32[wordsToRead];
-                    // I2S is already running continuously; just read from DMA buffers
-                    ESP_ERROR_CHECK(i2s_read(I2S_NUM_0, (void *)raw32, bytesExpected32, &bytesRead, 100 / portTICK_PERIOD_MS));
-                    if (bytesRead != bytesExpected32)
-                    {
-                        debugW("Only read %u of %u bytes from I2S\n", bytesRead, bytesExpected32);
-                        return;
-                    }
-                    // Decide which channel has signal (0 or 1 within each frame)
-                    static int s_chanIndex = -1;
-                    if (s_chanIndex < 0)
-                    {
-                        long long sumAbs[2] = {0, 0};
-                        for (int i = 0; i < MAX_SAMPLES; ++i)
-                        {
-                            int32_t r0 = raw32[i * kChannels + 0];
-                            int32_t r1 = raw32[i * kChannels + 1];
-                            sumAbs[0] += llabs((long long)r0);
-                            sumAbs[1] += llabs((long long)r1);
-                        }
-                        s_chanIndex = (sumAbs[1] > sumAbs[0]) ? 1 : 0;
-                    }
-                    // Downconvert 24-bit left-justified samples from the chosen channel to signed 16-bit
-                    // INMP441 produces 24-bit samples left-justified in 32-bit words (bits [31:8])
-                    // For better dynamic range, we shift by 16 to get the top 16 bits of the 24-bit sample
-                    // Apply additional scaling since INMP441 may have lower sensitivity than expected
-                    for (int i = 0; i < MAX_SAMPLES; i++)
-                    {
-                        int32_t v = raw32[i * kChannels + s_chanIndex];
-                        // Take top 16 bits and apply 2x scaling for INMP441 sensitivity compensation
-                        int32_t scaled = (v >> 15);  // Shift by 15 instead of 16 for 2x gain
-                        ptrSampleBuffer[i] = (int16_t)std::clamp(scaled, (int32_t)INT16_MIN, (int32_t)INT16_MAX);
-                    }
-                }
-        #else
-            // ADC or generic 16-bit I2S sources
-            {
-                constexpr auto bytesExpected16 = MAX_SAMPLES * sizeof(ptrSampleBuffer[0]);
-                // I2S is already running continuously; just read from DMA buffers
-                ESP_ERROR_CHECK(                i2s_read(I2S_NUM_0, (void *)ptrSampleBuffer.get(), bytesExpected16, &bytesRead, 100 / portTICK_PERIOD_MS));
-                if (bytesRead != bytesExpected16)
-                {
-                    debugW("Could only read %u bytes of %u in FillBufferI2S()\n", bytesRead, bytesExpected16);
-                    return;
-                }
-            }
 
-        #endif
+#if INPUT_PIN < 0
+        return;
+#endif
+
+#if USE_M5
+        bytesRead = SampleM5();
+#else
+        // Attempt to sample from all supported backends.
+        // Those not active in the current configuration will return 0 immediately.
+        if (bytesRead == 0) bytesRead = SampleI2S_Modern();
+        if (bytesRead == 0) bytesRead = SampleI2S_Legacy();
+        if (bytesRead == 0) bytesRead = SampleADC_Modern();
+        if (bytesRead == 0) bytesRead = SampleADC_Legacy();
+#endif
+
+        if (bytesRead == 0) return;
 
         // Compute stats and copy into FFT input buffer
         for (int i = 0; i < MAX_SAMPLES; i++)
@@ -794,96 +1016,46 @@ class SoundAnalyzer : public ISoundAnalyzer
         return ((1.0 - amt) + (_VURatioFade / 2.0) * amt);
     }
 
-    // flash record size, for recording 5 second
-    // SampleBufferInitI2S
-    //
-    // install and start i2s driver
+    void SetSimulateBeat(bool enable) { _simulateBeat = enable; }
+    void SetSimulateBPM(int bpm) { _simBPM = bpm; }
+    bool GetSimulateBeat() const { return _simulateBeat; }
+    int GetSimulateBPM() const { return _simBPM; }
 
+
+    // InitAudioInput
+    //
     // Configure and start the I2S (or M5) input at SAMPLING_FREQUENCY.
     // Board-specific branches set pins and ADC/I2S modes as needed.
-
-    void SampleBufferInitI2S()
+    //
+    void InitAudioInput()
     {
         // install and start i2s driver
+
+
+        // install and start i2s driver
+
+#if INPUT_PIN < 0
+    debugI("Audio: INPUT_PIN < 0, skipping hardware initialization. SimBeat only.");
+    return;
+#endif
 
         debugV("Begin SamplerBufferInitI2S...");
 
 #if USE_M5
-
-        // Can't use speaker and mic at the same time, and speaker defaults on, so turn it off
-
-        M5.Speaker.setVolume(255);
-        M5.Speaker.end();
-        auto cfg = M5.Mic.config();
-        cfg.sample_rate = SAMPLING_FREQUENCY;
-        cfg.noise_filter_level = 0;
-        cfg.magnification = 8;
-        M5.Mic.config(cfg);
-        M5.Mic.begin();
-
-#elif USE_I2S_AUDIO
-
-        const i2s_config_t i2s_config = {.mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
-                                         .sample_rate = SAMPLING_FREQUENCY,
-                                         .bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT,
-                                         .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
-                                         .communication_format = I2S_COMM_FORMAT_STAND_I2S,
-                                         .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-                                         .dma_buf_count = 4,  // Increased from 2 for better buffering
-                                         .dma_buf_len = (int)MAX_SAMPLES,
-                                         .use_apll = false,
-                                         .tx_desc_auto_clear = false,
-                                         .fixed_mclk = 0};
-
-        // i2s pin configuration - explicitly set pin modes
-        pinMode(I2S_BCLK_PIN, OUTPUT);  // Bit clock is output from ESP32
-        pinMode(I2S_WS_PIN, OUTPUT);    // Word select is output from ESP32
-        pinMode(INPUT_PIN, INPUT);      // Data input from microphone
-
-        const i2s_pin_config_t pin_config = {.bck_io_num = I2S_BCLK_PIN,
-                                             .ws_io_num = I2S_WS_PIN,
-                                             .data_out_num = I2S_PIN_NO_CHANGE, // not used
-                                             .data_in_num = INPUT_PIN};
-
-        ESP_ERROR_CHECK(i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL));
-        ESP_ERROR_CHECK(i2s_set_pin(I2S_NUM_0, &pin_config));
-
-        // Clear any existing data and start I2S running continuously
-        ESP_ERROR_CHECK(i2s_zero_dma_buffer(I2S_NUM_0));
-        ESP_ERROR_CHECK(i2s_start(I2S_NUM_0));
-
+        InitM5();
 #else
+        // Digital Microphones
+        InitI2S_Modern();
+        InitI2S_Legacy();
 
-        // This block is for TTGO, MESMERIZER, SPECTRUM_WROVER_KIT and other projects that
-        // use an analog mic connected to the input pin.
-
-        static_assert(SOC_I2S_SUPPORTS_ADC, "This ESP32 model does not support ADC built-in mode");
-
-        i2s_config_t i2s_config;
-        #if SOC_I2S_SUPPORTS_ADC
-            i2s_config.mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN);
-        #else
-            i2s_config.mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_RX);
-        #endif
-
-        i2s_config.sample_rate = SAMPLING_FREQUENCY;
-        i2s_config.dma_buf_len = MAX_SAMPLES;
-        i2s_config.bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT;
-        i2s_config.channel_format = I2S_CHANNEL_FMT_ONLY_LEFT;
-        i2s_config.use_apll = false;
-        i2s_config.communication_format = I2S_COMM_FORMAT_STAND_I2S;
-        i2s_config.intr_alloc_flags = ESP_INTR_FLAG_LEVEL1;
-        i2s_config.dma_buf_count = 2;
-
-        ESP_ERROR_CHECK(adc1_config_width(ADC_WIDTH_BIT_12));
-        ESP_ERROR_CHECK(adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_0));
-        ESP_ERROR_CHECK(i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL));
-        ESP_ERROR_CHECK(i2s_set_adc_mode(ADC_UNIT_1, ADC1_CHANNEL_0));
-
+        // Analog Microphones
+        InitADC_Modern();
+        InitADC_Legacy();
 #endif
-
         debugV("SamplerBufferInitI2S Complete\n");
     }
+
+
 
     // DecayPeaks
     //
@@ -963,17 +1135,58 @@ class SoundAnalyzer : public ISoundAnalyzer
     }
 #endif
 
+    // SimulateBeatPass
     //
+    // Generates fake audio data for testing without a microphone/source.
+    // SimulateBeatPass
+    //
+    // Generates fake audio data for testing without a microphone/source.
+    void SimulateBeatPass()
+    {
+        // --- Beat Timing Calculation ---
+        const float beatsPerSecond = _simBPM / 60.0f;
+        const float beatPeriodMillis = (beatsPerSecond > 0) ? (1000.0f / beatsPerSecond) : 1000.0f;
+        const float beatActiveDurationMillis = beatPeriodMillis * 0.15f; // e.g., 15% of the cycle
+
+        unsigned long currentTime = millis();
+        float timeInCycle = fmod(static_cast<float>(currentTime), beatPeriodMillis);
+        bool isOnBeat = (timeInCycle < beatActiveDurationMillis);
+
+        float targetVU = 0.0f;
+        PeakData simulatedPeaks;
+
+        if (isOnBeat)
+        {
+            targetVU = 50.0f; // Arbitrary "loud"
+            for (int i = 0; i < NUM_BANDS; ++i)
+            {
+                // Bass-heavy beat
+                double level = 1.0 * std::max(0.0, 1.0 - (double)i / (NUM_BANDS * 0.75));
+                simulatedPeaks[i] = level * level;
+            }
+        }
+        else
+        {
+            targetVU = 1.0f; // Silence/Noise
+        }
+
+        _Peaks = simulatedPeaks;
+        UpdateVU(targetVU);
+    }
+
     // RunSamplerPass
     //
-
     // Perform one audio acquisition/processing step.
     // Uses local mic if no recent remote peaks; otherwise trusts remote and only updates VU.
-
-    // Perform one audio acquisition/processing step.
     // Simplified - no runtime microphone switching needed
     inline void RunSamplerPass()
     {
+        if (_simulateBeat)
+        {
+            SimulateBeatPass();
+            return;
+        }
+
         if (millis() - _msLastRemoteAudio > AUDIO_PEAK_REMOTE_TIMEOUT)
         {
             // Use local microphone - type determined at compile time
