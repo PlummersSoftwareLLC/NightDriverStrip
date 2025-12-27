@@ -39,7 +39,7 @@
 #define key24  true
 #define key44  false
 
-void IRAM_ATTR RemoteLoopEntry(void *);
+void RemoteLoopEntry(void *);
 
 #if key24
 #define IR_BPLUS  0xF700FF  //

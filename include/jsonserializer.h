@@ -174,7 +174,7 @@ bool RemoveJSONFile(const String & fileName);
 class JSONWriter
 {
     // We allow the main JSON Writer task entry point function to access private members
-    friend void IRAM_ATTR JSONWriterTaskEntry(void *);
+    friend void JSONWriterTaskEntry(void *);
 
   private:
 

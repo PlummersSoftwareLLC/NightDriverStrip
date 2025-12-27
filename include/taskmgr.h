@@ -199,16 +199,16 @@ public:
 //
 // A superclass of the base TaskManager that knows how to start and track the tasks specific to this project
 
-void IRAM_ATTR ScreenUpdateLoopEntry(void *);
-void IRAM_ATTR AudioSerialTaskEntry(void *);
-void IRAM_ATTR DrawLoopTaskEntry(void *);
-void IRAM_ATTR AudioSamplerTaskEntry(void *);
-void IRAM_ATTR NetworkHandlingLoopEntry(void *);
-void IRAM_ATTR DebugLoopTaskEntry(void *);
-void IRAM_ATTR SocketServerTaskEntry(void *);
-void IRAM_ATTR RemoteLoopEntry(void *);
-void IRAM_ATTR JSONWriterTaskEntry(void *);
-void IRAM_ATTR ColorDataTaskEntry(void *);
+void ScreenUpdateLoopEntry(void *);
+void AudioSerialTaskEntry(void *);
+void DrawLoopTaskEntry(void *);
+void AudioSamplerTaskEntry(void *);
+void NetworkHandlingLoopEntry(void *);
+void DebugLoopTaskEntry(void *);
+void SocketServerTaskEntry(void *);
+void RemoteLoopEntry(void *);
+void JSONWriterTaskEntry(void *);
+void ColorDataTaskEntry(void *);
 
 #define DELETE_TASK(handle) if (handle != nullptr) vTaskDelete(handle)
 

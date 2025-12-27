@@ -146,7 +146,7 @@
     class NetworkReader
     {
       // We allow the main network task entry point function to access private members
-      friend void IRAM_ATTR NetworkHandlingLoopEntry(void *);
+      friend void NetworkHandlingLoopEntry(void *);
 
     private:
 

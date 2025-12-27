@@ -33,6 +33,7 @@
 #pragma once
 
 #include <improv.h>
+#include <SPIFFS.h>
 #include "network.h"
 #include "hexdump.h"
 #include "globals.h"
