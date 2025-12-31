@@ -62,12 +62,12 @@
     template<>
     void GFXBase::FillGetNoise<NoiseApproach::Two>()
     {
-        for (uint8_t i = 0; i < MATRIX_WIDTH; i++)
+        for (uint16_t i = 0; i < _width; i++)
         {
-            int32_t ioffset = _ptrNoise->noise_scale_x * (i - CENTER_X_MINOR);
-            for (uint8_t j = 0; j < MATRIX_HEIGHT; j++)
+            int32_t ioffset = _ptrNoise->noise_scale_x * (i - ((_width + 1) / 2));
+            for (uint16_t j = 0; j < _height; j++)
             {
-                int32_t joffset = _ptrNoise->noise_scale_y * (j - CENTER_Y_MINOR);
+                int32_t joffset = _ptrNoise->noise_scale_y * (j - ((_height + 1) / 2));
                 int8_t  data    = inoise16(_ptrNoise->noise_x + ioffset, _ptrNoise->noise_y + joffset, _ptrNoise->noise_z) >> 8;
                 int8_t  olddata = _ptrNoise->noise[i][j];
                 int8_t  newdata = scale8(olddata, _ptrNoise->noisesmoothing) + scale8(data, 256 - _ptrNoise->noisesmoothing);

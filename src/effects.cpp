@@ -94,14 +94,37 @@
     #include "effects/matrix/PatternSMFire2021.h"
     #include "effects/matrix/PatternSMNoise.h"
     #include "effects/matrix/PatternSMPicasso3in1.h"
+    #include "effects/matrix/PatternSMMetaBalls.h"
     #include "effects/matrix/PatternSMSpiroPulse.h"
     #include "effects/matrix/PatternSMTwister.h"
-    #include "effects/matrix/PatternSMMetaBalls.h"
+    #include "effects/matrix/PatternSMSmoke.h"
     #include "effects/matrix/PatternSMHolidayLights.h"
     #include "effects/matrix/PatternSMGamma.h"
     #include "effects/matrix/PatternSMFlowFields.h"
     #include "effects/matrix/PatternSMSupernova.h"
     #include "effects/matrix/PatternSMWalkingMachine.h"
+    #include "effects/matrix/PatternSMAurora.h"
+    #include "effects/matrix/PatternSMBoidExplosion.h"
+    #include "effects/matrix/PatternSMBubbles.h"
+    #include "effects/matrix/PatternSMColorPopcorn.h"
+    #include "effects/matrix/PatternSMEyeTunnel.h"
+    #include "effects/matrix/PatternSMFire2012.h"
+    #include "effects/matrix/PatternSMFireworks.h"
+    #include "effects/matrix/PatternSMFlocking.h"
+    #include "effects/matrix/PatternSMFlying.h"
+    #include "effects/matrix/PatternSMGoogleNexus.h"
+    #include "effects/matrix/PatternSMGravityBalls.h"
+    #include "effects/matrix/PatternSMLightning.h"
+    #include "effects/matrix/PatternSMSand.h"
+    #include "effects/matrix/PatternSMSnakes.h"
+    #include "effects/matrix/PatternSMSquaresAndDots.h"
+    #include "effects/matrix/PatternSMStarshipTroopers.h"
+    #include "effects/matrix/PatternSMSunRadiation.h"
+    #include "effects/matrix/PatternSMTixyLand.h"
+    #include "effects/matrix/PatternSMTraffic.h"
+    #include "effects/matrix/PatternSMTwist.h"
+    #include "effects/matrix/PatternSMWisp.h"
+    #include "effects/matrix/PatternSMXorCircles.h"
     #include "effects/matrix/PatternPongClock.h"
     #include "effects/matrix/PatternMandala.h"
     #include "effects/matrix/PatternQR.h"
@@ -333,6 +356,28 @@ void LoadEffectFactories()
             Effect<PatternSMRainbowTunnel>(),
             Effect<PatternSMSpiroPulse>(),
             Effect<PatternSMTwister>(),
+            Effect<PatternSMAurora>(),
+            Effect<PatternSMBoidExplosion>(),
+            Effect<PatternSMBubbles>(),
+            Effect<PatternSMColorPopcorn>(),
+            Effect<PatternSMEyeTunnel>(),
+            Effect<PatternSMFire2012>(),
+            Effect<PatternSMFireworks>(),
+            Effect<PatternSMFlocking>(),
+            Effect<PatternSMFlying>(),
+            Effect<PatternSMGoogleNexus>(),
+            Effect<PatternSMGravityBalls>(),
+            Effect<PatternSMLightning>(),
+            Effect<PatternSMSand>(),
+            Effect<PatternSMSnakes>(),
+            Effect<PatternSMSquaresAndDots>(),
+            Effect<PatternSMStarshipTroopers>(),
+            Effect<PatternSMSunRadiation>(),
+            Effect<PatternSMTixyLand>(),
+            Effect<PatternSMTraffic>(),
+            Effect<PatternSMTwist>(),
+            Effect<PatternSMWisp>(),
+            Effect<PatternSMXorCircles>(),
             Effect<PatternSMHolidayLights>(),
             Effect<PatternRose>(),
             Effect<PatternPinwheel>(),
