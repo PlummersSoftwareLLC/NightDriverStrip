@@ -166,8 +166,6 @@
 #include "soundanalyzer.h"
 #include "systemcontainer.h"
 #include "values.h"
-#include "improvserial.h"                       // ImprovSerial impl for setting WiFi credentials over the serial port
-#include <esp_now.h>
 
 #if defined(TOGGLE_BUTTON_0) || defined(TOGGLE_BUTTON_1)
   #include "Bounce2.h"                            // For Bounce button class
