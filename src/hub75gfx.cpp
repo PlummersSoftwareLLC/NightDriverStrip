@@ -109,7 +109,22 @@ void HUB75GFX::PrepareFrame()
 
             int y = MATRIX_HEIGHT - 2 - kCharHeight;
             int w = caption.length() * kCharWidth;
-            int x = (MATRIX_WIDTH / 2) - (w / 2) + 1;
+
+            unsigned long elapsed = millis() - captionStartTime;
+
+            int x;
+            if (w > MATRIX_WIDTH)
+            {
+                // Scroll if too wide to fit
+                float progress = (float)elapsed / totalCaptionDuration;
+                x = MATRIX_WIDTH - (int)(progress * (w + MATRIX_WIDTH));
+            }
+
+            else
+            {
+                // Center if it fits
+                x = (MATRIX_WIDTH / 2) - (w / 2) + 1;
+            }
 
             // Generic fill that's way faster than the rectangle base impl
             for (int i = y * _width; i < (y + 1 + kCharHeight) * _width; ++i)

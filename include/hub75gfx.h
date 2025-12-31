@@ -52,7 +52,8 @@ protected:
     unsigned long captionStartTime = 0;
     float captionDuration = 0;
     const float captionFadeInTime = 500;
-    const float captionFadeOutTime = 1000;
+    float captionFadeOutTime = 1000;
+    float totalCaptionDuration = 0;
 
 public:
     typedef RGB_TYPE(COLOR_DEPTH) SM_RGB;
@@ -179,7 +180,7 @@ public:
         if (strCaption == nullptr)
             return 0.0f;
 
-        if (now > (captionStartTime + captionDuration + captionFadeInTime + captionFadeOutTime))
+        if (now > (captionStartTime + totalCaptionDuration))
             return 0.0f;
 
         float elapsed = now - captionStartTime;
@@ -195,7 +196,8 @@ public:
 
     void SetCaption(const String & str, uint32_t duration)
     {
-        captionDuration = duration;
+        captionDuration = (float)duration;
+        totalCaptionDuration = captionFadeInTime + captionDuration + captionFadeOutTime;
         strCaption = str;
         captionStartTime = millis();
     }
