@@ -60,7 +60,6 @@
 #include <TJpg_Decoder.h>
 #endif // EFFECTS_MATRIX
 
-
 //
 // Externals
 //
