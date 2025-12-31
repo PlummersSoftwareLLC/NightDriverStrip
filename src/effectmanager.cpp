@@ -49,18 +49,9 @@ static DRAM_ATTR size_t l_CurrentEffectWriterIndex = SIZE_MAX;
 
 #if USE_HUB75
 
-#include <TJpg_Decoder.h>
-
     void InitSplashEffectManager()
     {
         debugW("InitSplashEffectManager");
-        TJpgDec.setJpgScale(1);
-        TJpgDec.setCallback([](int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
-        {
-            auto pgfx = g_ptrSystem->EffectManager().g();
-            pgfx->drawRGBBitmap(x, y, bitmap, w, h);
-            return true;
-        });
 
         g_ptrSystem->SetupEffectManager(make_shared_psram<SplashLogoEffect>(), g_ptrSystem->Devices());
     }
