@@ -629,7 +629,8 @@ def live_view(host, layout="flat", verbose=False, gain=1.0, scale=None):
                 if frame['pixels']:
                     peak_brightness = max(max(p) for p in frame['pixels'])
                     brightness_history.append(peak_brightness)
-                    print(f"Peak brightness: {peak_brightness}")
+                    if verbose:
+                        print(f"Peak brightness: {peak_brightness}")
 
                     # If we have a full history and ALL samples are dim (< 40) but not black (> 0)
                     if len(brightness_history) == brightness_history.maxlen:
