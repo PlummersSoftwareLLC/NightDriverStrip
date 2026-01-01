@@ -292,7 +292,7 @@ public:
         int offsetY = (MATRIX_HEIGHT - dstHeight) / 2;
 
         debugI("GIF scaling: %dx%d -> %dx%d (scale %.2f,%.2f) offset (%d,%d)",
-               gifWidth, gifHeight, dstWidth, dstHeight, scaleX, scaleY, offsetX, offsetY);
+               (int)gifWidth, (int)gifHeight, (int)dstWidth, (int)dstHeight, scaleX, scaleY, (int)offsetX, (int)offsetY);
 
         g_gifDecoderState._offsetX   = offsetX;
         g_gifDecoderState._offsetY   = offsetY;

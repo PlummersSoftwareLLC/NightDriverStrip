@@ -288,7 +288,7 @@ void WriteCurrentEffectIndexFile()
     }
 
     auto bytesWritten = file.print(g_ptrSystem->EffectManager().GetCurrentEffectIndex());
-    debugI("Number of bytes written to file %s: %zu", CURRENT_EFFECT_CONFIG_FILE, bytesWritten);
+    debugI("Number of bytes written to file %s: %zu", CURRENT_EFFECT_CONFIG_FILE, (size_t)bytesWritten);
 
     file.flush();
     file.close();
@@ -380,7 +380,7 @@ void EffectManager::ClearRemoteColor(bool retainRemoteEffect)
 
 void EffectManager::ApplyGlobalColor(CRGB color) const
 {
-    debugI("Setting Global Color: %08X\n", (uint32_t) color);
+    debugI("Setting Global Color: %08lX\n", (unsigned long)(uint32_t)color);
 
     auto& deviceConfig = g_ptrSystem->DeviceConfig();
     deviceConfig.SetColorSettings(color, deviceConfig.GlobalColor());

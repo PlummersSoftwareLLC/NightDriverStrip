@@ -339,7 +339,7 @@ protected:
                         log_write(".Sending details for SSID %s", WiFi.SSID(i).c_str());
                         // Send each ssid separately to avoid overflowing the buffer
                         std::vector<uint8_t> data = improv::build_rpc_response(
-                            improv::GET_WIFI_NETWORKS, {WiFi.SSID(i), str_sprintf("%d", WiFi.RSSI(i)), WiFi.encryptionType(i) != WIFI_AUTH_OPEN ? "YES" : "NO"}, false);
+                            improv::GET_WIFI_NETWORKS, {WiFi.SSID(i), str_sprintf("%ld", (long)WiFi.RSSI(i)), WiFi.encryptionType(i) != WIFI_AUTH_OPEN ? "YES" : "NO"}, false);
                         this->send_response_(data);
                     }
                 }

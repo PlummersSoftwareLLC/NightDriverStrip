@@ -224,9 +224,9 @@ void PrintOutputHeader()
         debugI("ESP32 PSRAM Init: %s", psramInit() ? "OK" : "FAIL");
     #endif
 
-    debugI("Version %u: Wifi SSID: \"%s\" - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u",
-            FLASH_VERSION, cszSSID, ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
-    debugI("ESP32 Clock Freq : %d MHz", ESP.getCpuFreqMHz());
+    debugI("Version %u: Wifi SSID: \"%s\" - ESP32 Free Memory: %zu, PSRAM:%zu, PSRAM Free: %zu",
+            FLASH_VERSION, cszSSID, (size_t)ESP.getFreeHeap(), (size_t)ESP.getPsramSize(), (size_t)ESP.getFreePsram());
+    debugI("ESP32 Clock Freq : %lu MHz", (unsigned long)ESP.getCpuFreqMHz());
 
     // Initial CLI prompt
     RunCommand("");
@@ -652,8 +652,8 @@ void loop()
                 strOutput += str_sprintf("WiFi: %s, MAC: %s, IP: %s ", WLtoString(WiFi.status()), WiFi.macAddress().c_str(), WiFi.localIP().toString().c_str());
             #endif
 
-            strOutput += str_sprintf("Mem: %u, LargestBlk: %u, PSRAM Free: %u/%u, ", ESP.getFreeHeap(), ESP.getMaxAllocHeap(), ESP.getFreePsram(), ESP.getPsramSize());
-            strOutput += str_sprintf("LED FPS: %d ", g_Values.FPS);
+            strOutput += str_sprintf("Mem: %zu, LargestBlk: %zu, PSRAM Free: %zu/%zu, ", (size_t)ESP.getFreeHeap(), (size_t)ESP.getMaxAllocHeap(), (size_t)ESP.getFreePsram(), (size_t)ESP.getPsramSize());
+            strOutput += str_sprintf("LED FPS: %lu ", (unsigned long)g_Values.FPS);
 
             #if USE_WS281X
                 strOutput += str_sprintf("LED Bright: %3.0lf%%, LED Watts: %u, ", g_Values.Brite, g_Values.Watts);
@@ -673,7 +673,7 @@ void loop()
 
             #if INCOMING_WIFI_ENABLED
                 auto& bufferManager = g_ptrSystem->BufferManagers()[0];
-                strOutput += str_sprintf("Buffer: %d/%d, ", bufferManager.Depth(), bufferManager.BufferCount());
+                strOutput += str_sprintf("Buffer: %zu/%zu, ", (size_t)bufferManager.Depth(), (size_t)bufferManager.BufferCount());
             #endif
 
             const auto& taskManager = g_ptrSystem->TaskManager();

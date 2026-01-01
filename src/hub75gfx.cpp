@@ -57,7 +57,7 @@ void HUB75GFX::StartMatrix()
     matrix.setMaxCalculationCpuPercentage(95);
     matrix.begin();
 
-    Serial.printf("Matrix Refresh Rate: %d\n", matrix.getRefreshRate());
+    Serial.printf("Matrix Refresh Rate: %lu\n", (unsigned long)matrix.getRefreshRate());
 
     //backgroundLayer.setRefreshRate(100);
     backgroundLayer.fillScreen(rgb24(0, 64, 0));
@@ -176,7 +176,7 @@ void HUB75GFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDr
 
     auto targetBrightness = min({ g_ptrSystem->DeviceConfig().GetBrightness(), g_Values.Fader, g_Values.MatrixScaledBrightness });
 
-    debugV("MW: %d, Setting Scaled Brightness to: %d", g_Values.MatrixPowerMilliwatts, targetBrightness);
+    debugV("MW: %lu, Setting Scaled Brightness to: %lu", (unsigned long)g_Values.MatrixPowerMilliwatts, (unsigned long)targetBrightness);
     pMatrix->SetBrightness(targetBrightness);
 
     #if SHOW_FPS_ON_MATRIX

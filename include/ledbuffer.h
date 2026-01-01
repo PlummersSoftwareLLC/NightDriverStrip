@@ -122,7 +122,7 @@ class LEDBuffer
 
         if (payloadLength < length32 * sizeof(CRGB) + cbHeader)
         {
-            debugW("command16: %d   length32: %d,  payloadLength: %d\n", command16, length32, payloadLength);
+            debugW("command16: %hu   length32: %lu,  payloadLength: %zu\n", command16, (unsigned long)length32, payloadLength);
             debugW("Data size mismatch");
             return false;
         }
@@ -131,13 +131,13 @@ class LEDBuffer
             debugW("More data than we have LEDs\n");
             return false;
         }
-        debugV("PayloadLength: %d, command16: %d, Length32: %d", payloadLength, command16, length32);
+        debugV("PayloadLength: %zu, command16: %hu, Length32: %lu", payloadLength, command16, (unsigned long)length32);
 
         CRGB * pRGB = reinterpret_cast<CRGB *>(&payloadData[cbHeader]);
 
         memcpy(_leds.get(), pRGB, length32 * sizeof(CRGB));
         debugV("seconds, micros: %llu.%llu", seconds, micros);
-        debugV("Color0: %08x", (uint32_t) _leds[0]);
+        debugV("Color0: %08lx", (unsigned long)(uint32_t) _leds[0]);
         return true;
     }
 
