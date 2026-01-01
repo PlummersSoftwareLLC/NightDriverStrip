@@ -850,13 +850,13 @@ def main():
                     name = effect.get('name', '').lower()
                     if query.lower() in name:
                         matches.append((i, effect.get('name')))
-                
+
                 if len(matches) == 1:
                     return matches[0][0]
                 elif len(matches) > 1:
                     print(f"Error: Ambiguous match for '{query}'. Candidates: {', '.join(m[1] for m in matches)}")
                     sys.exit(1)
-            
+
             print(f"Error: Could not find an effect matching '{query}'")
             sys.exit(1)
 
@@ -880,8 +880,9 @@ def main():
         client.previous_effect()
 
     if args.set_effect is not None:
-        # If it's a string from the direct --set-effect flag (if we changed the type)
-        # but here we kept it as int in argparse. Let's make argparse more flexible.
+        # If it's a string from the direct --set-effect flag (if we
+        # changed the type) but here we kept it as int in argparse.
+        # Let's make argparse more flexible.
         print(f"Setting effect to index {args.set_effect}...")
         client.set_current_effect(args.set_effect, width=16, height=16)
 
