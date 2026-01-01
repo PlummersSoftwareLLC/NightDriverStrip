@@ -49,7 +49,7 @@ void RemoteControl::handle()
     uint result = results.value;
     _IR_Receive.resume();
 
-    debugI("Received IR Remote Code: 0x%08X, Decode: %08X\n", result, results.decode_type);
+    debugI("Received IR Remote Code: 0x%08lX, Decode: %08lX\n", (unsigned long)result, (unsigned long)results.decode_type);
 
     if (0xFFFFFFFF == result || result == lastResult)
     {
@@ -68,7 +68,7 @@ void RemoteControl::handle()
 
         if (millis() - lastRepeatTime > kMinRepeatms)
         {
-            debugV("Remote Repeat; lastResult == %08x, elapsed = %lu\n", lastResult, millis()-lastRepeatTime);
+            debugV("Remote Repeat; lastResult == %08lx, elapsed = %lu\n", (unsigned long)lastResult, (unsigned long)(millis()-lastRepeatTime));
             result = lastResult;
             lastRepeatTime = millis();
         }
@@ -141,7 +141,7 @@ void RemoteControl::handle()
         effectManager.ShowVU( !effectManager.IsVUVisible() );
     }
 
-    debugI("Looking for match for remote color code: %08X\n", result);
+    debugI("Looking for match for remote color code: %08lX\n", (unsigned long)result);
 
     for (const auto & RemoteColorCode : RemoteColorCodes)
     {
@@ -151,7 +151,7 @@ void RemoteControl::handle()
             // crate a ColorFillEffect, and apply it as a temporary effect.  This will override the current
             // effect until the next effect change or remote command.
 
-            debugI("Changing Color via remote: %08X\n", (uint32_t) RemoteColorCode.color);
+            debugI("Changing Color via remote: %08lX\n", (unsigned long)(uint32_t) RemoteColorCode.color);
             effectManager.ApplyGlobalColor(RemoteColorCode.color);
             #if FULL_COLOR_REMOTE_FILL
                 auto effect = make_shared_psram<ColorFillEffect>("Remote Color", RemoteColorCode.color, 1, true);

@@ -103,7 +103,7 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
         return false;
     }
 
-    debugW("NTP clock: Raw values sec=%u, usec=%llu", frac, microsecs);
+    debugW("NTP clock: Raw values sec=%lu, usec=%llu", (unsigned long)frac, microsecs);
 
     tvNew.tv_sec = ((unsigned long)chNtpPacket[40] << 24) +       // bits 24 through 31 of ntp time
         ((unsigned long)chNtpPacket[41] << 16) +                        // bits 16 through 23 of ntp time
@@ -141,9 +141,9 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
     char chBuffer[128];
     struct tm * tmPointer = localtime(&tvNew.tv_sec);
     strftime(chBuffer, sizeof(chBuffer), "%d %b %Y %H:%M:%S", tmPointer);
-    debugI("NTP clock: response received, updated time to: %ld.%ld, DELTA: %lf\n",
-            tvNew.tv_sec,
-            tvNew.tv_usec,
+    debugI("NTP clock: response received, updated time to: %lld.%lld, DELTA: %lf\n",
+            (long long)tvNew.tv_sec,
+            (long long)tvNew.tv_usec,
             dNew - dOld );
 
     _bClockSet = true;  // Clock has been set at least once

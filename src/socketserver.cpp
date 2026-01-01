@@ -83,11 +83,11 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
             uint32_t compressedSize = _pBuffer[7] << 24  | _pBuffer[6] << 16  | _pBuffer[5] << 8  | _pBuffer[4];
             uint32_t expandedSize   = _pBuffer[11] << 24 | _pBuffer[10] << 16 | _pBuffer[9] << 8  | _pBuffer[8];
             uint32_t reserved       = _pBuffer[15] << 24 | _pBuffer[14] << 16 | _pBuffer[13] << 8 | _pBuffer[12];
-            debugV("Compressed Header: compressedSize: %u, expandedSize: %u, reserved: %u", compressedSize, expandedSize, reserved);
+            debugV("Compressed Header: compressedSize: %lu, expandedSize: %lu, reserved: %lu", (unsigned long)compressedSize, (unsigned long)expandedSize, (unsigned long)reserved);
 
             if (expandedSize > MAXIMUM_PACKET_SIZE)
             {
-                debugE("Expanded packet would be %u but buffer is only %u !!!!\n", expandedSize, MAXIMUM_PACKET_SIZE);
+                debugE("Expanded packet would be %lu but buffer is only %lu !!!!\n", (unsigned long)expandedSize, (unsigned long)MAXIMUM_PACKET_SIZE);
                 break;
             }
 
@@ -96,7 +96,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
                 debugW("Could not read compressed data from stream\n");
                 break;
             }
-            debugV("Successfully read %u bytes", COMPRESSED_HEADER_SIZE + compressedSize);
+            debugV("Successfully read %zu bytes", (size_t)(COMPRESSED_HEADER_SIZE + compressedSize));
 
             // If our buffer is in PSRAM it would be expensive to decompress in place, as the SPIRAM doesn't like
             // non-linear access from what I can tell.  I bet it must send addr+len to request each unique read, so
@@ -141,7 +141,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
 
                     size_t totalExpected = STANDARD_DATA_HEADER_SIZE + length32;
 
-                    debugV("PeakData Header: numbands=%u, length=%u, seconds=%llu, micro=%llu", numbands, length32, seconds, micros);
+                    debugV("PeakData Header: numbands=%u, length=%lu, seconds=%llu, micro=%llu", numbands, (unsigned long)length32, seconds, micros);
 
                     if (numbands != NUM_BANDS)
                     {
@@ -151,13 +151,13 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
 
                     if (length32 != numbands * sizeof(float))
                     {
-                        debugE("Expecting %zu bytes for %d audio bands, but received %zu.  Ensure float size and endianness matches between sender and receiver systems.", totalExpected, NUM_BANDS, _cbReceived);
+                        debugE("Expecting %zu bytes for %d audio bands, but received %zu.  Ensure float size and endianness matches between sender and receiver systems.", (size_t)totalExpected, (int)NUM_BANDS, (size_t)_cbReceived);
                         break;
                     }
 
                     if (false == ReadUntilNBytesReceived(new_socket, totalExpected))
                     {
-                        debugE("Error in getting peak data from wifi, could not read the %zu bytes", totalExpected);
+                        debugE("Error in getting peak data from wifi, could not read the %zu bytes", (size_t)totalExpected);
                         break;
                     }
 
@@ -165,7 +165,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
                         break;
 
                     // Consume the data by resetting the buffer
-                    debugV("Consuming the data as WIFI_COMMAND_PEAKDATA by setting _cbReceived to from %zu down 0.", _cbReceived);
+                    debugV("Consuming the data as WIFI_COMMAND_PEAKDATA by setting _cbReceived to from %zu down 0.", (size_t)_cbReceived);
                 }
                 #else
                     // Audio disabled: consume any declared payload to keep stream in sync, then ignore it
@@ -173,10 +173,10 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
                     size_t totalExpected = STANDARD_DATA_HEADER_SIZE + length32;
                     if (!ReadUntilNBytesReceived(new_socket, totalExpected))
                     {
-                        debugW("Audio disabled, failed to skip PEAKDATA payload of %zu bytes", totalExpected);
+                        debugW("Audio disabled, failed to skip PEAKDATA payload of %zu bytes", (size_t)totalExpected);
                         break;
                     }
-                    debugV("Audio disabled; skipped PEAKDATA payload (%zu bytes)", totalExpected);
+                    debugV("Audio disabled; skipped PEAKDATA payload (%zu bytes)", (size_t)totalExpected);
                 #endif
                 ResetReadBuffer();
 
@@ -190,16 +190,16 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
                 uint64_t seconds   = ULONGFromMemory(&_pBuffer.get()[8]);
                 uint64_t micros    = ULONGFromMemory(&_pBuffer.get()[16]);
 
-                debugV("Uncompressed Header: channel16=%u, length=%u, seconds=%llu, micro=%llu", channel16, length32, seconds, micros);
+                debugV("Uncompressed Header: channel16=%u, length=%lu, seconds=%llu, micro=%llu", channel16, (unsigned long)length32, seconds, micros);
 
                 size_t totalExpected = STANDARD_DATA_HEADER_SIZE + length32 * LED_DATA_SIZE;
                 if (totalExpected > MAXIMUM_PACKET_SIZE)
                 {
-                    debugW("Too many bytes promised (%zu) - more than we can use for our LEDs at max packet (%u)\n", totalExpected, MAXIMUM_PACKET_SIZE);
+                    debugW("Too many bytes promised (%zu) - more than we can use for our LEDs at max packet (%lu)\n", (size_t)totalExpected, (unsigned long)MAXIMUM_PACKET_SIZE);
                     break;
                 }
 
-                debugV("Expecting %zu total bytes", totalExpected);
+                debugV("Expecting %zu total bytes", (size_t)totalExpected);
                 if (false == ReadUntilNBytesReceived(new_socket, totalExpected))
                 {
                     debugW("Error in getting pixel data from wifi\n");
@@ -215,14 +215,14 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
                 }
 
                 // Consume the data by resetting the buffer
-                debugV("Consuming the data as WIFI_COMMAND_PIXELDATA64 by setting _cbReceived to from %zu down 0.", _cbReceived);
+                debugV("Consuming the data as WIFI_COMMAND_PIXELDATA64 by setting _cbReceived to from %zu down 0.", (size_t)_cbReceived);
                 ResetReadBuffer();
 
                 bSendResponsePacket = true;
             }
             else
             {
-                debugW("Unknown command in packet received: %d\n", command16);
+                debugW("Unknown command in packet received: %u\n", command16);
                 break;
             }
         }

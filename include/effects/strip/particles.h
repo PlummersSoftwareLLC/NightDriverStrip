@@ -310,7 +310,7 @@ template <typename Type = DrawableParticle> class ParticleSystem
 
     virtual void Render(const std::vector<std::shared_ptr<GFXBase>>& _gfx)
     {
-        debugV("ParticleSystemEffect::Draw for %d particles", _allParticles.size());
+        debugV("ParticleSystemEffect::Draw for %zu particles", (size_t)_allParticles.size());
 
         while (_allParticles.size() > 0 && _allParticles.front().Age() >= _allParticles.front().TotalLifetime())
             _allParticles.pop_front();

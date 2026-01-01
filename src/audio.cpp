@@ -245,11 +245,11 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
     VICESocketServer socketServer(NetworkPort::VICESocketServer);
     if (!socketServer.begin())
     {
-        debugE("Unable to start socket server on port %u for VICE!", NetworkPort::VICESocketServer);
+        debugE("Unable to start socket server on port %u for VICE!", (unsigned int)NetworkPort::VICESocketServer);
     }
     else
     {
-        debugW("Started socket server for VICE on port %u!", NetworkPort::VICESocketServer);
+        debugW("Started socket server for VICE on port %u!", (unsigned int)NetworkPort::VICESocketServer);
     }
 #endif
 

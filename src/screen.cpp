@@ -112,8 +112,8 @@ class BasicInfoSummaryPage final : public Page
         // Second param is background for clean overwrite
         display.setTextColor(display.GetTextColor(), display.GetBkgndColor());
         display.setCursor(xMargin, yMargin);
-        display.println(str_sprintf("%s:%dx%d %c %dK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS,
-                                    chStatus, ESP.getFreeHeap() / 1024));
+        display.println(str_sprintf("%s:%zu %c %zuk", FLASH_VERSION_NAME, (size_t)g_ptrSystem->Devices().size(),
+                                    chStatus, (size_t)(ESP.getFreeHeap() / 1024)));
 
         // WiFi info line 2
         auto lineHeight = display.fontHeight();
@@ -123,13 +123,13 @@ class BasicInfoSummaryPage final : public Page
         else
         {
             const IPAddress address = WiFi.localIP();
-            display.println(str_sprintf("%ddB:%d.%d.%d.%d", (int)labs(WiFi.RSSI()), address[0], address[1], address[2], address[3]));
+            display.println(str_sprintf("%ddB:%d.%d.%d.%d", (int)labs(WiFi.RSSI()), (int)address[0], (int)address[1], (int)address[2], (int)address[3]));
         }
 
         // Buffer Status Line 3
         auto &bufferManager = g_ptrSystem->BufferManagers()[0];
         display.setCursor(xMargin + 0, yMargin + lineHeight * 4);
-        display.println(str_sprintf("BUFR:%02d/%02d %dfps ", bufferManager.Depth(), bufferManager.BufferCount(), g_Values.FPS));
+        display.println(str_sprintf("BUFR:%02lu/%02lu %lufps ", (unsigned long)bufferManager.Depth(), (unsigned long)bufferManager.BufferCount(), (unsigned long)g_Values.FPS));
 
         // Data Status Line 4
         display.setCursor(xMargin + 0, yMargin + lineHeight * 2);
@@ -150,7 +150,7 @@ class BasicInfoSummaryPage final : public Page
         if (display.height() >= lineHeight * 5 + lineHeight)
         {
             display.setCursor(xMargin + 0, yMargin + lineHeight * 5);
-            display.println(str_sprintf("POWR:%3.0lf%% %4uW\n", g_Values.Brite, g_Values.Watts));
+            display.println(str_sprintf("POWR:%3.0lf%% %4luW\n", g_Values.Brite, (unsigned long)g_Values.Watts));
         }
 
         // PSRAM/CPU Info Line 7 - only if display tall enough
@@ -319,9 +319,9 @@ class TitlePage : public Page
             }
 
             // Footer line
-            String footer = str_sprintf(" LED: %2d  Scr: %02d", g_Values.FPS, (int)screenFPS);
+            String footer = str_sprintf(" LED: %2lu  Scr: %02d", (unsigned long)g_Values.FPS, (int)screenFPS);
             #if ENABLE_AUDIO
-                footer = str_sprintf(" LED: %2d  Aud: %2d Ser:%2d Scr: %02d", g_Values.FPS, g_Analyzer.AudioFPS(), g_Analyzer.SerialFPS(), (int)screenFPS);
+                footer = str_sprintf(" LED: %2lu  Aud: %2lu Ser:%2lu Scr: %02d", (unsigned long)g_Values.FPS, (unsigned long)g_Analyzer.AudioFPS(), (unsigned long)g_Analyzer.SerialFPS(), (int)screenFPS);
             #endif
 
             if (footer != lastFooter)

@@ -289,13 +289,13 @@ static void DoDirectoryListing(const cli_argv &argv)
 
         if (file.isDirectory())
         {
-            cli_printf("%-32s DIR      %d-%02d-%02d %02d:%02d:%02d\n", file.name(), tm.tm_year + 1900, tm.tm_mon + 1,
-                       tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+            cli_printf("%-32s DIR      %d-%02d-%02d %02d:%02d:%02d\n", file.name(), (int)(tm.tm_year + 1900), (int)(tm.tm_mon + 1),
+                       (int)tm.tm_mday, (int)tm.tm_hour, (int)tm.tm_min, (int)tm.tm_sec);
         }
         else
         {
-            cli_printf("%-32s %8d %d-%02d-%02d %02d:%02d:%02d\n", file.name(), file.size(), tm.tm_year + 1900,
-                       tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+            cli_printf("%-32s %8zu %d-%02d-%02d %02d:%02d:%02d\n", file.name(), (size_t)file.size(), (int)(tm.tm_year + 1900),
+                       (int)(tm.tm_mon + 1), (int)tm.tm_mday, (int)tm.tm_hour, (int)tm.tm_min, (int)tm.tm_sec);
         }
         file = root.openNextFile();
     }
@@ -399,7 +399,7 @@ static const command core_commands[] = {
              int val = atoi(std::string(argv[1]).c_str());
              g_ptrSystem->DeviceConfig().SetBrightness(val);
          }
-         cli_printf("Brightness: %d\n", g_ptrSystem->DeviceConfig().GetBrightness());
+         cli_printf("Brightness: %lu\n", (unsigned long)g_ptrSystem->DeviceConfig().GetBrightness());
      }},
     {"ls", "Show filesytem directory", "NAME", DoDirectoryListing},                    // Function pointer
     {"effect", "[next|prev] Show/change current effect", "Effects.", DoEffectCommand}, // Function pointer
