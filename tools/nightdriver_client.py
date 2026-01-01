@@ -803,7 +803,7 @@ def main():
     parser.add_argument("--settings", action="store_true", help="Get the current device settings.")
     parser.add_argument("--next", action="store_true", help="Switch to the next effect.")
     parser.add_argument("--prev", action="store_true", help="Switch to the previous effect.")
-    parser.add_argument("--set-effect", type=int, metavar="INDEX", help="Set the current effect to the specified index.")
+    parser.add_argument("--set-effect", type=str, metavar="INDEX_OR_NAME", help="Set the current effect.")
     parser.add_argument("--set-brightness", type=int, metavar="VALUE", help="Set the device brightness (0-255).")
     parser.add_argument("--capture", type=str, metavar="EFFECT_INDEX_OR_NAME", help="Capture an effect and save it as a GIF.")
     parser.add_argument("--duration", type=int, default=5, metavar="SECONDS", help="Duration to capture the effect in seconds (default: 5).")
@@ -852,6 +852,7 @@ def main():
                         matches.append((i, effect.get('name')))
 
                 if len(matches) == 1:
+                    print(f"Resolved '{query}' to '{matches[0][1]}' (index {matches[0][0]})")
                     return matches[0][0]
                 elif len(matches) > 1:
                     print(f"Error: Ambiguous match for '{query}'. Candidates: {', '.join(m[1] for m in matches)}")
@@ -880,11 +881,9 @@ def main():
         client.previous_effect()
 
     if args.set_effect is not None:
-        # If it's a string from the direct --set-effect flag (if we
-        # changed the type) but here we kept it as int in argparse.
-        # Let's make argparse more flexible.
-        print(f"Setting effect to index {args.set_effect}...")
-        client.set_current_effect(args.set_effect, width=16, height=16)
+        idx = find_effect_index(args.set_effect)
+        print(f"Setting effect to index {idx}...")
+        client.set_current_effect(idx, width=16, height=16)
 
     if args.capture is not None:
         effect_to_capture = None
