@@ -803,9 +803,9 @@ def main():
     parser.add_argument("--settings", action="store_true", help="Get the current device settings.")
     parser.add_argument("--next", action="store_true", help="Switch to the next effect.")
     parser.add_argument("--prev", action="store_true", help="Switch to the previous effect.")
-    parser.add_argument("--set-effect", type=str, metavar="INDEX_OR_NAME", help="Set the current effect.")
+    parser.add_argument("--set-effect", type=str, metavar="EFFECT_ID", help="Set the current effect.")
     parser.add_argument("--set-brightness", type=int, metavar="VALUE", help="Set the device brightness (0-255).")
-    parser.add_argument("--capture", type=str, metavar="EFFECT_INDEX_OR_NAME", help="Capture an effect and save it as a GIF.")
+    parser.add_argument("--capture", type=str, metavar="EFFECT_ID", help="Capture an effect and save it as a GIF.")
     parser.add_argument("--duration", type=int, default=5, metavar="SECONDS", help="Duration to capture the effect in seconds (default: 5).")
     parser.add_argument("--output", default="effect_capture.gif", metavar="FILENAME", help="Output filename for the captured GIF (default: effect_capture.gif).")
     parser.add_argument("--scale", type=int, metavar="FACTOR", help="Scale factor for the output GIF (e.g., 8 for 8x). Default: auto-scale if width or height < 256.")
@@ -886,21 +886,7 @@ def main():
         client.set_current_effect(idx, width=16, height=16)
 
     if args.capture is not None:
-        effect_to_capture = None
-        try:
-            effect_index = int(args.capture)
-            effect_to_capture = effect_index
-        except ValueError:
-            # Not a number, so it must be a name
-            effects_data = client.get_effects()
-            if effects_data and 'Effects' in effects_data:
-                for i, effect in enumerate(effects_data['Effects']):
-                    if args.capture.lower() in effect.get('name', '').lower():
-                        effect_to_capture = i
-                        break
-            if effect_to_capture is None:
-                print(f"Error: Could not find an effect with the name '{args.capture}'")
-                sys.exit(1)
+        effect_to_capture = find_effect_index(args.capture)
 
         if effect_to_capture is not None:
             print(f"Capturing effect {effect_to_capture} to {args.output} for {args.duration} seconds...")
