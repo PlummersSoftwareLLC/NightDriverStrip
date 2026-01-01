@@ -9,6 +9,7 @@
 
 import requests
 import json
+import sys
 import argparse
 import socket
 import time
@@ -713,10 +714,10 @@ def restore_configuration(client, input_filename):
             config = json.load(f)
     except FileNotFoundError:
         print(f"Error: Backup file not found at {input_filename}")
-        return
+        sys.exit(1)
     except json.JSONDecodeError:
         print(f"Error: Could not decode JSON from {input_filename}")
-        return
+        sys.exit(1)
 
     if 'settings' in config:
         print("Restoring device settings...")
@@ -816,6 +817,7 @@ def main():
     parser.add_argument("--restore", metavar="FILENAME", help="Restore the device configuration from a JSON file.")
     parser.add_argument("--generate-gallery", action="store_true", help="Generate an HTML gallery from captured GIFs.")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output for debugging.")
+    parser.add_argument("command", nargs="*", help="Optional command: next, prev, or an effect name/index.")
 
 
     args = parser.parse_args()
@@ -836,6 +838,39 @@ def main():
         if settings:
             print(json.dumps(settings, indent=2))
 
+    # Helper for resolving effect index/name
+    def find_effect_index(query):
+        try:
+            return int(query)
+        except ValueError:
+            effects_data = client.get_effects()
+            if effects_data and 'Effects' in effects_data:
+                matches = []
+                for i, effect in enumerate(effects_data['Effects']):
+                    name = effect.get('name', '').lower()
+                    if query.lower() in name:
+                        matches.append((i, effect.get('name')))
+                
+                if len(matches) == 1:
+                    return matches[0][0]
+                elif len(matches) > 1:
+                    print(f"Error: Ambiguous match for '{query}'. Candidates: {', '.join(m[1] for m in matches)}")
+                    sys.exit(1)
+            
+            print(f"Error: Could not find an effect matching '{query}'")
+            sys.exit(1)
+
+    # Handle positional commands (intent divining)
+    if args.command:
+        cmd = " ".join(args.command)
+        if cmd.lower() == "next":
+            args.next = True
+        elif cmd.lower() == "prev":
+            args.prev = True
+        else:
+            # Assume it's an effect name/index
+            args.set_effect = find_effect_index(cmd)
+
     if args.next:
         print("Switching to next effect...")
         client.next_effect()
@@ -845,6 +880,8 @@ def main():
         client.previous_effect()
 
     if args.set_effect is not None:
+        # If it's a string from the direct --set-effect flag (if we changed the type)
+        # but here we kept it as int in argparse. Let's make argparse more flexible.
         print(f"Setting effect to index {args.set_effect}...")
         client.set_current_effect(args.set_effect, width=16, height=16)
 
@@ -863,6 +900,7 @@ def main():
                         break
             if effect_to_capture is None:
                 print(f"Error: Could not find an effect with the name '{args.capture}'")
+                sys.exit(1)
 
         if effect_to_capture is not None:
             print(f"Capturing effect {effect_to_capture} to {args.output} for {args.duration} seconds...")
@@ -896,12 +934,6 @@ def main():
                     raw_filename = output_filename.replace('.gif', '.raw')
                     save_raw_frames(frames, raw_filename, verbose=args.verbose)
                     captured_files.append(output_filename)
-
-    args = parser.parse_args()
-
-    client = NightDriver(args.host, port=args.rest_port)
-
-    # ... (skipping captured_files init)
 
     if args.live_view:
         live_view(args.host, args.hex_layout, verbose=args.verbose, gain=args.preview_gain, scale=args.scale)
