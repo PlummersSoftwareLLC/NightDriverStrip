@@ -66,7 +66,7 @@ void cli_printf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 void RunCommand(const char* cmd);
 
 // Tab completion.
-std::string_view TabComplete(std::string_view partial);
+std::string_view TabComplete(std::string_view partial, std::string_view full_line);
 
 // Initialization (registers core commands).
 void InitDebugCLI();

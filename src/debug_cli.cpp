@@ -120,6 +120,24 @@ bool StringCompareInsensitive(std::string_view sv, const char *in_s)
     return *s == '\0';
 }
 
+bool StringStartsWithInsensitive(std::string_view haystack, std::string_view needle)
+{
+    if (needle.length() > haystack.length())
+        return false;
+    return std::equal(needle.begin(), needle.end(), haystack.begin(),
+                      [](char ch1, char ch2) { return std::tolower(ch1) == std::tolower(ch2); });
+}
+
+bool ContainsInsensitive(std::string_view haystack, std::string_view needle)
+{
+    if (needle.empty())
+        return true;
+    auto it = std::search(haystack.begin(), haystack.end(), needle.begin(), needle.end(),
+                          [](char ch1, char ch2) { return std::tolower(ch1) == std::tolower(ch2); });
+    return it != haystack.end();
+}
+
+
 //
 // Registration
 //
@@ -156,7 +174,7 @@ static void PrintHelp(const cli_argv &argv)
                 matches = 1;
                 break;
             }
-            if (strncasecmp(cmd->command, target.data(), target.length()) == 0)
+            if (StringStartsWithInsensitive(cmd->command, target))
             {
                 match = cmd;
                 matches++;
@@ -229,46 +247,160 @@ void RunCommand(const char *cmd_line)
 // print a space that's not in the command until newline is found. It will
 // not complete arguments, e.g. not 'reboot n<tab>' would not complete the
 // 'now' if that happened to be an option.
-std::string_view TabComplete(std::string_view partial)
+std::string_view TabComplete(std::string_view partial, std::string_view full_line)
 {
     if (partial.empty())
         return "";
-    std::string_view match = "";
-    int matches = 0;
 
-    for (const auto *cmd : g_CommandTable)
+    // If we're completing the first token (the command)
+    if (partial.data() == full_line.data())
     {
-        if (strncasecmp(cmd->command, partial.data(), partial.length()) == 0)
+        std::string_view match = "";
+        int matches = 0;
+
+        for (const auto *cmd : g_CommandTable)
         {
-            match = cmd->command;
-            matches++;
+            if (StringStartsWithInsensitive(cmd->command, partial))
+            {
+                match = cmd->command;
+                matches++;
+            }
+        }
+
+        if (matches == 1)
+            return match.substr(partial.length());
+
+        if (matches > 1)
+        {
+            // Calculate longest common prefix among all matching commands
+            size_t common_len = match.length();
+            for (const auto *cmd : g_CommandTable)
+            {
+                if (StringStartsWithInsensitive(cmd->command, partial))
+                {
+                    size_t j = partial.length();
+                    while (j < common_len && j < strlen(cmd->command) &&
+                           tolower(match[j]) == tolower(cmd->command[j]))
+                        j++;
+                    common_len = j;
+                }
+            }
+            if (common_len > partial.length())
+                return match.substr(partial.length(), common_len - partial.length());
         }
     }
-
-    if (matches == 1)
+    // If we're completing an argument for 'effect'
+    else if (full_line.substr(0, 6) == "effect")
     {
-        return match.substr(partial.length());
+        auto& effectManager = g_ptrSystem->EffectManager();
+        std::string_view firstMatch = "";
+        int matches = 0;
+        size_t common_len = 0;
+
+        for (size_t i = 0; i < effectManager.EffectCount(); ++i)
+        {
+            const String& name = effectManager.EffectsList()[i]->FriendlyName();
+            if (StringStartsWithInsensitive(name.c_str(), partial))
+            {
+                if (matches == 0)
+                {
+                    firstMatch = name.c_str();
+                    common_len = firstMatch.length();
+                }
+                else
+                {
+                    size_t j = partial.length();
+                    while (j < common_len && j < (size_t)name.length() &&
+                           tolower(firstMatch[j]) == tolower(name[j]))
+                        j++;
+                    common_len = j;
+                }
+                matches++;
+            }
+        }
+
+        if (matches > 0 && common_len > partial.length())
+            return firstMatch.substr(partial.length(), common_len - partial.length());
     }
+
     return "";
 }
+
 
 //
 // Core Commands Table
 //
 static void DoEffectCommand(const cli_argv &argv)
 {
-    cli_printf("Current Effect: %s\n", g_ptrSystem->EffectManager().GetCurrentEffectName().c_str());
+    auto& effectManager = g_ptrSystem->EffectManager();
+    cli_printf("Current Effect: %s\n", effectManager.GetCurrentEffectName().c_str());
+
     if (argv.size() > 1)
     {
-        if (argv[1] == "next")
+        std::string_view arg = argv[1];
+
+        if (arg == "next")
         {
-            g_ptrSystem->EffectManager().NextEffect();
+            effectManager.NextEffect();
         }
-        else if (argv[1] == "prev")
+        else if (arg == "prev")
         {
-            g_ptrSystem->EffectManager().PreviousEffect();
+            effectManager.PreviousEffect();
         }
-        cli_printf("New Effect: %s\n", g_ptrSystem->EffectManager().GetCurrentEffectName().c_str());
+        else
+        {
+            // Try as index first
+            char *end;
+            long index = strtol(arg.data(), &end, 10);
+            if (end != arg.data() && *end == '\0')
+            {
+                if (index >= 0 && index < (long)effectManager.EffectCount())
+                {
+                    effectManager.SetCurrentEffectIndex(index);
+                }
+                else
+                {
+                    cli_printf("Error: Effect index %ld out of range (0-%u)\n", index, effectManager.EffectCount() - 1);
+                    return;
+                }
+            }
+            else
+            {
+                // Try fuzzy name match
+                int match_index = -1;
+                int matches = 0;
+                std::vector<std::string> candidates;
+
+                for (size_t i = 0; i < effectManager.EffectCount(); ++i)
+                {
+                    const String& name = effectManager.EffectsList()[i]->FriendlyName();
+                    if (ContainsInsensitive(name.c_str(), arg))
+                    {
+                        match_index = i;
+                        matches++;
+                        candidates.push_back(name.c_str());
+                    }
+                }
+
+                if (matches == 1)
+                {
+                    effectManager.SetCurrentEffectIndex(match_index);
+                }
+                else if (matches > 1)
+                {
+                    cli_printf("Error: Ambiguous match for '%s'. Candidates:\n", std::string(arg).c_str());
+                    for (const auto& c : candidates)
+                        cli_printf("  %s\n", c.c_str());
+                    return;
+                }
+                else
+                {
+                    cli_printf("Error: No effect matching '%s' found.\n", std::string(arg).c_str());
+                    return;
+                }
+            }
+        }
+        cli_printf("New Effect: %s\n", effectManager.GetCurrentEffectName().c_str());
     }
 }
 
@@ -402,7 +534,17 @@ static const command core_commands[] = {
          cli_printf("Brightness: %d\n", g_ptrSystem->DeviceConfig().GetBrightness());
      }},
     {"ls", "Show filesytem directory", "NAME", DoDirectoryListing},                    // Function pointer
-    {"effect", "[next|prev] Show/change current effect", "Effects.", DoEffectCommand}, // Function pointer
+    {"effect", "[next|prev|name|index] Show/change current effect", "Effects.", DoEffectCommand}, // Function pointer
+    {"+", "Nudge brightness up", "Brightness +10", [](const cli_argv &) {
+        int val = std::min(255, g_ptrSystem->DeviceConfig().GetBrightness() + 10);
+        g_ptrSystem->DeviceConfig().SetBrightness(val);
+        cli_printf("Brightness: %d\n", val);
+    }},
+    {"-", "Nudge brightness down", "Brightness -10", [](const cli_argv &) {
+        int val = std::max(0, g_ptrSystem->DeviceConfig().GetBrightness() - 10);
+        g_ptrSystem->DeviceConfig().SetBrightness(val);
+        cli_printf("Brightness: %d\n", val);
+    }},
     {"help", "Display command line options", "Displaying system help",
      PrintHelp} // Function pointer logic requires PrintHelp signature match. It does.
 };

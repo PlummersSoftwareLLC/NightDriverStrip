@@ -402,7 +402,9 @@ void setup()
 
              switch (byte) {
                 case '\t': {
-                    std::string_view suffix = TabComplete(cmd);
+                    size_t lastSpace = cmd.find_last_of(' ');
+                    std::string_view partial = (lastSpace == std::string::npos) ? std::string_view(cmd) : std::string_view(cmd).substr(lastSpace + 1);
+                    std::string_view suffix = TabComplete(partial, cmd);
                     if (!suffix.empty()) {
                         cmd += suffix;
                         cmd += " ";
