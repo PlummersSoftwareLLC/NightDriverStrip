@@ -1382,7 +1382,7 @@ public:
         // function templates) are included in gfxbase.cpp, because of the way C++ demands things to be
         // structured.
         //
-        // The default approach for the tenplated functions is determined by the value of _defaultNoiseApproach,
+        // The default approach for the templated functions is determined by the value of _defaultNoiseApproach,
         // which is defined earlier in this class.
         template<NoiseApproach = _defaultNoiseApproach>
         void MoveFractionalNoiseX(uint8_t amt, uint8_t shift = 0);
