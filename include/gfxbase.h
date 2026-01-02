@@ -110,8 +110,8 @@ constexpr static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
 
     enum class NoiseApproach
     {
-        General,    // Used by Smearing and general noise effects
-        MRI         // Used by Mandala effects (MRI-style complex symmetries)
+        General,    // General approach used by most noise effects
+        MRI         // MRI-style complex symmetries
     };
 #endif
 
