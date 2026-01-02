@@ -96,12 +96,22 @@ constexpr static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
         uint8_t  noisesmoothing;
     } Noise;
 
-    // Enum type for the different noise approaches that are available. If anybody
-    // has ideas for more descriptive names for these, don't hesitate to suggest them. :)
+    // A "Noise Pool" in the context of computer graphics is a multi-dimensional array of
+    // pseudo-random values that are spatially coherent. Unlike the "static" on a TV
+    // or white noise in electronics (which is totally random from one pixel to the next),
+    // graphics noise (like Perlin or Simplex) changes smoothly across space.
+    // This allows for organic-looking animations like clouds, smoke, or fire.
+    //
+    // The Noise Pool here is populated by the FillGetNoise() method.
+    //
+    // NOTE: Approach "One" and "Two" are currently identical. Historically, they used
+    // different coordinate systems (Instance vs. Static), but we have unified them
+    // to use instance variables (_width/_height) for better display flexibility.
+
     enum class NoiseApproach
     {
-        One,
-        Two
+        One,    // Used by Mandala effects (MRI-style complex symmetries)
+        Two     // Used by Smearing and general noise effects
     };
 #endif
 

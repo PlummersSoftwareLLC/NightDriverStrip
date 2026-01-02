@@ -39,61 +39,51 @@
     // The following functions are specializations of noise-related member function
     // templates declared in gfxbase.h.
 
-    template<>
-    void GFXBase::FillGetNoise<NoiseApproach::One>()
+    template<NoiseApproach Approach>
+    void GFXBase::FillGetNoise()
     {
-        for (uint16_t i = 0; i < _width; i++)
+        // Subtracting the center offset before scaling ensures the noise pattern radiates
+        // outwards from the center of the display (exactly as #803 intended).
+        //
+        // We use uint32_t for the indices as it's the native register size for the ESP32,
+        // avoiding the unnecessary overhead of masking/extending smaller types.
+        for (uint32_t i = 0; i < _width; i++)
         {
-            uint32_t ioffset = _ptrNoise->noise_scale_x * (i - ((_height + 1) / 2));
+            int32_t ioffset = _ptrNoise->noise_scale_x * (int32_t)(i - (_width / 2));
 
-            for (uint16_t j = 0; j < _height; j++)
+            for (uint32_t j = 0; j < _height; j++)
             {
-                uint32_t joffset = _ptrNoise->noise_scale_y * (j - ((_height + 1) / 2));
-                uint16_t data    = inoise16(_ptrNoise->noise_x + ioffset, _ptrNoise->noise_y + joffset, _ptrNoise->noise_z) >> 8;
-                uint8_t  olddata = _ptrNoise->noise[i][j];
-                uint8_t  newdata = scale8(olddata, _ptrNoise->noisesmoothing) + scale8(data, 256 - _ptrNoise->noisesmoothing);
+                int32_t joffset = _ptrNoise->noise_scale_y * (int32_t)(j - (_height / 2));
+                uint8_t data    = inoise16(_ptrNoise->noise_x + ioffset, _ptrNoise->noise_y + joffset, _ptrNoise->noise_z) >> 8;
+                uint8_t olddata = _ptrNoise->noise[i][j];
+                uint8_t newdata = scale8(olddata, _ptrNoise->noisesmoothing) + scale8(data, 256 - _ptrNoise->noisesmoothing);
 
-                data = newdata;
-                _ptrNoise->noise[i][j] = data;
+                _ptrNoise->noise[i][j] = newdata;
             }
         }
     }
 
-    template<>
-    void GFXBase::FillGetNoise<NoiseApproach::Two>()
-    {
-        for (uint16_t i = 0; i < _width; i++)
-        {
-            int32_t ioffset = _ptrNoise->noise_scale_x * (i - ((_width + 1) / 2));
-            for (uint16_t j = 0; j < _height; j++)
-            {
-                int32_t joffset = _ptrNoise->noise_scale_y * (j - ((_height + 1) / 2));
-                int8_t  data    = inoise16(_ptrNoise->noise_x + ioffset, _ptrNoise->noise_y + joffset, _ptrNoise->noise_z) >> 8;
-                int8_t  olddata = _ptrNoise->noise[i][j];
-                int8_t  newdata = scale8(olddata, _ptrNoise->noisesmoothing) + scale8(data, 256 - _ptrNoise->noisesmoothing);
-                data = newdata;
-                _ptrNoise->noise[i][j] = data;
-            }
-        }
-    }
+    // Explicit instantiations to satisfy the linker for both available approaches
+    template void GFXBase::FillGetNoise<NoiseApproach::One>();
+    template void GFXBase::FillGetNoise<NoiseApproach::Two>();
 
     template<>
     void GFXBase::MoveFractionalNoiseX<NoiseApproach::One>(uint8_t amt, uint8_t shift)
     {
-        std::unique_ptr<CRGB[]> ledsTemp = make_unique_psram<CRGB[]>(NUM_LEDS);
+        std::unique_ptr<CRGB[]> ledsTemp = make_unique_psram<CRGB[]>(_ledcount);
 
         // move delta pixelwise
-        for (int y = 0; y < _height; y++)
+        for (uint32_t y = 0; y < _height; y++)
         {
             uint16_t amount = _ptrNoise->noise[0][y] * amt;
             uint8_t delta = _width - 1 - (amount / 256);
 
-            // Process up to the end less the dekta
-            for (int x = 0; x < _width - delta; x++)
+            // Process up to the end less the delta
+            for (uint32_t x = 0; x < _width - delta; x++)
                 ledsTemp[XY(x, y)] = leds[XY(x + delta, y)];
 
             // Do the tail portion while wrapping around
-            for (int x = _width - delta; x < _width; x++)
+            for (uint32_t x = _width - delta; x < _width; x++)
                 ledsTemp[XY(x, y)] = leds[XY(x + delta - _width, y)];
         }
 
@@ -101,13 +91,13 @@
         CRGB PixelA;
         CRGB PixelB;
 
-        for (uint16_t y = 0; y < _height; y++)
+        for (uint32_t y = 0; y < _height; y++)
         {
             uint16_t amount = _ptrNoise->noise[0][y] * amt;
-            uint8_t delta = _height - 1 - (amount / 256);
+            uint8_t delta = _width - 1 - (amount / 256);
             uint8_t fractions = amount - (delta * 256);
 
-            for (uint16_t x = 1; x < _width; x++)
+            for (uint32_t x = 1; x < _width; x++)
             {
                 PixelA = ledsTemp[XY(x, y)];
                 PixelB = ledsTemp[XY(x - 1, y)];
@@ -131,31 +121,39 @@
     template<>
     void GFXBase::MoveFractionalNoiseX<NoiseApproach::Two>(uint8_t amt, uint8_t shift)
     {
-        for (uint8_t y = 0; y < MATRIX_HEIGHT; y++)
+        // Aligning with Approach::One while keeping the "Approach::Two" optimized behavior.
+        // We use int32_t for the 'amount' and 'delta' as they can be large or negative.
+        for (uint32_t y = 0; y < _height; y++)
         {
-            int16_t amount =((int16_t)_ptrNoise->noise[0][y] - 128) * 2 * amt + shift * 256;
-            int8_t delta = abs(amount) >> 8;
-            int8_t fraction = abs(amount) & 255;
-            for (uint8_t x = 0; x < MATRIX_WIDTH; x++)
+            int32_t amount = ((int32_t)_ptrNoise->noise[0][y] - 128) * 2 * amt + shift * 256;
+            int32_t delta = abs(amount) >> 8;
+            int32_t fraction = abs(amount) & 255;
+
+            for (uint32_t x = 0; x < _width; x++)
             {
-                int8_t zD;
-                int8_t zF;
+                int32_t zD;
+                int32_t zF;
 
                 if (amount < 0)
                 {
-                    zD = x - delta;
+                    zD = (int32_t)x - delta;
                     zF = zD - 1;
                 }
                 else
                 {
-                    zD = x + delta;
+                    zD = (int32_t)x + delta;
                     zF = zD + 1;
                 }
+
                 CRGB PixelA = CRGB::Black;
-                if ((zD >= 0) && (zD < MATRIX_WIDTH)) PixelA = leds[XY(zD, y)];
-                    CRGB PixelB = CRGB::Black;
-                if ((zF >= 0) && (zF < MATRIX_WIDTH)) PixelB = leds[XY(zF, y)];
-                    leds[XY(x, y)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));
+                if ((zD >= 0) && (zD < (int32_t)_width))
+                    PixelA = leds[XY(zD, y)];
+
+                CRGB PixelB = CRGB::Black;
+                if ((zF >= 0) && (zF < (int32_t)_width))
+                    PixelB = leds[XY(zF, y)];
+
+                leds[XY(x, y)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));
             }
         }
     }
@@ -163,19 +161,19 @@
     template<>
     void GFXBase::MoveFractionalNoiseY<NoiseApproach::One>(uint8_t amt, uint8_t shift)
     {
-    std::unique_ptr<CRGB[]> ledsTemp = make_unique_psram<CRGB[]>(NUM_LEDS);
+        std::unique_ptr<CRGB[]> ledsTemp = make_unique_psram<CRGB[]>(_ledcount);
 
         // move delta pixelwise
-        for (int x = 0; x < _width; x++)
+        for (uint32_t x = 0; x < _width; x++)
         {
             uint16_t amount = _ptrNoise->noise[x][0] * amt;
             uint8_t delta = _height - 1 - (amount / 256);
 
-            for (int y = 0; y < _height - delta; y++)
+            for (uint32_t y = 0; y < _height - delta; y++)
             {
                 ledsTemp[XY(x, y)] = leds[XY(x, y + delta)];
             }
-            for (int y = _height - delta; y < _height; y++)
+            for (uint32_t y = _height - delta; y < _height; y++)
             {
                 ledsTemp[XY(x, y)] = leds[XY(x, y + delta - _height)];
             }
@@ -185,13 +183,13 @@
         CRGB PixelA;
         CRGB PixelB;
 
-        for (uint16_t x = 0; x < _width; x++)
+        for (uint32_t x = 0; x < _width; x++)
         {
             uint16_t amount = _ptrNoise->noise[x][0] * amt;
             uint8_t delta = _height - 1 - (amount / 256);
             uint8_t fractions = amount - (delta * 256);
 
-            for (uint16_t y = 1; y < _height; y++)
+            for (uint32_t y = 1; y < _height; y++)
             {
                 PixelA = ledsTemp[XY(x, y)];
                 PixelB = ledsTemp[XY(x, y - 1)];
@@ -215,32 +213,36 @@
     template<>
     void GFXBase::MoveFractionalNoiseY<NoiseApproach::Two>(uint8_t amt, uint8_t shift)
     {
-        for (uint8_t x = 0; x < MATRIX_WIDTH; x++)
+        for (uint32_t x = 0; x < _width; x++)
         {
-            int16_t amount = ((int16_t)_ptrNoise->noise[x][0] - 128) * 2 * amt + shift * 256;
-            int8_t delta = abs(amount) >> 8;
-            int8_t fraction = abs(amount) & 255;
-            for (uint8_t y = 0; y < MATRIX_HEIGHT; y++)
+            int32_t amount = ((int32_t)_ptrNoise->noise[x][0] - 128) * 2 * amt + shift * 256;
+            int32_t delta = abs(amount) >> 8;
+            int32_t fraction = abs(amount) & 255;
+
+            for (uint32_t y = 0; y < _height; y++)
             {
-                int8_t zD;
-                int8_t zF;
+                int32_t zD;
+                int32_t zF;
 
                 if (amount < 0)
                 {
-                    zD = y - delta;
+                    zD = (int32_t)y - delta;
                     zF = zD - 1;
                 }
                 else
                 {
-                    zD = y + delta;
+                    zD = (int32_t)y + delta;
                     zF = zD + 1;
                 }
+
                 CRGB PixelA = CRGB::Black;
-                if ((zD >= 0) && (zD < MATRIX_HEIGHT))
+                if ((zD >= 0) && (zD < (int32_t)_height))
                     PixelA = leds[XY(x, zD)];
+
                 CRGB PixelB = CRGB::Black;
-                if ((zF >= 0) && (zF < MATRIX_HEIGHT))
+                if ((zF >= 0) && (zF < (int32_t)_height))
                     PixelB = leds[XY(x, zF)];
+
                 leds[XY(x, y)] = (PixelA.nscale8(ease8InOutApprox(255 - fraction))) + (PixelB.nscale8(ease8InOutApprox(fraction)));
             }
         }
