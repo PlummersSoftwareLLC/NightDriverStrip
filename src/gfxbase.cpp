@@ -39,34 +39,6 @@
     // The following functions are specializations of noise-related member function
     // templates declared in gfxbase.h.
 
-    template<NoiseApproach Approach>
-    void GFXBase::FillGetNoise()
-    {
-        // Subtracting the center offset before scaling ensures the noise pattern radiates
-        // outwards from the center of the display (exactly as #803 intended).
-        //
-        // We use uint32_t for the indices as it's the native register size for the ESP32,
-        // avoiding the unnecessary overhead of masking/extending smaller types.
-        for (uint32_t i = 0; i < _width; i++)
-        {
-            int32_t ioffset = _ptrNoise->noise_scale_x * (int32_t)(i - (_width / 2));
-
-            for (uint32_t j = 0; j < _height; j++)
-            {
-                int32_t joffset = _ptrNoise->noise_scale_y * (int32_t)(j - (_height / 2));
-                uint8_t data    = inoise16(_ptrNoise->noise_x + ioffset, _ptrNoise->noise_y + joffset, _ptrNoise->noise_z) >> 8;
-                uint8_t olddata = _ptrNoise->noise[i][j];
-                uint8_t newdata = scale8(olddata, _ptrNoise->noisesmoothing) + scale8(data, 256 - _ptrNoise->noisesmoothing);
-
-                _ptrNoise->noise[i][j] = newdata;
-            }
-        }
-    }
-
-    // Explicit instantiations to satisfy the linker for both available approaches
-    template void GFXBase::FillGetNoise<NoiseApproach::One>();
-    template void GFXBase::FillGetNoise<NoiseApproach::Two>();
-
     template<>
     void GFXBase::MoveFractionalNoiseX<NoiseApproach::One>(uint8_t amt, uint8_t shift)
     {
