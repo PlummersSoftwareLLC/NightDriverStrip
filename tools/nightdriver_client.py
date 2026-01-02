@@ -492,7 +492,7 @@ def save_raw_frames(frames, output_filename, verbose=False):
 
     if verbose: print(f"save_raw_frames: Saved raw frames to {output_filename}")
 
-def live_view(host, layout="flat", verbose=False, gain=1.0, scale=None):
+def live_view(host, layout="flat", verbose=False, gain=1.0, scale=None, mapping="row-major"):
     """
     Displays a live, real-time view of the device output.
     """
@@ -600,6 +600,14 @@ def live_view(host, layout="flat", verbose=False, gain=1.0, scale=None):
             screen_width = matrix_width * (pixel_scale_x + PIXEL_GAP) - PIXEL_GAP
             screen_height = matrix_height * (pixel_scale_y + PIXEL_GAP) - PIXEL_GAP
 
+        # Auto-detect mapping if not specified
+        if mapping == "auto":
+            if matrix_width == 48 and matrix_height == 16:
+                print("Auto-detected 48x16 matrix: Using 'spectrum' mapping.")
+                mapping = "spectrum"
+            else:
+                mapping = "row-major"
+
         screen = pygame.display.set_mode((screen_width, screen_height))
         print(f"Created pygame window: {screen_width}x{screen_height}")
         pygame.display.set_caption("NightDriver Live View")
@@ -630,7 +638,8 @@ def live_view(host, layout="flat", verbose=False, gain=1.0, scale=None):
                 if frame['pixels']:
                     peak_brightness = max(max(p) for p in frame['pixels'])
                     brightness_history.append(peak_brightness)
-                    print(f"Peak brightness: {peak_brightness}")
+                    if verbose:
+                        print(f"Peak brightness: {peak_brightness}")
 
                     # If we have a full history and ALL samples are dim (< 40) but not black (> 0)
                     if len(brightness_history) == brightness_history.maxlen:
@@ -660,7 +669,27 @@ def live_view(host, layout="flat", verbose=False, gain=1.0, scale=None):
             else:
                 for y in range(matrix_height):
                     for x in range(matrix_width):
-                        pixel_index = y * matrix_width + x
+                        # Mapping logic
+                        if mapping == "serpentine":
+                            # NightDriver/FastLED style vertical serpentine (column-major boustrophedon)
+                            if x % 2 == 1:
+                                # Odd columns run backwards
+                                pixel_index = x * matrix_height + (matrix_height - 1 - y)
+                            else:
+                                # Even columns run forwards
+                                pixel_index = x * matrix_height + y
+                        elif mapping == "spectrum":
+                            # Special case: 3x 16x16 panels aligned horizontally.
+                            # Each panel is 16x16, but internally it's mapped as 16 strips of 16.
+                            panel_index = x // 16
+                            local_x = x % 16
+                            if local_x % 2 == 1:
+                                pixel_index = panel_index * 256 + local_x * 16 + (15 - y)
+                            else:
+                                pixel_index = panel_index * 256 + local_x * 16 + y
+                        else: # row-major (default)
+                            pixel_index = y * matrix_width + x
+
                         if pixel_index < len(frame['pixels']):
                             color = frame['pixels'][pixel_index]
 
@@ -816,6 +845,7 @@ def main():
     parser.add_argument("--backup", metavar="FILENAME", help="Save the device configuration to a JSON file.")
     parser.add_argument("--restore", metavar="FILENAME", help="Restore the device configuration from a JSON file.")
     parser.add_argument("--generate-gallery", action="store_true", help="Generate an HTML gallery from captured GIFs.")
+    parser.add_argument("--mapping", type=str, default="auto", choices=["auto", "row-major", "serpentine", "spectrum"], help="Specify the pixel mapping/layout (auto, row-major, serpentine, or spectrum). Default: auto.")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output for debugging.")
     parser.add_argument("command", nargs="*", help="Optional command: next, prev, or an effect name/index.")
 
@@ -922,7 +952,7 @@ def main():
                     captured_files.append(output_filename)
 
     if args.live_view:
-        live_view(args.host, args.hex_layout, verbose=args.verbose, gain=args.preview_gain, scale=args.scale)
+        live_view(args.host, args.hex_layout, verbose=args.verbose, gain=args.preview_gain, scale=args.scale, mapping=args.mapping)
 
     if args.backup:
         backup_configuration(client, args.backup)
