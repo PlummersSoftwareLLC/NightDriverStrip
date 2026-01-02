@@ -101,7 +101,7 @@ class PatternRainbowFlag : public EffectWithId<PatternRainbowFlag>
         // g()->MoveFractionalNoiseY<NoiseApproach::One>(8);
 
         g()->MoveY(3);
-        g()->MoveFractionalNoiseX<NoiseApproach::One>(4);
+        g()->MoveFractionalNoiseX<NoiseApproach::MRI>(4);
     }
 };
 #endif

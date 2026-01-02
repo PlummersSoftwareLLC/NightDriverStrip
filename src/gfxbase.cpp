@@ -40,7 +40,7 @@
     // templates declared in gfxbase.h.
 
     template<>
-    void GFXBase::MoveFractionalNoiseX<NoiseApproach::One>(uint8_t amt, uint8_t shift)
+    void GFXBase::MoveFractionalNoiseX<NoiseApproach::MRI>(uint8_t amt, uint8_t shift)
     {
         std::unique_ptr<CRGB[]> ledsTemp = make_unique_psram<CRGB[]>(_ledcount);
 
@@ -91,7 +91,7 @@
     }
 
     template<>
-    void GFXBase::MoveFractionalNoiseX<NoiseApproach::Two>(uint8_t amt, uint8_t shift)
+    void GFXBase::MoveFractionalNoiseX<NoiseApproach::General>(uint8_t amt, uint8_t shift)
     {
         // Aligning with Approach::One while keeping the "Approach::Two" optimized behavior.
         // We use int32_t for the 'amount' and 'delta' as they can be large or negative.
@@ -131,7 +131,7 @@
     }
 
     template<>
-    void GFXBase::MoveFractionalNoiseY<NoiseApproach::One>(uint8_t amt, uint8_t shift)
+    void GFXBase::MoveFractionalNoiseY<NoiseApproach::MRI>(uint8_t amt, uint8_t shift)
     {
         std::unique_ptr<CRGB[]> ledsTemp = make_unique_psram<CRGB[]>(_ledcount);
 
@@ -183,7 +183,7 @@
     }
 
     template<>
-    void GFXBase::MoveFractionalNoiseY<NoiseApproach::Two>(uint8_t amt, uint8_t shift)
+    void GFXBase::MoveFractionalNoiseY<NoiseApproach::General>(uint8_t amt, uint8_t shift)
     {
         for (uint32_t x = 0; x < _width; x++)
         {

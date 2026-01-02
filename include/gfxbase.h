@@ -104,14 +104,14 @@ constexpr static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
     //
     // The Noise Pool here is populated by the FillGetNoise() method.
     //
-    // NOTE: Approach "One" and "Two" are currently identical. Historically, they used
-    // different coordinate systems (Instance vs. Static), but we have unified them
-    // to use instance variables (_width/_height) for better display flexibility.
+    // Both noise approaches introduced below are identical as to how the noise pool is filled,
+    // but they differ in how they use the noise pool after it's been filled to achieve different
+    // visual effects.
 
     enum class NoiseApproach
     {
-        One,    // Used by Mandala effects (MRI-style complex symmetries)
-        Two     // Used by Smearing and general noise effects
+        General,    // Used by Smearing and general noise effects
+        MRI         // Used by Mandala effects (MRI-style complex symmetries)
     };
 #endif
 
@@ -121,7 +121,7 @@ class GFXBase : public Adafruit_GFX
 private:
     // The standard noise approach used for noise function templates, if none is specified
     // at the point of invocation.
-    static constexpr NoiseApproach _defaultNoiseApproach = NoiseApproach::Two;
+    static constexpr NoiseApproach _defaultNoiseApproach = NoiseApproach::General;
 #endif
 
 protected:
@@ -1375,8 +1375,8 @@ public:
         // The next couple of two-liners define function templates for the different noise approaches
         // that are implemented in the project. The desired noise approach for a particular use case
         // can be chosen by passing one of the NoiseApproach enum's values as a template parameter.
-        // For instance, using MoveFractionalNoiseX() with the "One" noise approach can be achieved by
-        // calling gfxbase.MoveFractionalNoiseX<NoiseApproach::One>()
+        // For instance, using MoveFractionalNoiseX() with the "MRI" noise approach can be achieved by
+        // calling gfxbase.MoveFractionalNoiseX<NoiseApproach::MRI>()
         //
         // The actual implementations for the noise functions (in the shape of specializations of the
         // function templates) are included in gfxbase.cpp, because of the way C++ demands things to be
