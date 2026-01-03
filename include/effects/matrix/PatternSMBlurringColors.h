@@ -50,12 +50,6 @@ class PatternSMBlurringColors : public EffectWithId<PatternSMBlurringColors>
     std::array<PowderItem, powder_item_max_count> _powder_items;
 
     // matrix size constants are calculated only here and do not change in effects
-    const uint8_t CENTER_X_MINOR =
-        (MATRIX_WIDTH / 2) - ((MATRIX_WIDTH - 1) & 0x01); // the center of the matrix according to ICSU, shifted to the
-                                                          // smaller side, if the width is even
-    const uint8_t CENTER_Y_MINOR =
-        (MATRIX_HEIGHT / 2) -
-        ((MATRIX_HEIGHT - 1) & 0x01); // center of the YGREK matrix, shifted down if the height is even
     const uint8_t CENTER_X_MAJOR =
         MATRIX_WIDTH / 2 + (MATRIX_WIDTH % 2); // the center of the matrix according to IKSU,
                                                // shifted to a larger side, if the width is even

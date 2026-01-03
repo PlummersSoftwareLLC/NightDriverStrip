@@ -96,12 +96,22 @@ constexpr static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)
         uint8_t  noisesmoothing;
     } Noise;
 
-    // Enum type for the different noise approaches that are available. If anybody
-    // has ideas for more descriptive names for these, don't hesitate to suggest them. :)
+    // A "Noise Pool" in the context of computer graphics is a multi-dimensional array of
+    // pseudo-random values that are spatially coherent. Unlike the "static" on a TV
+    // or white noise in electronics (which is totally random from one pixel to the next),
+    // graphics noise (like Perlin or Simplex) changes smoothly across space.
+    // This allows for organic-looking animations like clouds, smoke, or fire.
+    //
+    // The Noise Pool here is populated by the FillGetNoise() method.
+    //
+    // Both noise approaches introduced below are identical as to how the noise pool is filled,
+    // but they differ in how they use the noise pool after it's been filled to achieve different
+    // visual effects.
+
     enum class NoiseApproach
     {
-        One,
-        Two
+        General,    // General approach used by most noise effects
+        MRI         // MRI-style complex symmetries
     };
 #endif
 
@@ -111,7 +121,7 @@ class GFXBase : public Adafruit_GFX
 private:
     // The standard noise approach used for noise function templates, if none is specified
     // at the point of invocation.
-    static constexpr NoiseApproach _defaultNoiseApproach = NoiseApproach::Two;
+    static constexpr NoiseApproach _defaultNoiseApproach = NoiseApproach::General;
 #endif
 
 protected:
@@ -1339,26 +1349,41 @@ public:
             _ptrNoise->noise_scale_y = sy;
         }
 
-        static constexpr uint8_t CENTER_X_MINOR = (MATRIX_WIDTH / 2) - ((MATRIX_WIDTH - 1) & 0x01);
-        static constexpr uint8_t CENTER_Y_MINOR = (MATRIX_HEIGHT / 2) - ((MATRIX_HEIGHT - 1) & 0x01);
-        static constexpr uint8_t CENTER_X_MAJOR = MATRIX_WIDTH / 2 + (MATRIX_WIDTH % 2);
-        static constexpr uint8_t CENTER_Y_MAJOR = MATRIX_HEIGHT / 2 +(MATRIX_HEIGHT % 2);
+        void FillGetNoise()
+        {
+            // Subtracting the center offset before scaling ensures the noise pattern radiates
+            // outwards from the center of the display (exactly as #803 intended).
+            //
+            // We use uint32_t for the indices as it's the native register size for the ESP32,
+            // avoiding the unnecessary overhead of masking/extending smaller types.
+            for (uint32_t i = 0; i < _width; i++)
+            {
+                int32_t ioffset = _ptrNoise->noise_scale_x * (int32_t)(i - (_width / 2));
 
-        // The next three two-liners define function templates for the different noise approaches
+                for (uint32_t j = 0; j < _height; j++)
+                {
+                    int32_t joffset = _ptrNoise->noise_scale_y * (int32_t)(j - (_height / 2));
+                    uint8_t data    = inoise16(_ptrNoise->noise_x + ioffset, _ptrNoise->noise_y + joffset, _ptrNoise->noise_z) >> 8;
+                    uint8_t olddata = _ptrNoise->noise[i][j];
+                    uint8_t newdata = scale8(olddata, _ptrNoise->noisesmoothing) + scale8(data, 256 - _ptrNoise->noisesmoothing);
+
+                    _ptrNoise->noise[i][j] = newdata;
+                }
+            }
+        }
+
+        // The next couple of two-liners define function templates for the different noise approaches
         // that are implemented in the project. The desired noise approach for a particular use case
         // can be chosen by passing one of the NoiseApproach enum's values as a template parameter.
-        // For instance, using FillGetNoise() with the "One" noise approach can be achieved by calling
-        // gfxbase.FillGetNoise<NoiseApproach::One>()
+        // For instance, using MoveFractionalNoiseX() with the "MRI" noise approach can be achieved by
+        // calling gfxbase.MoveFractionalNoiseX<NoiseApproach::MRI>()
         //
         // The actual implementations for the noise functions (in the shape of specializations of the
         // function templates) are included in gfxbase.cpp, because of the way C++ demands things to be
         // structured.
         //
-        // The default approach for all functions is determined by the value of _defaultNoiseApproach,
+        // The default approach for the templated functions is determined by the value of _defaultNoiseApproach,
         // which is defined earlier in this class.
-        template<NoiseApproach = _defaultNoiseApproach>
-        void FillGetNoise();
-
         template<NoiseApproach = _defaultNoiseApproach>
         void MoveFractionalNoiseX(uint8_t amt, uint8_t shift = 0);
 
