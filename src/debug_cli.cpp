@@ -36,6 +36,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <optional>
 
 #include "globals.h"
 #include "debug_cli.h"
@@ -328,6 +329,64 @@ std::string_view TabComplete(std::string_view partial, std::string_view full_lin
 
 
 //
+// Helper: Resolve Effect by index or name
+//
+static std::optional<size_t> ResolveEffect(std::string_view arg)
+{
+    auto& effectManager = g_ptrSystem->EffectManager();
+
+    // Try as index first
+    std::string argStr(arg);
+    char *end;
+    long index = strtol(argStr.c_str(), &end, 10);
+    if (end != argStr.c_str() && *end == '\0')
+    {
+        if (index >= 0 && index < (long)effectManager.EffectCount())
+        {
+            return (size_t)index;
+        }
+        else
+        {
+            cli_printf("Error: Effect index %ld out of range (0-%u)\n", index, effectManager.EffectCount() - 1);
+            return std::nullopt;
+        }
+    }
+
+    // Try fuzzy name match
+    int match_index = -1;
+    int matches = 0;
+    std::vector<std::string> candidates;
+
+    for (size_t i = 0; i < effectManager.EffectCount(); ++i)
+    {
+        const String& name = effectManager.EffectsList()[i]->FriendlyName();
+        if (ContainsInsensitive(name.c_str(), arg))
+        {
+            match_index = i;
+            matches++;
+            candidates.push_back(name.c_str());
+        }
+    }
+
+    if (matches == 1)
+    {
+        return (size_t)match_index;
+    }
+    else if (matches > 1)
+    {
+        cli_printf("Error: Ambiguous match for '%s'. Candidates:\n", argStr.c_str());
+        for (const auto& c : candidates)
+            cli_printf("  %s\n", c.c_str());
+        return std::nullopt;
+    }
+    else
+    {
+        cli_printf("Error: No effect matching '%s' found.\n", argStr.c_str());
+        return std::nullopt;
+    }
+}
+
+//
 // Core Commands Table
 //
 static void DoEffectCommand(const cli_argv &argv)
@@ -349,55 +408,14 @@ static void DoEffectCommand(const cli_argv &argv)
         }
         else
         {
-            // Try as index first
-            char *end;
-            long index = strtol(arg.data(), &end, 10);
-            if (end != arg.data() && *end == '\0')
+            auto idx = ResolveEffect(arg);
+            if (idx)
             {
-                if (index >= 0 && index < (long)effectManager.EffectCount())
-                {
-                    effectManager.SetCurrentEffectIndex(index);
-                }
-                else
-                {
-                    cli_printf("Error: Effect index %ld out of range (0-%u)\n", index, effectManager.EffectCount() - 1);
-                    return;
-                }
+                effectManager.SetCurrentEffectIndex(*idx);
             }
             else
             {
-                // Try fuzzy name match
-                int match_index = -1;
-                int matches = 0;
-                std::vector<std::string> candidates;
-
-                for (size_t i = 0; i < effectManager.EffectCount(); ++i)
-                {
-                    const String& name = effectManager.EffectsList()[i]->FriendlyName();
-                    if (ContainsInsensitive(name.c_str(), arg))
-                    {
-                        match_index = i;
-                        matches++;
-                        candidates.push_back(name.c_str());
-                    }
-                }
-
-                if (matches == 1)
-                {
-                    effectManager.SetCurrentEffectIndex(match_index);
-                }
-                else if (matches > 1)
-                {
-                    cli_printf("Error: Ambiguous match for '%s'. Candidates:\n", std::string(arg).c_str());
-                    for (const auto& c : candidates)
-                        cli_printf("  %s\n", c.c_str());
-                    return;
-                }
-                else
-                {
-                    cli_printf("Error: No effect matching '%s' found.\n", std::string(arg).c_str());
-                    return;
-                }
+                return;
             }
         }
         cli_printf("New Effect: %s\n", effectManager.GetCurrentEffectName().c_str());
