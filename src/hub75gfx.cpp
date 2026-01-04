@@ -57,7 +57,7 @@ void HUB75GFX::StartMatrix()
     matrix.setMaxCalculationCpuPercentage(95);
     matrix.begin();
 
-    Serial.printf("Matrix Refresh Rate: %d\n", matrix.getRefreshRate());
+    Serial.printf("Matrix Refresh Rate: %lu\n", (unsigned long)matrix.getRefreshRate());
 
     //backgroundLayer.setRefreshRate(100);
     backgroundLayer.fillScreen(rgb24(0, 64, 0));
@@ -109,7 +109,22 @@ void HUB75GFX::PrepareFrame()
 
             int y = MATRIX_HEIGHT - 2 - kCharHeight;
             int w = caption.length() * kCharWidth;
-            int x = (MATRIX_WIDTH / 2) - (w / 2) + 1;
+
+            unsigned long elapsed = millis() - captionStartTime;
+
+            int x;
+            if (w > MATRIX_WIDTH)
+            {
+                // Scroll if too wide to fit
+                float progress = (float)elapsed / totalCaptionDuration;
+                x = MATRIX_WIDTH - (int)(progress * (w + MATRIX_WIDTH));
+            }
+
+            else
+            {
+                // Center if it fits
+                x = (MATRIX_WIDTH / 2) - (w / 2) + 1;
+            }
 
             // Generic fill that's way faster than the rectangle base impl
             for (int i = y * _width; i < (y + 1 + kCharHeight) * _width; ++i)
@@ -176,7 +191,7 @@ void HUB75GFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDr
 
     auto targetBrightness = min({ g_ptrSystem->DeviceConfig().GetBrightness(), g_Values.Fader, g_Values.MatrixScaledBrightness });
 
-    debugV("MW: %d, Setting Scaled Brightness to: %d", g_Values.MatrixPowerMilliwatts, targetBrightness);
+    debugV("MW: %lu, Setting Scaled Brightness to: %lu", (unsigned long)g_Values.MatrixPowerMilliwatts, (unsigned long)targetBrightness);
     pMatrix->SetBrightness(targetBrightness);
 
     #if SHOW_FPS_ON_MATRIX

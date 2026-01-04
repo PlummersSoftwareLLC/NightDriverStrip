@@ -118,10 +118,10 @@ void CWebServer::begin()
     EmbeddedWebFile ico_file(ico_start, ico_end, "image/vnd.microsoft.icon", "gzip");
     EmbeddedWebFile timezones_file(timezones_start, timezones_end - 1, "text/json"); // end - 1 because of zero-termination
 
-    debugI("Embedded html file size: %d", html_file.length);
-    debugI("Embedded jsx file size: %d", js_file.length);
-    debugI("Embedded ico file size: %d", ico_file.length);
-    debugI("Embedded timezones file size: %d", timezones_file.length);
+    debugI("Embedded html file size: %zu", (size_t)html_file.length);
+    debugI("Embedded jsx file size: %zu", (size_t)js_file.length);
+    debugI("Embedded ico file size: %zu", (size_t)ico_file.length);
+    debugI("Embedded timezones file size: %zu", (size_t)timezones_file.length);
 
     _staticStats.HeapSize = ESP.getHeapSize();
     _staticStats.DmaHeapSize = heap_caps_get_total_size(MALLOC_CAP_DMA);

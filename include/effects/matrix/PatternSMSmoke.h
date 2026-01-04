@@ -87,8 +87,9 @@ public:
     }
 
     // Lower number for thicker, more static fog. Higher for more wisp.
-    g()->MoveFractionalNoiseX(3);
-    g()->MoveFractionalNoiseY(3);
+    // Smearing 1 was the minimal fix that cured the vertical bars.
+    g()->MoveFractionalNoiseX(1);
+    g()->MoveFractionalNoiseY(1);
     // Without this, we get tornadoes where the diagonals cross as there's
     // an excess of set pixels there.
     g()->BlurFrame(10);

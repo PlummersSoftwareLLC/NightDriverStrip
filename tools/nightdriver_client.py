@@ -9,6 +9,7 @@
 
 import requests
 import json
+import sys
 import argparse
 import socket
 import time
@@ -491,7 +492,7 @@ def save_raw_frames(frames, output_filename, verbose=False):
 
     if verbose: print(f"save_raw_frames: Saved raw frames to {output_filename}")
 
-def live_view(host, layout="flat", verbose=False, gain=1.0, scale=None):
+def live_view(host, layout="flat", verbose=False, gain=1.0, scale=None, mapping="row-major"):
     """
     Displays a live, real-time view of the device output.
     """
@@ -599,6 +600,14 @@ def live_view(host, layout="flat", verbose=False, gain=1.0, scale=None):
             screen_width = matrix_width * (pixel_scale_x + PIXEL_GAP) - PIXEL_GAP
             screen_height = matrix_height * (pixel_scale_y + PIXEL_GAP) - PIXEL_GAP
 
+        # Auto-detect mapping if not specified
+        if mapping == "auto":
+            if matrix_width == 48 and matrix_height == 16:
+                print("Auto-detected 48x16 matrix: Using 'spectrum' mapping.")
+                mapping = "spectrum"
+            else:
+                mapping = "row-major"
+
         screen = pygame.display.set_mode((screen_width, screen_height))
         print(f"Created pygame window: {screen_width}x{screen_height}")
         pygame.display.set_caption("NightDriver Live View")
@@ -629,7 +638,8 @@ def live_view(host, layout="flat", verbose=False, gain=1.0, scale=None):
                 if frame['pixels']:
                     peak_brightness = max(max(p) for p in frame['pixels'])
                     brightness_history.append(peak_brightness)
-                    print(f"Peak brightness: {peak_brightness}")
+                    if verbose:
+                        print(f"Peak brightness: {peak_brightness}")
 
                     # If we have a full history and ALL samples are dim (< 40) but not black (> 0)
                     if len(brightness_history) == brightness_history.maxlen:
@@ -659,7 +669,27 @@ def live_view(host, layout="flat", verbose=False, gain=1.0, scale=None):
             else:
                 for y in range(matrix_height):
                     for x in range(matrix_width):
-                        pixel_index = y * matrix_width + x
+                        # Mapping logic
+                        if mapping == "serpentine":
+                            # NightDriver/FastLED style vertical serpentine (column-major boustrophedon)
+                            if x % 2 == 1:
+                                # Odd columns run backwards
+                                pixel_index = x * matrix_height + (matrix_height - 1 - y)
+                            else:
+                                # Even columns run forwards
+                                pixel_index = x * matrix_height + y
+                        elif mapping == "spectrum":
+                            # Special case: 3x 16x16 panels aligned horizontally.
+                            # Each panel is 16x16, but internally it's mapped as 16 strips of 16.
+                            panel_index = x // 16
+                            local_x = x % 16
+                            if local_x % 2 == 1:
+                                pixel_index = panel_index * 256 + local_x * 16 + (15 - y)
+                            else:
+                                pixel_index = panel_index * 256 + local_x * 16 + y
+                        else: # row-major (default)
+                            pixel_index = y * matrix_width + x
+
                         if pixel_index < len(frame['pixels']):
                             color = frame['pixels'][pixel_index]
 
@@ -713,10 +743,10 @@ def restore_configuration(client, input_filename):
             config = json.load(f)
     except FileNotFoundError:
         print(f"Error: Backup file not found at {input_filename}")
-        return
+        sys.exit(1)
     except json.JSONDecodeError:
         print(f"Error: Could not decode JSON from {input_filename}")
-        return
+        sys.exit(1)
 
     if 'settings' in config:
         print("Restoring device settings...")
@@ -802,9 +832,9 @@ def main():
     parser.add_argument("--settings", action="store_true", help="Get the current device settings.")
     parser.add_argument("--next", action="store_true", help="Switch to the next effect.")
     parser.add_argument("--prev", action="store_true", help="Switch to the previous effect.")
-    parser.add_argument("--set-effect", type=int, metavar="INDEX", help="Set the current effect to the specified index.")
+    parser.add_argument("--set-effect", type=str, metavar="EFFECT_ID", help="Set the current effect.")
     parser.add_argument("--set-brightness", type=int, metavar="VALUE", help="Set the device brightness (0-255).")
-    parser.add_argument("--capture", type=str, metavar="EFFECT_INDEX_OR_NAME", help="Capture an effect and save it as a GIF.")
+    parser.add_argument("--capture", type=str, metavar="EFFECT_ID", help="Capture an effect and save it as a GIF.")
     parser.add_argument("--duration", type=int, default=5, metavar="SECONDS", help="Duration to capture the effect in seconds (default: 5).")
     parser.add_argument("--output", default="effect_capture.gif", metavar="FILENAME", help="Output filename for the captured GIF (default: effect_capture.gif).")
     parser.add_argument("--scale", type=int, metavar="FACTOR", help="Scale factor for the output GIF (e.g., 8 for 8x). Default: auto-scale if width or height < 256.")
@@ -815,7 +845,9 @@ def main():
     parser.add_argument("--backup", metavar="FILENAME", help="Save the device configuration to a JSON file.")
     parser.add_argument("--restore", metavar="FILENAME", help="Restore the device configuration from a JSON file.")
     parser.add_argument("--generate-gallery", action="store_true", help="Generate an HTML gallery from captured GIFs.")
+    parser.add_argument("--mapping", type=str, default="auto", choices=["auto", "row-major", "serpentine", "spectrum"], help="Specify the pixel mapping/layout (auto, row-major, serpentine, or spectrum). Default: auto.")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output for debugging.")
+    parser.add_argument("command", nargs="*", help="Optional command: next, prev, or an effect name/index.")
 
 
     args = parser.parse_args()
@@ -836,6 +868,40 @@ def main():
         if settings:
             print(json.dumps(settings, indent=2))
 
+    # Helper for resolving effect index/name
+    def find_effect_index(query):
+        try:
+            return int(query)
+        except ValueError:
+            effects_data = client.get_effects()
+            if effects_data and 'Effects' in effects_data:
+                matches = []
+                for i, effect in enumerate(effects_data['Effects']):
+                    name = effect.get('name', '').lower()
+                    if query.lower() in name:
+                        matches.append((i, effect.get('name')))
+
+                if len(matches) == 1:
+                    print(f"Resolved '{query}' to '{matches[0][1]}' (index {matches[0][0]})")
+                    return matches[0][0]
+                elif len(matches) > 1:
+                    print(f"Error: Ambiguous match for '{query}'. Candidates: {', '.join(m[1] for m in matches)}")
+                    sys.exit(1)
+
+            print(f"Error: Could not find an effect matching '{query}'")
+            sys.exit(1)
+
+    # Handle positional commands (intent divining)
+    if args.command:
+        cmd = " ".join(args.command)
+        if cmd.lower() == "next":
+            args.next = True
+        elif cmd.lower() == "prev":
+            args.prev = True
+        else:
+            # Assume it's an effect name/index
+            args.set_effect = find_effect_index(cmd)
+
     if args.next:
         print("Switching to next effect...")
         client.next_effect()
@@ -845,24 +911,12 @@ def main():
         client.previous_effect()
 
     if args.set_effect is not None:
-        print(f"Setting effect to index {args.set_effect}...")
-        client.set_current_effect(args.set_effect, width=16, height=16)
+        idx = find_effect_index(args.set_effect)
+        print(f"Setting effect to index {idx}...")
+        client.set_current_effect(idx, width=16, height=16)
 
     if args.capture is not None:
-        effect_to_capture = None
-        try:
-            effect_index = int(args.capture)
-            effect_to_capture = effect_index
-        except ValueError:
-            # Not a number, so it must be a name
-            effects_data = client.get_effects()
-            if effects_data and 'Effects' in effects_data:
-                for i, effect in enumerate(effects_data['Effects']):
-                    if args.capture.lower() in effect.get('name', '').lower():
-                        effect_to_capture = i
-                        break
-            if effect_to_capture is None:
-                print(f"Error: Could not find an effect with the name '{args.capture}'")
+        effect_to_capture = find_effect_index(args.capture)
 
         if effect_to_capture is not None:
             print(f"Capturing effect {effect_to_capture} to {args.output} for {args.duration} seconds...")
@@ -897,14 +951,8 @@ def main():
                     save_raw_frames(frames, raw_filename, verbose=args.verbose)
                     captured_files.append(output_filename)
 
-    args = parser.parse_args()
-
-    client = NightDriver(args.host, port=args.rest_port)
-
-    # ... (skipping captured_files init)
-
     if args.live_view:
-        live_view(args.host, args.hex_layout, verbose=args.verbose, gain=args.preview_gain, scale=args.scale)
+        live_view(args.host, args.hex_layout, verbose=args.verbose, gain=args.preview_gain, scale=args.scale, mapping=args.mapping)
 
     if args.backup:
         backup_configuration(client, args.backup)

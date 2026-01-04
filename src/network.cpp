@@ -57,9 +57,9 @@ void DoStatsCommand()
 {
     auto& bufferManager = g_ptrSystem->BufferManagers()[0];
 
-    DebugCLI::cli_printf("%s:%zux%d %uK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS, ESP.getFreeHeap() / 1024);
+    DebugCLI::cli_printf("%s:%zux%d %zuK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS, (size_t)(ESP.getFreeHeap() / 1024));
     DebugCLI::cli_printf("%sdB:%s",String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
-    DebugCLI::cli_printf("BUFR:%02zu/%02zu [%dfps]", bufferManager.Depth(), bufferManager.BufferCount(), g_Values.FPS);
+    DebugCLI::cli_printf("BUFR:%02zu/%02zu [%lufps]", (size_t)bufferManager.Depth(), (size_t)bufferManager.BufferCount(), (unsigned long)g_Values.FPS);
     DebugCLI::cli_printf("DATA:%+04.2lf-%+04.2lf", bufferManager.AgeOfOldestBuffer(), bufferManager.AgeOfNewestBuffer());
 
     #if ENABLE_AUDIO
@@ -142,7 +142,7 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
 
     if (message.cbSize != sizeof(message))
     {
-        debugE("ESPNOW Message received with wrong structure size: %d but should be %d", message.cbSize, sizeof(message));
+        debugE("ESPNOW Message received with wrong structure size: %u but should be %zu", message.cbSize, sizeof(message));
         return;
     }
 
@@ -159,7 +159,7 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
             break;
 
         case ESPNowCommand::ESPNOW_SETEFFECT:
-            debugI("ESPNOW Setting effect index to %d", message.arg1);
+            debugI("ESPNOW Setting effect index to %u", message.arg1);
             g_ptrSystem->EffectManager().SetCurrentEffectIndex(message.arg1);
             break;
 
@@ -371,8 +371,8 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                 WiFi.disconnect();
                 debugV("Wifi.mode");
                 WiFi.mode(WIFI_STA);
-                debugW("Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %u, PSRAM:%u, PSRAM Free: %u\n",
-                       WiFi_ssid.c_str(), ESP.getFreeHeap(), ESP.getPsramSize(), ESP.getFreePsram());
+                debugW("Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %zu, PSRAM:%zu, PSRAM Free: %zu\n",
+                       WiFi_ssid.c_str(), (size_t)ESP.getFreeHeap(), (size_t)ESP.getPsramSize(), (size_t)ESP.getFreePsram());
 
                 WiFi.begin(WiFi_ssid.c_str(), WiFi_password.c_str());
 
@@ -474,9 +474,9 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                     uint64_t seconds   = ULONGFromMemory(&payloadData[8]);
                     uint64_t micros    = ULONGFromMemory(&payloadData[16]);
 
-                debugV("ProcessIncomingData -- Bands: %u, Length: %u, Seconds: %llu, Micros: %llu ... ",
-                       numbands,
-                       length32,
+                debugV("ProcessIncomingData -- Bands: %u, Length: %lu, Seconds: %llu, Micros: %llu ... ",
+                       (unsigned int)numbands,
+                       (unsigned long)length32,
                        seconds,
                        micros);
 
@@ -507,9 +507,9 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                 uint64_t seconds   = ULONGFromMemory(&payloadData[8]);
                 uint64_t micros    = ULONGFromMemory(&payloadData[16]);
 
-                debugV("ProcessIncomingData -- Channel: %u, Length: %u, Seconds: %llu, Micros: %llu ... ",
-                    channel16,
-                    length32,
+                debugV("ProcessIncomingData -- Channel: %u, Length: %lu, Seconds: %llu, Micros: %llu ... ",
+                    (unsigned int)channel16,
+                    (unsigned long)length32,
                     seconds,
                     micros);
 
