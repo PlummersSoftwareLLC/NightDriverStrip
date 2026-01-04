@@ -42,6 +42,11 @@
 #include "debug_cli.h"
 #include "effectmanager.h"
 #include "systemcontainer.h"
+#include <FS.h>
+#include <SPIFFS.h>
+
+namespace DebugCLI
+{
 
 //
 // Private Globals
@@ -422,13 +427,11 @@ static void DoEffectCommand(const cli_argv &argv)
     }
 }
 
-#include <FS.h>
-#include <SPIFFS.h>
 static void DoDirectoryListing(const cli_argv &argv)
 {
-    fs::FS *fs = &SPIFFS;
+    fs::FS *fileSystem = &SPIFFS;
 
-    fs::File root = fs->open("/");
+    fs::File root = fileSystem->open("/");
 
     fs::File file = root.openNextFile();
     while (file)
@@ -464,14 +467,14 @@ static void DoCat(const cli_argv &argv)
     if (fname[0] != '/')
         fname = "/" + fname;
 
-    fs::FS *fs = &SPIFFS;
-    if (!fs->exists(fname.c_str()))
+    fs::FS *fileSystem = &SPIFFS;
+    if (!fileSystem->exists(fname.c_str()))
     {
         cli_printf("File not found: %s\n", fname.c_str());
         return;
     }
 
-    fs::File file = fs->open(fname.c_str(), "r");
+    fs::File file = fileSystem->open(fname.c_str(), "r");
     if (!file || file.isDirectory())
     {
         cli_printf("Error opening file: %s\n", fname.c_str());
@@ -601,3 +604,5 @@ void InitDebugCLI()
 {
     RegisterCommands(core_commands);
 }
+
+} // namespace DebugCLI

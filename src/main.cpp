@@ -229,7 +229,7 @@ void PrintOutputHeader()
     debugI("ESP32 Clock Freq : %d MHz", ESP.getCpuFreqMHz());
 
     // Initial CLI prompt
-    RunCommand("");
+    DebugCLI::RunCommand("");
 }
 
 // TerminateHandler
@@ -404,7 +404,7 @@ void setup()
                 case '\t': {
                     size_t lastSpace = cmd.find_last_of(' ');
                     std::string_view partial = (lastSpace == std::string::npos) ? std::string_view(cmd) : std::string_view(cmd).substr(lastSpace + 1);
-                    std::string_view suffix = TabComplete(partial, cmd);
+                    std::string_view suffix = DebugCLI::TabComplete(partial, cmd);
                     if (!suffix.empty()) {
                         cmd += suffix;
                         cmd += " ";
@@ -417,7 +417,7 @@ void setup()
                 case 0x7f:
                     if (!cmd.empty()) {
                         cmd.pop_back();
-                        cli_printf("\b \b");
+                        DebugCLI::cli_printf("\b \b");
                     }
                     else {
                          // Optional: Ring bell or ignore if buffer empty
@@ -429,13 +429,13 @@ void setup()
                     if (byte == '\r') Serial.println(); // Correctly handle CRLF for local echo
                     if (cmd.empty()) {
                         // If buffer was empty (just Enter), RunCommand("") handles the prompt
-                        RunCommand("");
+                        DebugCLI::RunCommand("");
                         cmd.clear();
                     }
                     else {
                         // User entered a command
-                        cli_printf("\n");
-                        RunCommand(cmd.c_str());
+                        DebugCLI::cli_printf("\n");
+			DebugCLI::RunCommand(cmd.c_str());
                         cmd.clear();
                     }
                     break;
@@ -611,7 +611,7 @@ void setup()
     taskManager.StartColorDataThread();
     taskManager.StartSocketThread();
 
-    InitDebugCLI();
+    DebugCLI::InitDebugCLI();
     InitNetworkCLI();
 
     SaveEffectManagerConfig();

@@ -29,44 +29,49 @@
 #include <vector>
 #include <string_view>
 
-typedef std::vector<std::string_view> cli_argv;
-
-// Helper function pointer type for static command initialization.
-typedef void (*command_handler_t)(const cli_argv&);
-
-// Each command gets one of these to describe it.
-struct command
+namespace DebugCLI
 {
-    const char* command;
-    const char* help;
-    const char* announcement;
-    command_handler_t helper;
-};
 
-// Case-insensitive string comparison for commands.
-bool StringCompareInsensitive(std::string_view sv, const char* s);
+    typedef std::vector<std::string_view> cli_argv;
 
-// Register a single command.
-void RegisterCommand(const command* cmd);
+    // Helper function pointer type for static command initialization.
+    typedef void (*command_handler_t)(const cli_argv&);
 
-// Register an array of commands.
-void RegisterCommands(const command* cmds, size_t count);
+    // Each command gets one of these to describe it.
+    struct command
+    {
+        const char* command;
+        const char* help;
+        const char* announcement;
+        command_handler_t helper;
+    };
 
-// Template helper for array registration.
-template <size_t N>
-void RegisterCommands(const command (&cmds)[N])
-{
-    RegisterCommands(cmds, N);
-}
+    // Case-insensitive string comparison for commands.
+    bool StringCompareInsensitive(std::string_view sv, const char* s);
 
-// printf-style output to Debug/Serial without log-level tags
-void cli_printf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+    // Register a single command.
+    void RegisterCommand(const command* cmd);
 
-// Process and execute command line: telnet, serial, or (someday) a script.
-void RunCommand(const char* cmd);
+    // Register an array of commands.
+    void RegisterCommands(const command* cmds, size_t count);
 
-// Tab completion.
-std::string_view TabComplete(std::string_view partial, std::string_view full_line);
+    // Template helper for array registration.
+    template <size_t N>
+    void RegisterCommands(const command (&cmds)[N])
+    {
+        RegisterCommands(cmds, N);
+    }
 
-// Initialization (registers core commands).
-void InitDebugCLI();
+    // printf-style output to Debug/Serial without log-level tags
+    void cli_printf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+
+    // Process and execute command line: telnet, serial, or (someday) a script.
+    void RunCommand(const char* cmd);
+
+    // Tab completion.
+    std::string_view TabComplete(std::string_view partial, std::string_view full_line);
+
+    // Initialization (registers core commands).
+    void InitDebugCLI();
+
+} // namespace debug_cli
