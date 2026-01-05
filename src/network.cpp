@@ -81,9 +81,6 @@ String urlEncode(const String& str)
     return encodedString;
 }
 
-
-
-
 void DoStatsCommand()
 {
     auto& bufferManager = g_ptrSystem->BufferManagers()[0];
