@@ -56,6 +56,10 @@
     #include "effects/strip/faneffects.h"       // Fan-based effects
 #endif
 
+#if EFFECTS_FULLMATRIX
+#include <TJpg_Decoder.h>
+#endif // EFFECTS_MATRIX
+
 //
 // Externals
 //
@@ -276,6 +280,14 @@ void LoadEffectFactories()
     #endif
 
     #if defined(EFFECTS_FULLMATRIX)
+        TJpgDec.setJpgScale(1);
+        TJpgDec.setCallback([](int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
+        {
+            auto pgfx = g_ptrSystem->EffectManager().g();
+            pgfx->drawRGBBitmap(x, y, bitmap, w, h);
+            return true;
+        });
+
         // Full matrix effect set for advanced displays (Mesmerizer, etc.)
         RegisterAll(*g_ptrEffectFactories,
             Effect<SpectrumBarEffect>("Audiograph", 16, 4, 0),
