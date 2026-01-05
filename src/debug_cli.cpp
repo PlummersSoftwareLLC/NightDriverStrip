@@ -26,6 +26,7 @@
 //
 
 #include <algorithm>
+#include <charconv>
 #include <cctype>
 #include <cstring>
 #include <esp_heap_caps.h>
@@ -341,18 +342,18 @@ static std::optional<size_t> ResolveEffect(std::string_view arg)
     auto& effectManager = g_ptrSystem->EffectManager();
 
     // Try as index first
-    std::string argStr(arg);
-    char *end;
-    long index = strtol(argStr.c_str(), &end, 10);
-    if (end != argStr.c_str() && *end == '\0')
+    // Try as index first
+    size_t val = 0;
+    auto [ptr, ec] = std::from_chars(arg.begin(), arg.end(), val);
+    if (ec == std::errc() && ptr == arg.end())
     {
-        if (index >= 0 && index < (long)effectManager.EffectCount())
+        if (val < effectManager.EffectCount())
         {
-            return (size_t)index;
+            return val;
         }
         else
         {
-            cli_printf("Error: Effect index %ld out of range (0-%u)\n", index, effectManager.EffectCount() - 1);
+            cli_printf("Error: Effect index %zu out of range (0-%u)\n", val, effectManager.EffectCount() - 1);
             return std::nullopt;
         }
     }
@@ -379,14 +380,14 @@ static std::optional<size_t> ResolveEffect(std::string_view arg)
     }
     else if (matches > 1)
     {
-        cli_printf("Error: Ambiguous match for '%s'. Candidates:\n", argStr.c_str());
+        cli_printf("Error: Ambiguous match for '%.*s'. Candidates:\n", (int)arg.length(), arg.data());
         for (const auto& c : candidates)
             cli_printf("  %s\n", c.c_str());
         return std::nullopt;
     }
     else
     {
-        cli_printf("Error: No effect matching '%s' found.\n", argStr.c_str());
+        cli_printf("Error: No effect matching '%.*s' found.\n", (int)arg.length(), arg.data());
         return std::nullopt;
     }
 }
@@ -598,6 +599,68 @@ void cli_printf(const char *fmt, ...)
     Debug.print(buf);
     Debug.showRaw(false);
     Debug.setSerialEnabled(true);
+}
+
+void ProcessCLIByte(uint8_t byte)
+{
+    // Essentially a global that never shrinks. We quickly reach
+    // the size of the length that people type, but it's free if
+    // never used.
+    static std::string cmd;
+
+    switch (byte)
+    {
+    case '\t':
+    {
+        size_t lastSpace = cmd.find_last_of(' ');
+        std::string_view partial = (lastSpace == std::string::npos) ? std::string_view(cmd) : std::string_view(cmd).substr(lastSpace + 1);
+        std::string_view suffix = TabComplete(partial, cmd);
+        if (!suffix.empty())
+        {
+            cmd += suffix;
+            cmd += " ";
+            Serial.print(suffix.data());
+            Serial.print(" ");
+        }
+        break;
+    }
+    case '\b':
+    case 0x7f:
+        if (!cmd.empty())
+        {
+            cmd.pop_back();
+            cli_printf("\b \b");
+        }
+        else
+        {
+            // Optional: Ring bell or ignore if buffer empty
+        }
+        break;
+
+    case '\r':
+    case '\n':
+        if (byte == '\r')
+            Serial.println(); // Correctly handle CRLF for local echo
+        if (cmd.empty())
+        {
+            // If buffer was empty (just Enter), RunCommand("") handles the prompt
+            RunCommand("");
+            cmd.clear();
+        }
+        else
+        {
+            // User entered a command
+            cli_printf("\n");
+            RunCommand(cmd.c_str());
+            cmd.clear();
+        }
+        break;
+
+    default:
+        Serial.write(byte);
+        cmd += (char)byte;
+        break;
+    }
 }
 
 void InitDebugCLI()

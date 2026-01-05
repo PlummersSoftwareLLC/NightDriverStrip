@@ -32,17 +32,17 @@
 namespace DebugCLI
 {
 
-    typedef std::vector<std::string_view> cli_argv;
+    using cli_argv = std::vector<std::string_view>;
 
     // Helper function pointer type for static command initialization.
-    typedef void (*command_handler_t)(const cli_argv&);
+    using command_handler_t = void (*)(const cli_argv&);
 
     // Each command gets one of these to describe it.
     struct command
     {
-        const char* command;
-        const char* help;
-        const char* announcement;
+        const char* const command;
+        const char* const help;
+        const char* const announcement;
         command_handler_t helper;
     };
 
@@ -70,6 +70,9 @@ namespace DebugCLI
 
     // Tab completion.
     std::string_view TabComplete(std::string_view partial, std::string_view full_line);
+
+    // Process a single byte of input from the CLI.
+    void ProcessCLIByte(uint8_t byte);
 
     // Initialization (registers core commands).
     void InitDebugCLI();

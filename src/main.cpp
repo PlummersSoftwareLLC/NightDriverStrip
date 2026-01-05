@@ -393,59 +393,7 @@ void setup()
         String name = "NDESP32" + get_mac_address().substring(6);
         g_pImprovSerial = make_unique_psram<ImprovSerial<typeof(Serial)>>();
         g_pImprovSerial->setup(PROJECT_NAME, FLASH_VERSION_NAME, family, name.c_str(), &Serial);
-        g_pImprovSerial->set_on_unknown_byte([](uint8_t byte)
-        {
-             // Essentially a global that never shrinks. We quickly reach
-             // the size of the length that people type, but it's free if
-             // never used.
-             static std::string cmd;
-
-             switch (byte) {
-                case '\t': {
-                    size_t lastSpace = cmd.find_last_of(' ');
-                    std::string_view partial = (lastSpace == std::string::npos) ? std::string_view(cmd) : std::string_view(cmd).substr(lastSpace + 1);
-                    std::string_view suffix = DebugCLI::TabComplete(partial, cmd);
-                    if (!suffix.empty()) {
-                        cmd += suffix;
-                        cmd += " ";
-                        Serial.print(suffix.data());
-                        Serial.print(" ");
-                    }
-                    break;
-                }
-                case '\b':
-                case 0x7f:
-                    if (!cmd.empty()) {
-                        cmd.pop_back();
-                        DebugCLI::cli_printf("\b \b");
-                    }
-                    else {
-                         // Optional: Ring bell or ignore if buffer empty
-                    }
-                    break;
-
-                case '\r':
-                case '\n':
-                    if (byte == '\r') Serial.println(); // Correctly handle CRLF for local echo
-                    if (cmd.empty()) {
-                        // If buffer was empty (just Enter), RunCommand("") handles the prompt
-                        DebugCLI::RunCommand("");
-                        cmd.clear();
-                    }
-                    else {
-                        // User entered a command
-                        DebugCLI::cli_printf("\n");
-			DebugCLI::RunCommand(cmd.c_str());
-                        cmd.clear();
-                    }
-                    break;
-
-                default:
-                    Serial.write(byte);
-                    cmd += (char)byte;
-                    break;
-             }
-        });
+        g_pImprovSerial->set_on_unknown_byte(DebugCLI::ProcessCLIByte);
     #endif
 
     // Setup config objects
