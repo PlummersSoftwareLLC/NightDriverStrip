@@ -107,6 +107,7 @@ bool DeviceConfig::SetTimeZone(const String& newTimeZone, bool skipWrite)
 
 DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const String &newOpenWeatherAPIKey)
 {
+#if ENABLE_WIFI
     HTTPClient http;
 
     String url = "http://api.openweathermap.org/data/2.5/weather?lat=0&lon=0&appid=" + urlEncode(newOpenWeatherAPIKey);
@@ -141,6 +142,9 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const Str
             return { false, "Unable to validate" };
         }
     }
+#else
+    return { true, "" };
+#endif
 }
 
 void DeviceConfig::SetColorSettings(const CRGB& newGlobalColor, const CRGB& newSecondColor)

@@ -279,6 +279,7 @@ class PatternWeather : public EffectWithId<PatternWeather>
         HTTPClient http;
         String url = "http://api.openweathermap.org/data/2.5/forecast"
             "?lat=" + strLatitude + "&lon=" + strLongitude + "&cnt=16&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
+debugA("url: %s", url.c_str());
         http.begin(url);
         int httpResponseCode = http.GET();
 
