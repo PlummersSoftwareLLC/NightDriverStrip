@@ -56,7 +56,7 @@
     #include "effects/strip/faneffects.h"       // Fan-based effects
 #endif
 
-#if EFFECTS_MATRIX
+#if EFFECTS_FULLMATRIX
 #include <TJpg_Decoder.h>
 #endif // EFFECTS_MATRIX
 
