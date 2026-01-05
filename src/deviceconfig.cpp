@@ -29,6 +29,7 @@
 //---------------------------------------------------------------------------
 
 #include <HTTPClient.h>
+#include <UrlEncode.h>
 #include "globals.h"
 #include "systemcontainer.h"
 
@@ -104,8 +105,6 @@ bool DeviceConfig::SetTimeZone(const String& newTimeZone, bool skipWrite)
     return true;
 }
 
-#if USE_MATRIX
-#include <UrlEncode.h>
 DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const String &newOpenWeatherAPIKey)
 {
     HTTPClient http;
@@ -143,10 +142,6 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const Str
         }
     }
 }
-#else
-// This should never be called. Displaying weather on a strip is nonsensical.
-DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const String &newOpenWeatherAPIKey) {}
-#endif
 
 void DeviceConfig::SetColorSettings(const CRGB& newGlobalColor, const CRGB& newSecondColor)
 {
