@@ -57,31 +57,31 @@ void DoStatsCommand()
 {
     auto& bufferManager = g_ptrSystem->BufferManagers()[0];
 
-    cli_printf("%s:%zux%d %zuK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS, (size_t)(ESP.getFreeHeap() / 1024));
-    cli_printf("%sdB:%s",String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
-    cli_printf("BUFR:%02zu/%02zu [%lufps]", (size_t)bufferManager.Depth(), (size_t)bufferManager.BufferCount(), (unsigned long)g_Values.FPS);
-    cli_printf("DATA:%+04.2lf-%+04.2lf", bufferManager.AgeOfOldestBuffer(), bufferManager.AgeOfNewestBuffer());
+    DebugCLI::cli_printf("%s:%zux%d %zuK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS, (size_t)(ESP.getFreeHeap() / 1024));
+    DebugCLI::cli_printf("%sdB:%s",String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
+    DebugCLI::cli_printf("BUFR:%02zu/%02zu [%lufps]", (size_t)bufferManager.Depth(), (size_t)bufferManager.BufferCount(), (unsigned long)g_Values.FPS);
+    DebugCLI::cli_printf("DATA:%+04.2lf-%+04.2lf", bufferManager.AgeOfOldestBuffer(), bufferManager.AgeOfNewestBuffer());
 
     #if ENABLE_AUDIO
-        cli_printf("g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer.VU(), g_Analyzer.MinVU(), g_Analyzer.PeakVU(), g_Analyzer.VURatio());
+    DebugCLI::cli_printf("g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer.VU(), g_Analyzer.MinVU(), g_Analyzer.PeakVU(), g_Analyzer.VURatio());
     #endif
 
     #if INCOMING_WIFI_ENABLED
-        cli_printf("Socket Buffer _cbReceived: %zu", g_ptrSystem->SocketServer()._cbReceived);
+    DebugCLI::cli_printf("Socket Buffer _cbReceived: %zu", g_ptrSystem->SocketServer()._cbReceived);
     #endif
 }
 
-static const command network_commands[] = {
+static const DebugCLI::command network_commands[] = {
     { "clock", "Refresh time from server", "Refreshing Time from Server",
-        [](const cli_argv&) { NTPTimeClient::UpdateClockFromWeb(&l_Udp); } },
+        [](const DebugCLI::cli_argv&) { NTPTimeClient::UpdateClockFromWeb(&l_Udp); } },
     { "stats", "Display system statistics", "Displaying statistics",
-        [](const cli_argv&) { DoStatsCommand(); } },
+        [](const DebugCLI::cli_argv&) { DoStatsCommand(); } },
     { "uptime", "Display system run duration", "Displaying system uptime",
-        [](const cli_argv&) { NTPTimeClient::ShowUptime(); } }
+        [](const DebugCLI::cli_argv&) { NTPTimeClient::ShowUptime(); } }
 };
 
 void InitNetworkCLI() {
-    RegisterCommands(network_commands, sizeof(network_commands)/sizeof(network_commands[0]));
+    DebugCLI::RegisterCommands(network_commands, sizeof(network_commands)/sizeof(network_commands[0]));
 }
 #endif // ENABLE_WIFI
 
@@ -181,7 +181,7 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
     void processRemoteDebugCmd()
     {
         String str = Debug.getLastCommand();
-	RunCommand(str.c_str());
+        DebugCLI::RunCommand(str.c_str());
 
     }
 #endif
