@@ -33,7 +33,6 @@
 #ifndef PatternSub_H
 #define PatternSub_H
 
-#include <UrlEncode.h>
 #include "systemcontainer.h"
 
 extern const GFXfont Apple5x7 PROGMEM;
