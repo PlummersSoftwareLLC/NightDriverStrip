@@ -631,10 +631,6 @@ void ProcessCLIByte(uint8_t byte)
             cmd.pop_back();
             cli_printf("\b \b");
         }
-        else
-        {
-            // Optional: Ring bell or ignore if buffer empty
-        }
         break;
 
     case '\r':
@@ -645,7 +641,6 @@ void ProcessCLIByte(uint8_t byte)
         {
             // If buffer was empty (just Enter), RunCommand("") handles the prompt
             RunCommand("");
-            cmd.clear();
         }
         else
         {
