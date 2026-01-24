@@ -117,11 +117,11 @@
     #endif
 #endif
 
-#define XSTR(x) STR(x)              // The defs will generate the stringized version of it
+#define XSTR(x) ND_STR(x)           // The defs will generate the stringized version of it
 #if FLASH_VERSION > 99
-    #define STR(x) "v"#x
+    #define ND_STR(x) "v"#x
 #else
-    #define STR(x) "v0"#x
+    #define ND_STR(x) "v0"#x
 #endif
 #define FLASH_VERSION_NAME_X(x) "v"#x
 #define FLASH_VERSION_NAME XSTR(FLASH_VERSION)
