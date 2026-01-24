@@ -1,6 +1,7 @@
-#if ENABLE_NTP
 
 #include "globals.h"
+
+#if ENABLE_NTP
 #include "systemcontainer.h"
 
 // Static member definitions
