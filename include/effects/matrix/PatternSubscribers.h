@@ -35,6 +35,7 @@
 
 #if ENABLE_WIFI
 
+#include <HTTPClient.h>
 #include "systemcontainer.h"
 
 extern const GFXfont Apple5x7 PROGMEM;
