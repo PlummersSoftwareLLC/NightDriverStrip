@@ -29,6 +29,7 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
+#include "systemcontainer.h"
 
 #if ENABLE_WIFI
 
@@ -42,7 +43,6 @@
 #include "ledviewer.h"              // For the LEDViewer task and object
 #include "network.h"
 #include "soundanalyzer.h"
-#include "systemcontainer.h"
 
 extern DRAM_ATTR std::mutex g_buffer_mutex;
 
