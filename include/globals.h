@@ -117,11 +117,11 @@
     #endif
 #endif
 
-#define XSTR(x) VERSION_STR(x)      // The defs will generate the stringized version of it
+#define XSTR(x) STR(x)              // The defs will generate the stringized version of it
 #if FLASH_VERSION > 99
-    #define VERSION_STR(x) "v"#x
+    #define STR(x) "v"#x
 #else
-    #define VERSION_STR(x) "v0"#x
+    #define STR(x) "v0"#x
 #endif
 #define FLASH_VERSION_NAME_X(x) "v"#x
 #define FLASH_VERSION_NAME XSTR(FLASH_VERSION)
@@ -278,9 +278,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #endif
     #if defined(COLORDATA_SERVER_ENABLED) && COLORDATA_SERVER_ENABLED
         #error "COLORDATA_SERVER_ENABLED requires ENABLE_WIFI"
-    #endif
-    #if defined(ENABLE_ESPNOW) && ENABLE_ESPNOW
-        #error "ENABLE_ESPNOW requires ENABLE_WIFI"
     #endif
 #endif
 
