@@ -601,7 +601,9 @@ void setup()
     taskManager.StartSocketThread();
 
     InitDebugCLI();
+    #if ENABLE_WIFI
     InitNetworkCLI();
+    #endif
 
     SaveEffectManagerConfig();
     // Start the main loop
