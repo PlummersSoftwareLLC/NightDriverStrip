@@ -199,13 +199,12 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
 // in order to allow us to add custom commands.  I've added a clock reset and stats command, for example.
 
 #if ENABLE_WIFI
+void processRemoteDebugCmd()
+{
+    String str = Debug.getLastCommand();
+    DebugCLI::RunCommand(str.c_str());
 
-    void processRemoteDebugCmd()
-    {
-        String str = Debug.getLastCommand();
-        DebugCLI::RunCommand(str.c_str());
-
-    }
+}
 #endif
 
 // SetupOTA
