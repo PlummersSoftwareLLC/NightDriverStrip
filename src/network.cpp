@@ -28,12 +28,14 @@
 //
 //---------------------------------------------------------------------------
 
+#include "globals.h"
+
+#if ENABLE_WIFI
+
 #include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
 #include <ESPmDNS.h>
 #include <nvs.h>
 #include <algorithm>
-
-#include "globals.h"
 
 #include "debug_cli.h"
 #include "effectmanager.h"
@@ -46,12 +48,6 @@ extern DRAM_ATTR std::mutex g_buffer_mutex;
 
 static DRAM_ATTR WiFiUDP l_Udp;              // UDP object used for NNTP, etc
 
-// Static initializers
-DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
-DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
-
-
-#if ENABLE_WIFI
 
 String urlEncode(const String& str)
 {
@@ -104,8 +100,7 @@ static const command network_commands[] = {
         [](const cli_argv&) { NTPTimeClient::UpdateClockFromWeb(&l_Udp); } },
     { "stats", "Display system statistics", "Displaying statistics",
         [](const cli_argv&) { DoStatsCommand(); } },
-    { "uptime", "Display system run duration", "Displaying system uptime",
-        [](const cli_argv&) { NTPTimeClient::ShowUptime(); } }
+
 };
 
 void InitNetworkCLI() {
