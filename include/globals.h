@@ -261,20 +261,59 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #ifndef ENABLE_WIFI
     #define ENABLE_WIFI             1   // Connect to WiFi
 #endif
+
+// Check for nonsensical network configurations
+#if !ENABLE_WIFI
+    #if defined(ENABLE_WEBSERVER) && ENABLE_WEBSERVER
+        #error "ENABLE_WEBSERVER requires ENABLE_WIFI"
+    #endif
+    #if defined(ENABLE_NTP) && ENABLE_NTP
+        #error "ENABLE_NTP requires ENABLE_WIFI"
+    #endif
+    #if defined(ENABLE_OTA) && ENABLE_OTA
+        #error "ENABLE_OTA requires ENABLE_WIFI"
+    #endif
+    #if defined(INCOMING_WIFI_ENABLED) && INCOMING_WIFI_ENABLED
+        #error "INCOMING_WIFI_ENABLED requires ENABLE_WIFI"
+    #endif
+    #if defined(COLORDATA_SERVER_ENABLED) && COLORDATA_SERVER_ENABLED
+        #error "COLORDATA_SERVER_ENABLED requires ENABLE_WIFI"
+    #endif
+    #if defined(ENABLE_ESPNOW) && ENABLE_ESPNOW
+        #error "ENABLE_ESPNOW requires ENABLE_WIFI"
+    #endif
+#endif
+
 #ifndef INCOMING_WIFI_ENABLED
-    #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+    #if ENABLE_WIFI
+        #define INCOMING_WIFI_ENABLED   1   // Accepting incoming color data and commands
+    #else
+        #define INCOMING_WIFI_ENABLED   0
+    #endif
 #endif
 #ifndef TIME_BEFORE_LOCAL
     #define TIME_BEFORE_LOCAL       1   // How many seconds before the lamp times out and shows local content
 #endif
 #ifndef ENABLE_NTP
-    #define ENABLE_NTP              1   // Set the clock from the web
+    #if ENABLE_WIFI
+        #define ENABLE_NTP              1   // Set the clock from the web
+    #else
+        #define ENABLE_NTP              0
+    #endif
 #endif
 #ifndef ENABLE_OTA
-    #define ENABLE_OTA              1
+    #if ENABLE_WIFI
+        #define ENABLE_OTA              1
+    #else
+        #define ENABLE_OTA              0
+    #endif
 #endif
 #ifndef ENABLE_WEBSERVER
-    #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+    #if ENABLE_WIFI
+        #define ENABLE_WEBSERVER        1   // Turn on the internal webserver
+    #else
+        #define ENABLE_WEBSERVER        0
+    #endif
 #endif
 
 #ifndef LED_PIN0
