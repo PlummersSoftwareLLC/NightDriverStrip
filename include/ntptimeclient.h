@@ -30,6 +30,7 @@
 
 #pragma once
 
+#if ENABLE_NTP
 #include <sys/cdefs.h>
 #include <sys/time.h>
 #include <ctime>
@@ -59,10 +60,7 @@ class NTPTimeClient
     }
 
     static bool UpdateClockFromWeb(WiFiUDP * pUDP);
-
-    static void ShowUptime();
 };
 
-
-
+#endif // ENABLE_NTP
 
