@@ -100,8 +100,6 @@ static const DebugCLI::command network_commands[] = {
         [](const DebugCLI::cli_argv&) { NTPTimeClient::UpdateClockFromWeb(&l_Udp); } },
     { "stats", "Display system statistics", "Displaying statistics",
         [](const DebugCLI::cli_argv&) { DoStatsCommand(); } },
-    { "uptime", "Display system run duration", "Displaying system uptime",
-        [](const DebugCLI::cli_argv&) { NTPTimeClient::ShowUptime(); } }
 };
 
 void InitNetworkCLI() {
