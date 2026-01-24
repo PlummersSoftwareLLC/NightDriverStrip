@@ -96,8 +96,10 @@ void DoStatsCommand()
 }
 
 static const DebugCLI::command network_commands[] = {
+#if ENABLE_NTP
     { "clock", "Refresh time from server", "Refreshing Time from Server",
         [](const DebugCLI::cli_argv&) { NTPTimeClient::UpdateClockFromWeb(&l_Udp); } },
+#endif
     { "stats", "Display system statistics", "Displaying statistics",
         [](const DebugCLI::cli_argv&) { DoStatsCommand(); } },
 };
