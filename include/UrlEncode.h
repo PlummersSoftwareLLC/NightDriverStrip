@@ -1,8 +1,8 @@
 //+--------------------------------------------------------------------------
 //
-// File:        NTPTimeClient.h
+// File:        UrlEncode.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2026 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -22,45 +22,13 @@
 //
 // Description:
 //
-//    Sets the system clock from the specified NTP Server
+//   Helper to URL-encode strings for API calls.
+//   Implemenation provides RFC 1738 style percent-encoding.
 //
-// History:     Jul-12-2018         Davepl      Created for BigBlueLCD
-//              Oct-09-2018         Davepl      Copied to LEDWifi project
 //---------------------------------------------------------------------------
 
 #pragma once
 
-#if ENABLE_NTP
-#include <sys/cdefs.h>
-#include <sys/time.h>
-#include <ctime>
-#include <WiFi.h>
-#include <WiFiUdp.h>
-#include <mutex>
+#include <Arduino.h>
 
-// NTPTimeClient
-//
-// Basically, I took some really ancient NTP code that I had on hand that I knew
-// worked and wrapped it in a class.  As expected, it works, but it could likely
-// benefit from cleanup or even wholesale replacement.
-
-class NTPTimeClient
-{
-    static bool        _bClockSet;
-    static std::mutex  _clockMutex;
-
-  public:
-
-    NTPTimeClient()
-    = default;
-
-    static inline bool HasClockBeenSet()
-    {
-        return _bClockSet;
-    }
-
-    static bool UpdateClockFromWeb(WiFiUDP * pUDP);
-};
-
-#endif // ENABLE_NTP
-
+String urlEncode(const String& str);

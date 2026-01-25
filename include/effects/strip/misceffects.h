@@ -387,8 +387,10 @@ class StatusEffect : public EffectWithId<StatusEffect>
           color = CRGB::Purple;
         else if (!WiFi.isConnected())
           color = CRGB::Red;
+        #if ENABLE_NTP
         else if (!NTPTimeClient::HasClockBeenSet())
           color = CRGB::Green;
+        #endif
 
         if (_everyNth != 1)
           fillSolidOnAllChannels(CRGB::Black);

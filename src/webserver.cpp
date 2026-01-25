@@ -29,6 +29,9 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
+
+#if ENABLE_WEBSERVER
+
 #include "webserver.h"
 
 #include <utility>
@@ -728,3 +731,5 @@ void CWebServer::Reset(AsyncWebServerRequest * pRequest)
         throw std::runtime_error("Resetting device at API request");
     }
 }
+
+#endif  // ENABLE_WEBSERVER

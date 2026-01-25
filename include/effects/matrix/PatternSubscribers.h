@@ -33,7 +33,9 @@
 #ifndef PatternSub_H
 #define PatternSub_H
 
-#include <UrlEncode.h>
+#if ENABLE_WIFI
+
+#include <HTTPClient.h>
 #include "systemcontainer.h"
 
 extern const GFXfont Apple5x7 PROGMEM;
@@ -285,5 +287,7 @@ class PatternSubscribers : public EffectWithId<PatternSubscribers>
         return LEDStripEffect::SetSetting(name, value);
     }
 };
+
+#endif // ENABLE_WIFI
 
 #endif

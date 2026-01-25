@@ -496,6 +496,42 @@ static void DoCat(const cli_argv &argv)
     file.close();
 }
 
+void DoUptime(const cli_argv &)
+{
+    struct timeval timeval = { 0 };
+    // Microseconds since boot. File wrap bugreport in 292 million years.
+    auto uptime = esp_timer_get_time();
+
+    timeval.tv_sec = uptime / MICROS_PER_SECOND;
+
+    char buf[128];
+    struct tm *tm = gmtime(&timeval.tv_sec);
+    // No, I don't care about leap seconds.
+    strftime(buf, sizeof(buf), "%X", tm);
+    int ndays = timeval.tv_sec / (24 * 60 * 60);
+    cli_printf("Uptime: %d days - %s\n", ndays, buf);
+
+    const char* reason_text = "Unknown";
+    esp_reset_reason_t reason = esp_reset_reason();
+    switch (reason)
+    {
+        case ESP_RST_POWERON: reason_text = "Power On"; break;
+        case ESP_RST_EXT: reason_text = "External Pin"; break;
+        case ESP_RST_SW: reason_text = "Software Restart"; break;
+        case ESP_RST_PANIC: reason_text = "Panic"; break;
+        case ESP_RST_INT_WDT: reason_text = "Watchdog barked"; break;
+        case ESP_RST_TASK_WDT: reason_text = "Task Watchdog barked"; break;
+        case ESP_RST_WDT: reason_text = "Other Watchdog barked"; break;
+        case ESP_RST_DEEPSLEEP: reason_text = "Reset in deep sleep"; break;
+        case ESP_RST_BROWNOUT: reason_text = "Brownout"; break;
+        case ESP_RST_SDIO: reason_text = "Reset over SDIO"; break;
+        // Documented,  but not defined in ESP-IDF esp_system.h (v5.1.0) yet.
+        // case ESP_RST_USB: reason_text = "Reset by USB peripheral"; break;
+        default: reason_text = "Unknown"; break;
+    }
+    cli_printf("Last boot reason: (%d): %s\n", reason, reason_text);
+}
+
 static const command core_commands[] = {
     {"cat", "Display file content", "Printing file...", DoCat},
     {"reboot", "Reboot system", "Rebooting. Please stand by...", [](const cli_argv &) { esp_restart(); }},
@@ -567,6 +603,7 @@ static const command core_commands[] = {
         g_ptrSystem->DeviceConfig().SetBrightness(val);
         cli_printf("Brightness: %d\n", val);
     }},
+    {"uptime", "Show system uptime", "Showing uptime...", DoUptime},
     {"help", "Display command line options", "Displaying system help",
      PrintHelp} // Function pointer logic requires PrintHelp signature match. It does.
 };

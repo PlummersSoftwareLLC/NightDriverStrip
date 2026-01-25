@@ -39,7 +39,6 @@
 #include <gfxfont.h>                // Adafruit GFX font structs
 #include <string.h>
 #include <HTTPClient.h>
-#include <UrlEncode.h>
 #include <ledstripeffect.h>
 #include <ArduinoJson.h>
 #include "systemcontainer.h"

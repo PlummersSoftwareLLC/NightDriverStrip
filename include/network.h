@@ -67,12 +67,9 @@
       CompileTimeCreds = 1
     };
 
-    void processRemoteDebugCmd();
-
     WiFiConnectResult ConnectToWiFi(const String& ssid, const String& password);
     WiFiConnectResult ConnectToWiFi(const String* ssid, const String* password);
     void UpdateNTPTime();
-    void SetupOTA(const String & strHostname);
     bool ReadWiFiConfig(WifiCredSource source, String& WiFi_ssid, String& WiFi_password);
     bool WriteWiFiConfig(WifiCredSource source, const String& WiFi_ssid, const String& WiFi_password);
     bool ClearWiFiConfig(WifiCredSource source);

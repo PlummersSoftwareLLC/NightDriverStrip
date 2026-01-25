@@ -39,6 +39,8 @@
 
 #pragma once
 
+#if ENABLE_WEBSERVER
+
 #include "deviceconfig.h"
 #include "network.h"
 
@@ -238,3 +240,4 @@ inline CWebServer::StatisticsType operator&(CWebServer::StatisticsType lhs, CWeb
 // Set value in lambda using a forwarding function. Reports success based on function's return value,
 //   which must be implicitly convertable to bool
 #define CONFIRM_VALUE(functionCall) [&](auto value)->bool { return functionCall; }
+#endif  // ENABLE_WEBSERVER
