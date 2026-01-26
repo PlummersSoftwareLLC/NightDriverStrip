@@ -68,6 +68,7 @@ uint16_t WiFiDraw()
         if (false == bufferManager.IsEmpty())
         {
             std::shared_ptr<LEDBuffer> pBuffer;
+            #if ENABLE_NTP
             if (NTPTimeClient::HasClockBeenSet() == false)
             {
                 pBuffer = bufferManager.GetOldestBuffer();
@@ -81,6 +82,9 @@ uint16_t WiFiDraw()
                 while (!bufferManager.IsEmpty() && bufferManager.PeekOldestBuffer()->IsBufferOlderThan(tv))
                     pBuffer = bufferManager.GetOldestBuffer();
             }
+            #else
+            pBuffer = bufferManager.GetOldestBuffer();
+            #endif
 
             if (pBuffer)
             {

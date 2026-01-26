@@ -28,31 +28,55 @@
 //
 //---------------------------------------------------------------------------
 
+#include "globals.h"
+#include "systemcontainer.h"
+
+#if ENABLE_WIFI
+
 #include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
 #include <ESPmDNS.h>
 #include <nvs.h>
 #include <algorithm>
-
-#include "globals.h"
 
 #include "debug_cli.h"
 #include "effectmanager.h"
 #include "ledviewer.h"              // For the LEDViewer task and object
 #include "network.h"
 #include "soundanalyzer.h"
-#include "systemcontainer.h"
 
 extern DRAM_ATTR std::mutex g_buffer_mutex;
 
 static DRAM_ATTR WiFiUDP l_Udp;              // UDP object used for NNTP, etc
 
-// Static initializers
-DRAM_ATTR bool NTPTimeClient::_bClockSet = false;                                   // Has our clock been set by SNTP?
-DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;                                    // Clock guard mutex for SNTP client
 
+String urlEncode(const String& str)
+{
+    String encodedString = "";
+    char c;
+    char code0;
+    char code1;
+    for (int i = 0; i < str.length(); i++) {
+        c = str.charAt(i);
+        if (isalnum(c)) {
+            encodedString += c;
+        } else {
+            code1 = (c & 0xf) + '0';
+            if ((c & 0xf) > 9) {
+                code1 = (c & 0xf) - 10 + 'A';
+            }
+            c = (c >> 4) & 0xf;
+            code0 = c + '0';
+            if (c > 9) {
+                code0 = c - 10 + 'A';
+            }
+            encodedString += '%';
+            encodedString += code0;
+            encodedString += code1;
+        }
+    }
+    return encodedString;
+}
 
-
-#if ENABLE_WIFI
 void DoStatsCommand()
 {
     auto& bufferManager = g_ptrSystem->BufferManagers()[0];
@@ -72,12 +96,12 @@ void DoStatsCommand()
 }
 
 static const DebugCLI::command network_commands[] = {
+#if ENABLE_NTP
     { "clock", "Refresh time from server", "Refreshing Time from Server",
         [](const DebugCLI::cli_argv&) { NTPTimeClient::UpdateClockFromWeb(&l_Udp); } },
+#endif
     { "stats", "Display system statistics", "Displaying statistics",
         [](const DebugCLI::cli_argv&) { DoStatsCommand(); } },
-    { "uptime", "Display system run duration", "Displaying system uptime",
-        [](const DebugCLI::cli_argv&) { NTPTimeClient::ShowUptime(); } }
 };
 
 void InitNetworkCLI() {
@@ -177,13 +201,12 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
 // in order to allow us to add custom commands.  I've added a clock reset and stats command, for example.
 
 #if ENABLE_WIFI
+void processRemoteDebugCmd()
+{
+    String str = Debug.getLastCommand();
+    DebugCLI::RunCommand(str.c_str());
 
-    void processRemoteDebugCmd()
-    {
-        String str = Debug.getLastCommand();
-        DebugCLI::RunCommand(str.c_str());
-
-    }
+}
 #endif
 
 // SetupOTA

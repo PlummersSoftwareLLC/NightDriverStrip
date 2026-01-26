@@ -105,6 +105,7 @@ bool DeviceConfig::SetTimeZone(const String& newTimeZone, bool skipWrite)
     return true;
 }
 
+#if ENABLE_WIFI
 DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const String &newOpenWeatherAPIKey)
 {
     HTTPClient http;
@@ -142,6 +143,7 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const Str
         }
     }
 }
+#endif  // ENABLE_WIFI
 
 void DeviceConfig::SetColorSettings(const CRGB& newGlobalColor, const CRGB& newSecondColor)
 {

@@ -550,8 +550,10 @@ void setup()
     taskManager.StartColorDataThread();
     taskManager.StartSocketThread();
 
+
+    #if ENABLE_WIFI
     DebugCLI::InitDebugCLI();
-    InitNetworkCLI();
+    #endif
 
     SaveEffectManagerConfig();
     // Start the main loop
