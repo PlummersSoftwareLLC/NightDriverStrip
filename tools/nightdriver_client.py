@@ -492,6 +492,111 @@ def save_raw_frames(frames, output_filename, verbose=False):
 
     if verbose: print(f"save_raw_frames: Saved raw frames to {output_filename}")
 
+def save_png_sequence(frames, output_filename, scale=None, verbose=False):
+    """
+    Saves captured frames as a sequence of PNG files.
+
+    Args:
+        frames: A list of frames from capture_frames.
+        output_filename: The base filename (e.g. output.gif) to derive the PNG names from.
+        scale: The integer factor to scale the image by.
+        verbose: Enable verbose output for debugging.
+    """
+    from PIL import Image
+    import os
+
+    if not frames:
+        if verbose: print("save_png_sequence: No frames to save.")
+        return
+
+    # Smart scaling
+    first_frame = frames[0]
+    original_width = first_frame['width']
+    original_height = first_frame['height']
+
+    if scale is None:
+        if original_width < 256 and original_height < 256:
+            scale = 8 # Default scale factor for small images
+            if verbose: print(f"save_png_sequence: Auto-scaling enabled with factor {scale}.")
+        else:
+            scale = 1 # No scaling for larger images
+
+    base_name = os.path.splitext(output_filename)[0]
+    if verbose: print(f"save_png_sequence: Saving {len(frames)} frames with prefix '{base_name}-' and scale factor {scale}.")
+
+    for i, frame in enumerate(frames):
+        img = Image.new('RGB', (frame['width'], frame['height']))
+        img.putdata([tuple(p) for p in frame['pixels']])
+
+        if scale > 1:
+            img = img.resize((frame['width'] * scale, frame['height'] * scale), Image.NEAREST)
+
+        filename = f"{base_name}-{i}.png"
+        img.save(filename)
+        if verbose: print(f"save_png_sequence: Saved {filename}")
+
+def create_contact_sheet(frames, output_filename, scale=None, verbose=False):
+    """
+    Creates a contact sheet (grid of frames) from a list of frames.
+
+    Args:
+        frames: A list of frames from capture_frames.
+        output_filename: The base filename (e.g. output.gif) to derive the PNG name from.
+        scale: The integer factor to scale the image by.
+        verbose: Enable verbose output for debugging.
+    """
+    from PIL import Image
+    import math
+    import os
+
+    if not frames:
+        if verbose: print("create_contact_sheet: No frames to save.")
+        return
+
+    # Smart scaling
+    first_frame = frames[0]
+    original_width = first_frame['width']
+    original_height = first_frame['height']
+
+    if scale is None:
+        if original_width < 256 and original_height < 256:
+            scale = 8 # Default scale factor for small images
+            if verbose: print(f"create_contact_sheet: Auto-scaling enabled with factor {scale}.")
+        else:
+            scale = 1 # No scaling for larger images
+
+    num_frames = len(frames)
+    cols = math.ceil(math.sqrt(num_frames))
+    rows = math.ceil(num_frames / cols)
+
+    frame_width = original_width * scale
+    frame_height = original_height * scale
+
+    sheet_width = cols * frame_width
+    sheet_height = rows * frame_height
+
+    sheet = Image.new('RGB', (sheet_width, sheet_height))
+
+    if verbose: print(f"create_contact_sheet: Creating {sheet_width}x{sheet_height} sheet from {num_frames} frames ({cols}x{rows} grid).")
+
+    for i, frame in enumerate(frames):
+        img = Image.new('RGB', (frame['width'], frame['height']))
+        img.putdata([tuple(p) for p in frame['pixels']])
+
+        if scale > 1:
+            img = img.resize((frame_width, frame_height), Image.NEAREST)
+
+        col = i % cols
+        row = i // cols
+        x = col * frame_width
+        y = row * frame_height
+        sheet.paste(img, (x, y))
+
+    base_name = os.path.splitext(output_filename)[0]
+    sheet_filename = f"{base_name}_sheet.png"
+    sheet.save(sheet_filename)
+    if verbose: print(f"create_contact_sheet: Saved contact sheet to {sheet_filename}")
+
 def live_view(host, layout="flat", verbose=False, gain=1.0, scale=None, mapping="row-major"):
     """
     Displays a live, real-time view of the device output.
@@ -838,6 +943,8 @@ def main():
     parser.add_argument("--duration", type=int, default=5, metavar="SECONDS", help="Duration to capture the effect in seconds (default: 5).")
     parser.add_argument("--output", default="effect_capture.gif", metavar="FILENAME", help="Output filename for the captured GIF (default: effect_capture.gif).")
     parser.add_argument("--scale", type=int, metavar="FACTOR", help="Scale factor for the output GIF (e.g., 8 for 8x). Default: auto-scale if width or height < 256.")
+    parser.add_argument("--save-png", action="store_true", help="Save captured frames as a sequence of PNG files.")
+    parser.add_argument("--save-contact-sheet", action="store_true", help="Save captured frames as a single contact sheet image.")
     parser.add_argument("--capture-all", action="store_true", help="Capture all effects and save them as GIFs.")
     parser.add_argument("--live-view", action="store_true", help="Display a live, real-time view of the device output.")
     parser.add_argument("--hex-layout", type=str, default="flat", choices=["pointy", "flat"], help="Specify the hexagon layout for live view (pointy or flat). Default: flat.")
@@ -919,7 +1026,14 @@ def main():
         effect_to_capture = find_effect_index(args.capture)
 
         if effect_to_capture is not None:
-            print(f"Capturing effect {effect_to_capture} to {args.output} for {args.duration} seconds...")
+            outputs = [args.output, args.output.replace('.gif', '.raw')]
+            if args.save_png:
+                outputs.append(os.path.splitext(args.output)[0] + "-*.png")
+            if args.save_contact_sheet:
+                outputs.append(os.path.splitext(args.output)[0] + "_sheet.png")
+
+            print(f"Capturing effect {effect_to_capture} for {args.duration} seconds...")
+            print(f"Outputs: {', '.join(outputs)}")
             client.set_current_effect(effect_to_capture, width=16, height=16)
             with ColorClient(args.host, verbose=args.verbose) as color_client:
                 frames = color_client.capture_frames(args.duration)
@@ -928,6 +1042,10 @@ def main():
                 create_animated_gif(frames, args.output, scale=args.scale, verbose=args.verbose)
                 raw_filename = args.output.replace('.gif', '.raw')
                 save_raw_frames(frames, raw_filename, verbose=args.verbose)
+                if args.save_png:
+                    save_png_sequence(frames, args.output, scale=args.scale, verbose=args.verbose)
+                if args.save_contact_sheet:
+                    create_contact_sheet(frames, args.output, scale=args.scale, verbose=args.verbose)
                 captured_files.append(args.output)
 
     elif args.capture_all:
@@ -939,7 +1057,14 @@ def main():
                 sanitized_name = "".join(c if c.isalnum() else '_' for c in effect_name)
                 output_filename = f"{sanitized_name}.gif"
 
-                print(f"Capturing effect: {effect_name} to {output_filename}")
+                outputs = [output_filename, output_filename.replace('.gif', '.raw')]
+                if args.save_png:
+                    outputs.append(sanitized_name + "-*.png")
+                if args.save_contact_sheet:
+                    outputs.append(sanitized_name + "_sheet.png")
+
+                print(f"Capturing effect: {effect_name} for {args.duration} seconds...")
+                print(f"Outputs: {', '.join(outputs)}")
                 client.set_current_effect(i, width=16, height=16)
 
                 with ColorClient(args.host, verbose=args.verbose) as color_client:
@@ -949,6 +1074,10 @@ def main():
                     create_animated_gif(frames, output_filename, scale=args.scale, verbose=args.verbose)
                     raw_filename = output_filename.replace('.gif', '.raw')
                     save_raw_frames(frames, raw_filename, verbose=args.verbose)
+                    if args.save_png:
+                        save_png_sequence(frames, output_filename, scale=args.scale, verbose=args.verbose)
+                    if args.save_contact_sheet:
+                        create_contact_sheet(frames, output_filename, scale=args.scale, verbose=args.verbose)
                     captured_files.append(output_filename)
 
     if args.live_view:
