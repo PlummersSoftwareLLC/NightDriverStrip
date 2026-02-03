@@ -30,75 +30,8 @@ class PatternSMGoogleNexus : public EffectWithId<PatternSMGoogleNexus>
         return (out_max - out_min) * (x - in_min) / (in_max - in_min) + out_min;
     }
 
-    void drawPixelXYF_X(float x, uint16_t y, const CRGB &color)
-    {
-        if (x < 0 || y < 0 || x > ((float)MATRIX_WIDTH - 1) || y > ((float)MATRIX_HEIGHT - 1))
-            return;
-
-        // extract the fractional parts and derive their inverses
-        uint8_t xx = (x - (int)x) * 255, ix = 255 - xx;
-        // calculate the intensities for each affected pixel
-        uint8_t wu[2] = {ix, xx};
-        // multiply the intensities by the colour, and saturating-add them to the
-        // pixels
-        for (int8_t i = 1; i >= 0; i--)
-        {
-            int16_t xn = x + (i & 1);
-            if (xn < 0 || xn > MATRIX_WIDTH - 1)
-                continue; // WHY?
-            CRGB clr = g()->leds[XY(xn, y)];
-            if (xn > 0 && xn < (int)MATRIX_WIDTH - 1)
-            {
-                clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-                clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-                clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-            }
-            else if (xn == 0 || xn == (int)MATRIX_WIDTH - 1)
-            {
-                clr.r = qadd8(clr.r, (color.r * 85) >> 8);
-                clr.g = qadd8(clr.g, (color.g * 85) >> 8);
-                clr.b = qadd8(clr.b, (color.b * 85) >> 8);
-            }
-            g()->leds[XY(xn, y)] = clr;
-        }
-    }
-
-    void drawPixelXYF_Y(uint16_t x, float y, const CRGB &color)
-    {
-        if (!g()->isValidPixel(x, y))
-            return;
-
-        // extract the fractional parts and derive their inverses
-        uint8_t yy = (y - (int)y) * 255, iy = 255 - yy;
-        // calculate the intensities for each affected pixel
-        uint8_t wu[2] = {iy, yy};
-        // multiply the intensities by the colour, and saturating-add them to the
-        // pixels
-        for (int8_t i = 1; i >= 0; i--)
-        {
-            int16_t yn = y + (i & 1);
-            if (yn < 0 || yn >= MATRIX_HEIGHT - 1)
-                continue; // WHY?
-            CRGB clr = g()->leds[XY(x, yn)];
-            if (yn > 0 && yn < (int)MATRIX_HEIGHT - 1)
-            {
-                clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-                clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-                clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-            }
-            else if (yn == 0 || yn == (int)MATRIX_HEIGHT - 1)
-            {
-                clr.r = qadd8(clr.r, (color.r * 85) >> 8);
-                clr.g = qadd8(clr.g, (color.g * 85) >> 8);
-                clr.b = qadd8(clr.b, (color.b * 85) >> 8);
-            }
-            g()->leds[XY(x, yn)] = clr;
-        }
-    }
-
     void resetDot(int idx)
     {
-        randomSeed(micros());
         dots[idx].direct = random8(0, 4);                                            // set direction
         dots[idx].color = ColorFromPalette(RainbowColors_p, random(0, 9) * 31, 255); // color
         dots[idx].accel = (float)random(5, 10) / 70; // make particles slightly different acceleration
@@ -137,6 +70,7 @@ class PatternSMGoogleNexus : public EffectWithId<PatternSMGoogleNexus>
     void Start() override
     {
         g()->Clear();
+        randomSeed(micros());
         for (int i = 0; i < GOOGLE_NEXUS; i++)
         {
             dots[i].direct = random(0, 4);           // Set direction
@@ -199,19 +133,7 @@ class PatternSMGoogleNexus : public EffectWithId<PatternSMGoogleNexus>
                 resetDot(i);
             }
 
-            switch (dots[i].direct)
-            {
-            case 0: // up
-            case 1: // down
-                drawPixelXYF_Y(dots[i].posX, dots[i].posY, dots[i].color);
-                break;
-            case 2: // right
-            case 3: // left
-                drawPixelXYF_X(dots[i].posX, dots[i].posY, dots[i].color);
-                break;
-            default:
-                break;
-            }
+            g()->drawPixelXYF_Wu(dots[i].posX, dots[i].posY, dots[i].color);
         }
     }
 };

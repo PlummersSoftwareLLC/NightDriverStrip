@@ -19,16 +19,15 @@ class PatternSMTwister : public EffectWithId<PatternSMTwister>
         for (uint16_t i = 1; i <= steps; i++)
         {
             uint8_t dx = lerp8by8(x1, x, i * 255 / steps);
-            uint16_t index = XY(dx, y);
-            g()->leds[index] = color;
+            CRGB pixelColor = color;
             if (grad)
-                g()->leds[index] %=
-                    (sin8(numline * 8 + side * 64 + a + sinOff) + i * 255 / steps) / 2; // for draw gradient line
+                pixelColor %= (sin8(numline * 8 + side * 64 + a + sinOff) + i * 255 / steps) / 2; // for draw gradient line
+            g()->drawPixel(dx, y, pixelColor);
         }
         if (dot)
         { // add white point at the ends of line
-            g()->leds[XY(x, y)] = CRGB::Black;
-            g()->leds[XY(x1, y)] = CRGB::Black;
+            g()->drawPixel(x, y, CRGB::Black);
+            g()->drawPixel(x1, y, CRGB::Black);
         }
     }
 
@@ -71,6 +70,6 @@ class PatternSMTwister : public EffectWithId<PatternSMTwister>
                 mydrawLine(x4, x1, i, CHSV(hueColor + 192, 255, 255), 1, 1, i, 3, sinOff, a);
         }
 
-        fadeAllChannelsToBlackBy(60);
+        g()->DimAll(60);
     }
 };

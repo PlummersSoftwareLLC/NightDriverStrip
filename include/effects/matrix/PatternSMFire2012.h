@@ -17,9 +17,6 @@ class PatternSMFire2012 : public EffectWithId<PatternSMFire2012>
                                                   &HeatColors_p,   &OceanColors_p, &CloudColors_p,
                                                   &ForestColors_p, &RainbowColors_p,   &RainbowStripeColors_p};
     const TProgmemRGBPalette16 *curPalette = palette_arr[0];
-	// BUGBUG: should probably be dynamically allocated.
-    uint8_t noise3d[MATRIX_WIDTH][MATRIX_HEIGHT]; // двухслойная маска или хранилище свойств в
-                                                                 // размер всей матрицы
 
     static inline int wrapX(int x)
     {
@@ -72,6 +69,8 @@ class PatternSMFire2012 : public EffectWithId<PatternSMFire2012>
         const uint8_t fireSmoothing = 80;
         // Add entropy to random number generator; we use a lot of it.
         random16_add_entropy(random(256));
+
+        auto& noise3d = g()->GetNoise().noise;
 
         // Loop for each column individually
         for (int x = 0; x < MATRIX_WIDTH; x++)

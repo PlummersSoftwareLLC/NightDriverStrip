@@ -59,34 +59,6 @@ class PatternSMTraffic : public EffectWithId<PatternSMTraffic>
         drawTrafficLight(hue, false);
     }
 
-    // функция получения цвета пикселя по его номеру
-    CRGB getPixColor(uint32_t thisSegm) const
-    {
-        uint32_t thisPixel = thisSegm; // * SEGMENTS;
-        if (thisPixel > NUM_LEDS - 1)
-            return 0;
-        return g()->leds[thisPixel];
-    }
-
-    // функция получения цвета пикселя в матрице по его координатам
-    [[nodiscard]] CRGB getPixColorXY(uint8_t x, uint8_t y) const
-    {
-        // Just don't think about what this does to prefetch and prediction...
-        return g()->leds[XY(x, y)];
-    }
-
-    // функция отрисовки точки по координатам X Y
-    void drawPixelXY(int8_t x, int8_t y, CRGB color)
-    {
-		if (!g()->isValidPixel(x, y))
-            return;
-        uint32_t thisPixel = XY((uint8_t)x, (uint8_t)y); // * SEGMENTS;
-        // for (uint8_t i = 0; i < SEGMENTS; i++)
-        //{
-        g()->leds[thisPixel] = color;
-        //}
-    } // служебные функции
-
     // ============== Traffic ================
     //      © SlingMaster | by Alex Dovby
     //              EFF_TRAFFIC
@@ -105,25 +77,25 @@ class PatternSMTraffic : public EffectWithId<PatternSMTraffic>
             light_colorH = CRGB::Yellow;
         }
 
-        drawPixelXY(center + 4, centerY + 4, light_colorV);
-        drawPixelXY(center + 5, centerY + 5, light_colorV);
-        drawPixelXY(center - 5, centerY - 5, light_colorH);
-        drawPixelXY(center - 5, centerY - 5, light_colorH);
+        g()->drawPixel(center + 4, centerY + 4, light_colorV);
+        g()->drawPixel(center + 5, centerY + 5, light_colorV);
+        g()->drawPixel(center - 5, centerY - 5, light_colorH);
+        g()->drawPixel(center - 5, centerY - 5, light_colorH);
 
-        drawPixelXY(center, centerY + 1, CRGB::Black);
-        drawPixelXY(center, centerY - 1, CRGB::Black);
-        drawPixelXY(center - 1, centerY, CRGB::Black);
-        drawPixelXY(center + 1, centerY, CRGB::Black);
+        g()->drawPixel(center, centerY + 1, CRGB::Black);
+        g()->drawPixel(center, centerY - 1, CRGB::Black);
+        g()->drawPixel(center - 1, centerY, CRGB::Black);
+        g()->drawPixel(center + 1, centerY, CRGB::Black);
 
         if (sts == 1)
         {
-            drawPixelXY(center + 2, centerY + 1, CRGB::Black);
-            drawPixelXY(center - 2, centerY - 1, CRGB::Black);
+            g()->drawPixel(center + 2, centerY + 1, CRGB::Black);
+            g()->drawPixel(center - 2, centerY - 1, CRGB::Black);
         }
         else
         {
-            drawPixelXY(center - 1, centerY + 2, CRGB::Black);
-            drawPixelXY(center + 1, centerY - 2, CRGB::Black);
+            g()->drawPixel(center - 1, centerY + 2, CRGB::Black);
+            g()->drawPixel(center + 1, centerY - 2, CRGB::Black);
         }
     }
 

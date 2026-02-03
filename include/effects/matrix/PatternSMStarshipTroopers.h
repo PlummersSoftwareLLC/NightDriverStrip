@@ -61,11 +61,11 @@ class PatternSMStarshipTroopers : public EffectWithId<PatternSMStarshipTroopers>
     void Start() override
     {
         g()->Clear();
+        randomSeed(millis());
     }
 
     void Draw() override
     {
-        randomSeed(millis());
         //   fadeToBlackBy(leds, NUM_LEDS, map(speed, 1, 255, 5, 10));
         switch (dir)
         {
@@ -79,7 +79,7 @@ class PatternSMStarshipTroopers : public EffectWithId<PatternSMStarshipTroopers>
                 }
                 for (float y = 0; y < HEIGHT; y += speedFactor)
                 {
-                    g()->leds[XY((int)x, MATRIX_HEIGHT - 1 - (int)y)] = (((int)y == HEIGHT - 1) ? CRGB::Black : g()->leds[XY((int)x, MATRIX_HEIGHT - 1 - ((int)y + 1))]);
+                    g()->drawPixel(x, MATRIX_HEIGHT - 1 - (int)y, (((int)y == HEIGHT - 1) ? CRGB::Black : g()->getPixel(x, MATRIX_HEIGHT - 1 - ((int)y + 1))));
                 }
             }
             break;
@@ -93,7 +93,7 @@ class PatternSMStarshipTroopers : public EffectWithId<PatternSMStarshipTroopers>
                 }
                 for (int y = 0; y < HEIGHT; y++)
                 {
-                    g()->leds[XY((int)x, MATRIX_HEIGHT - 1 - y)] = ((y == HEIGHT - 1 or (int) x == WIDTH - 1) ? CRGB::Black : g()->leds[XY((int)x + 1, MATRIX_HEIGHT - 1 - (y + 1))]);
+                    g()->drawPixel((int)x, MATRIX_HEIGHT - 1 - y, ((y == HEIGHT - 1 or (int) x == WIDTH - 1) ? CRGB::Black : g()->getPixel((int)x + 1, MATRIX_HEIGHT - 1 - (y + 1))));
                 }
             }
             break;
@@ -107,7 +107,7 @@ class PatternSMStarshipTroopers : public EffectWithId<PatternSMStarshipTroopers>
                 }
                 for (int y = HEIGHT - 1; y > 0; y--)
                 {
-                    g()->leds[XY((int)x, MATRIX_HEIGHT - 1 - y)] = (((int)x == WIDTH - 1) ? CRGB::Black : g()->leds[XY((int)x + 1, MATRIX_HEIGHT - 1 - y)]);
+                    g()->drawPixel((int)x, MATRIX_HEIGHT - 1 - y, (((int)x == WIDTH - 1) ? CRGB::Black : g()->getPixel((int)x + 1, MATRIX_HEIGHT - 1 - y)));
                 }
             }
             break;
@@ -121,7 +121,7 @@ class PatternSMStarshipTroopers : public EffectWithId<PatternSMStarshipTroopers>
                 }
                 for (int y = HEIGHT - 1; y > 0; y--)
                 {
-                    g()->leds[XY((int)x, MATRIX_HEIGHT - 1 - y)] = (((int)x == WIDTH - 1 or y == 0) ? CRGB::Black : g()->leds[XY((int)x + 1, MATRIX_HEIGHT - 1 - (y - 1))]);
+                    g()->drawPixel((int)x, MATRIX_HEIGHT - 1 - y, (((int)x == WIDTH - 1 or y == 0) ? CRGB::Black : g()->getPixel((int)x + 1, MATRIX_HEIGHT - 1 - (y - 1))));
                 }
             }
             break;
@@ -135,7 +135,7 @@ class PatternSMStarshipTroopers : public EffectWithId<PatternSMStarshipTroopers>
                 }
                 for (float y = HEIGHT - 1; y > 0; y -= speedFactor)
                 {
-                    g()->leds[XY(x, MATRIX_HEIGHT - 1 - (int)y)] = (((int)y == 0) ? CRGB::Black : g()->leds[XY(x, MATRIX_HEIGHT - 1 - ((int)y - 1))]);
+                    g()->drawPixel(x, MATRIX_HEIGHT - 1 - (int)y, (((int)y == 0) ? CRGB::Black : g()->getPixel(x, MATRIX_HEIGHT - 1 - ((int)y - 1))));
                 }
             }
             break;
@@ -149,7 +149,7 @@ class PatternSMStarshipTroopers : public EffectWithId<PatternSMStarshipTroopers>
                 }
                 for (uint8_t y = HEIGHT - 1; y > 0; y--)
                 {
-                    g()->leds[XY((int)x, MATRIX_HEIGHT - 1 - y)] = ((y == 0 or (int) x == 0) ? CRGB::Black : g()->leds[XY((int)x - 1, MATRIX_HEIGHT - 1 - (y - 1))]);
+                    g()->drawPixel((int)x, MATRIX_HEIGHT - 1 - y, ((y == 0 or (int) x == 0) ? CRGB::Black : g()->getPixel((int)x - 1, MATRIX_HEIGHT - 1 - (y - 1))));
                 }
             }
             break;
@@ -163,7 +163,7 @@ class PatternSMStarshipTroopers : public EffectWithId<PatternSMStarshipTroopers>
                 }
                 for (uint8_t y = HEIGHT - 1; y > 0; y--)
                 {
-                    g()->leds[XY((int)x, MATRIX_HEIGHT - 1 - y)] = ((int)x == 0 ? CRGB::Black : g()->leds[XY((int)x - 1, MATRIX_HEIGHT - 1 - y)]);
+                    g()->drawPixel((int)x, MATRIX_HEIGHT - 1 - y, ((int)x == 0 ? CRGB::Black : g()->getPixel((int)x - 1, MATRIX_HEIGHT - 1 - y)));
                 }
             }
             break;
@@ -177,7 +177,7 @@ class PatternSMStarshipTroopers : public EffectWithId<PatternSMStarshipTroopers>
                 }
                 for (uint8_t y = HEIGHT - 1; y > 0; y--)
                 {
-                    g()->leds[XY((int)x, MATRIX_HEIGHT - 1 - y)] = ((y == HEIGHT - 1 or (int) x == 0) ? CRGB::Black : g()->leds[XY((int)x - 1, MATRIX_HEIGHT - 1 - (y + 1))]);
+                    g()->drawPixel((int)x, MATRIX_HEIGHT - 1 - y, ((y == HEIGHT - 1 or (int) x == 0) ? CRGB::Black : g()->getPixel((int)x - 1, MATRIX_HEIGHT - 1 - (y + 1))));
                 }
             }
             break;
