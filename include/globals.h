@@ -117,14 +117,14 @@
     #endif
 #endif
 
-#define XSTR(x) STR(x)              // The defs will generate the stringized version of it
-#if FLASH_VERSION > 99
-    #define STR(x) "v"#x
-#else
-    #define STR(x) "v0"#x
-#endif
+#define ND_STRINGIZE(x) #x          // Local stringize helpers; avoid clashes with third-party STR macros
+#define ND_EXPAND_AND_STRINGIZE(x) ND_STRINGIZE(x)
 #define FLASH_VERSION_NAME_X(x) "v"#x
-#define FLASH_VERSION_NAME XSTR(FLASH_VERSION)
+#if FLASH_VERSION > 99
+    #define FLASH_VERSION_NAME "v" ND_EXPAND_AND_STRINGIZE(FLASH_VERSION)
+#else
+    #define FLASH_VERSION_NAME "v0" ND_EXPAND_AND_STRINGIZE(FLASH_VERSION)
+#endif
 
 #define FASTLED_INTERNAL        1       // Silence FastLED build banners
 #define NTP_DELAY_SECONDS       (5*60)  // delay count for NTP update, in seconds

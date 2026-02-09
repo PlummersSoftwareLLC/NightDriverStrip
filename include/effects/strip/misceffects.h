@@ -601,7 +601,7 @@ class PDPCMXEffect : public EffectWithId<PDPCMXEffect>
 {
   private:
 
-    static constexpr int GROUP_HEIGHT = 5; // Height of each logical group
+    static constexpr int GROUP_HEIGHT = 6; // Height of each logical group
     static constexpr float LED_PROBABILITY = 0.30f; // 30% chance of LED being on
 
     void scrollGroup(int groupStartY, bool scrollLeft)
@@ -638,11 +638,10 @@ class PDPCMXEffect : public EffectWithId<PDPCMXEffect>
         {
             if (random(100) < (LED_PROBABILITY * 100))
             {
-                CRGB color = CRGB::Red;
                 if (scrollLeft)
-                    setPixelOnAllChannels(MATRIX_WIDTH - 1, y, color);
+                    setPixelOnAllChannels(MATRIX_WIDTH - 1, y, CRGB::Red);
                 else
-                    setPixelOnAllChannels(0, y, color);
+                    setPixelOnAllChannels(0, y, CRGB::Orange);
             }
         }
     }
@@ -672,8 +671,8 @@ class PDPCMXEffect : public EffectWithId<PDPCMXEffect>
         // Process each logical group
         int numGroups = (MATRIX_HEIGHT + GROUP_HEIGHT - 1) / GROUP_HEIGHT; // Ceiling division
 
-        fadeAllChannelsToBlackBy(5);
-        EVERY_N_MILLISECONDS(200)
+        fadeAllChannelsToBlackBy(2);
+        EVERY_N_MILLISECONDS(100)
         {
           for (int group = 0; group < numGroups; group++)
           {

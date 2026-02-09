@@ -479,6 +479,7 @@ class EffectSimulatorPage final : public TitlePage
             if (dt > 0)
                 display.UpdateScreenFPSFromDelta(dt);
         }
+        
         _lastEffectDrawMs = nowMs;
         int ledIndex = 0;
         for (int y = 0; y < mh; ++y)
