@@ -36,12 +36,8 @@
 
 #include "globals.h"
 
-#include <algorithm>
-#include <numeric>
-#include <array>
 #include <arduinoFFT.h>
-#include <driver/adc.h>
-#include <driver/i2s.h>
+#include <array>
 #include <memory>
 
 #ifndef SPECTRUM_BAND_SCALE_MEL

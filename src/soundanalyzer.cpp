@@ -30,13 +30,15 @@
 //---------------------------------------------------------------------------
 
 
+#include "globals.h"
+#include "soundanalyzer.h"
+
 #if ENABLE_AUDIO
 
+#include <algorithm>
+#include <driver/adc.h>
+#include <driver/i2s.h>
 #include <numeric>
-
-#include "globals.h"
-
-#include "soundanalyzer.h"
 
 // Explicit implementations of template methods for SoundAnalyzer
 
