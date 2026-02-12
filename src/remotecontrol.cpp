@@ -24,59 +24,232 @@
 // Description:
 //
 //    Handles a simple IR remote for changing effects, brightness, etc.
+//    Native ESP32 RMT implementation to eliminate the 4GB build churn
+//    of the IRremoteESP8266 library.
 //
-// History:     Jun-14-2023     Rbergen        Extracted handle() from header
+// History:     Jun-14-2023     Rbergen                      Extracted handle() from header
+//              Feb-12-2026     Antigravity & Robert Lipe    Replaced library with native RMT decoder
 //---------------------------------------------------------------------------
 
 #include "globals.h"
 
 #if ENABLE_REMOTE
 
+#include <driver/rmt.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/ringbuf.h>
+
+#include "remotecontrol.h"
 #include "systemcontainer.h"
 #include "effects/strip/misceffects.h"
-#include "systemcontainer.h"
+
+// ---------------------------------------------------------
+// IR Key Definitions (NEC Protocol)
+// ---------------------------------------------------------
+
+#define IR_BPLUS  0xF700FF
+#define IR_BMINUS 0xF7807F
+#define IR_OFF    0xF740BF
+#define IR_ON     0xF7C03F
+#define IR_R      0xF720DF
+#define IR_G      0xF7A05F
+#define IR_B      0xF7609F
+#define IR_W      0xF7E01F
+#define IR_B1     0xF710EF
+#define IR_B2     0xF7906F
+#define IR_B3     0xF750AF
+#define IR_FLASH  0xF7D02F
+#define IR_B4     0xF730CF
+#define IR_B5     0xF7B04F
+#define IR_B6     0xF7708F
+#define IR_STROBE 0xF7F00F
+#define IR_B7     0xF708F7
+#define IR_B8     0xF78877
+#define IR_B9     0xF748B7
+#define IR_FADE   0xF7C837
+#define IR_B10    0xF728D7
+#define IR_B11    0xF7A857
+#define IR_B12    0xF76897
+#define IR_SMOOTH 0xF7E817
+
+static const RemoteColorCode RemoteColorCodes[] = 
+{
+    { IR_OFF, CRGB(000, 000, 000), 0    },
+    { IR_R,   CRGB(255, 000, 000), 0    },
+    { IR_G,   CRGB(000, 255, 000), 96   },
+    { IR_B,   CRGB(000, 000, 255), 160  },
+    { IR_W,   CRGB(255, 255, 255), 0    },
+    { IR_B1,  CRGB(255,  64, 000), 16   },
+    { IR_B2,  CRGB(000, 255,  64), 112  },
+    { IR_B3,  CRGB( 64, 000, 255), 176  },
+    { IR_B4,  CRGB(255, 128, 000), 32   },
+    { IR_B5,  CRGB(000, 255, 128), 128  },
+    { IR_B6,  CRGB(128, 000, 255), 192  },
+    { IR_B7,  CRGB(255, 192, 000), 48   },
+    { IR_B8,  CRGB(000, 255, 192), 112  },
+    { IR_B9,  CRGB(192, 000, 255), 208  },
+    { IR_B10, CRGB(255, 255, 000), 64   },
+    { IR_B11, CRGB(000, 255, 255), 144  },
+    { IR_B12, CRGB(255, 000, 255), 224  }
+};
+
+// ---------------------------------------------------------
+// Native RMT Decoder Implementation (Legacy 4.x API)
+// ---------------------------------------------------------
+
+#define NEC_DECODE_MARGIN 200  // Tolerance in microseconds
+#define RMT_RESOLUTION_HZ 1000000 
+
+class RemoteControlImpl 
+{
+public:
+    RemoteControlImpl(int pin) : _pin(pin), _channel(RMT_CHANNEL_0) {}
+    
+    ~RemoteControlImpl() {
+        if (_begun) {
+            rmt_rx_stop(_channel);
+            rmt_driver_uninstall(_channel);
+        }
+    }
+
+    bool begin() {
+        rmt_config_t config = RMT_DEFAULT_CONFIG_RX((gpio_num_t)_pin, _channel);
+        config.clk_div = 80; // 80MHz / 80 = 1MHz resolution (1us per tick)
+        config.rx_config.filter_en = true;
+        config.rx_config.filter_ticks_thresh = 100; // Ignore pulses shorter than 100us
+        config.rx_config.idle_threshold = 20000;    // 20ms idle = end of frame
+
+        if (rmt_config(&config) != ESP_OK) return false;
+        if (rmt_driver_install(_channel, 1024, 0) != ESP_OK) return false;
+        if (rmt_get_ringbuf_handle(_channel, &_ringbuf) != ESP_OK) return false;
+        if (rmt_rx_start(_channel, true) != ESP_OK) return false;
+
+        _begun = true;
+        return true;
+    }
+
+    bool decode(uint32_t &code, bool &isRepeat) {
+        if (!_begun) return false;
+
+        size_t size = 0;
+        rmt_item32_t* items = (rmt_item32_t*)xRingbufferReceive(_ringbuf, &size, 0);
+        if (items) {
+            bool success = parseNecFrame(items, size / sizeof(rmt_item32_t), code, isRepeat);
+            vRingbufferReturnItem(_ringbuf, items);
+            return success;
+        }
+        return false;
+    }
+
+private:
+    int _pin;
+    rmt_channel_t _channel;
+    RingbufHandle_t _ringbuf = NULL;
+    bool _begun = false;
+
+    bool match(uint32_t measured, uint32_t target) {
+        return (measured >= (target - NEC_DECODE_MARGIN)) && 
+               (measured <= (target + NEC_DECODE_MARGIN));
+    }
+
+    bool parseNecFrame(rmt_item32_t* items, size_t count, uint32_t &code, bool &isRepeat) {
+        isRepeat = false; // Always reset first
+
+        // Linearized access to durations
+        auto get_time = [&](int i) -> uint32_t {
+            if (i % 2 == 0) return items[i/2].duration0;
+            else return items[i/2].duration1;
+        };
+
+        size_t symbol_count = count * 2;
+        if (symbol_count < 2) return false;
+
+        // Leader Code (9ms Mark, 4.5ms Space / 2.25ms Repeat)
+        if (!match(get_time(0), 9000)) return false;
+        
+        if (match(get_time(1), 2250)) {
+            isRepeat = true;
+            return true;
+        }
+        if (!match(get_time(1), 4500)) return false;
+
+        if (symbol_count < 67) return false;
+
+        uint32_t data = 0;
+        int bit_idx = 0;
+
+        for (int i = 2; i < 66; i += 2) {
+            if (!match(get_time(i), 560)) return false;
+            
+            data <<= 1;
+            
+            // 560us space = '0', 1690us space = '1'
+            if (match(get_time(i+1), 1690)) {
+                data |= 1;
+            } else if (!match(get_time(i+1), 560)) {
+                return false; 
+            }
+        }
+        
+        code = data;
+        isRepeat = false;
+        return true;
+    }
+};
+
+// ---------------------------------------------------------
+// RemoteControl Wrappers
+// ---------------------------------------------------------
+
+RemoteControl::RemoteControl() : _pImpl(std::make_unique<RemoteControlImpl>(IR_REMOTE_PIN)) {}
+RemoteControl::~RemoteControl() = default;
+
+bool RemoteControl::begin() {
+    debugW("Native Remote Control Decoding Started (RMT Legacy)");
+    return _pImpl->begin();
+}
+
+void RemoteControl::end() {
+    debugW("Native Remote Control Decoding Stopped");
+}
 
 #define BRIGHTNESS_STEP     20
 
 void RemoteControl::handle()
 {
-    decode_results results;
-    static uint lastResult = 0;
+    uint32_t result = 0;
+    bool isRepeat = false;
+    static uint32_t lastResult = 0;
 
-    if (!_IR_Receive.decode(&results))
+    if (!_pImpl->decode(result, isRepeat))
         return;
 
-    uint result = results.value;
-    _IR_Receive.resume();
+    if (isRepeat) {
+        result = lastResult;
+    }
 
-    debugI("Received IR Remote Code: 0x%08lX, Decode: %08lX\n", (unsigned long)result, (unsigned long)results.decode_type);
+    if (result == 0) return;
 
-    if (0xFFFFFFFF == result || result == lastResult)
+    debugI("Received IR Remote Code: 0x%08lX %s\n", (unsigned long)result, isRepeat ? "(Repeat)" : "");
+
+    if (isRepeat || result == lastResult)
     {
         static uint lastRepeatTime = millis();
-
-        // Only the OFF key runs at the full unbounded speed, so you can rapidly dim.  But everything
-        // else has its repeat rate clamped here.
-
         auto kMinRepeatms = 200;
+        
         if (result == IR_OFF)
-            kMinRepeatms = 0;               // Dim as fast as the remote sends it
-        else if (result == 0xFFFFFFFF)
-            kMinRepeatms = 500;             // Repeats happen at 500ms
+            kMinRepeatms = 0;               
+        else if (isRepeat)
+            kMinRepeatms = 500;             
         else if (result == lastResult)
-            kMinRepeatms = 50;              // Manual presses get debounced to at least 50ms
+            kMinRepeatms = 50;              
 
-        if (millis() - lastRepeatTime > kMinRepeatms)
-        {
-            debugV("Remote Repeat; lastResult == %08lx, elapsed = %lu\n", (unsigned long)lastResult, (unsigned long)(millis()-lastRepeatTime));
-            result = lastResult;
-            lastRepeatTime = millis();
-        }
-        else
-        {
+        if (millis() - lastRepeatTime <= kMinRepeatms)
             return;
-        }
+
+        lastRepeatTime = millis();
     }
+    
     lastResult = result;
 
     auto &effectManager = g_ptrSystem->EffectManager();
@@ -141,16 +314,10 @@ void RemoteControl::handle()
         effectManager.ShowVU( !effectManager.IsVUVisible() );
     }
 
-    debugI("Looking for match for remote color code: %08lX\n", (unsigned long)result);
-
     for (const auto & RemoteColorCode : RemoteColorCodes)
     {
         if (RemoteColorCode.code == result)
         {
-            // To set a solid color fill based on the remote buttons, we take the color from the table,
-            // crate a ColorFillEffect, and apply it as a temporary effect.  This will override the current
-            // effect until the next effect change or remote command.
-
             debugI("Changing Color via remote: %08lX\n", (unsigned long)(uint32_t) RemoteColorCode.color);
             effectManager.ApplyGlobalColor(RemoteColorCode.color);
             #if FULL_COLOR_REMOTE_FILL
