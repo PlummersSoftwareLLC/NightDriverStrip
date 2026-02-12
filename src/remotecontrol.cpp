@@ -47,30 +47,36 @@
 // IR Key Definitions (NEC Protocol)
 // ---------------------------------------------------------
 
-#define IR_BPLUS  0xF700FF
-#define IR_BMINUS 0xF7807F
-#define IR_OFF    0xF740BF
-#define IR_ON     0xF7C03F
-#define IR_R      0xF720DF
-#define IR_G      0xF7A05F
-#define IR_B      0xF7609F
-#define IR_W      0xF7E01F
-#define IR_B1     0xF710EF
-#define IR_B2     0xF7906F
-#define IR_B3     0xF750AF
-#define IR_FLASH  0xF7D02F
-#define IR_B4     0xF730CF
-#define IR_B5     0xF7B04F
-#define IR_B6     0xF7708F
-#define IR_STROBE 0xF7F00F
-#define IR_B7     0xF708F7
-#define IR_B8     0xF78877
-#define IR_B9     0xF748B7
-#define IR_FADE   0xF7C837
-#define IR_B10    0xF728D7
-#define IR_B11    0xF7A857
-#define IR_B12    0xF76897
-#define IR_SMOOTH 0xF7E817
+// Set to 1 to enable the 44-Key Remote (White remote with DIY keys)
+// Set to 0 to enable the 24-Key Remote (Black/Color remote)
+#define REMOTE_KEY44 0
+
+#if !REMOTE_KEY44
+// 24-Key Remote Definitions
+#define IR_ON      0xF7C03F
+#define IR_OFF     0xF740BF
+#define IR_BPLUS   0xF700FF
+#define IR_BMINUS  0xF7807F
+#define IR_R       0xF720DF
+#define IR_G       0xF7A05F
+#define IR_B       0xF7609F
+#define IR_W       0xF7E01F
+#define IR_B1      0xF710EF
+#define IR_B2      0xF7906F
+#define IR_B3      0xF750AF
+#define IR_B4      0xF730CF
+#define IR_B5      0xF7B04F
+#define IR_B6      0xF7708F
+#define IR_B7      0xF708F7
+#define IR_B8      0xF78877
+#define IR_B9      0xF748B7
+#define IR_B10     0xF728D7
+#define IR_B11     0xF7A857
+#define IR_B12     0xF76897
+#define IR_FLASH   0xF7D02F
+#define IR_STROBE  0xF7F00F
+#define IR_FADE    0xF7C837
+#define IR_SMOOTH  0xF7E817
 
 static const RemoteColorCode RemoteColorCodes[] = 
 {
@@ -92,6 +98,95 @@ static const RemoteColorCode RemoteColorCodes[] =
     { IR_B11, CRGB(0, 255, 255),   144, "Sky Blue"     },
     { IR_B12, CRGB(255, 0, 255),   224, "Pink"         }
 };
+
+#else
+// 44-Key Remote Definitions
+#define IR_BPLUS  0xFF3AC5  // Brightness Up
+#define IR_BMINUS 0xFFBA45  // Brightness Down
+#define IR_OFF    0xFF02FD  // Play/Pause (used as Off/On toggle in some logic)
+#define IR_ON     0xFF827D  // On/Off (Power)
+
+#define IR_R      0xFF1AE5  // Red
+#define IR_G      0xFF9A65  // Green
+#define IR_B      0xFFA25D  // Blue
+#define IR_W      0xFF22DD  // White
+
+#define IR_B1     0xFF2AD5  // Red-Orange
+#define IR_B2     0xFFAA55  // Green-Light
+#define IR_B3     0xFF926D  // Blue-Light
+#define IR_B4     0xFF12ED  // Peach?
+
+#define IR_B5     0xFF0AF5  // Orange
+#define IR_B6     0xFF8A75  // Cyan
+#define IR_B7     0xFFB24D  // Purple
+#define IR_B8     0xFF32CD  // Pink?
+
+#define IR_B9     0xFF38C7  // Yellow-Orange
+#define IR_B10    0xFFB847  // Light Blue
+#define IR_B11    0xFF7887  // Magenta
+#define IR_B12    0xFFF807  // Light Yellow
+
+#define IR_B13    0xFF18E7  // Sky Blue
+#define IR_B14    0xFF9867  // Pink
+#define IR_B15    0xFF58A7  // Aqua
+#define IR_B16    0xFFD827  // Blue-White
+
+#define IR_UPR    0xFF28D7  // Red Up
+#define IR_UPG    0xFFA857  // Green Up
+#define IR_UPB    0xFF6897  // Blue Up
+#define IR_QUICK  0xFFE817  // Quick
+
+#define IR_DOWNR  0xFF08F7  // Red Down
+#define IR_DOWNG  0xFF8877  // Green Down
+#define IR_DOWNB  0xFF48B7  // Blue Down
+#define IR_SLOW   0xFFC837  // Slow
+
+#define IR_DIY1   0xFF30CF  // DIY1
+#define IR_DIY2   0xFFB04F  // DIY2
+#define IR_DIY3   0xFF708F  // DIY3
+#define IR_AUTO   0xFFF00F  // Auto
+
+#define IR_DIY4   0xFF10EF  // DIY4
+#define IR_DIY5   0xFF906F  // DIY5
+#define IR_DIY6   0xFF50AF  // DIY6
+#define IR_FLASH  0xFFD02F  // Flash
+
+#define IR_JUMP3  0xFF20DF  // Jump3
+#define IR_JUMP7  0xFFA05F  // Jump7
+#define IR_FADE3  0xFF609F  // Fade3 / Fade
+#define IR_FADE7  0xFFE01F  // Fade7
+
+// Map required keys for logic compatibility
+#define IR_FADE   IR_FADE3 
+#define IR_SMOOTH IR_AUTO   // Map Smooth to Auto
+
+static const RemoteColorCode RemoteColorCodes[] = 
+{
+    { IR_OFF,   CRGB(0, 0, 0),       0,   "Off"          },
+    { IR_R,     CRGB(255, 0, 0),     0,   "Red"          },
+    { IR_G,     CRGB(0, 255, 0),     96,  "Green"        },
+    { IR_B,     CRGB(0, 0, 255),     160, "Blue"         },
+    { IR_W,     CRGB(255, 255, 255), 0,   "White"        },
+    { IR_B1,    CRGB(255, 64, 0),    16,  "Red-Orange"   },
+    { IR_B2,    CRGB(0, 255, 64),    112, "Light Green"  },
+    { IR_B3,    CRGB(64, 0, 255),    176, "Indigo"       },
+    { IR_B4,    CRGB(255, 128, 0),   32,  "Orange"       },
+    { IR_B5,    CRGB(0, 255, 128),   128, "Cyan-Green"   },
+    { IR_B6,    CRGB(0, 128, 255),   160, "Light Blue"   }, // Adjusted guess
+    { IR_B7,    CRGB(128, 0, 255),   192, "Purple"       },
+    { IR_B8,    CRGB(255, 0, 128),   224, "Pink"         },
+    { IR_B9,    CRGB(255, 128, 0),   48,  "Yellow-Orange"}, // Repetitive
+    { IR_B10,   CRGB(0, 255, 128),   112, "Cyan"         }, // Repetitive
+    { IR_B11,   CRGB(128, 0, 255),   208, "Magenta"      },
+    { IR_B12,   CRGB(255, 255, 0),   64,  "Yellow"       },
+    // The 44 key remote has more "color" buttons (B13-B16) but our struct
+    // and standard array usually stop at B12. We can add them if needed.
+    // For now, mapping the core set.
+    { IR_DIY1,  CRGB(255, 0, 0),     0,   "DIY1 (Red)"   },
+    { IR_DIY2,  CRGB(0, 255, 0),     96,  "DIY2 (Green)" },
+    { IR_DIY3,  CRGB(0, 0, 255),     160, "DIY3 (Blue)"  },
+};
+#endif
 
 // ---------------------------------------------------------
 // Native RMT Decoder Implementation (Legacy 4.x API)
