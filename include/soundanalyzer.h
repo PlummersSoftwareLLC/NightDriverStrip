@@ -317,6 +317,10 @@ class SoundAnalyzer : public ISoundAnalyzer
     std::unique_ptr<int16_t[]> ptrSampleBuffer; // sample buffer storage
     PeakData _Peaks; // cached last normalized peaks (moved earlier for inline method visibility)
 
+    // The FFT object is now a member variable to avoid ctor/dtor overhead per frame.
+    // Declaration order ensures _vReal and _vImaginary address are stable when _FFT is initialized.
+    ArduinoFFT<float> _FFT;
+
     void Reset();
     void FFT();
     void SampleAudio();
@@ -337,7 +341,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     // Typically maintained by higher-level audio logic.
     // Range ~[0..something], consumer-specific.
 
-    inline float VURatio() const override
+    float VURatio() const override
     {
         return _VURatio;
     }
@@ -345,7 +349,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     // Smoothed/decayed version of VURatio for more graceful visuals.
     // Use when you want beat emphasis without sharp jumps.
 
-    inline float VURatioFade() const override
+    float VURatioFade() const override
     {
         return _VURatioFade;
     }
@@ -353,7 +357,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     // Average normalized energy this frame (0..1 after gating/compression).
     // Updated in ProcessPeaksEnergy()/SetPeakDataFromRemote via UpdateVU().
 
-    inline float VU() const override
+    float VU() const override
     {
         return _VU;
     }
@@ -361,7 +365,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     // Highest recent VU observed (peak hold with damping).
     // Useful for setting adaptive effect ceilings.
 
-    inline float PeakVU() const override
+    float PeakVU() const override
     {
         return _PeakVU;
     }
@@ -369,7 +373,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     // Lowest recent VU observed (floor with damping).
     // Useful as denominator clamps for normalized ratios.
 
-    inline float MinVU() const override
+    float MinVU() const override
     {
         return _MinVU;
     }
@@ -377,7 +381,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     // Measured audio processing frames-per-second.
     // For diagnostics/telemetry; not critical to effects logic.
 
-    inline int AudioFPS() const override
+    int AudioFPS() const override
     {
         return _AudioFPS;
     }
@@ -385,7 +389,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     // Measured serial streaming FPS (if enabled).
     // For diagnostics; may be zero if not used.
 
-    inline int SerialFPS() const override
+    int SerialFPS() const override
     {
         return _serialFPS;
     }
@@ -399,7 +403,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     // Returns the latest per-band normalized peaks (0..1).
     // Pointer remains valid until next ProcessPeaksEnergy/SetPeakDataFromRemote.
 
-    inline const PeakData &Peaks() const override
+    const PeakData &Peaks() const override
     {
         return _Peaks;
     }
@@ -407,17 +411,17 @@ class SoundAnalyzer : public ISoundAnalyzer
     // Returns the slower-decay overlay level for the given band (0..1).
     // Used by some visuals to draw trailing bars/dots.
 
-    inline float Peak2Decay(int band) const override
+    float Peak2Decay(int band) const override
     {
         return (band >= 0 && band < NUM_BANDS) ? _peak2Decay[band] : 0.0f;
     }
 
-    inline float Peak1Decay(int band) const override
+    float Peak1Decay(int band) const override
     {
         return (band >= 0 && band < NUM_BANDS) ? _peak1Decay[band] : 0.0f;
     }
 
-    inline unsigned long LastPeak1Time(int band) const override
+    unsigned long LastPeak1Time(int band) const override
     {
         return (band >= 0 && band < NUM_BANDS) ? _lastPeak1Time[band] : 0;
     }
@@ -425,7 +429,7 @@ class SoundAnalyzer : public ISoundAnalyzer
     // Configure how quickly the two decay overlays drop over time.
     // r1 = fast track, r2 = slow track; higher = faster decay.
 
-    inline void SetPeakDecayRates(float r1, float r2) override;
+    void SetPeakDecayRates(float r1, float r2) override;
 
     // These functions allow access to the last-acquired sample buffer and its size so that
     // effects can draw the waveform or do other things with the raw audio data

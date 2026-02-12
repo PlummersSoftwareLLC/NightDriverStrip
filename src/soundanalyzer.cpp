@@ -4,6 +4,23 @@
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
+// This file is part of the NightDriver software project.
+//
+//    NightDriver is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    NightDriver is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Nightdriver.  It is normally found in copying.txt
+//    If not, see <https://www.gnu.org/licenses/>.
+//
+//
 // Description:
 //
 //   Analyzes the audio input
@@ -27,6 +44,7 @@
 // Throws std::runtime_error on allocation failure. Computes band layout once.
 template<const AudioInputParams& Params>
 SoundAnalyzer<Params>::SoundAnalyzer()
+    : _FFT(_vReal.data(), _vImaginary.data(), MAX_SAMPLES, SAMPLING_FREQUENCY, true) // Enable precomputed weights
 {
     ptrSampleBuffer.reset((int16_t *)heap_caps_malloc(MAX_SAMPLES * sizeof(int16_t), MALLOC_CAP_8BIT));
     if (!ptrSampleBuffer)
@@ -67,8 +85,8 @@ void SoundAnalyzer<Params>::Reset()
 template<const AudioInputParams& Params>
 void SoundAnalyzer<Params>::FFT()
 {
-    ArduinoFFT<float> _FFT(_vReal.data(), _vImaginary.data(), MAX_SAMPLES, SAMPLING_FREQUENCY);
-    _FFT.dcRemoval();
+    // _FFT is now a member variable to avoid ctor/dtor overhead per frame.
+    // Windowing and computation use either the Hann window or others as configured.
     _FFT.windowing(FFTWindow::Hann, FFTDirection::Forward);
     _FFT.compute(FFTDirection::Forward);
     _FFT.complexToMagnitude();
@@ -384,6 +402,21 @@ const PeakData & SoundAnalyzer<Params>::ProcessPeaksEnergy()
     }
     UpdateVU(sumNorm / (float)NUM_BANDS);
     return _Peaks;
+}
+
+// BeatEnhance
+//
+// Looks like pure voodoo, but it returns the multiplier by which to scale a value to enhance it
+// by the current VURatioFade amount.  The amt amount is the amount of your factor that should be
+// made up of the VURatioFade multiplier. So passing a 0.75 is a lot of beat enhancement, whereas
+// 0.25 is a little bit.
+//
+// Compute a blend factor using VURatioFade to "pulse" visuals.
+// amt in [0..1] controls how strongly the ratio influences the result.
+template<const AudioInputParams& Params>
+float SoundAnalyzer<Params>::BeatEnhance(float amt)
+{
+    return ((1.0f - amt) + (_VURatioFade / 2.0f) * amt);
 }
 
 // SampleBufferInitI2S
