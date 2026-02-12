@@ -41,6 +41,7 @@ struct RemoteColorCode
     uint32_t code;
     CRGB     color;
     uint8_t  hue;
+    const char* name;
 };
 
 // Pimpl to hide RMT driver details from the 115 files including this header

@@ -74,23 +74,23 @@
 
 static const RemoteColorCode RemoteColorCodes[] = 
 {
-    { IR_OFF, CRGB(000, 000, 000), 0    },
-    { IR_R,   CRGB(255, 000, 000), 0    },
-    { IR_G,   CRGB(000, 255, 000), 96   },
-    { IR_B,   CRGB(000, 000, 255), 160  },
-    { IR_W,   CRGB(255, 255, 255), 0    },
-    { IR_B1,  CRGB(255,  64, 000), 16   },
-    { IR_B2,  CRGB(000, 255,  64), 112  },
-    { IR_B3,  CRGB( 64, 000, 255), 176  },
-    { IR_B4,  CRGB(255, 128, 000), 32   },
-    { IR_B5,  CRGB(000, 255, 128), 128  },
-    { IR_B6,  CRGB(128, 000, 255), 192  },
-    { IR_B7,  CRGB(255, 192, 000), 48   },
-    { IR_B8,  CRGB(000, 255, 192), 112  },
-    { IR_B9,  CRGB(192, 000, 255), 208  },
-    { IR_B10, CRGB(255, 255, 000), 64   },
-    { IR_B11, CRGB(000, 255, 255), 144  },
-    { IR_B12, CRGB(255, 000, 255), 224  }
+    { IR_OFF, CRGB(0, 0, 0),       0,   "Off"          },
+    { IR_R,   CRGB(255, 0, 0),     0,   "Red"          },
+    { IR_G,   CRGB(0, 255, 0),     96,  "Green"        },
+    { IR_B,   CRGB(0, 0, 255),     160, "Blue"         },
+    { IR_W,   CRGB(255, 255, 255), 0,   "White"        },
+    { IR_B1,  CRGB(255, 64, 0),    16,  "Red-Orange"   },
+    { IR_B2,  CRGB(0, 255, 64),    112, "Light Green"  },
+    { IR_B3,  CRGB(64, 0, 255),    176, "Indigo"       },
+    { IR_B4,  CRGB(255, 128, 0),   32,  "Orange"       },
+    { IR_B5,  CRGB(0, 255, 128),   128, "Cyan-Green"   },
+    { IR_B6,  CRGB(128, 0, 255),   192, "Purple"       },
+    { IR_B7,  CRGB(255, 192, 0),   48,  "Yellow-Orange"},
+    { IR_B8,  CRGB(0, 255, 192),   112, "Cyan"         },
+    { IR_B9,  CRGB(192, 0, 255),   208, "Magenta"      },
+    { IR_B10, CRGB(255, 255, 0),   64,  "Yellow"       },
+    { IR_B11, CRGB(0, 255, 255),   144, "Sky Blue"     },
+    { IR_B12, CRGB(255, 0, 255),   224, "Pink"         }
 };
 
 // ---------------------------------------------------------
@@ -230,7 +230,7 @@ void RemoteControl::handle()
 
     if (result == 0) return;
 
-    debugI("Received IR Remote Code: 0x%08lX %s\n", (unsigned long)result, isRepeat ? "(Repeat)" : "");
+    // debugI("Received IR Remote Code: 0x%08lX %s\n", (unsigned long)result, isRepeat ? "(Repeat)" : "");
 
     if (isRepeat || result == lastResult)
     {
@@ -257,7 +257,7 @@ void RemoteControl::handle()
 
     if (IR_ON == result)
     {
-        debugV("Turning ON via remote");
+        debugI("Remote: Power ON");
         effectManager.ClearRemoteColor();
         effectManager.SetInterval(0);
         effectManager.StartEffect();
@@ -266,6 +266,7 @@ void RemoteControl::handle()
     }
     else if (IR_OFF == result)
     {
+        debugI("Remote: Power OFF");
         #if USE_HUB75
             deviceConfig.SetBrightness((int)deviceConfig.GetBrightness() - BRIGHTNESS_STEP);
         #else
@@ -278,6 +279,7 @@ void RemoteControl::handle()
     }
     else if (IR_BPLUS == result)
     {
+        debugI("Remote: Bright/Speed +");
         effectManager.SetInterval(DEFAULT_EFFECT_INTERVAL, true);
         if (deviceConfig.ApplyGlobalColors())
             effectManager.ClearRemoteColor();
@@ -288,6 +290,7 @@ void RemoteControl::handle()
     }
     else if (IR_BMINUS == result)
     {
+        debugI("Remote: Bright/Speed -");
         effectManager.SetInterval(DEFAULT_EFFECT_INTERVAL, true);
         if (deviceConfig.ApplyGlobalColors())
             effectManager.ClearRemoteColor();
@@ -298,19 +301,23 @@ void RemoteControl::handle()
     }
     else if (IR_SMOOTH == result)
     {
+        debugI("Remote: Smooth");
         effectManager.ClearRemoteColor();
         effectManager.SetInterval(EffectManager::csSmoothButtonSpeed);
     }
     else if (IR_STROBE == result)
     {
+        debugI("Remote: Strobe");
         effectManager.NextPalette();
     }
     else if (IR_FLASH == result)
     {
+        debugI("Remote: Flash");
         effectManager.PreviousPalette();
     }
     else if (IR_FADE == result)
     {
+        debugI("Remote: Fade");
         effectManager.ShowVU( !effectManager.IsVUVisible() );
     }
 
@@ -318,7 +325,7 @@ void RemoteControl::handle()
     {
         if (RemoteColorCode.code == result)
         {
-            debugI("Changing Color via remote: %08lX\n", (unsigned long)(uint32_t) RemoteColorCode.color);
+            debugI("Remote: Color %s (0x%08lX)", RemoteColorCode.name, (unsigned long)(uint32_t) RemoteColorCode.color);
             effectManager.ApplyGlobalColor(RemoteColorCode.color);
             #if FULL_COLOR_REMOTE_FILL
                 auto effect = make_shared_psram<ColorFillEffect>("Remote Color", RemoteColorCode.color, 1, true);
@@ -330,6 +337,9 @@ void RemoteControl::handle()
             return;
         }
     }
+    
+    // Log unknown codes
+    debugD("Remote: Unknown Code 0x%08lX", (unsigned long)result);
 }
 
 #endif
