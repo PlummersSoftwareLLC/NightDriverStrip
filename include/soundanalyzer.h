@@ -35,6 +35,7 @@
 #pragma once
 
 #include "globals.h"
+
 #include <algorithm>
 #include <numeric>
 #include <array>

@@ -29,12 +29,14 @@
 //
 //---------------------------------------------------------------------------
 
-#include "soundanalyzer.h"
-#include "globals.h"
 
 #if ENABLE_AUDIO
 
 #include <numeric>
+
+#include "globals.h"
+
+#include "soundanalyzer.h"
 
 // Explicit implementations of template methods for SoundAnalyzer
 
@@ -169,33 +171,26 @@ void SoundAnalyzer<Params>::SampleAudio()
     #endif
 
     // Compute stats and copy into FFT input buffer
-    for (int i = 0; i < MAX_SAMPLES; i++)
-    {
-        int16_t s = ptrSampleBuffer[i];
-        _vReal[i] = (float)s;
-    }
+    //
+    // Use std::transform to cast samples and copy into the FFT input buffer
+    std::transform(ptrSampleBuffer.get(), ptrSampleBuffer.get() + MAX_SAMPLES, _vReal.begin(),
+                   [](int16_t s) { return static_cast<float>(s); });
 }
 
 // UpdateVU
 //
-// Update the VU and peak values based on the new sample
+// Update the VU and peak values based on the new sample. Instant rise, dampened fall.
 template<const AudioInputParams& Params>
 void SoundAnalyzer<Params>::UpdateVU(float newval)
 {
-    if (newval > _oldVU)
-        _VU = newval;
-    else
-        _VU = (_oldVU * VUDAMPEN + newval) / (VUDAMPEN + 1);
+    // If VUDAMPEN is 0, this simplifies to _VU = newval
+    _VU = (newval > _oldVU) ? newval : (_oldVU * VUDAMPEN + newval) / (VUDAMPEN + 1);
     _oldVU = _VU;
-    if (_VU > _PeakVU)
-        _PeakVU = _VU;
-    else
-        _PeakVU = (_oldPeakVU * VUDAMPENMAX + _VU) / (VUDAMPENMAX + 1);
+
+    _PeakVU = (_VU > _oldPeakVU) ? _VU : (_oldPeakVU * VUDAMPENMAX + _VU) / (VUDAMPENMAX + 1);
     _oldPeakVU = _PeakVU;
-    if (_VU < _MinVU)
-        _MinVU = _VU;
-    else
-        _MinVU = (_oldMinVU * VUDAMPENMIN + _VU) / (VUDAMPENMIN + 1);
+
+    _MinVU = (_VU < _oldMinVU) ? _VU : (_oldMinVU * VUDAMPENMIN + _VU) / (VUDAMPENMIN + 1);
     _oldMinVU = _MinVU;
 }
 
@@ -272,12 +267,11 @@ const PeakData & SoundAnalyzer<Params>::ProcessPeaksEnergy()
             _vPeaks[b] = 0.0f;
             continue;
         }
-        float sumPower = 0.0f;
-        for (int k = start; k < end; k++)
-        {
-            float mag = _vReal[k];
-            sumPower += mag * mag;
-        }
+
+        // Sum of squares using inner_product (hipster voodoo for power calculation)
+        float sumPower = std::inner_product(_vReal.begin() + start, _vReal.begin() + end,
+                                           _vReal.begin() + start, 0.0f);
+
         int widthBins = end - start;
         float avgPower = (widthBins > 0) ? (sumPower / (float)widthBins) : 0.0f;
         avgPower *= _params.windowPowerCorrection;
@@ -312,12 +306,9 @@ const PeakData & SoundAnalyzer<Params>::ProcessPeaksEnergy()
 
         // Accumulate noise stats
         noiseSum += _noiseFloor[b];
-        if (_noiseFloor[b] > noiseMaxAll)
-            noiseMaxAll = _noiseFloor[b];
+        noiseMaxAll = std::max(noiseMaxAll, _noiseFloor[b]);
 
-        float signal = (float)avgPower - _noiseFloor[b];
-        if (signal < 0.0f)
-            signal = 0.0f;
+        float signal = std::max(0.0f, (float)avgPower - _noiseFloor[b]);
 
         #if ENABLE_AUDIO_SMOOTHING
             // Weighted average: 0.25 * (2 * current + left + right)
@@ -347,11 +338,8 @@ const PeakData & SoundAnalyzer<Params>::ProcessPeaksEnergy()
     float snrRaw = frameSumRaw / (noiseMaxAll + 1e-9f);
     if (snrRaw < _params.frameSNRGate)
     {
-        for (int b = 0; b < NUM_BANDS; ++b)
-        {
-            _vPeaks[b] = 0.0f;
-            _Peaks[b] = 0.0f;
-        }
+        _vPeaks.fill(0.0f);
+        _Peaks.fill(0.0f);
         UpdateVU(0.0f);
         return _Peaks;
     }
@@ -362,11 +350,8 @@ const PeakData & SoundAnalyzer<Params>::ProcessPeaksEnergy()
     // Quiet environment gate: if the derived env floor is below a configured threshold, suppress the whole frame
     if (_params.quietEnvFloorGate > 0.0f && envFloorRaw < _params.quietEnvFloorGate)
     {
-        for (int b = 0; b < NUM_BANDS; ++b)
-        {
-            _vPeaks[b] = 0.0f;
-            _Peaks[b] = 0.0f;
-        }
+        _vPeaks.fill(0.0f);
+        _Peaks.fill(0.0f);
         UpdateVU(0.0f);
         return _Peaks;
     }
@@ -379,11 +364,9 @@ const PeakData & SoundAnalyzer<Params>::ProcessPeaksEnergy()
     // Now that layout skips the lowest bins, emit all NUM_BANDS directly with no reindexing
     for (int b = 0; b < NUM_BANDS; b++)
     {
-        float vTarget = _vPeaks[b] * invEnv;
-        vTarget = powf(std::max(0.0f, vTarget), _params.compressGamma);
-        if (vTarget > 1.0f) vTarget = 1.0f;
-        vTarget *= kDisplayGain;
-        if (vTarget > 1.0f) vTarget = 1.0f;
+        float vTarget = std::clamp(powf(std::max(0.0f, _vPeaks[b] * invEnv), _params.compressGamma), 0.0f, 1.0f);
+        vTarget = std::clamp(vTarget * kDisplayGain, 0.0f, 1.0f);
+
         const float bandFloor = std::max(kBandFloorMin * 1.0f, kBandFloorScale); // Fixed kBandFloorMin usage
         if (vTarget < bandFloor) { vTarget = 0.0f; }
         float vCurr = _livePeaks[b];
@@ -391,10 +374,9 @@ const PeakData & SoundAnalyzer<Params>::ProcessPeaksEnergy()
         if (vTarget > vCurr)
         {
             const float maxRise = kLiveAttackPerSec * dt;
-            vNew = vCurr + std::min(vTarget - vCurr, maxRise);
+            vNew = std::min(vTarget, vCurr + maxRise);
         }
-        if (vNew > 1.0f) vNew = 1.0f;
-        if (vNew < 0.0f) vNew = 0.0f;
+        vNew = std::clamp(vNew, 0.0f, 1.0f);
         _livePeaks[b] = vNew;
         _vPeaks[b] = vNew;
         _Peaks[b] = vNew;
@@ -423,6 +405,9 @@ float SoundAnalyzer<Params>::BeatEnhance(float amt)
 //
 // Configure and start the I2S (or M5) input at SAMPLING_FREQUENCY.
 // Board-specific branches set pins and ADC/I2S modes as needed.
+//
+// NOTE: I2S driver implementation will need migration for Arduino 3 / ESP-IDF 5.x
+// where the current legacy driver is deprecated in favor of the new I2S driver.
 template<const AudioInputParams& Params>
 void SoundAnalyzer<Params>::SampleBufferInitI2S()
 {
@@ -523,11 +508,9 @@ void SoundAnalyzer<Params>::DecayPeaks()
     float decayAmount1 = std::max(0.0f, audioFrameTime * _peak1DecayRate);
     float decayAmount2 = std::max(0.0f, audioFrameTime * _peak2DecayRate);
 
-    for (int iBand = 0; iBand < NUM_BANDS; iBand++)
-    {
-        _peak1Decay[iBand] -= min(decayAmount1, _peak1Decay[iBand]);
-        _peak2Decay[iBand] -= min(decayAmount2, _peak2Decay[iBand]);
-    }
+    // Modern range-based decay (separate passes for better cache locality in tight loops)
+    for (auto& d1 : _peak1Decay) d1 = std::max(0.0f, d1 - decayAmount1);
+    for (auto& d2 : _peak2Decay) d2 = std::max(0.0f, d2 - decayAmount2);
 }
 
 // UpdatePeakData
@@ -537,20 +520,22 @@ void SoundAnalyzer<Params>::DecayPeaks()
 template<const AudioInputParams& Params>
 void SoundAnalyzer<Params>::UpdatePeakData()
 {
+    const float lastFrameTime = g_Values.AppTime.LastFrameTime();
+    const float maxInc1 = std::max(0.0f, lastFrameTime * _peak1DecayRate * (float)VU_REACTIVITY_RATIO);
+    const float maxInc2 = std::max(0.0f, lastFrameTime * _peak2DecayRate * (float)VU_REACTIVITY_RATIO);
+    const auto now = millis();
+
     for (int i = 0; i < NUM_BANDS; i++)
     {
+        // Branchless-style rise limits
         if (_Peaks[i] > _peak1Decay[i])
         {
-            const float maxIncrease =
-                std::max(0.0, g_Values.AppTime.LastFrameTime() * _peak1DecayRate * VU_REACTIVITY_RATIO);
-            _peak1Decay[i] = std::min(_Peaks[i], _peak1Decay[i] + maxIncrease);
-            _lastPeak1Time[i] = millis();
+            _peak1Decay[i] = std::min(_Peaks[i], _peak1Decay[i] + maxInc1);
+            _lastPeak1Time[i] = now;
         }
         if (_Peaks[i] > _peak2Decay[i])
         {
-            const float maxIncrease =
-                std::max(0.0, g_Values.AppTime.LastFrameTime() * _peak2DecayRate * VU_REACTIVITY_RATIO);
-            _peak2Decay[i] = std::min(_Peaks[i], _peak2Decay[i] + maxIncrease);
+            _peak2Decay[i] = std::min(_Peaks[i], _peak2Decay[i] + maxInc2);
         }
     }
 }
@@ -576,8 +561,8 @@ void SoundAnalyzer<Params>::SetPeakDataFromRemote(const PeakData &peaks)
     _msLastRemoteAudio = millis();
     _Peaks = peaks;
     _vPeaks = _Peaks;
-    float sum = std::accumulate(_vPeaks.begin(), _vPeaks.end(), 0.0f);
-    UpdateVU(sum / NUM_BANDS);
+    float sum = accumulate(_vPeaks);
+    UpdateVU(sum / (float)NUM_BANDS);
 }
 
 #if ENABLE_AUDIO_DEBUG
