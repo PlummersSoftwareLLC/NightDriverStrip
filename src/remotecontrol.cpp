@@ -185,6 +185,23 @@ static const RemoteColorCode RemoteColorCodes[] =
     { IR_DIY1,  CRGB(255, 0, 0),     0,   "DIY1 (Red)"   },
     { IR_DIY2,  CRGB(0, 255, 0),     96,  "DIY2 (Green)" },
     { IR_DIY3,  CRGB(0, 0, 255),     160, "DIY3 (Blue)"  },
+    { IR_DIY4,  CRGB(255, 0, 0),     0,   "DIY4 (Red)"   },
+    { IR_DIY5,  CRGB(0, 255, 0),     96,  "DIY5 (Green)" },
+    { IR_DIY6,  CRGB(0, 0, 255),     160, "DIY6 (Blue)"  },
+    { IR_JUMP3, CRGB(0, 0, 0),       0,   "Jump 3"       },
+    { IR_JUMP7, CRGB(0, 0, 0),       0,   "Jump 7"       },
+    { IR_FADE3, CRGB(0, 0, 0),       0,   "Fade 3"       },
+    { IR_FADE7, CRGB(0, 0, 0),       0,   "Fade 7"       },
+    { IR_QUICK, CRGB(0, 0, 0),       0,   "Quick"        },
+    { IR_SLOW,  CRGB(0, 0, 0),       0,   "Slow"         },
+    { IR_AUTO,  CRGB(0, 0, 0),       0,   "Auto"         },
+    { IR_FLASH, CRGB(0, 0, 0),       0,   "Flash"        },
+    { IR_UPR,   CRGB(0, 0, 0),       0,   "Red Up"       },
+    { IR_UPG,   CRGB(0, 0, 0),       0,   "Green Up"     },
+    { IR_UPB,   CRGB(0, 0, 0),       0,   "Blue Up"      },
+    { IR_DOWNR, CRGB(0, 0, 0),       0,   "Red Down"     },
+    { IR_DOWNG, CRGB(0, 0, 0),       0,   "Green Down"   },
+    { IR_DOWNB, CRGB(0, 0, 0),       0,   "Blue Down"    },
 };
 #endif
 
@@ -421,14 +438,19 @@ void RemoteControl::handle()
         if (RemoteColorCode.code == result)
         {
             debugI("Remote: Color %s (0x%08lX)", RemoteColorCode.name, (unsigned long)(uint32_t) RemoteColorCode.color);
-            effectManager.ApplyGlobalColor(RemoteColorCode.color);
-            #if FULL_COLOR_REMOTE_FILL
-                auto effect = make_shared_psram<ColorFillEffect>("Remote Color", RemoteColorCode.color, 1, true);
-                if (effect->Init(g_ptrSystem->EffectManager().GetBaseGraphics()))
-                    g_ptrSystem->EffectManager().SetTempEffect(effect);
-                else
-                    debugE("Could not initialize new color fill effect");
-            #endif
+            
+            // Only apply color if it's not Black (used as placeholder for command keys)
+            if (RemoteColorCode.color != CRGB::Black) 
+            {
+                effectManager.ApplyGlobalColor(RemoteColorCode.color);
+                #if FULL_COLOR_REMOTE_FILL
+                    auto effect = make_shared_psram<ColorFillEffect>("Remote Color", RemoteColorCode.color, 1, true);
+                    if (effect->Init(g_ptrSystem->EffectManager().GetBaseGraphics()))
+                        g_ptrSystem->EffectManager().SetTempEffect(effect);
+                    else
+                        debugE("Could not initialize new color fill effect");
+                #endif
+            }
             return;
         }
     }
