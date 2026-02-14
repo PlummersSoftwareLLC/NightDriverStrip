@@ -57,6 +57,6 @@ class PatternSMMetaBalls : public EffectWithId<PatternSMMetaBalls>
         }
 
         g()->blur2d(g()->leds, MATRIX_WIDTH - 1, 0, MATRIX_HEIGHT - 1, 0, 32);
-        fadeAllChannelsToBlackBy(10);
+        g()->DimAll(245);
     }
 };

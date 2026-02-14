@@ -1,6 +1,7 @@
 #pragma once
 
 #include "effectmanager.h"
+#include <cmath>
 
 // Yo Dawg! Circles inside your circles, but XORing the patterns.
 // Needs more clever color.
@@ -9,15 +10,8 @@
 class PatternSMXorCircles : public EffectWithId<PatternSMXorCircles>
 {
   private:
-    /*
-        double log2(double num){
-          double number=log(num)/log(2);
-          return (number);
-        }
-    */
-#define log2(num) log(num) / log(2)
-    static constexpr uint8_t scale_x = log2(64 / MATRIX_WIDTH);
-    static constexpr uint8_t scale_y = log2(64 / MATRIX_HEIGHT);
+    static constexpr uint8_t scale_x = std::log2f(64.0f / MATRIX_WIDTH);
+    static constexpr uint8_t scale_y = std::log2f(64.0f / MATRIX_HEIGHT);
 
   public:
     PatternSMXorCircles() : EffectWithId<PatternSMXorCircles>("Xor Circles")
@@ -54,5 +48,3 @@ class PatternSMXorCircles : public EffectWithId<PatternSMXorCircles>
         }
     }
 };
-
-#undef log2

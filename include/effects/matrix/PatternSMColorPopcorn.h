@@ -81,12 +81,6 @@ class PatternSMColorPopcorn : public EffectWithId<PatternSMColorPopcorn>
         }
     }
 
-    uint8_t wu_weight(uint8_t a, uint8_t b)
-    {
-        // This idea came from Xiaolin Wu.
-        return ((a * b) + (a + b)) >> 8;
-    }
-
     void paint()
     {
         // fill_solid(g()->leds, N_LEDS, CRGB::Black);
@@ -98,28 +92,9 @@ class PatternSMColorPopcorn : public EffectWithId<PatternSMColorPopcorn>
             if (-1 > rockets[r].yd < 1)
                 rgb = CRGB::White;
 
-            // extract the fractional parts and derive their inverses
-            uint8_t xx = rockets[r].x & 0xff;
-            uint8_t yy = rockets[r].y & 0xff;
-            uint8_t ix = 255 - xx;
-            uint8_t iy = 255 - yy;
-            uint8_t wu[4] = {wu_weight(ix, iy), wu_weight(xx, iy), wu_weight(ix, yy), wu_weight(xx, yy)};
-
-            // multiply the intensities by the colour, and saturating-add them to the
-            // pixels
-            for (uint8_t i = 0; i < 4; i++)
-            {
-                int x = (rockets[r].x >> 8) + (i & 1);
-                int y = (rockets[r].y >> 8) + ((i >> 1) & 1);
-                // Mesmerizer has swapped Y axis.
-                int32_t index = XY(x, MATRIX_HEIGHT - 1 - y);
-                if (index < NUM_LEDS)
-                {
-                    g()->leds[index].r = qadd8(g()->leds[index].r, rgb.r * wu[i] >> 8);
-                    g()->leds[index].g = qadd8(g()->leds[index].g, rgb.g * wu[i] >> 8);
-                    g()->leds[index].b = qadd8(g()->leds[index].b, rgb.b * wu[i] >> 8);
-                } // else warn...
-            }
+            float x = rockets[r].x / 256.0f;
+            float y = rockets[r].y / 256.0f;
+            g()->drawPixelXYF_Wu(x, MATRIX_HEIGHT - 1 - y, rgb);
         }
     }
 
