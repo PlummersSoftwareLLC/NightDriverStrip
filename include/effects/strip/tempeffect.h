@@ -1,3 +1,4 @@
+#pragma once
 //+--------------------------------------------------------------------------
 //
 // File:        TempEffect.h
@@ -29,11 +30,14 @@
 //
 //---------------------------------------------------------------------------
 
-#pragma once
+
 
 #if ENABLE_AUDIO
 
 #include <deque>
+
+#include "colordata.h"
+#include "values.h"
 
 class SimpleInsulatorBeatEffect : public EffectWithId<SimpleInsulatorBeatEffect>, public BeatEffectBase
 {

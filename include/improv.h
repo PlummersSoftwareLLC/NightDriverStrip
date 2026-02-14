@@ -1,3 +1,5 @@
+#pragma once
+
 //+--------------------------------------------------------------------------
 //
 // File:        improv.h
@@ -36,11 +38,7 @@
 //
 //---------------------------------------------------------------------------
 
-#pragma once
-
-#ifdef ARDUINO
-#include <Arduino.h>
-#endif // ARDUINO
+#include "globals.h"
 
 #include <cstdint>
 #include <functional>

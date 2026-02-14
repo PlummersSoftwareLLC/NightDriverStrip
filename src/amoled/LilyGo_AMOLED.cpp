@@ -7,11 +7,13 @@
  *
  */
 
+#include "globals.h"
+
 #if AMOLED_S3
 
 #include "amoled/LilyGo_AMOLED.h"
-#include <esp_adc_cal.h>
 #include <driver/gpio.h>
+#include <esp_adc_cal.h>
 
 #define SEND_BUF_SIZE           (16384)
 #define TFT_SPI_MODE            SPI_MODE0

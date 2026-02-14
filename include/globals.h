@@ -1,3 +1,5 @@
+#pragma once
+
 //+--------------------------------------------------------------------------
 //
 // File:        Globals.h
@@ -82,17 +84,14 @@
 //
 //---------------------------------------------------------------------------
 
-#pragma once
-
-#include <sstream>
-#include <iomanip>
 
 //  See https://github.com/PlummersSoftwareLLC/NightDriverStrip/issues/515
 #define FASTLED_ESP32_FLASH_LOCK 1
 #define FASTLED_INTERNAL 1               // Suppresses build banners
-#include <FastLED.h>
+#include <mutex>
+extern std::mutex g_buffer_mutex;
 
-#include <RemoteDebug.h>
+#include <FastLED.h>
 
 // If we're not using GNU C, (unlikely in embedded, especially in this
 // heavily ESP/Arduino-accented probject) elide __attribute__ - but even
@@ -157,9 +156,6 @@
 #endif
 
 
-#if USE_M5
-#include "M5Unified.h"
-#endif
 #define EFFECT_CROSS_FADE_TIME 1200.0    // How long for an effect to ramp brightness fader down and back during effect change
 
 // Thread priorities
@@ -209,8 +205,6 @@
 #define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
 #define __STDC_FORMAT_MACROS
 
-extern RemoteDebug Debug;           // Let everyone in the project know about it.  If you don't have it, delete this
-
 // Project Configuration
 //
 // One and only one of DEMO, SPECTRUM, ATOMLIGHT, etc. should be set to true by the build config for your project
@@ -252,14 +246,12 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #define RING_SIZE_0             MATRIX_WIDTH
 #endif
 
+
 // Once you have a working project, selectively enable various additional features by setting
 // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
 
 #ifndef ENABLE_AUDIO
     #define ENABLE_AUDIO            0
-#endif
-#ifndef ENABLE_WIFI
-    #define ENABLE_WIFI             1   // Connect to WiFi
 #endif
 
 // Check for nonsensical network configurations
@@ -300,8 +292,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #endif
 #ifndef ENABLE_OTA
     #if ENABLE_WIFI
-        #define ENABLE_OTA              1
-    #else
+//        #define ENABLE_OTA              1
+//    #else
         #define ENABLE_OTA              0
     #endif
 #endif
@@ -321,11 +313,6 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #define PROJECT_NAME        "Mesmerizer"
 #endif
 
-#if USE_HUB75
-#include "MatrixHardware_ESP32_Custom.h"
-#define SM_INTERNAL     // Silence build messages from their header
-#include <SmartMatrix.h>
-#endif
 
 #if ENABLE_AUDIOSERIAL
 #ifndef SERIAL_PINRX
@@ -365,9 +352,9 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
     #endif
 #endif
 
-#ifndef ENABLE_OTA
-#define ENABLE_OTA              1   // Listen for over the air update to the flash
-#endif
+//#ifndef ENABLE_OTA
+//#define ENABLE_OTA              1   // Listen for over the air update to the flash
+//#endif
 
 #ifndef ENABLE_ESPNOW
 #define ENABLE_ESPNOW           0   // Listen for ESPNOW packets
@@ -649,7 +636,7 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 // Items with rings must provide a table indicating how big each ring is.  If an insulator had 60 LEDs grouped
 // into rings of 30, 20, and 10, you'd have (NUM_RINGS = 3) and this table would contain (30, 20, 10).
 
-extern DRAM_ATTR const int g_aRingSizeTable[];
+extern const int g_aRingSizeTable[];
 
 #ifndef MICROS_PER_SECOND
     #define MICROS_PER_SECOND 1000000
@@ -697,6 +684,8 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
     #define EFFECTS_WEB_SOCKET_ENABLED 0
   #endif
 #endif
+
+#define WEB_SOCKETS_ANY_ENABLED (COLORDATA_WEB_SOCKET_ENABLED || EFFECTS_WEB_SOCKET_ENABLED)
 
 // Microphone
 //
@@ -755,198 +744,8 @@ extern DRAM_ATTR const int g_aRingSizeTable[];
 //
 // Headers that are only included when certain features are enabled
 
-
-// FPS
-//
-// Given a time value for when the last frame took place and the current timestamp returns the number of
-// frames per second, as low as 0.  Never exceeds 999 so you can make some width assumptions.
-
-inline int FPS(unsigned long duration, uint32_t perSecond = MILLIS_PER_SECOND)
-{
-    if (duration == 0)
-        return 999;
-
-    float fpsf = 1.0f / (duration / (float)perSecond);
-    int FPS = (int)fpsf;
-    if (FPS > 999)
-        FPS = 999;
-    return FPS;
-}
-
-// str_snprintf
-//
-// va-args style printf that returns the formatted string as a result
-
-// Let compiler warn if our arguments don't match.
-inline String str_sprintf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
-
-inline String str_sprintf(const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-
-    va_list args_copy;
-    va_copy(args_copy, args);
-
-    // BUGBUG: Investigate a vasprintf here and String::copy() to get move semantics
-    // on the return.
-    // Could Save one complete format, a copy, and an alloc and we're called a
-    // few times a second.
-    int requiredLen = vsnprintf(nullptr, 0, fmt, args) + 1;
-    va_end(args);
-
-    if (requiredLen <= 0) {
-        va_end(args_copy);
-        return {};
-    }
-
-    std::unique_ptr<char []> str = std::make_unique<char []>(requiredLen);
-    vsnprintf(str.get(), requiredLen, fmt, args_copy);
-    va_end(args_copy);
-
-    String retval;
-    retval.reserve(requiredLen); // At least saves one scan of the buffer.
-
-    retval = str.get();
-    return retval;
-}
-
+#include "interfaces.h"
 #include "types.h"
-
-// C Helpers
-//
-// Simple inline utility functions like random numbers, mapping, conversion, etc
-
-#include <random>
-#include <type_traits>
-#include <iterator>
-
-template <typename T>
-inline static T random_range(T lower, T upper)
-{
-#if USE_STRONG_RAND
-    static_assert(std::is_arithmetic<T>::value, "Template argument must be numeric type");
-
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-
-    if constexpr (std::is_integral<T>::value) {
-        std::uniform_int_distribution<T> distrib(lower, upper);
-        return distrib(gen);
-    } else if constexpr (std::is_floating_point<T>::value) {
-        std::uniform_real_distribution<T> distrib(lower, upper);
-        return distrib(gen);
-    }
-#else
-    static bool seeded = [&] { srand(time(nullptr)); return true; } ();
-
-    if constexpr (std::is_integral<T>::value) {
-        return std::rand() % (upper - lower + 1) + lower;
-    } else if constexpr (std::is_floating_point<T>::value) {
-        return std::rand() / (RAND_MAX / (upper - lower)) + lower;
-    } else {
-        static_assert(std::is_integral<T>::value || std::is_floating_point<T>::value, "Template argument must be numeric type");
-    }
-#endif
-}
-
-inline uint64_t ULONGFromMemory(const uint8_t * payloadData)
-{
-    return  (uint64_t)payloadData[7] << 56  |
-            (uint64_t)payloadData[6] << 48  |
-            (uint64_t)payloadData[5] << 40  |
-            (uint64_t)payloadData[4] << 32  |
-            (uint64_t)payloadData[3] << 24  |
-            (uint64_t)payloadData[2] << 16  |
-            (uint64_t)payloadData[1] << 8   |
-            (uint64_t)payloadData[0];
-}
-
-inline uint32_t DWORDFromMemory(const uint8_t * payloadData)
-{
-    return  (uint32_t)payloadData[3] << 24  |
-            (uint32_t)payloadData[2] << 16  |
-            (uint32_t)payloadData[1] << 8   |
-            (uint32_t)payloadData[0];
-}
-
-inline uint16_t WORDFromMemory(const uint8_t * payloadData)
-{
-    return  (uint16_t)payloadData[1] << 8   |
-            (uint16_t)payloadData[0];
-}
-
-// SetSocketBlockingEnabled
-//
-// In blocking mode, socket API calls wait until the operation is complete before returning control to the application.
-// For example, a call to the send() function won't return until all data has been sent. This can lead to the application
-// hanging if the operation takes a long time.
-
-// In contrast, in non-blocking mode, socket API calls return immediately. If an operation cannot be completed immediately, the function returns an error (usually EWOULDBLOCK or EAGAIN). The application can then decide how to handle the situation, such as by retrying the operation later. This provides more control and can make the application more responsive. However, it also requires more sophisticated programming, as the application must be prepared to handle these error conditions.
-
-inline bool SetSocketBlockingEnabled(int fd, bool blocking)
-{
-   if (fd < 0) return false;
-
-   int flags = fcntl(fd, F_GETFL, 0);
-   if (flags == -1) return false;
-   flags = blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
-   return (fcntl(fd, F_SETFL, flags) == 0) ? true : false;
-}
-
-// formatSize
-//
-// Returns a string with the size formatted in a human-readable format.
-// For example, 1024 becomes "1K", 1000*1000 becomes "1M", etc.
-// It pains me not to use 1024, but such are the times we live in.
-
-inline String formatSize(size_t size, size_t threshold = 1000)
-{
-    // If the size is above the threshold, we want a precision of 2 to show more accurate value
-    const int precision = size < threshold ? 0 : 2;
-
-    const char* suffixes[] = {"", "K", "M", "G", "T", "P", "E", "Z"};
-    size_t suffixIndex = 0;
-    double sizeDouble = static_cast<double>(size);
-
-    while (sizeDouble >= threshold && suffixIndex < (sizeof(suffixes) / sizeof(suffixes[0])) - 1)
-    {
-        sizeDouble /= 1000;
-        ++suffixIndex;
-    }
-
-    std::ostringstream oss;
-    oss << std::fixed << std::setprecision(precision) << sizeDouble << suffixes[suffixIndex];
-    std::string result = oss.str();  // Store the result to avoid dangling pointer
-    return String(result.c_str());
-}
-
-
-// to_array
-//
-// Because the ESP32 compiler, as of this writing, doesn't have std::to_array, we provide our own (davepl).
-// BUGBUG: Once we have compiler support we should use the C++20 versions
-
-template <typename T, std::size_t N>
-constexpr std::array<T, N> to_array(const T (&arr)[N]) {
-    std::array<T, N> result{};
-    for (std::size_t i = 0; i < N; ++i) {
-        result[i] = arr[i];
-    }
-    return result;
-}
-
-// Provide a single-parameter std::accumulate overload for ranges/containers
-// This allows: auto total = std::accumulate(container);
-template <typename Range>
-inline auto accumulate(const Range& r)
-    -> std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(r))>>
-{
-    using T = std::remove_cv_t<std::remove_reference_t<decltype(*std::begin(r))>>;
-    T total{};
-    for (const auto& v : r) total += v;
-    return total;
-}
 
 // 16-bit (5:6:5) color definitions for common colors
 
@@ -959,17 +758,6 @@ inline auto accumulate(const Range& r)
 #define YELLOW16    0xFFE0
 #define WHITE16     0xFFFF
 
-// Main includes
-
-#include "gfxbase.h"                            // GFXBase drawing interface
-#include "socketserver.h"                       // Incoming WiFi data connections
-#include "ws281xgfx.h"                           // Essential drawing code for strips
-#include "ledstripeffect.h"                     // Defines base led effect classes
-#include "ntptimeclient.h"                      // setting the system clock from ntp
-#include "effectmanager.h"                      // For g_EffectManager
-#include "ledbuffer.h"                          // Buffer manager for strip
-#include "colordata.h"                          // color palettes
-
 #if USE_TFTSPI
     #define DISABLE_ALL_LIBRARY_WARNINGS 1
     // If the project provides its own TFT_eSPI setup via USER_SETUP_LOADED
@@ -978,6 +766,12 @@ inline auto accumulate(const Range& r)
     #if TTGO && !defined(USER_SETUP_LOADED)
         #include <User_Setups/Setup25_TTGO_T_Display.h>
     #endif
-    #include <TFT_eSPI.h>
     #include <SPI.h>
+    #include <TFT_eSPI.h>
 #endif
+
+#undef ENABLE_REMOTE
+#define ENABLE_REMOTE 0
+
+#include <RemoteDebug.h>
+extern RemoteDebug Debug;           // Let everyone in the project know about it.  If you don't have it, delete this

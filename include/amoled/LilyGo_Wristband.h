@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @file      LilyGo_Wristband.h
  * @author    Lewis He (lewishe@outlook.com)
@@ -6,16 +8,17 @@
  * @date      2023-10-06
  *
  */
-#pragma once
+
+#include "globals.h"
 
 #include <Arduino.h>
-#include <Wire.h>
-#include <SPI.h>
-#include <SensorPCF85063.hpp>
-#include <SensorBHI260AP.hpp>
 #include <esp_lcd_types.h>
-#include "LilyGo_Display.h"
 #include "LilyGo_Button.h"
+#include "LilyGo_Display.h"
+#include <SensorBHI260AP.hpp>
+#include <SensorPCF85063.hpp>
+#include <SPI.h>
+#include <Wire.h>
 
 #define BOARD_NONE_PIN      (-1)
 

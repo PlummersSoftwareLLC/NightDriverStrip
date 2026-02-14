@@ -1,3 +1,5 @@
+#pragma once
+
 
 //+--------------------------------------------------------------------------
 //
@@ -35,19 +37,19 @@
 #define PatternWeather_H
 
 #include <Arduino.h>
-#include <string.h>
-#include <HTTPClient.h>
-#include <UrlEncode.h>
-#include <ledstripeffect.h>
-#include <hub75gfx.h>
 #include <ArduinoJson.h>
-#include "systemcontainer.h"
 #include <array>
 #include <chrono>
-#include <thread>
+#include <HTTPClient.h>
 #include <map>
-#include "TJpg_Decoder.h"
+#include <string.h>
+#include <thread>
+#include <UrlEncode.h>
+
 #include "effects.h"
+#include "array_utils.h"
+#include "systemcontainer.h"
+#include "TJpg_Decoder.h"
 #include "types.h"
 
 // Use centralized Apple5x7 font across all targets
@@ -208,7 +210,7 @@ class PatternWeather : public EffectWithId<PatternWeather>
      */
     static inline float KelvinToLocal(float K)
     {
-        if (g_ptrSystem->DeviceConfig().UseCelsius())
+        if (g_ptrSystem->GetDeviceConfig().UseCelsius())
             return KelvinToCelsius(K);
         else
             return KelvinToFarenheit(K);
@@ -228,16 +230,16 @@ class PatternWeather : public EffectWithId<PatternWeather>
         if (!HasLocationChanged())
             return false;
 
-        const String& configLocation = g_ptrSystem->DeviceConfig().GetLocation();
-        const String& configCountryCode = g_ptrSystem->DeviceConfig().GetCountryCode();
-        const bool configLocationIsZip = g_ptrSystem->DeviceConfig().IsLocationZip();
+        const String& configLocation = g_ptrSystem->GetDeviceConfig().GetLocation();
+        const String& configCountryCode = g_ptrSystem->GetDeviceConfig().GetCountryCode();
+        const bool configLocationIsZip = g_ptrSystem->GetDeviceConfig().IsLocationZip();
 
         if (configLocationIsZip)
             url = "http://api.openweathermap.org/geo/1.0/zip"
-                "?zip=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
+                "?zip=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&appid=" + urlEncode(g_ptrSystem->GetDeviceConfig().GetOpenWeatherAPIKey());
         else
             url = "http://api.openweathermap.org/geo/1.0/direct"
-                "?q=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&limit=1&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
+                "?q=" + urlEncode(configLocation) + "," + urlEncode(configCountryCode) + "&limit=1&appid=" + urlEncode(g_ptrSystem->GetDeviceConfig().GetOpenWeatherAPIKey());
 
         http.begin(url);
         int httpResponseCode = http.GET();
@@ -278,7 +280,7 @@ class PatternWeather : public EffectWithId<PatternWeather>
     {
         HTTPClient http;
         String url = "http://api.openweathermap.org/data/2.5/forecast"
-            "?lat=" + strLatitude + "&lon=" + strLongitude + "&cnt=16&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
+            "?lat=" + strLatitude + "&lon=" + strLongitude + "&cnt=16&appid=" + urlEncode(g_ptrSystem->GetDeviceConfig().GetOpenWeatherAPIKey());
         http.begin(url);
         int httpResponseCode = http.GET();
 
@@ -363,7 +365,7 @@ class PatternWeather : public EffectWithId<PatternWeather>
         HTTPClient http;
 
         String url = "http://api.openweathermap.org/data/2.5/weather"
-            "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey());
+            "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrSystem->GetDeviceConfig().GetOpenWeatherAPIKey());
         http.begin(url);
         int httpResponseCode = http.GET();
         if (httpResponseCode > 0)
@@ -412,7 +414,7 @@ class PatternWeather : public EffectWithId<PatternWeather>
         }
 
         // Only try to update if we have an API Key
-        if (!g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey().isEmpty())
+        if (!g_ptrSystem->GetDeviceConfig().GetOpenWeatherAPIKey().isEmpty())
         {
             updateCoordinates();
 
@@ -429,8 +431,8 @@ class PatternWeather : public EffectWithId<PatternWeather>
      */
     bool HasLocationChanged()
     {
-        bool locationChanged = g_ptrSystem->DeviceConfig().GetLocation() != strLocation;
-        bool countryChanged = g_ptrSystem->DeviceConfig().GetCountryCode() != strCountryCode;
+        bool locationChanged = g_ptrSystem->GetDeviceConfig().GetLocation() != strLocation;
+        bool countryChanged = g_ptrSystem->GetDeviceConfig().GetCountryCode() != strCountryCode;
 
         return locationChanged || countryChanged;
     }
@@ -456,7 +458,7 @@ public:
      */
     ~PatternWeather()
     {
-        g_ptrSystem->NetworkReader().CancelReader(readerIndex);
+        g_ptrSystem->GetNetworkReader().CancelReader(readerIndex);
     }
 
     /**
@@ -471,7 +473,7 @@ public:
             return false;
 
         // Register a Network Reader task with no interval.  Will manually flag in Draw()
-        readerIndex = g_ptrSystem->NetworkReader().RegisterReader([this] { UpdateWeather(); });
+        readerIndex = g_ptrSystem->GetNetworkReader().RegisterReader([this] { UpdateWeather(); });
 
         return true;
     }
@@ -504,7 +506,7 @@ public:
 
             debugI("Triggering thread to check weather now...");
             // Trigger the weather reader.
-            g_ptrSystem->NetworkReader().FlagReader(readerIndex);
+            g_ptrSystem->GetNetworkReader().FlagReader(readerIndex);
         }
 
         // Draw the graphics
@@ -531,7 +533,7 @@ public:
         g()->setTextColor(WHITE16);
         String showLocation = strLocation;
         showLocation.toUpperCase();
-        if (g_ptrSystem->DeviceConfig().GetOpenWeatherAPIKey().isEmpty())
+        if (g_ptrSystem->GetDeviceConfig().GetOpenWeatherAPIKey().isEmpty())
             g()->print("No API Key");
         else
             g()->print((strLocationName.isEmpty() ? showLocation : strLocationName).substring(0, (MATRIX_WIDTH - 2 * fontWidth)/fontWidth));

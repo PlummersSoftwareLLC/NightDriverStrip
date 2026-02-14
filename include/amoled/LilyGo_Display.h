@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @file      LilyGo_Display.h
  * @author    Lewis He (lewishe@outlook.com)
@@ -6,7 +8,8 @@
  * @date      2023-10-06
  *
  */
-#pragma once
+
+#include "globals.h"
 
 #include <stdint.h>
 

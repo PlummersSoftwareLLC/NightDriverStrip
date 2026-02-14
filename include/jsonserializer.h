@@ -1,3 +1,5 @@
+#pragma once
+
 //+--------------------------------------------------------------------------
 //
 // File:        jsonserializer.h
@@ -29,17 +31,12 @@
 //
 //---------------------------------------------------------------------------
 
-#pragma once
+#include "globals.h"
 
-#include <atomic>
-#include <utility>
 #include <ArduinoJson.h>
-
-struct IJSONSerializable
-{
-    virtual bool SerializeToJSON(JsonObject& jsonObject) = 0;
-    virtual bool DeserializeFromJSON(const JsonObjectConst& jsonObject) { return false; }
-};
+#include <atomic>
+#include <memory>
+#include <vector>
 
 template <class E>
 constexpr auto to_value(E e) noexcept
@@ -47,55 +44,9 @@ constexpr auto to_value(E e) noexcept
 	return static_cast<std::underlying_type_t<E>>(e);
 }
 
-#if USE_PSRAM
+JsonDocument CreateJsonDocument();
 
-    struct JsonPsramAllocator : ArduinoJson::Allocator
-    {
-        void* allocate(size_t size) override
-        {
-            return ps_malloc(size);
-        }
-
-        void deallocate(void* pointer) override
-        {
-            free(pointer);
-        }
-
-        void* reallocate(void* ptr, size_t new_size) override {
-            return ps_realloc(ptr, new_size);
-        }
-    };
-
-    inline JsonDocument CreateJsonDocument()
-    {
-        static auto jsonPsramAllocator = JsonPsramAllocator();
-
-        return JsonDocument(&jsonPsramAllocator);
-    }
-
-#else
-
-    inline JsonDocument CreateJsonDocument()
-    {
-        return JsonDocument();
-    }
-
-#endif
-
-inline bool SetIfNotOverflowed(JsonDocument& jsonDoc, JsonObject& jsonObject, const char* location = nullptr)
-{
-    if (jsonDoc.overflowed())
-    {
-        if (location)
-            debugE("JSON document overflowed at: %s", location);
-        else
-            debugE("JSON document overflowed");
-
-        return false;
-    }
-
-    return jsonObject.set(jsonDoc.as<JsonObjectConst>());
-}
+bool SetIfNotOverflowed(JsonDocument& jsonDoc, JsonObject& jsonObject, const char* location = nullptr);
 
 uint32_t toUint32(const CRGB& color);
 
@@ -104,20 +55,9 @@ namespace ArduinoJson
     template <>
     struct Converter<CRGB>
     {
-        static bool toJson(const CRGB& color, JsonVariant dst)
-        {
-            return dst.set(toUint32(color));
-        }
-
-        static CRGB fromJson(JsonVariantConst src)
-        {
-            return CRGB(src.as<uint32_t>());
-        }
-
-        static bool checkJson(JsonVariantConst src)
-        {
-            return src.is<uint32_t>();
-        }
+        static bool toJson(const CRGB& color, JsonVariant dst);
+        static CRGB fromJson(JsonVariantConst src);
+        static bool checkJson(JsonVariantConst src);
     };
 
     inline bool canConvertFromJson(JsonVariantConst src, const CRGB&)
@@ -128,34 +68,9 @@ namespace ArduinoJson
     template <>
     struct Converter<CRGBPalette16>
     {
-        static bool toJson(const CRGBPalette16& palette, JsonVariant dst)
-        {
-            auto doc = CreateJsonDocument();
-
-            JsonArray colors = doc.to<JsonArray>();
-
-            for (auto& color: palette.entries)
-                colors.add(color);
-
-            return dst.set(doc);
-        }
-
-        static CRGBPalette16 fromJson(JsonVariantConst src)
-        {
-            CRGB colors[16];
-            int colorIndex = 0;
-
-            JsonArrayConst componentsArray = src.as<JsonArrayConst>();
-            for (JsonVariantConst value : componentsArray)
-                colors[colorIndex++] = value.as<CRGB>();
-
-            return CRGBPalette16(colors);
-        }
-
-        static bool checkJson(JsonVariantConst src)
-        {
-            return src.is<JsonArrayConst>() && src.as<JsonArrayConst>().size() == 16;
-        }
+        static bool toJson(const CRGBPalette16& palette, JsonVariant dst);
+        static CRGBPalette16 fromJson(JsonVariantConst src);
+        static bool checkJson(JsonVariantConst src);
     };
 
     inline bool canConvertFromJson(JsonVariantConst src, const CRGBPalette16&)
@@ -178,26 +93,16 @@ class JSONWriter
 
   private:
 
-    // Writer function and flag combo
-    struct WriterEntry
-    {
-        std::atomic_bool flag = false;
-        std::function<void()> writer;
+    struct WriterEntry;
 
-        explicit WriterEntry(std::function<void()> writer) :
-            writer(std::move(writer))
-        {}
-
-        WriterEntry(WriterEntry&& entry)  noexcept : WriterEntry(entry.writer)
-        {}
-    };
-
-    std::vector<WriterEntry, psram_allocator<WriterEntry>> writers;
+    std::vector<std::shared_ptr<WriterEntry>> writers;
     std::atomic_ulong        latestFlagMs;
     std::atomic_bool         flushRequested;
     std::atomic_bool         haltWrites;
 
   public:
+    JSONWriter();
+    ~JSONWriter();
 
     // Add a writer to the collection. Returns the index of the added writer, for use with FlagWriter()
     size_t RegisterWriter(const std::function<void()>& writer);
@@ -208,4 +113,3 @@ class JSONWriter
     // Flush pending writes now
     void FlushWrites(bool halt = false);
 };
-

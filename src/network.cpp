@@ -29,24 +29,96 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
+
+#include <fcntl.h>
+
+#include "colordata.h"
+#include "deviceconfig.h"
+#include "effectmanager.h"
+#include "ledbuffer.h"
+#include "socketserver.h"
 #include "systemcontainer.h"
+#include "taskmgr.h"
+#include "values.h"
+#include "webserver.h"
+#include "websocketserver.h"
 
 #if ENABLE_WIFI
 
-#include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
+#include <algorithm>
+#include <ArduinoOTA.h>
 #include <ESPmDNS.h>
 #include <nvs.h>
-#include <algorithm>
 
+#include "byte_utils.h"
 #include "debug_cli.h"
-#include "effectmanager.h"
-#include "ledviewer.h"              // For the LEDViewer task and object
-#include "network.h"
+#include "ledviewer.h"
+#include "nd_network.h"
+#include "ntptimeclient.h"
 #include "soundanalyzer.h"
+#if USE_HUB75
+    #include "hub75gfx.h"
+#endif
 
-extern DRAM_ATTR std::mutex g_buffer_mutex;
+// Writer function and flag combo
+struct NetworkReader::ReaderEntry
+{
+    std::function<void()> reader;
+    std::atomic_ulong readInterval;
+    std::atomic_ulong lastReadMs;
+    std::atomic_bool flag = false;
+    std::atomic_bool canceled = false;
+
+    ReaderEntry(std::function<void()> reader, unsigned long interval) :
+        reader(std::move(reader)),
+        lastReadMs(0),
+        readInterval(interval)
+    {}
+
+    ReaderEntry(std::function<void()> reader, unsigned long interval, unsigned long lastReadMs, bool flag, bool canceled) :
+        reader(std::move(reader)),
+        readInterval(interval),
+        lastReadMs(lastReadMs),
+        flag(flag),
+        canceled(canceled)
+    {}
+};
 
 static DRAM_ATTR WiFiUDP l_Udp;              // UDP object used for NNTP, etc
+
+String get_mac_address()
+{
+  uint8_t mac[6];
+  WiFi.macAddress(mac);
+  return str_sprintf("%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+}
+
+String get_mac_address_pretty()
+{
+  uint8_t mac[6];
+  WiFi.macAddress(mac);
+  return str_sprintf("%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+}
+
+const char* WLtoString(wl_status_t status)
+{
+    switch (status) {
+    case 255: return WL_NO_SHIELD;
+    case 0: return   WL_IDLE_STATUS;
+    case 1: return   WL_NO_SSID_AVAIL;
+    case 2: return   WL_SCAN_COMPLETED;
+    case 3: return   WL_CONNECTED;
+    case 4: return   WL_CONNECT_FAILED;
+    case 5: return   WL_CONNECTION_LOST;
+    case 6: return   WL_DISCONNECTED;
+    default: return  WL_UNKNOWN_STATUS;
+    }
+}
+
+void get_mac_address_raw(uint8_t *mac)
+{
+    esp_efuse_mac_get_default(mac);
+}
 
 
 String urlEncode(const String& str)
@@ -79,9 +151,9 @@ String urlEncode(const String& str)
 
 void DoStatsCommand()
 {
-    auto& bufferManager = g_ptrSystem->BufferManagers()[0];
+    auto& bufferManager = g_ptrSystem->GetBufferManagers()[0];
 
-    DebugCLI::cli_printf("%s:%zux%d %zuK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS, (size_t)(ESP.getFreeHeap() / 1024));
+    DebugCLI::cli_printf("%s:%zux%d %zuK", FLASH_VERSION_NAME, g_ptrSystem->GetDevices().size(), NUM_LEDS, (size_t)(ESP.getFreeHeap() / 1024));
     DebugCLI::cli_printf("%sdB:%s",String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
     DebugCLI::cli_printf("BUFR:%02zu/%02zu [%lufps]", (size_t)bufferManager.Depth(), (size_t)bufferManager.BufferCount(), (unsigned long)g_Values.FPS);
     DebugCLI::cli_printf("DATA:%+04.2lf-%+04.2lf", bufferManager.AgeOfOldestBuffer(), bufferManager.AgeOfNewestBuffer());
@@ -91,7 +163,7 @@ void DoStatsCommand()
     #endif
 
     #if INCOMING_WIFI_ENABLED
-    DebugCLI::cli_printf("Socket Buffer _cbReceived: %zu", g_ptrSystem->SocketServer()._cbReceived);
+    DebugCLI::cli_printf("Socket Buffer _cbReceived: %zu", g_ptrSystem->GetSocketServer()._cbReceived);
     #endif
 }
 
@@ -174,17 +246,17 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
     {
         case ESPNowCommand::ESPNOW_NEXTEFFECT:
             debugI("ESPNOW Next effect");
-            g_ptrSystem->EffectManager().NextEffect();
+            g_ptrSystem->GetEffectManager().NextEffect();
             break;
 
         case ESPNowCommand::ESPNOW_PREVEFFECT:
             debugI("ESPNOW Previous effect");
-            g_ptrSystem->EffectManager().PreviousEffect();
+            g_ptrSystem->GetEffectManager().PreviousEffect();
             break;
 
         case ESPNowCommand::ESPNOW_SETEFFECT:
             debugI("ESPNOW Setting effect index to %u", message.arg1);
-            g_ptrSystem->EffectManager().SetCurrentEffectIndex(message.arg1);
+            g_ptrSystem->GetEffectManager().SetCurrentEffectIndex(message.arg1);
             break;
 
         default:
@@ -236,7 +308,7 @@ void SetupOTA(const String & strHostname)
 
             debugI("Stopping IR remote");
             #if ENABLE_REMOTE
-            g_ptrSystem->RemoteControl().end();
+            g_ptrSystem->GetRemoteControl().end();
             #endif
 
             debugI("Start updating from OTA ");
@@ -257,7 +329,7 @@ void SetupOTA(const String & strHostname)
                 debugI("OTA Progress: %u%%\r", p);
 
                 #if USE_HUB75
-                    auto pMatrix = std::static_pointer_cast<HUB75GFX>(g_ptrSystem->EffectManager().GetBaseGraphics()[0]);
+                    auto pMatrix = std::static_pointer_cast<HUB75GFX>(g_ptrSystem->GetEffectManager().GetBaseGraphics()[0]);
                     pMatrix->SetCaption(str_sprintf("Update:%d%%", p), CAPTION_TIME);
                 #endif
             }
@@ -310,7 +382,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 {
     //debugW(">> RemoteLoopEntry\n");
 
-    auto& remoteControl = g_ptrSystem->RemoteControl();
+    auto& remoteControl = g_ptrSystem->GetRemoteControl();
 
     remoteControl.begin();
     while (true)
@@ -378,7 +450,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             }
             else
             {
-                auto hostname = g_ptrSystem->DeviceConfig().GetHostname().c_str();
+                auto hostname = g_ptrSystem->GetDeviceConfig().GetHostname().c_str();
 
                 if (hostname[0] == '\0')
                 {
@@ -421,7 +493,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         bPreviousConnection = true;
 
         #if INCOMING_WIFI_ENABLED
-            auto& socketServer = g_ptrSystem->SocketServer();
+            auto& socketServer = g_ptrSystem->GetSocketServer();
 
             // Start listening for incoming data
             debugI("Starting/restarting Socket Server...");
@@ -444,7 +516,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         #if ENABLE_WEBSERVER
             debugI("Starting Web Server...");
-            g_ptrSystem->WebServer().begin();
+            g_ptrSystem->GetWebServer().begin();
             debugI("Web Server begin called!");
         #endif
 
@@ -548,14 +620,14 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
                 std::lock_guard<std::mutex> guard(g_buffer_mutex);
 
-                for (int iChannel = 0, channelMask = 1; iChannel < g_ptrSystem->BufferManagers().size(); iChannel++, channelMask <<= 1)
+                for (int iChannel = 0, channelMask = 1; iChannel < g_ptrSystem->GetBufferManagers().size(); iChannel++, channelMask <<= 1)
                 {
                     if ((channelMask & channel16) != 0)
                     {
                         debugV("Processing for Channel %d", iChannel);
 
                         bool bDone = false;
-                        auto& bufferManager = g_ptrSystem->BufferManagers()[iChannel];
+                        auto& bufferManager = g_ptrSystem->GetBufferManagers()[iChannel];
 
                         if (!bufferManager.IsEmpty())
                         {
@@ -788,7 +860,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         {
             if (WiFi.isConnected())
             {
-                auto& socketServer = g_ptrSystem->SocketServer();
+                auto& socketServer = g_ptrSystem->GetSocketServer();
 
                 socketServer.release();
                 socketServer.begin();
@@ -812,9 +884,9 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         bool wsListenersPresent = false;
         BaseFrameEventListener frameEventListener;
 
-        auto& effectManager = g_ptrSystem->EffectManager();
+        auto& effectManager = g_ptrSystem->GetEffectManager();
         #if COLORDATA_WEB_SOCKET_ENABLED
-            auto& webSocketServer = g_ptrSystem->WebSocketServer();
+            auto& webSocketServer = g_ptrSystem->GetWebSocketServer();
         #endif
 
         effectManager.AddFrameEventListener(frameEventListener);
@@ -882,6 +954,12 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     }
 #endif // COLORDATA_SERVER_ENABLED
 
+    // NetworkReader
+    //
+    // Allows functions to be registered that are called at regular intervals and/or on request, in the
+    // background. As the name of the class implies, this is intended to be used to execute network
+    // requests, like for effects that require data from RESTful APIs.
+
     // NetworkHandlingLoopEntry
     //
     // Thead entry point for the Networking task
@@ -917,7 +995,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
                     #if WEB_SOCKETS_ANY_ENABLED
                         // It's recommended to clean up any stale web socket clients every second or so
-                        g_ptrSystem->WebSocketServer().CleanupClients();
+                        g_ptrSystem->GetWebSocketServer().CleanupClients();
                     #endif
                 }
                 else
@@ -943,12 +1021,13 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                 continue;
             }
 
-            auto& networkReader = g_ptrSystem->NetworkReader();
+            auto& networkReader = g_ptrSystem->GetNetworkReader();
             unsigned long now = millis();
 
             // Flag entries of which the read interval has passed
-            for (auto& entry : networkReader.readers)
+            for (auto& entryPtr : networkReader.readers)
             {
+                auto& entry = *entryPtr;
                 if (entry.canceled.load())
                     continue;
 
@@ -973,8 +1052,9 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             now = millis();
 
             // Calculate how long we can sleep. This is determined by the reader that is closest to its interval passing.
-            for (auto& entry : networkReader.readers)
+            for (auto& entryPtr : networkReader.readers)
             {
+                auto& entry = *entryPtr;
                 if (entry.canceled.load())
                     continue;
 
@@ -1005,11 +1085,12 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     size_t NetworkReader::RegisterReader(const std::function<void()>& reader, unsigned long interval, bool flag)
     {
         // Add the reader with its flag unset
-        auto& readerEntry = readers.emplace_back(reader, interval);
+        auto readerEntry = std::make_shared<ReaderEntry>(reader, interval);
+        readers.push_back(readerEntry);
 
         // If an interval is specified, start the interval timer now.
         if (interval)
-            readerEntry.lastReadMs.store(millis());
+            readerEntry->lastReadMs.store(millis());
 
         size_t index = readers.size() - 1;
 
@@ -1025,25 +1106,37 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         if (index >= readers.size())
             return;
 
-        readers[index].flag.store(true);
+        readers[index]->flag.store(true);
 
-        g_ptrSystem->TaskManager().NotifyNetworkThread();
+        g_ptrSystem->GetTaskManager().NotifyNetworkThread();
     }
 
+    // Cancel a reader. After this, it will no longer be invoked.
     void NetworkReader::CancelReader(size_t index)
     {
         // Check if we received a valid reader index
         if (index >= readers.size())
             return;
 
-        auto& entry = readers[index];
+        auto& entry = *readers[index];
         entry.canceled.store(true);
         entry.readInterval.store(0);
         entry.reader = nullptr;
     }
+
 #else
 
     void InitNetworkCLI() {
     }
 
 #endif // ENABLE_WIFI
+
+bool SetSocketBlockingEnabled(int fd, bool blocking)
+{
+   if (fd < 0) return false;
+
+   int flags = fcntl(fd, F_GETFL, 0);
+   if (flags == -1) return false;
+   flags = blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
+   return (fcntl(fd, F_SETFL, flags) == 0) ? true : false;
+}

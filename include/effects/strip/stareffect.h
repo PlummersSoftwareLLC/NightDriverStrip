@@ -1,3 +1,4 @@
+#pragma once
 //+--------------------------------------------------------------------------
 //
 // File:        StarEffect.h
@@ -29,12 +30,12 @@
 //
 //---------------------------------------------------------------------------
 
-#pragma once
 
-#include <deque>
 #include <algorithm>
+#include <deque>
 
 #include "particles.h"
+#include "random_utils.h"
 
 const int cMaxNewStarsPerFrame = 144;
 const int cMaxStars = 500;

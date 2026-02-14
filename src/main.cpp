@@ -154,38 +154,72 @@
 #define FASTLED_ALL_PINS_HARDWARE_SPI
 #define FASTLED_ESP32_SPI_BUS HSPI
 
-#include <ArduinoOTA.h>             // Over-the-air helper object so we can be flashed via WiFi
-#include <nvs_flash.h>                   // Non-volatile storage access
-#include <nvs.h>
-
 #include "globals.h"
+#if USE_M5
+#include <M5Unified.h>
+#endif
+
+#include <algorithm>
+#include <ArduinoOTA.h>
+#include <memory>
+#include <mutex>
+#include <nvs.h>
+#include <nvs_flash.h>
+#include <vector>
 
 #include "debug_cli.h"
 #include "deviceconfig.h"
-#include "improvserial.h"                       // ImprovSerial impl for setting WiFi credentials over the serial port
+#include "effectmanager.h"
+#include "gfxbase.h"
+#include "improvserial.h"
+#include "jsonserializer.h"
+#include "ledbuffer.h"
+#include "ledstripeffect.h"
+#include "ntptimeclient.h"
+#include "socketserver.h"
 #include "soundanalyzer.h"
 #include "systemcontainer.h"
+#include "taskmgr.h"
 #include "values.h"
+#include "websocketserver.h"
+#if USE_HUB75
+    #include "hub75gfx.h"
+#endif
+
+#if INCOMING_WIFI_ENABLED
+extern "C"
+{
+    #include "uzlib/src/uzlib.h"
+}
+#endif
+
+#if USE_WS281X
+    #include "ws281xgfx.h"
+#endif
 
 #if defined(TOGGLE_BUTTON_0) || defined(TOGGLE_BUTTON_1)
   #include "Bounce2.h"                            // For Bounce button class
 #endif
 
-void IRAM_ATTR ScreenUpdateLoopEntry(void *);
+void ScreenUpdateLoopEntry(void *);
 
 #if ENABLE_ESPNOW
+#include <esp_arduino_version.h>
 #include <esp_now.h>
+#if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
+void onReceiveESPNOW(const esp_now_recv_info_t *recvInfo, const uint8_t *data, int dataLen);
+#else
 void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen);
+#endif
 #endif
 
 //
 // Global Variables
 //
 
-std::unique_ptr<SystemContainer> g_ptrSystem;
-Values g_Values;
+DRAM_ATTR std::unique_ptr<SystemContainer> g_ptrSystem;
 RemoteDebug Debug;                                                        // Instance of our telnet debug server
-std::mutex g_buffer_mutex;
+DRAM_ATTR std::mutex g_buffer_mutex;
 
 // The one and only instance of ImprovSerial.  We instantiate it as the type needed
 // for the serial port on this module.  That's usually HardwareSerial but can be
@@ -199,7 +233,7 @@ std::unique_ptr<ImprovSerial<typeof(Serial)>> g_pImprovSerial;
 // Imagine a setup of 5 Christmas trees, where each tree was made up of 4 concentric rings of decreasing
 // size, like 16, 12, 8, 4.  You would have NUM_FANS of 5 and MAX_RINGS of 4 and your ring table would be 16, 12, 8 4.
 
-const int g_aRingSizeTable[MAX_RINGS] =
+DRAM_ATTR const int g_aRingSizeTable[MAX_RINGS] =
 {
     RING_SIZE_0,
     RING_SIZE_1,
@@ -294,7 +328,9 @@ void setup()
     #endif
 
     // Initialize LZ library for decompressing compressed wifi packets
+#if INCOMING_WIFI_ENABLED
     uzlib_init();
+#endif
 
     // Create the SystemContainer that holds primary device management objects.
     g_ptrSystem = make_unique_psram<SystemContainer>();
@@ -418,7 +454,7 @@ void setup()
         g_ptrSystem->SetupWebServer();
 
         #if WEB_SOCKETS_ANY_ENABLED
-            g_ptrSystem->SetupWebSocketServer(g_ptrSystem->WebServer());
+            g_ptrSystem->SetupWebSocketServer(g_ptrSystem->GetWebServer());
         #endif
     #endif
 
@@ -446,52 +482,47 @@ void setup()
     // TOGGLE_BUTTON_0/1 are configured inside Screen's update loop
 
     #if AMOLED_S3
-        #include "amoled/LilyGo_AMOLED.h"
         debugW("Creating AMOLED Screen");
-        g_ptrSystem->SetupDisplay<AMOLEDScreen>(TFT_HEIGHT, TFT_WIDTH);
+        g_ptrSystem->SetupHardwareDisplay(TFT_HEIGHT, TFT_WIDTH);
     #endif
 
     #if USE_TFTSPI
         // Height and width get reversed here because the display is actually portrait, not landscape.  Once
         // we set the rotation, it works as expected in landscape.
         debugW("Creating TFT Screen");
-        g_ptrSystem->SetupDisplay<TFTScreen>(TFT_HEIGHT, TFT_WIDTH);
+        g_ptrSystem->SetupHardwareDisplay(TFT_HEIGHT, TFT_WIDTH);
 
     #elif USE_LCD
 
         debugW("Creating LCD Screen");
-        g_ptrSystem->SetupDisplay<LCDScreen>(TFT_HEIGHT, TFT_WIDTH);
+        g_ptrSystem->SetupHardwareDisplay(TFT_HEIGHT, TFT_WIDTH);
 
     #elif USE_M5
 
         M5.begin();
-        M5.Display.startWrite();
-        M5.Display.setRotation(1);
-        M5.Display.setTextDatum(top_center);
-        M5.Display.setTextColor(WHITE);
-
-        g_ptrSystem->SetupDisplay<M5Screen>(M5.Lcd.width(), M5.Lcd.height());
+        // M5 specific setup is now inside M5Screen constructor
+        g_ptrSystem->SetupHardwareDisplay(M5.Lcd.width(), M5.Lcd.height());
 
     #elif ELECROW
 
             debugW("Creating Elecrow Screen");
-            g_ptrSystem->SetupDisplay<ElecrowScreen>(TFT_HEIGHT, TFT_WIDTH);
+            g_ptrSystem->SetupHardwareDisplay(TFT_HEIGHT, TFT_WIDTH);
 
     #elif USE_OLED
 
         #if USE_SSD1306
             debugW("Creating SSD1306 Screen");
-            g_ptrSystem->SetupDisplay<SSD1306Screen>(128, 64);
+            g_ptrSystem->SetupHardwareDisplay(128, 64);
         #else
         debugW("Creating OLED Screen");
-            g_ptrSystem->SetupDisplay<OLEDScreen>(128, 64);
+            g_ptrSystem->SetupHardwareDisplay(128, 64);
         #endif
 
     #endif
 
     // Create the vector with devices (channels)
     g_ptrSystem->SetupDevices();
-    auto& devices = g_ptrSystem->Devices();
+    auto& devices = g_ptrSystem->GetDevices();
 
     // Initialize the strand controllers depending on how many channels we have
 
@@ -512,12 +543,18 @@ void setup()
     // Onboard PWM LED
 
     #if ONBOARD_LED_R
-        ledcAttachPin(ONBOARD_LED_R,  1);   // assign RGB led pins to PWM channels
-        ledcAttachPin(ONBOARD_LED_G,  2);
-        ledcAttachPin(ONBOARD_LED_B,  3);
-        ledcSetup(1, 12000, 8);             // 12 kHz PWM, 8-bit resolution
-        ledcSetup(2, 12000, 8);
-        ledcSetup(3, 12000, 8);
+	#if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
+	    ledcAttach(ONBOARD_LED_R, 12000, 8); //
+	    ledcAttach(ONBOARD_LED_G, 12000, 8); //
+	    ledcAttach(ONBOARD_LED_B, 12000, 8); //
+        #else
+	    ledcAttachPin(ONBOARD_LED_R,  1);    // assign RGB led pins to PWM channels
+	    ledcAttachPin(ONBOARD_LED_G,  2);
+	    ledcAttachPin(ONBOARD_LED_B,  3);
+	    ledcSetup(1, 12000, 8);              // 12 kHz PWM, 8-bit resolution
+	    ledcSetup(2, 12000, 8);
+	    ledcSetup(3, 12000, 8);
+        #endif
     #endif
 
     g_ptrSystem->SetupBufferManagers();
@@ -599,7 +636,7 @@ void loop()
             strOutput += str_sprintf("LED FPS: %lu ", (unsigned long)g_Values.FPS);
 
             #if USE_WS281X
-                strOutput += str_sprintf("LED Bright: %3.0lf%%, LED Watts: %u, ", g_Values.Brite, g_Values.Watts);
+                strOutput += str_sprintf("LED Bright: %3.0lf%%, LED Watts: %lu, ", g_Values.Brite, (unsigned long)g_Values.Watts);
             #endif
 
             #if USE_HUB75
@@ -615,11 +652,11 @@ void loop()
             #endif
 
             #if INCOMING_WIFI_ENABLED
-                auto& bufferManager = g_ptrSystem->BufferManagers()[0];
+                auto& bufferManager = g_ptrSystem->GetBufferManagers()[0];
                 strOutput += str_sprintf("Buffer: %zu/%zu, ", (size_t)bufferManager.Depth(), (size_t)bufferManager.BufferCount());
             #endif
 
-            const auto& taskManager = g_ptrSystem->TaskManager();
+            const auto& taskManager = g_ptrSystem->GetTaskManager();
             strOutput += str_sprintf("CPU: %03.0f%%, %03.0f%%, FreeDraw: %4.3lf", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1), g_Values.FreeDrawTime);
 
             debugI("%s", strOutput.c_str());

@@ -32,16 +32,180 @@
 
 #if USE_HUB75
 
-#include <SmartMatrix.h>
+#include <algorithm>
+
+#include "deviceconfig.h"
+#include "effectmanager.h"
 #include "hub75gfx.h"
-#include "systemcontainer.h"
+#include "ledstripeffect.h"
 #include "soundanalyzer.h"
+#include "systemcontainer.h"
+#include "values.h"
 
 // The declarations create the "layers" that make up the matrix display
 
 SMLayerBackground<HUB75GFX::SM_RGB, HUB75GFX::kBackgroundLayerOptions> HUB75GFX::backgroundLayer(kMatrixWidth, kMatrixHeight);
 SMLayerBackground<HUB75GFX::SM_RGB, HUB75GFX::kBackgroundLayerOptions> HUB75GFX::titleLayer(kMatrixWidth, kMatrixHeight);
 SmartMatrixHub75Calc<COLOR_DEPTH, HUB75GFX::kMatrixWidth, HUB75GFX::kMatrixHeight, HUB75GFX::kPanelType, HUB75GFX::kMatrixOptions> HUB75GFX::matrix;
+
+HUB75GFX::HUB75GFX(size_t w, size_t h) : GFXBase(w, h)
+{
+}
+
+HUB75GFX::~HUB75GFX()
+{
+}
+
+void HUB75GFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devices)
+{
+    StartMatrix();
+
+    for (int i = 0; i < NUM_CHANNELS; i++)
+    {
+        auto tmp_matrix = make_shared_psram<HUB75GFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+        devices.push_back(tmp_matrix);
+        tmp_matrix->loadPalette(0);
+    }
+
+    // We don't need color correction on the title layer, but we want it on the main background
+
+    titleLayer.enableColorCorrection(false);
+    backgroundLayer.enableColorCorrection(true);
+
+    // Starting an effect might need to draw, so we need to set the leds up before doing so
+    std::static_pointer_cast<HUB75GFX>(devices[0])->setLeds(GetMatrixBackBuffer());
+}
+
+void HUB75GFX::SetBrightness(byte amount)
+{
+    matrix.setBrightness(amount);
+}
+
+// EstimatePowerDraw
+//
+// Estimate the total power load for the board and matrix by walking the pixels and adding our previously measured
+// power draw per pixel based on what color and brightness each pixel is
+
+int HUB75GFX::EstimatePowerDraw()
+{
+    constexpr auto kBaseLoad       = 1500;          // Experimentally derived values
+    constexpr auto mwPerPixelRed   = 4.10f;
+    constexpr auto mwPerPixelGreen = 0.82f;
+    constexpr auto mwPerPixelBlue  = 1.75f;
+
+    float totalPower = kBaseLoad;
+    for (int i = 0; i < NUM_LEDS; i++)
+    {
+        const auto pixel = leds[i];
+        totalPower += pixel.r * mwPerPixelRed   / 255.0f;
+        totalPower += pixel.g * mwPerPixelGreen / 255.0f;
+        totalPower += pixel.b * mwPerPixelBlue  / 255.0f;
+    }
+    return (int) totalPower;
+}
+
+// Whereas an WS281xGFX would track its own memory for the CRGB array, we simply point to the buffer already used for
+// the matrix display memory.  That also eliminated having a local draw buffer that is then copied, because the effects
+// can render directly to the right back buffer automatically.
+
+void HUB75GFX::setLeds(CRGB *pLeds)
+{
+    leds = pLeds;
+}
+
+void HUB75GFX::fillLeds(std::unique_ptr<CRGB []> & pLEDs)
+{
+    // A mesmerizer panel has the same layout as in memory, so we can memcpy.
+
+    memcpy(leds, pLEDs.get(), sizeof(CRGB) * GetLEDCount());
+}
+
+void HUB75GFX::Clear(CRGB color)
+{
+    // NB: We directly clear the backbuffer because otherwise effects would start with a snapshot of the effect
+    //     before them on the next buffer swap.  So we clear the backbuffer and then the leds, which point to
+    //     the current front buffer.  TLDR:  We clear both the front and back buffers to avoid flicker between effects.
+
+    if (color.g == color.r && color.r == color.b)
+    {
+        memset((void *) leds, color.r, sizeof(CRGB) * _ledcount);
+        memset((void *) backgroundLayer.backBuffer(), color.r, sizeof(HUB75GFX::SM_RGB) * _ledcount);
+    }
+    else
+    {
+        SM_RGB* buf = (SM_RGB*)backgroundLayer.backBuffer();
+        for (size_t i = 0; i < _ledcount; ++i)
+        {
+            buf[i]  = rgb24(color.r, color.g, color.b);
+            leds[i] = color;
+        }
+    }
+}
+
+const String & HUB75GFX::GetCaption()
+{
+    return strCaption;
+}
+
+float HUB75GFX::GetCaptionTransparency()
+{
+    unsigned long now = millis();
+    if (strCaption == nullptr)
+        return 0.0f;
+
+    if (now > (captionStartTime + totalCaptionDuration))
+        return 0.0f;
+
+    float elapsed = now - captionStartTime;
+
+    if (elapsed < captionFadeInTime)
+        return elapsed / captionFadeInTime;
+
+    if (elapsed > captionFadeInTime + captionDuration)
+        return 1.0f - ((elapsed - captionFadeInTime - captionDuration) / captionFadeOutTime);
+
+    return 1.0f;
+}
+
+void HUB75GFX::SetCaption(const String & str, uint32_t duration)
+{
+    captionDuration = (float)duration;
+    totalCaptionDuration = captionFadeInTime + captionDuration + captionFadeOutTime;
+    strCaption = str;
+    captionStartTime = millis();
+}
+
+void HUB75GFX::MoveInwardX(int startY, int endY)
+{
+    // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
+    // out in order to do the scroll.  We should technically use memmove instead
+    // of memcpy since the regions are overlapping but this is faster and seems
+    // to work!
+
+    for (int y = startY; y <= endY; y++)
+    {
+        auto pLinemem = leds + y * MATRIX_WIDTH;
+        auto pLinemem2 = pLinemem + (MATRIX_WIDTH / 2);
+        memcpy(pLinemem + 1, pLinemem, sizeof(CRGB) * (MATRIX_WIDTH / 2));
+        memcpy(pLinemem2, pLinemem2 + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));
+    }
+}
+
+void HUB75GFX::MoveOutwardsX(int startY, int endY)
+{
+    // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
+    // out in order to do the scroll.  We should technically use memmove instead
+    // of memcpy since the regions are overlapping but this is faster and seems
+    // to work!
+
+    for (int y = startY; y <= endY; y++)
+    {
+        auto pLinemem = leds + y * MATRIX_WIDTH;
+        auto pLinemem2 = pLinemem + (MATRIX_WIDTH / 2);
+        memcpy(pLinemem, pLinemem + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));
+        memcpy(pLinemem2 + 1, pLinemem2, sizeof(CRGB) * (MATRIX_WIDTH / 2));
+    }
+}
 
 void HUB75GFX::StartMatrix()
 {
@@ -77,19 +241,19 @@ void HUB75GFX::PrepareFrame()
 
     EVERY_N_MILLIS(MILLIS_PER_FRAME)
     {
-        auto graphics = g_ptrSystem->EffectManager().g();
+        auto graphics = g_ptrSystem->GetEffectManager().g();
 
         matrix.setCalcRefreshRateDivider(MATRIX_CALC_DIVIDER);
         matrix.setRefreshRate(MATRIX_REFRESH_RATE);
 
-        auto pMatrix = std::static_pointer_cast<HUB75GFX>(g_ptrSystem->EffectManager().GetBaseGraphics()[0]);
+        auto pMatrix = std::static_pointer_cast<HUB75GFX>(g_ptrSystem->GetEffectManager().GetBaseGraphics()[0]);
         pMatrix->setLeds(GetMatrixBackBuffer());
 
         // We set ourselves to the lower of the fader value or the brightness value,
         // so that we can fade between effects without having to change the brightness
         // setting.
 
-        if (g_ptrSystem->EffectManager().GetCurrentEffect().ShouldShowTitle() && pMatrix->GetCaptionTransparency() > 0.00)
+        if (g_ptrSystem->GetEffectManager().GetCurrentEffect().ShouldShowTitle() && pMatrix->GetCaptionTransparency() > 0.00)
         {
             titleLayer.setFont(font3x5);
             uint8_t brite = (uint8_t)(pMatrix->GetCaptionTransparency() * 255.0);
@@ -164,7 +328,7 @@ void HUB75GFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDr
     if ((localPixelsDrawn + wifiPixelsDrawn) == 0)
         return;
 
-    auto pMatrix = std::static_pointer_cast<HUB75GFX>(g_ptrSystem->EffectManager().g());
+    auto pMatrix = std::static_pointer_cast<HUB75GFX>(g_ptrSystem->GetEffectManager().g());
 
     constexpr auto kCaptionPower = 500;                                                 // A guess as the power the caption will consume
     g_Values.MatrixPowerMilliwatts = pMatrix->EstimatePowerDraw();                             // What our drawn pixels will consume
@@ -172,7 +336,7 @@ void HUB75GFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDr
     if (pMatrix->GetCaptionTransparency() > 0)
         g_Values.MatrixPowerMilliwatts += kCaptionPower;
 
-    const double kMaxPower = g_ptrSystem->DeviceConfig().GetPowerLimit();
+    const double kMaxPower = g_ptrSystem->GetDeviceConfig().GetPowerLimit();
     uint8_t scaledBrightness = std::clamp(kMaxPower / g_Values.MatrixPowerMilliwatts, 0.0, 1.0) * 255;
 
     // If the target brightness is lower than current, we drop to it immediately, but if it is higher, we ramp the brightness back in
@@ -189,7 +353,7 @@ void HUB75GFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDr
     // We set ourselves to the lower of the fader value or the brightness value, or the power constrained value,
     // whichever is lowest, so that we can fade between effects without having to change the brightness setting.
 
-    auto targetBrightness = min({ g_ptrSystem->DeviceConfig().GetBrightness(), g_Values.Fader, g_Values.MatrixScaledBrightness });
+    auto targetBrightness = min({ g_ptrSystem->GetDeviceConfig().GetBrightness(), g_Values.Fader, g_Values.MatrixScaledBrightness });
 
     debugV("MW: %lu, Setting Scaled Brightness to: %lu", (unsigned long)g_Values.MatrixPowerMilliwatts, (unsigned long)targetBrightness);
     pMatrix->SetBrightness(targetBrightness);
@@ -197,21 +361,21 @@ void HUB75GFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDr
     #if SHOW_FPS_ON_MATRIX
         // Display status on bottom of matrix in format FPS: 00 CPU0: 000 CPU1: 000 Aud: 00
         backgroundLayer.setFont(font3x5);
-        auto& taskManager = g_ptrSystem->TaskManager();
+        auto& taskManager = g_ptrSystem->GetTaskManager();
         String output = "LED: " + String(g_Values.FPS) + " AUD: " + String(g_Analyzer.AudioFPS());
         backgroundLayer.drawString(2, MATRIX_HEIGHT  - 12, rgb24(255, 255, 255), rgb24(0, 0, 0), output.c_str());
         output = "CP0: " + String((int)taskManager.GetCPUUsagePercent(0)) + " CP1: " + String((int)taskManager.GetCPUUsagePercent(1));
         backgroundLayer.drawString(2, MATRIX_HEIGHT  - 6, rgb24(255, 255, 255), rgb24(0, 0, 0), output.c_str());
     #endif
 
-    MatrixSwapBuffers((wifiPixelsDrawn > 0) || g_ptrSystem->EffectManager().GetCurrentEffect().RequiresDoubleBuffering() || pMatrix->GetCaptionTransparency() > 0.0);
+    MatrixSwapBuffers((wifiPixelsDrawn > 0) || g_ptrSystem->GetEffectManager().GetCurrentEffect().RequiresDoubleBuffering() || pMatrix->GetCaptionTransparency() > 0.0);
 
     FastLED.countFPS();
 }
 
 CRGB *HUB75GFX::GetMatrixBackBuffer()
 {
-    for (auto& device : g_ptrSystem->Devices())
+    for (auto& device : g_ptrSystem->GetDevices())
         device->UpdatePaletteCycle();
 
     return (CRGB *)backgroundLayer.backBuffer();

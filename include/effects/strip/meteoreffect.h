@@ -1,3 +1,4 @@
+#pragma once
 //+--------------------------------------------------------------------------
 //
 // File:        MeteorPaletteEffect.h
@@ -29,11 +30,10 @@
 //
 //---------------------------------------------------------------------------
 
-#pragma once
 
+
+#include "random_utils.h"
 #include "soundanalyzer.h"
-
-#include "ledstripeffect.h"
 
 class MeteorChannel
 {

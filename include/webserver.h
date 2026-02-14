@@ -1,3 +1,5 @@
+#pragma once
+
 //+--------------------------------------------------------------------------
 //
 // File:        webserver.h
@@ -37,26 +39,27 @@
 //              Apr-28-2023         Rbergen     Reduce code duplication
 //---------------------------------------------------------------------------
 
-#pragma once
+#include "globals.h"
 
 #if ENABLE_WEBSERVER
 
-#include "deviceconfig.h"
-#include "network.h"
-
-#include <Arduino.h>
 #include <ArduinoJson.h>
-#include <AsyncJson.h>
-#include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <FS.h>
-#include <HTTPClient.h>
-#include <WiFi.h>
 #include <map>
+
+#include "deviceconfig.h"
+#include "jsonserializer.h"
+#include "nd_network.h"
+
+class LEDStripEffect;
 
 class CWebServer
 {
   public:
+    static constexpr int HttpOk = 200;
+    static constexpr int HttpBadRequest = 400;
+    static constexpr int HttpNotFound = 404;
+    static constexpr int HttpInternalServerError = 500;
 
     enum class StatisticsType : uint8_t
     {
@@ -149,12 +152,12 @@ class CWebServer
     // Version for empty response, normally used to finish up things that don't return anything, like "NextEffect"
     static void AddCORSHeaderAndSendOKResponse(AsyncWebServerRequest * pRequest)
     {
-        AddCORSHeaderAndSendResponse(pRequest, pRequest->beginResponse(HTTP_CODE_OK));
+        AddCORSHeaderAndSendResponse(pRequest, pRequest->beginResponse(HttpOk));
     }
 
     static void AddCORSHeaderAndSendBadRequest(AsyncWebServerRequest * pRequest, const String& message)
     {
-        AddCORSHeaderAndSendResponse(pRequest, pRequest->beginResponse(HTTP_CODE_BAD_REQUEST, "text/json",
+        AddCORSHeaderAndSendResponse(pRequest, pRequest->beginResponse(HttpBadRequest, "text/json",
             "{\"message\": \"" + message + "\"}"));
     }
 

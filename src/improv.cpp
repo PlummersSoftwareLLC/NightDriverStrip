@@ -1,6 +1,6 @@
 //+--------------------------------------------------------------------------
 //
-// File:        improvserial.h
+// File:        improv.cpp
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
@@ -23,15 +23,20 @@
 //
 // Description:
 //
-//   Wraps ImprovSerial to manage its state and provide an interface to it
+//   Implements basic IMPROV rpc functions
 //
 // History:     Feb-13-2023         Davepl Based on Apache 2.0 licensed code:
 //                                  https://github.com/improv-wifi/sdk-cpp
 //
 //---------------------------------------------------------------------------
 
-#include "improv.h"
+#include "globals.h"
+
 #include <numeric>
+#include <string>
+#include <vector>
+
+#include "improv.h"
 
 namespace improv
 {

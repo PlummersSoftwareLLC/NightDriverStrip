@@ -29,17 +29,20 @@
 //
 //---------------------------------------------------------------------------
 
-#include <esp_task_wdt.h>
 #include "globals.h"
-#include "soundanalyzer.h"
 
-ProjectSoundAnalyzer g_Analyzer;
+#include <algorithm>
+#include <esp_task_wdt.h>
+#include <fcntl.h>
+#include <memory>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 #if ENABLE_AUDIO
-
-#if ENABLE_VICE_SERVER
-#include "network.h"
-#endif
+#include "nd_network.h"
+#include "soundanalyzer.h"
+#include "time_utils.h"
 
 // AudioSamplerTaskEntry
 // A background task that samples audio, computes the VU, stores it for effect use, etc.

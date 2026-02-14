@@ -1,3 +1,4 @@
+#pragma once
 //+--------------------------------------------------------------------------
 //
 // File:        SnakeEffect.h
@@ -29,10 +30,9 @@
 //
 //---------------------------------------------------------------------------
 
-#pragma once
 
 #include "effects.h"
-#include "globals.h"
+#include "random_utils.h"
 
 class SnakeEffect : public EffectWithId<SnakeEffect>
 {

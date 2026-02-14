@@ -1,3 +1,5 @@
+#pragma once
+
 //+--------------------------------------------------------------------------
 //
 // File:        debug_cli.h
@@ -23,11 +25,13 @@
 // Description:
 //
 //    Protos and data for debugging command line interface to NightDriver.
+//
+//---------------------------------------------------------------------------
 
-#pragma once
+#include "globals.h"
 
-#include <vector>
 #include <string_view>
+#include <vector>
 
 namespace DebugCLI
 {

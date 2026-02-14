@@ -1,12 +1,65 @@
+//+--------------------------------------------------------------------------
+//
+// File:        ntptimeclient.cpp
+//
+// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+//
+// This file is part of the NightDriver software project.
+//
+//    NightDriver is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    NightDriver is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Nightdriver.  It is normally found in copying.txt
+//    If not, see <https://www.gnu.org/licenses/>.
+//
+// Description:
+//
+//    Sets the system clock from the specified NTP Server
+//
+// History:     Jul-12-2018         Davepl      Created for BigBlueLCD
+//              Oct-09-2018         Davepl      Copied to LEDWifi project
+//---------------------------------------------------------------------------
 
 #include "globals.h"
 
 #if ENABLE_NTP
-#include "systemcontainer.h"
+#include <ctime>
+#include <mutex>
+#include <sys/time.h>
+#include <WiFi.h>
+#include <WiFiUdp.h>
 
-// Static member definitions
-DRAM_ATTR bool NTPTimeClient::_bClockSet = false;
-DRAM_ATTR std::mutex NTPTimeClient::_clockMutex;
+#include "deviceconfig.h"
+#include "ntptimeclient.h"
+#include "systemcontainer.h"
+#include "values.h"
+
+// NTPTimeClient
+//
+// Basically, I took some really ancient NTP code that I had on hand that I knew
+// worked and wrapped it in a class.  As expected, it works, but it could likely
+// benefit from cleanup or even wholesale replacement.
+
+// File-static variables to replace class static members
+static DRAM_ATTR bool l_bClockSet = false;
+static DRAM_ATTR std::mutex l_clockMutex;
+
+bool NTPTimeClient::HasClockBeenSet()
+{
+    return l_bClockSet;
+}
+
+// UpdateClockFromWeb
+//
+// Obtains the time from the specified NTP Server and sets the ESP32 RTC to the result
 
 bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
 {
@@ -18,7 +71,7 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
 
     debugV("Updating Clock From Web...");
 
-    std::lock_guard<std::mutex> guard(_clockMutex);
+    std::lock_guard<std::mutex> guard(l_clockMutex);
 
     char chNtpPacket[NTP_PACKET_LENGTH];
     memset(chNtpPacket, 0, NTP_PACKET_LENGTH);
@@ -41,12 +94,16 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
     chNtpPacket[0] = 0b00011011;
 
     IPAddress ipNtpServer;
-    if (WiFi.hostByName(g_ptrSystem->DeviceConfig().GetNTPServer().c_str(), ipNtpServer) != 1)
+    if (WiFi.hostByName(g_ptrSystem->GetDeviceConfig().GetNTPServer().c_str(), ipNtpServer) != 1)
         ipNtpServer.fromString("216.239.35.12"); // Use Google Time as default. The pool.ntp.org servers (IPs) don't necessarily last very long.
 
     // Send the ntp packet.
     while (pUDP->parsePacket() != 0)
-        pUDP->flush();
+        #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
+            pUDP->clear();
+        #else
+            pUDP->flush();
+        #endif
 
     if (!pUDP->beginPacket(ipNtpServer, 123))
     {
@@ -72,7 +129,11 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
     int iPass = 0;
     while (!pUDP->parsePacket())
     {
-        pUDP->flush();
+        #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
+            pUDP->clear();
+        #else
+            pUDP->flush();
+        #endif
         delay(100);
         debugV(".");
         if (iPass++ > 100)
@@ -153,7 +214,7 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
             (long long)tvNew.tv_usec,
             dNew - dOld );
 
-    _bClockSet = true;  // Clock has been set at least once
+    l_bClockSet = true;  // Clock has been set at least once
 
     return true;
 }
