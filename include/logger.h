@@ -87,25 +87,27 @@ private:
 //
 namespace LoggerInternal
 {
-    // Default: pass through
+    // Default: pass through by value to avoid binding references to packed fields.
+    // Small types (int, float, etc.) are efficient by value; larger types
+    // remain supported as long as they are printable by vsnprintf.
     template <typename T>
-    inline decltype(auto) Unwrap(T&& val) {
-        return std::forward<T>(val);
+    inline T Unwrap(T val) {
+        return val;
     }
 
-    // Specialization for Arduino String
+    // Specialization for Arduino String - pass by reference to access c_str()
     inline const char* Unwrap(const String& s) {
         return s.c_str();
     }
 
-    // Specialization for std::string
+    // Specialization for std::string - pass by reference to access c_str()
     inline const char* Unwrap(const std::string& s) {
         return s.c_str();
     }
 
     template <typename... Args>
     void DispatchLog(LogLevel level, const char* tag, const char* fmt, Args&&... args) {
-        Logger::Logf(level, tag, fmt, Unwrap(std::forward<Args>(args))...);
+        Logger::Logf(level, tag, fmt, Unwrap(args)...);
     }
 }
 
