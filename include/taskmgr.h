@@ -45,8 +45,9 @@
 
 #include <Arduino.h>
 #include <esp_task_wdt.h>
-
+#include <freertos/task.h>
 #include <utility>
+
 #include "ledstripeffect.h"
 
 // Stack size for the taskmgr's idle threads
@@ -58,6 +59,7 @@
 #define JSON_STACK_SIZE    4096
 #define SOCKET_STACK_SIZE  4096
 #define NET_STACK_SIZE     8192
+#define COLORDATA_STACK_SIZE 4096
 #define DEBUG_STACK_SIZE   8192                 // Needs a lot of stack for output if UpdateClockFromWeb is called from debugger
 #define REMOTE_STACK_SIZE  4096
 #define SCREEN_STACK_SIZE  8192
@@ -187,6 +189,7 @@ public:
         // to see how much there is (it's how they measure free CPU).  Thus, we starve the system's normal idle tasks
         // and have to feed the watchdog on our own.
 
+
         esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));
         esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(1));
         esp_task_wdt_add(_hIdle0);
@@ -298,7 +301,7 @@ public:
     {
         #if COLORDATA_SERVER_ENABLED
             Serial.print( str_sprintf(">> Launching ColorData Thread.  Mem: %zu, LargestBlk: %zu, PSRAM Free: %zu/%zu, ", (size_t)ESP.getFreeHeap(), (size_t)ESP.getMaxAllocHeap(), (size_t)ESP.getFreePsram(), (size_t)ESP.getPsramSize()) );
-            xTaskCreatePinnedToCore(ColorDataTaskEntry, "ColorData Loop", DEFAULT_STACK_SIZE, nullptr, COLORDATA_PRIORITY, &_taskColorData, COLORDATA_CORE);
+            xTaskCreatePinnedToCore(ColorDataTaskEntry, "ColorData Loop", COLORDATA_STACK_SIZE, nullptr, COLORDATA_PRIORITY, &_taskColorData, COLORDATA_CORE);
             CheckHeap();
         #endif
     }

@@ -25,26 +25,31 @@
 //    Implementation of debugging command line interface to NightDriver.
 //
 
+#include "globals.h"
+
 #include <algorithm>
-#include <charconv>
 #include <cctype>
+#include <charconv>
 #include <cstring>
-#include <esp_heap_caps.h>
-#include <esp_log.h>
-#include <esp_system.h> // esp_restart
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
-#include <optional>
+
+#include <FS.h>
+#include <SPIFFS.h>
+#include <esp_heap_caps.h>
+#include <esp_log.h>
+#include <esp_system.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
 #include "globals.h"
+
+#include "console.h"
 #include "debug_cli.h"
 #include "effectmanager.h"
 #include "systemcontainer.h"
-#include <FS.h>
-#include <SPIFFS.h>
 
 namespace DebugCLI
 {
@@ -207,11 +212,22 @@ static void PrintHelp(const cli_argv &argv)
 }
 
 //
+// _activeSession - thread-local pointer to the session currently dispatching a command.
+// Set by RunCommand so that cli_printf knows where to direct output.
+// Falls back to Broadcast if called from outside a RunCommand context.
+//
+static thread_local ConsoleSession* _activeSession = nullptr;
+
+//
 // Parse and run cmd_line. Zero copies or allocations.
 //
-void RunCommand(const char *cmd_line)
+void RunCommand(std::string_view cmd_line, ConsoleSession& session)
 {
     const auto argv = Tokenize(cmd_line);
+
+    // Pin output to this session for the duration of the command.
+    ConsoleSession* previous = _activeSession;
+    _activeSession = &session;
 
     // If command is valid
     if (!argv.empty())
@@ -222,7 +238,10 @@ void RunCommand(const char *cmd_line)
         if (it != g_CommandTable.end())
         {
             if ((*it)->announcement)
-                cli_printf("%s\n", (*it)->announcement);
+            {
+                session.WriteText((*it)->announcement);
+                session.WriteText("\n");
+            }
             (*it)->helper(argv);
         }
         else
@@ -231,23 +250,11 @@ void RunCommand(const char *cmd_line)
         }
     }
 
-    // Always emit prompt after command execution (or empty command)
-    // Serial: Inline prompt (cleaner)
-    Serial.print("> ");
+    _activeSession = previous;
 
-// RemoteDebug: Direct write to TelnetClient to bypass cleaner buffering and avoid extra newline.
-// We check if the debugger is enabled (which exposes getTelnetClient) and if we have an active client.
-#ifdef DEBUGGER_ENABLED
-    if (Debug.isActive(Debug.ANY))
-    {
-        WiFiClient *client = Debug.getTelnetClient();
-        if (client && client->connected())
-        {
-            client->print("> ");
-            client->flush();
-        }
-    }
-#endif
+    // Always emit prompt after command execution (or empty command)
+    session.WriteRaw("> ");
+    session.Flush();
 }
 
 // If you have command 'reboot', reb<TAB> will complete "reboot". Caller will
@@ -608,9 +615,11 @@ static const command core_commands[] = {
      PrintHelp} // Function pointer logic requires PrintHelp signature match. It does.
 };
 
+
 //
-// Helper: cli_printf is needed to bypass the stupid (I) tags
-// forced by Debug.printf(). This outputs to both serial and telnet.
+// Helper: cli_printf routes output to the session that originated the current
+// command (_activeSession), falling back to Broadcast if called outside a
+// RunCommand context.
 //
 void cli_printf(const char *fmt, ...)
 {
@@ -620,30 +629,17 @@ void cli_printf(const char *fmt, ...)
     vsnprintf(buf, sizeof(buf), fmt, args);
     va_end(args);
 
-    // Write to Serial directly (ensure CR for every LF)
-    for (const char *p = buf; *p; p++)
-    {
-        if (*p == '\n')
-            Serial.write('\r');
-        Serial.write(*p);
-    }
-
-    // Write to RemoteDebug (Telnet/WebSocket)
-    // We suppress the Serial echo to avoid double-printing, and use showRaw to avoid tags.
-    // Note: We assume SerialEnabled should be restored to true, which is the standard config.
-    Debug.setSerialEnabled(false);
-    Debug.showRaw(true);
-    Debug.print(buf);
-    Debug.showRaw(false);
-    Debug.setSerialEnabled(true);
+    // Direct output to the session that originated the current command, if any.
+    // This prevents commands run on telnet from also spewing on serial and vice versa.
+    if (_activeSession)
+        _activeSession->WriteText(buf);
+    else
+        ConsoleManager::Instance().Broadcast(buf);
 }
 
-void ProcessCLIByte(uint8_t byte)
+void ProcessCLIByte(uint8_t byte, ConsoleSession& session)
 {
-    // Essentially a global that never shrinks. We quickly reach
-    // the size of the length that people type, but it's free if
-    // never used.
-    static std::string cmd;
+    std::string& cmd = session.StringBuffer();
 
     switch (byte)
     {
@@ -656,8 +652,8 @@ void ProcessCLIByte(uint8_t byte)
         {
             cmd += suffix;
             cmd += " ";
-            Serial.print(suffix.data());
-            Serial.print(" ");
+            session.WriteRaw(suffix);
+            session.WriteRaw(" ");
         }
         break;
     }
@@ -666,30 +662,28 @@ void ProcessCLIByte(uint8_t byte)
         if (!cmd.empty())
         {
             cmd.pop_back();
-            cli_printf("\b \b");
+            session.WriteRaw("\b \b");
         }
         break;
 
     case '\r':
+    {
+        // CR triggers command dispatch. Echo the newline so the terminal
+        // moves to the next line before command output appears.
+        session.WriteRaw("\r\n");
+        RunCommand(cmd, session);
+        cmd.clear();
+        break;
+    }
+
     case '\n':
-        if (byte == '\r')
-            Serial.println(); // Correctly handle CRLF for local echo
-        if (cmd.empty())
-        {
-            // If buffer was empty (just Enter), RunCommand("") handles the prompt
-            RunCommand("");
-        }
-        else
-        {
-            // User entered a command
-            cli_printf("\n");
-            RunCommand(cmd.c_str());
-            cmd.clear();
-        }
+        // Swallow bare LF — it's the second byte of a \r\n pair from a
+        // terminal, or a stray newline. The \r already dispatched the command.
         break;
 
     default:
-        Serial.write(byte);
+        if (session.EchoEnabled())
+            session.WriteRaw(std::string_view(reinterpret_cast<const char*>(&byte), 1));
         cmd += (char)byte;
         break;
     }
@@ -697,7 +691,11 @@ void ProcessCLIByte(uint8_t byte)
 
 void InitDebugCLI()
 {
+    // Registration
     RegisterCommands(core_commands);
+
+    // Register the byte handler with ConsoleManager
+    ConsoleManager::Instance().SetByteHandler(ProcessCLIByte);
 }
 
 } // namespace DebugCLI

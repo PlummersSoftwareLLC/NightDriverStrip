@@ -38,9 +38,11 @@
 #include <nvs.h>
 #include <algorithm>
 
+#include "console.h"
 #include "debug_cli.h"
 #include "effectmanager.h"
 #include "ledviewer.h"              // For the LEDViewer task and object
+#include "ntptimeclient.h"
 #include "network.h"
 #include "soundanalyzer.h"
 
@@ -195,19 +197,6 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
 
 #endif
 
-// processRemoteDebugCmd
-//
-// Callback function that the debug library (which exposes a little console over telnet and serial) calls
-// in order to allow us to add custom commands.  I've added a clock reset and stats command, for example.
-
-#if ENABLE_WIFI
-void processRemoteDebugCmd()
-{
-    String str = Debug.getLastCommand();
-    DebugCLI::RunCommand(str.c_str());
-
-}
-#endif
 
 // SetupOTA
 //
@@ -747,34 +736,6 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         return success;
     }
 
-    // DebugLoopTaskEntry
-    //
-    // Entry point for the Debug task, pumps the Debug handler
-
-    void IRAM_ATTR DebugLoopTaskEntry(void *)
-    {
-        //debugI(">> DebugLoopTaskEntry\n");
-
-    // Initialize RemoteDebug
-
-        debugV("Starting RemoteDebug server...\n");
-
-        Debug.setResetCmdEnabled(true);                         // Enable the reset command
-        Debug.showProfiler(false);                              // Profiler (Good to measure times, to optimize codes)
-        Debug.showColors(false);                                // Colors
-        Debug.setCallBackProjectCmds(&processRemoteDebugCmd);   // Func called to handle any debug extensions we add
-
-        while (!WiFi.isConnected())                             // Wait for wifi, no point otherwise
-            delay(100);
-
-        Debug.begin(WiFi.getHostname(), RemoteDebug::INFO);     // Initialize the WiFi debug server
-
-        for (;;)                                                // Call Debug.handle() 20 times a second
-        {
-            Debug.handle();
-            delay(MILLIS_PER_SECOND / 20);
-        }
-    }
 
 #if INCOMING_WIFI_ENABLED
 

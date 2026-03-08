@@ -160,7 +160,9 @@
 
 #include "globals.h"
 
+#include "console.h"
 #include "debug_cli.h"
+#include "logger.h"
 #include "deviceconfig.h"
 #include "improvserial.h"                       // ImprovSerial impl for setting WiFi credentials over the serial port
 #include "soundanalyzer.h"
@@ -184,7 +186,6 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen);
 
 std::unique_ptr<SystemContainer> g_ptrSystem;
 Values g_Values;
-RemoteDebug Debug;                                                        // Instance of our telnet debug server
 std::mutex g_buffer_mutex;
 
 // The one and only instance of ImprovSerial.  We instantiate it as the type needed
@@ -226,9 +227,6 @@ void PrintOutputHeader()
     debugI("Version %u: Wifi SSID: \"%s\" - ESP32 Free Memory: %zu, PSRAM:%zu, PSRAM Free: %zu",
             FLASH_VERSION, cszSSID, (size_t)ESP.getFreeHeap(), (size_t)ESP.getPsramSize(), (size_t)ESP.getFreePsram());
     debugI("ESP32 Clock Freq : %lu MHz", (unsigned long)ESP.getCpuFreqMHz());
-
-    // Initial CLI prompt
-    DebugCLI::RunCommand("");
 }
 
 // TerminateHandler
@@ -278,8 +276,9 @@ void setup()
     // Initialize Serial output
     Serial.begin(115200);
 
-    // Re-route debug output to the serial port
-    Debug.setSerialEnabled(true);
+    // Route all ESP-IDF log output through ConsoleManager so CRLF translation
+    // and Serial.flush() are applied on every log line.
+    Logger::InstallLogHook();
 
     // Initialize SPIFFS for file access to non-volatile storage
     if (!SPIFFS.begin(true))
@@ -307,10 +306,6 @@ void setup()
     // Display a simple startup header on the serial port
     PrintOutputHeader();
     debugI("Startup!");
-
-    // Start Debug
-    debugI("Starting DebugLoopTaskEntry");
-    taskManager.StartDebugThread();
 
     // Initialize Non-Volatile Storage
     esp_err_t err = nvs_flash_init();
@@ -392,8 +387,12 @@ void setup()
         String name = "NDESP32" + get_mac_address().substring(6);
         g_pImprovSerial = make_unique_psram<ImprovSerial<typeof(Serial)>>();
         g_pImprovSerial->setup(PROJECT_NAME, FLASH_VERSION_NAME, family, name.c_str(), &Serial);
-        g_pImprovSerial->set_on_unknown_byte(DebugCLI::ProcessCLIByte);
-    #endif
+
+        // Improv will feed unknown bytes to the Serial session's CLI processor
+        g_pImprovSerial->set_on_unknown_byte([](uint8_t byte) {
+            DebugCLI::ProcessCLIByte(byte, ConsoleManager::Instance().GetSerialSession());
+        });
+#endif
 
     // Setup config objects
     g_ptrSystem->SetupConfig();
@@ -540,7 +539,6 @@ void setup()
     #if ENABLE_WIFI
         debugI("Making initial attempt to connect to WiFi.");
         ConnectToWiFi(WiFi_ssid, WiFi_password);
-        Debug.setSerialEnabled(true);
     #endif
 
     // Start the network-dependent services.  These will be NOPs on a non-wifi build.
@@ -549,11 +547,9 @@ void setup()
     taskManager.StartNetworkThread();
     taskManager.StartColorDataThread();
     taskManager.StartSocketThread();
+    taskManager.StartDebugThread();
 
-
-    #if ENABLE_WIFI
     DebugCLI::InitDebugCLI();
-    #endif
 
     SaveEffectManagerConfig();
     // Start the main loop
@@ -568,6 +564,12 @@ void loop()
 {
     while(true)
     {
+        // Feed any direct serial bytes to the console manager (if not handled by Improv)
+        while (Serial.available())
+        {
+            ConsoleManager::Instance().FeedSerialByte(Serial.read());
+        }
+
         #if ENABLE_WIFI
             EVERY_N_MILLIS(20)
             {

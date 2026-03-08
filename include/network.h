@@ -27,14 +27,15 @@
 //---------------------------------------------------------------------------
 #pragma once
 
+#include <atomic>
+#include <functional>
 #include <utility>
 // Retire this test once Arduino3 fully lands.
 #include <esp_arduino_version.h>
 #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
    #include_next <Network.h> // For wl_status_t, etc. (case matters)
 #endif
-#include "esp_mac.h"
-
+#include <WiFi.h>
 #include "types.h"
 
 #if INCOMING_WIFI_ENABLED
@@ -50,6 +51,7 @@
       ColorServer  = 12000,
       IncomingWiFi  = 49152,
       VICESocketServer = 25232,
+      Telnet = 23,
       Webserver  = 80
     };
 
@@ -170,7 +172,12 @@
               canceled(canceled)
           {}
 
-          ReaderEntry(ReaderEntry&& entry)  noexcept : ReaderEntry(entry.reader, entry.readInterval, entry.lastReadMs, entry.flag, entry.canceled)
+          ReaderEntry(ReaderEntry&& entry)  noexcept :
+              reader(std::move(entry.reader)),
+              readInterval(entry.readInterval.load()),
+              lastReadMs(entry.lastReadMs.load()),
+              flag(entry.flag.load()),
+              canceled(entry.canceled.load())
           {}
       };
 

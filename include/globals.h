@@ -92,7 +92,6 @@
 #define FASTLED_INTERNAL 1               // Suppresses build banners
 #include <FastLED.h>
 
-#include <RemoteDebug.h>
 
 // If we're not using GNU C, (unlikely in embedded, especially in this
 // heavily ESP/Arduino-accented probject) elide __attribute__ - but even
@@ -209,7 +208,6 @@
 #define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
 #define __STDC_FORMAT_MACROS
 
-extern RemoteDebug Debug;           // Let everyone in the project know about it.  If you don't have it, delete this
 
 // Project Configuration
 //
@@ -251,6 +249,8 @@ extern RemoteDebug Debug;           // Let everyone in the project know about it
 #ifndef RING_SIZE_0
     #define RING_SIZE_0             MATRIX_WIDTH
 #endif
+
+#include "logger.h"
 
 // Once you have a working project, selectively enable various additional features by setting
 // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
