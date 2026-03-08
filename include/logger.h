@@ -106,7 +106,7 @@ namespace LoggerInternal
     }
 
     template <typename... Args>
-    void DispatchLog(LogLevel level, const char* tag, const char* fmt, Args&&... args) {
+    void DispatchLog(LogLevel level, const char* tag, const char* fmt, Args... args) {
         Logger::Logf(level, tag, fmt, Unwrap(args)...);
     }
 }
