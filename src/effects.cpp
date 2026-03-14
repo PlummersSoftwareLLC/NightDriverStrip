@@ -28,24 +28,33 @@
 //              Sep-26-2023         Rbergen     Extracted EffectManager stuff
 //---------------------------------------------------------------------------
 
-// Ensure Adafruit font types are seen before any potential LGFX aliasing from M5Unified
-#include <gfxfont.h>
 #include <Adafruit_GFX.h>
+#include <gfxfont.h>
+#include <memory>
 
+#include "globals.h"
+#include "deviceconfig.h"
+#include "effectfactories.h"
+#include "effectmanager.h"
 #include "effectsupport.h"
+#include "gfxbase.h"
+#include "jsonserializer.h"
+#include "ledstripeffect.h"
+#include "nd_network.h"
+#include "values.h"
 
 // Include the effect classes we'll need later
 
-#include "effects/strip/fireeffect.h"           // fire effects
-#include "effects/strip/paletteeffect.h"        // palette effects
-#include "effects/strip/doublepaletteeffect.h"  // double palette effect
-#include "effects/strip/meteoreffect.h"         // meteor blend effect
-#include "effects/strip/stareffect.h"           // star effects
-#include "effects/strip/bouncingballeffect.h"   // bouncing ball effects
-#include "effects/strip/tempeffect.h"
-#include "effects/strip/laserline.h"
-#include "effects/strip/misceffects.h"
 #include "effects/matrix/PatternClock.h"        // No matrix dependencies
+#include "effects/strip/bouncingballeffect.h"   // bouncing ball effects
+#include "effects/strip/doublepaletteeffect.h"  // double palette effect
+#include "effects/strip/fireeffect.h"           // fire effects
+#include "effects/strip/laserline.h"
+#include "effects/strip/meteoreffect.h"         // meteor blend effect
+#include "effects/strip/misceffects.h"
+#include "effects/strip/paletteeffect.h"        // palette effects
+#include "effects/strip/stareffect.h"           // star effects
+#include "effects/strip/tempeffect.h"
 
 #if ENABLE_AUDIO
     #include "effects/matrix/spectrumeffects.h" // Musis spectrum effects
@@ -75,9 +84,9 @@
 #if USE_MATRIX
 
     #if ENABLE_WIFI
+        #include "effects/matrix/PatternStocks.h"
         #include "effects/matrix/PatternSubscribers.h"
         #include "effects/matrix/PatternWeather.h"
-        #include "effects/matrix/PatternStocks.h"
     #endif
 
     #if USE_NOISE
@@ -85,46 +94,44 @@
         #include "effects/matrix/PatternSMSmoke.h"
     #endif
 
-    #include "effects/matrix/PatternPongClock.h"
-    #include "effects/matrix/PatternMandala.h"
-    #include "effects/matrix/PatternSMHypnosis.h"
-    #include "effects/matrix/PatternSMRainbowTunnel.h"
-    #include "effects/matrix/PatternSMRadialWave.h"
-    #include "effects/matrix/PatternSMRadialFire.h"
+    #include "effects/matrix/PatternAlienText.h"
     #include "effects/matrix/PatternAnimatedGIF.h"
-    #include "effects/matrix/PatternSMStarDeep.h"
+    #include "effects/matrix/PatternBounce.h"
+    #include "effects/matrix/PatternCircuit.h"
+    #include "effects/matrix/PatternCube.h"
+    #include "effects/matrix/PatternLife.h"
+    #include "effects/matrix/PatternMandala.h"
+    #include "effects/matrix/PatternMaze.h"
+    #include "effects/matrix/PatternMisc.h"
+    #include "effects/matrix/PatternPongClock.h"
+    #include "effects/matrix/PatternPulse.h"
+    #include "effects/matrix/PatternQR.h"
+    #include "effects/matrix/PatternRadar.h"
+    #include "effects/matrix/PatternSerendipity.h"
+    #include "effects/matrix/PatternSM2DDPR.h"
     #include "effects/matrix/PatternSMAmberRain.h"
     #include "effects/matrix/PatternSMBlurringColors.h"
     #include "effects/matrix/PatternSMFire2021.h"
+    #include "effects/matrix/PatternSMFlowFields.h"
+    #include "effects/matrix/PatternSMGamma.h"
+    #include "effects/matrix/PatternSMHolidayLights.h"
+    #include "effects/matrix/PatternSMHypnosis.h"
+    #include "effects/matrix/PatternSMMetaBalls.h"
     #include "effects/matrix/PatternSMNoise.h"
     #include "effects/matrix/PatternSMPicasso3in1.h"
+    #include "effects/matrix/PatternSMRadialFire.h"
+    #include "effects/matrix/PatternSMRadialWave.h"
+    #include "effects/matrix/PatternSMRainbowTunnel.h"
     #include "effects/matrix/PatternSMSpiroPulse.h"
-    #include "effects/matrix/PatternSMTwister.h"
-    #include "effects/matrix/PatternSMMetaBalls.h"
-    #include "effects/matrix/PatternSMHolidayLights.h"
-    #include "effects/matrix/PatternSMGamma.h"
-    #include "effects/matrix/PatternSMFlowFields.h"
-    #include "effects/matrix/PatternSMSupernova.h"
-    #include "effects/matrix/PatternSMWalkingMachine.h"
-    #include "effects/matrix/PatternPongClock.h"
-    #include "effects/matrix/PatternMandala.h"
-    #include "effects/matrix/PatternQR.h"
-    #include "effects/matrix/PatternSM2DDPR.h"
+    #include "effects/matrix/PatternSMStarDeep.h"
     #include "effects/matrix/PatternSMStrobeDiffusion.h"
-    #include "effects/matrix/PatternSerendipity.h"
-    #include "effects/matrix/PatternSwirl.h"
-    #include "effects/matrix/PatternPulse.h"
-    #include "effects/matrix/PatternWave.h"
-    #include "effects/matrix/PatternMaze.h"
-    #include "effects/matrix/PatternLife.h"
-    #include "effects/matrix/PatternSpiro.h"
-    #include "effects/matrix/PatternCube.h"
-    #include "effects/matrix/PatternCircuit.h"
-    #include "effects/matrix/PatternAlienText.h"
-    #include "effects/matrix/PatternRadar.h"
-    #include "effects/matrix/PatternBounce.h"
+    #include "effects/matrix/PatternSMSupernova.h"
+    #include "effects/matrix/PatternSMTwister.h"
+    #include "effects/matrix/PatternSMWalkingMachine.h"
     #include "effects/matrix/PatternSpin.h"
-    #include "effects/matrix/PatternMisc.h"
+    #include "effects/matrix/PatternSpiro.h"
+    #include "effects/matrix/PatternSwirl.h"
+    #include "effects/matrix/PatternWave.h"
 #endif
 
 // Global effect set version
@@ -132,8 +139,6 @@
 #define EFFECT_SET_VERSION 6
 
 // Inform the linker which effects have setting specs, and in which class member
-
-INIT_EFFECT_SETTING_SPECS(LEDStripEffect, _baseSettingSpecs);
 
 //#if USE_HUB75 && ENABLE_WIFI
 #if USE_MATRIX && ENABLE_WIFI
@@ -283,7 +288,7 @@ void LoadEffectFactories()
         TJpgDec.setJpgScale(1);
         TJpgDec.setCallback([](int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
         {
-            auto pgfx = g_ptrSystem->EffectManager().g();
+            auto pgfx = g_ptrSystem->GetEffectManager().g();
             pgfx->drawRGBBitmap(x, y, bitmap, w, h);
             return true;
         });

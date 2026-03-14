@@ -1,3 +1,4 @@
+#pragma once
 //+--------------------------------------------------------------------------
 //
 // File:        PaletteEffect.h
@@ -28,9 +29,9 @@
 //
 //---------------------------------------------------------------------------
 
-#pragma once
 
 #include "effects.h"
+#include "values.h"
 
 template <typename TEffect>
 class PaletteEffectBase : public EffectWithId<TEffect>

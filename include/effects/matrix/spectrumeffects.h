@@ -1,3 +1,4 @@
+#pragma once
 //+--------------------------------------------------------------------------
 //
 // File:        spectrumeffects.h
@@ -29,12 +30,17 @@
 //
 //---------------------------------------------------------------------------
 
-#pragma once
 
-#include "esp_attr.h"
+
+#include <esp_attr.h>
+
+#include "colordata.h"
 #include "effects/strip/musiceffect.h"
 #include "effects/strip/particles.h"
 #include "values.h"
+#include "effectmanager.h"
+#include "deviceconfig.h"
+#include "ledstripeffect.h"
 #include "systemcontainer.h"
 
 #if ENABLE_AUDIO
@@ -44,7 +50,7 @@ class InsulatorSpectrumEffect : public EffectWithId<InsulatorSpectrumEffect>, pu
   private:
 
     int                    _iLastInsulator = 0;
-    const CRGBPalette16 & _Palette;
+    CRGBPalette16 _Palette;
     CRGB _baseColor = CRGB::Black;
 
   public:
@@ -187,7 +193,7 @@ class VUMeterVertical : public VUMeter
 {
   private:
 
-    virtual inline void EraseVUMeter(std::vector<std::shared_ptr<GFXBase>> & GFX, int start, int yVU) const
+    virtual inline void EraseVUMeter(std::vector<std::shared_ptr<GFXBase>> & GFX, int start, int yVU) const override
     {
         for (int i = start; i <= GFX[0]->width(); i++)
             for (auto& device : GFX)
@@ -206,7 +212,7 @@ class VUMeterVertical : public VUMeter
 
   public:
 
-    void DrawVUMeter(std::vector<std::shared_ptr<GFXBase>> & GFX, int yVU = 0, const CRGBPalette16 * pPalette = nullptr)
+    void DrawVUMeter(std::vector<std::shared_ptr<GFXBase>> & GFX, int yVU = 0, const CRGBPalette16 * pPalette = nullptr) override
     {
         const int MAX_FADE = 256;
 
@@ -244,7 +250,7 @@ public:
 
     virtual void Draw() override
     {
-        DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0);
+        DrawVUMeter(g_ptrSystem->GetEffectManager().GetBaseGraphics(), 0);
     }
 
     VUMeterEffect() : EffectWithId<VUMeterEffect>("VUMeter") {}
@@ -263,7 +269,7 @@ public:
 
     virtual void Draw() override
     {
-        DrawVUMeter(g_ptrSystem->EffectManager().GetBaseGraphics(), 0);
+        DrawVUMeter(g_ptrSystem->GetEffectManager().GetBaseGraphics(), 0);
     }
 
     VUMeterVerticalEffect() : EffectWithId<VUMeterVerticalEffect>("Vertical VUMeter") {}
@@ -526,7 +532,7 @@ class SpectrumAnalyzerEffect : public EffectWithId<SpectrumAnalyzerEffect>, virt
             else
             {
                 // If global colors are set, we use them
-                auto& deviceConfig = g_ptrSystem->DeviceConfig();
+                auto& deviceConfig = g_ptrSystem->GetDeviceConfig();
                 std::optional<CRGBPalette16> globalPalette = {};
 
                 if (!_ignoreGlobalColor && deviceConfig.ApplyGlobalColors())
@@ -620,7 +626,7 @@ class WaveformEffectBase : public EffectWithId<TEffect>
 
     virtual void Draw() override
     {
-        int top = g_ptrSystem->EffectManager().IsVUVisible() ? 1 : 0;
+        int top = g_ptrSystem->GetEffectManager().IsVUVisible() ? 1 : 0;
         LEDStripEffect::g()->MoveInwardX(top);                            // Start on Y=1 so we don't shift the VU meter
         DrawSpike(MATRIX_WIDTH-1, g_Analyzer.VURatio()/2.0);
         DrawSpike(0, g_Analyzer.VURatio()/2.0);
@@ -687,7 +693,7 @@ class GhostWave : public WaveformEffectBase<GhostWave>
 
     virtual void Draw() override
     {
-        auto& effectManager = g_ptrSystem->EffectManager();
+        auto& effectManager = g_ptrSystem->GetEffectManager();
         int top = effectManager.IsVUVisible() ? 1 : 0;
 
         g()->MoveOutwardsX(top);

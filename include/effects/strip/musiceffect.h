@@ -1,3 +1,4 @@
+#pragma once
 //+--------------------------------------------------------------------------
 //
 // File:        MusicEffect.h
@@ -28,12 +29,12 @@
 //
 //---------------------------------------------------------------------------
 
-#pragma once
 
 #include <deque>
 
 #include "effects.h"
 #include "faneffects.h"
+#include "values.h"
 
 #if ENABLE_AUDIO
 
@@ -137,7 +138,7 @@ class SimpleColorBeat : public BeatEffectBase, public EffectWithId<SimpleColorBe
     {
         ProcessAudio();
 
-        CRGB c = CRGB::Blue * g_Analyzer.VURatio() * g_Values.AppTime.LastFrameTime() * 0.75;
+        CRGB c = (CRGB)CRGB::Blue * (g_Analyzer.VURatio() * g_Values.AppTime.LastFrameTime() * 0.75);
         setPixelsOnAllChannels(0, NUM_LEDS, c, true);
 
         fadeAllChannelsToBlackBy(min(255.0,1000.0 * g_Values.AppTime.LastFrameTime()));

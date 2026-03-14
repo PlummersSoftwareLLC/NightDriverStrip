@@ -1,3 +1,5 @@
+#pragma once
+
 //+--------------------------------------------------------------------------
 //
 // File:        improvserial.h
@@ -30,16 +32,14 @@
 //
 //---------------------------------------------------------------------------
 
-#pragma once
-
-#include <improv.h>
-#include <SPIFFS.h>
-#include "network.h"
-#include "hexdump.h"
 #include "globals.h"
 
+#include <improv.h>
 #include <numeric>
 #include <SPIFFS.h>
+
+#include "hexdump.h"
+#include "nd_network.h"
 
 #define IMPROV_LOG_FILE             "/improv.log"
 

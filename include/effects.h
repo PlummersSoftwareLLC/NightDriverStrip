@@ -1,3 +1,5 @@
+#pragma once
+
 //+--------------------------------------------------------------------------
 //
 // File:        effects.h
@@ -29,7 +31,8 @@
 //              Aug-17-2025         Davepl       Converted to enums
 //
 //---------------------------------------------------------------------------
-#pragma once
+
+#include "globals.h"
 
 using EffectId = uint32_t;
 using FactoryId = uint64_t;

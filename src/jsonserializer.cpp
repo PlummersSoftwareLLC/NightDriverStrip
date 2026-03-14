@@ -27,12 +27,138 @@
 // History:     Apr-18-2023         Rbergen     Created
 //---------------------------------------------------------------------------
 
+#include "globals.h"
+
 #include <FS.h>
+#include <functional>
+#include <memory>
 #include <SPIFFS.h>
 
-#include "globals.h"
+#include "jsonserializer.h"
 #include "systemcontainer.h"
 #include "taskmgr.h"
+
+#if USE_PSRAM
+
+    struct JsonPsramAllocator : ArduinoJson::Allocator
+    {
+        void* allocate(size_t size) override
+        {
+            return ps_malloc(size);
+        }
+
+        void deallocate(void* pointer) override
+        {
+            free(pointer);
+        }
+
+        void* reallocate(void* ptr, size_t new_size) override {
+            return ps_realloc(ptr, new_size);
+        }
+    };
+
+    JsonDocument CreateJsonDocument()
+    {
+        static auto jsonPsramAllocator = JsonPsramAllocator();
+
+        return JsonDocument(&jsonPsramAllocator);
+    }
+
+#else
+
+    JsonDocument CreateJsonDocument()
+    {
+        return JsonDocument();
+    }
+
+#endif
+
+// SetIfNotOverflowed
+//
+// This function attempts to set the content of a JsonObject from a JsonDocument, provided the document
+// has not overflowed. It takes three parameters:
+// - A reference to a JsonDocument (jsonDoc).
+// - A reference to a JsonObject (jsonObject).
+// - An optional C-string (location) that indicates the location in the code where the function is called.
+//
+// If the JsonDocument has overflowed, the function logs an error message (including the location if provided)
+// and returns false. If the document has not overflowed, the function sets the JsonObject's content to the
+// document's content and returns true.
+
+bool SetIfNotOverflowed(JsonDocument& jsonDoc, JsonObject& jsonObject, const char* location)
+{
+    if (jsonDoc.overflowed())
+    {
+        if (location)
+            debugE("JSON document overflowed at: %s", location);
+        else
+            debugE("JSON document overflowed");
+
+        return false;
+    }
+
+    return jsonObject.set(jsonDoc.as<JsonObjectConst>());
+}
+
+namespace ArduinoJson
+{
+    bool Converter<CRGB>::toJson(const CRGB& color, JsonVariant dst)
+    {
+        return dst.set(toUint32(color));
+    }
+
+    CRGB Converter<CRGB>::fromJson(JsonVariantConst src)
+    {
+        return CRGB(src.as<uint32_t>());
+    }
+
+    bool Converter<CRGB>::checkJson(JsonVariantConst src)
+    {
+        return src.is<uint32_t>();
+    }
+
+    bool Converter<CRGBPalette16>::toJson(const CRGBPalette16& palette, JsonVariant dst)
+    {
+        auto doc = CreateJsonDocument();
+
+        JsonArray colors = doc.to<JsonArray>();
+
+        for (auto& color: palette.entries)
+            colors.add(color);
+
+        return dst.set(doc);
+    }
+
+    CRGBPalette16 Converter<CRGBPalette16>::fromJson(JsonVariantConst src)
+    {
+        CRGB colors[16];
+        int colorIndex = 0;
+
+        JsonArrayConst componentsArray = src.as<JsonArrayConst>();
+        for (JsonVariantConst value : componentsArray)
+            colors[colorIndex++] = value.as<CRGB>();
+
+        return CRGBPalette16(colors);
+    }
+
+    bool Converter<CRGBPalette16>::checkJson(JsonVariantConst src)
+    {
+        return src.is<JsonArrayConst>() && src.as<JsonArrayConst>().size() == 16;
+    }
+}
+
+struct JSONWriter::WriterEntry
+{
+    std::atomic_bool flag = false;
+    std::function<void()> writer;
+
+    explicit WriterEntry(std::function<void()> writer) :
+        writer(std::move(writer))
+    {}
+};
+
+JSONWriter::JSONWriter() {}
+JSONWriter::~JSONWriter() {}
 
 bool BoolFromText(const String& text)
 {
@@ -117,29 +243,35 @@ bool RemoveJSONFile(const String & fileName)
 
 size_t JSONWriter::RegisterWriter(const std::function<void()>& writer)
 {
+    // Add a writer to the collection. Returns the index of the added writer, for use with FlagWriter()
+
     // Add the writer with its flag unset
-    writers.emplace_back(writer);
+    writers.push_back(std::make_shared<WriterEntry>(writer));
     return writers.size() - 1;
 }
 
 void JSONWriter::FlagWriter(size_t index)
 {
+    // Flag a writer for invocation and wake up the task that calls them
+
     // Check if we received a valid writer index
     if (index >= writers.size())
         return;
 
-    writers[index].flag.store(true);
+    writers[index]->flag.store(true);
     latestFlagMs.store(millis());
 
-    g_ptrSystem->TaskManager().NotifyJSONWriterThread();
+    g_ptrSystem->GetTaskManager().NotifyJSONWriterThread();
 }
 
 void JSONWriter::FlushWrites(bool halt)
 {
+    // Flush pending writes now
+
     flushRequested.store(true);
     haltWrites.store(halt);
 
-    g_ptrSystem->TaskManager().NotifyJSONWriterThread();
+    g_ptrSystem->GetTaskManager().NotifyJSONWriterThread();
 }
 
 // JSONWriterTaskEntry
@@ -159,7 +291,7 @@ void IRAM_ATTR JSONWriterTaskEntry(void *)
             if (!g_ptrSystem->HasJSONWriter())
                 continue;
 
-            auto& jsonWriter = g_ptrSystem->JSONWriter();
+            auto& jsonWriter = g_ptrSystem->GetJSONWriter();
 
             // If a flush was requested then we execute pending writes now
             if (jsonWriter.flushRequested.load())
@@ -180,9 +312,10 @@ void IRAM_ATTR JSONWriterTaskEntry(void *)
             notifyWait = pdMS_TO_TICKS(holdUntil - now);
         }
 
-        for (auto &entry : g_ptrSystem->JSONWriter().writers)
+        for (auto &entryPtr : g_ptrSystem->GetJSONWriter().writers)
         {
-            // Unset flag before we do the actual write. This makes that we don't miss another flag raise if it happens while writing
+            auto& entry = *entryPtr;
+            // Unset flag before we do the actual write. This makes that we don't miss another flag raise if it happens while reading
             if (entry.flag.exchange(false))
                 entry.writer();
         }

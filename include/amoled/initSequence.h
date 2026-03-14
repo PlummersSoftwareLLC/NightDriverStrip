@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @file      initSequence.h
  * @author    Lewis He (lewishe@outlook.com)
@@ -6,7 +8,8 @@
  * @date      2023-05-29
  *
  */
-#pragma once
+
+#include "globals.h"
 
 #include <stdint.h>
 
@@ -52,13 +55,3 @@ extern const lcd_cmd_t rm690b0_cmd[RM690B0_INIT_SEQUENCE_LENGHT];
 extern const lcd_cmd_t jd9613_cmd[JD9613_INIT_SEQUENCE_LENGHT];
 #define JD9613_WIDTH                            126
 #define JD9613_HEIGHT                           294
-
-
-
-
-
-
-
-
-
-

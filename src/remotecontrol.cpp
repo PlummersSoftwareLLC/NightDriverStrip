@@ -39,9 +39,16 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/ringbuf.h>
 
+#include "deviceconfig.h"
+#include "effectmanager.h"
 #include "remotecontrol.h"
 #include "systemcontainer.h"
+
 #include "effects/strip/misceffects.h"
+
+// RemoteColorCode
+//
+// Maps an IR remote code to a color and a name
 
 // ---------------------------------------------------------
 // IR Key Definitions (NEC Protocol)
@@ -316,16 +323,29 @@ private:
 RemoteControl::RemoteControl() : _pImpl(std::make_unique<RemoteControlImpl>(IR_REMOTE_PIN)) {}
 RemoteControl::~RemoteControl() = default;
 
+// begin
+//
+// Starts the IR remote task and sets up the IR receiver
+
 bool RemoteControl::begin() {
     debugW("Native Remote Control Decoding Started (RMT Legacy)");
     return _pImpl->begin();
 }
+
+// end
+//
+// Stops the IR remote task
 
 void RemoteControl::end() {
     debugW("Native Remote Control Decoding Stopped");
 }
 
 #define BRIGHTNESS_STEP     20
+
+// handle
+//
+// Main function for the remote control task.  It checks for new remote codes and then takes the
+// appropriate action based on the code received.
 
 void RemoteControl::handle()
 {
@@ -364,8 +384,8 @@ void RemoteControl::handle()
     
     lastResult = result;
 
-    auto &effectManager = g_ptrSystem->EffectManager();
-    auto &deviceConfig = g_ptrSystem->DeviceConfig();
+    auto &effectManager = g_ptrSystem->GetEffectManager();
+    auto &deviceConfig = g_ptrSystem->GetDeviceConfig();
 
     if (IR_ON == result)
     {
@@ -445,8 +465,8 @@ void RemoteControl::handle()
                 effectManager.ApplyGlobalColor(RemoteColorCode.color);
                 #if FULL_COLOR_REMOTE_FILL
                     auto effect = make_shared_psram<ColorFillEffect>("Remote Color", RemoteColorCode.color, 1, true);
-                    if (effect->Init(g_ptrSystem->EffectManager().GetBaseGraphics()))
-                        g_ptrSystem->EffectManager().SetTempEffect(effect);
+                    if (effect->Init(g_ptrSystem->GetEffectManager().GetBaseGraphics()))
+                        g_ptrSystem->GetEffectManager().SetTempEffect(effect);
                     else
                         debugE("Could not initialize new color fill effect");
                 #endif

@@ -31,6 +31,8 @@
 
 #include "globals.h"
 
+#include "colordata.h"
+
 DEFINE_GRADIENT_PALETTE( vu_gpGreen )
 {
       0,     0,   4,   0,   // near black green
@@ -39,7 +41,7 @@ DEFINE_GRADIENT_PALETTE( vu_gpGreen )
     192,   255,   0,   0,   // red
     255,   255,   0,   0    // red
 };
-const CRGBPalette16 vuPaletteGreen = vu_gpGreen;
+extern const CRGBPalette16 vuPaletteGreen = vu_gpGreen;
 
 DEFINE_GRADIENT_PALETTE( vu_gpBlue )
 {
@@ -49,7 +51,27 @@ DEFINE_GRADIENT_PALETTE( vu_gpBlue )
     192,   255,   0,   0,   // red
     255,   255,   0,   0    // red
 };
-const CRGBPalette16 vuPaletteBlue = vu_gpBlue;
+extern const CRGBPalette16 vuPaletteBlue = vu_gpBlue;
+
+extern const CRGBPalette16 spectrumBasicColors =
+{
+    CRGB(0xFD0E35), // Red
+    CRGB(0xFF8833), // Orange
+    CRGB(0xFFEB00), // Middle Yellow
+    CRGB(0xAFE313), // Inchworm
+    CRGB(0x3AA655), // Green
+    CRGB(0x8DD9CC), // Middle Blue Green
+    CRGB(0x0066FF), // Blue III
+    CRGB(0xDB91EF), // Lilac
+    CRGB(0xFD0E35), // Red
+    CRGB(0xFF8833), // Orange
+    CRGB(0xFFEB00), // Middle Yellow
+    CRGB(0xAFE313), // Inchworm
+    CRGB(0x3AA655), // Green
+    CRGB(0x8DD9CC), // Middle Blue Green
+    CRGB(0x0066FF), // Blue III
+    CRGB(0xDB91EF)  // Lilac
+};
 
 extern const TProgmemRGBPalette16 BlueHeatColors_p FL_PROGMEM =
 {

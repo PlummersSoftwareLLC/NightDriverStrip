@@ -1,0 +1,9 @@
+# Standard 4M partition layout with OTA (Over the air updates)
+
+# Name,   Type, SubType,     Offset,      Size, Flags
+nvs,        data,   nvs,     0x00b000,    0x003000,
+otadata,    data,   ota,     0x00e000,    0x002000,
+app0,       app,    ota_0,   0x010000,    0x1A0000,
+app1,       app,    ota_1,   0x1B0000,    0x1A0000,
+coredump,   data,   coredump, 0x350000,    0x010000,
+storage,    data,   spiffs,   0x360000,    0x0A0000

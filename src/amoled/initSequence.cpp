@@ -7,6 +7,8 @@
  *
  */
 
+#include "globals.h"
+
 #if AMOLED_S3
 
 #include "amoled/initSequence.h"

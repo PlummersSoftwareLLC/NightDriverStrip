@@ -1,3 +1,7 @@
+#pragma once
+
+#include "globals.h"
+
 // Adafruit GFX font Apple5x7 size: 5x7
 
 const uint8_t Apple5x7Bitmaps[] PROGMEM = {

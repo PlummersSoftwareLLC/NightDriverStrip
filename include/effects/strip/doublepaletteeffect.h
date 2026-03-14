@@ -1,3 +1,4 @@
+#pragma once
 //+--------------------------------------------------------------------------
 //
 // File:        DoublePaletteEffect.h
@@ -28,9 +29,9 @@
 //
 //---------------------------------------------------------------------------
 
-#pragma once
 
 #include "effects.h"
+#include "paletteeffect.h"
 
 class DoublePaletteEffect : public EffectWithId<DoublePaletteEffect>
 {

@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * Aurora: https://github.com/pixelmatix/aurora
  * Copyright (c) 2014 Jason Coon

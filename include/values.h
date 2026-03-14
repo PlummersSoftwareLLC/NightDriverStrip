@@ -1,3 +1,5 @@
+#pragma once
+
 //+--------------------------------------------------------------------------
 //
 // File:        values.h
@@ -28,10 +30,8 @@
 //
 //---------------------------------------------------------------------------
 
-#pragma once
-
-#include <esp_attr.h>
 #include "globals.h"
+
 #include "types.h"
 
 // Struct with global values that are not persisted as settings - those reside in DeviceConfig
