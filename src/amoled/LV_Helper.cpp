@@ -7,10 +7,12 @@
  *
  */
 
+#include "globals.h"
+
 #if AMOLED_S3
 
-#include <Arduino.h>
 #include "amoled/LV_Helper.h"
+#include <Arduino.h>
 
 
 #if LV_VERSION_CHECK(9,0,0)

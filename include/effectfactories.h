@@ -1,3 +1,5 @@
+#pragma once
+
 //+--------------------------------------------------------------------------
 //
 // File:        effectfactories.h
@@ -31,64 +33,25 @@
 //
 //---------------------------------------------------------------------------
 
-#pragma once
+#include "globals.h"
 
-#include <vector>
-#include <map>
-#include <functional>
-#include <memory>
-#include <algorithm>
 #include <cstdint>
+#include <functional>
+#include <map>
+#include <memory>
+#include <type_traits>
+#include <vector>
+
 #include <ArduinoJson.h>
-#include <esp_attr.h>
-#include "ledstripeffect.h"
+
+#include "effects.h"
+#include "hashing.h"
+
+class LEDStripEffect;
 
 // Use std::function so factories can be capturing lambdas (needed for macro-free registration)
 using DefaultEffectFactory = std::function<std::shared_ptr<LEDStripEffect>()>;
 using JSONEffectFactory = std::function<std::shared_ptr<LEDStripEffect>(const JsonObjectConst&)>;
-
-// -----------------------------------------------------------------------------
-// Class: EffectFactories
-//
-// This class manages a collection of default and JSON effect factories. Each
-// factory is associated with a unique effect number. Factories are categorized
-// into two types: default and JSON, managed separately using respective containers.
-//
-// Sub-Structure:
-//
-// NumberedFactory: This class represents a default factory coupled with its unique
-//                  effect number and an optional factory ID. It also includes a flag
-//                  that indicates whether the effect that is created using the factory
-//                  function should be set to "disabled" immediately after creation.
-//                  Besides these member variables, the class includes a function to
-//                  create the effect in accordance with an instance's member variables'
-//                  values.
-//
-// Member Variables:
-//
-// defaultFactories: A vector of NumberedFactory instances. Each NumberedFactory holds an
-//                   effect number, a DefaultEffectFactory instance, and an optional factory ID.
-// jsonFactories: A map linking each effect number to its corresponding JSONEffectFactory.
-// hashString: A string that can store a hash of the factory configuration.
-//
-// Member Functions:
-//
-// GetDefaultFactories: Returns a const reference to the vector of default factories.
-// GetJSONFactories: Returns a const reference to the map of JSON factories.
-// AddEffect: Adds a new effect factory into the collection. It takes four parameters:
-//            - An effect number which is an integer.
-//            - A DefaultEffectFactory reference.
-//            - A JSONEffectFactory reference.
-//            - An optional factory ID.
-//            It returns a reference to the NumberedFactory that was created around the
-//            DefaultEffectFactory.
-// IsEmpty: Returns a boolean indicating whether both defaultFactories and jsonFactories are empty.
-// ClearDefaultFactories: Clears the vector of default factories and the hash string.
-// FactoryIDs: Returns a vector of the factory IDs from the default factories.
-// HashString (getter): Returns the stored hash string. Throws an error if it hasn't been set.
-// HashString (setter): Sets the hash string.
-//
-// -----------------------------------------------------------------------------
 
 class EffectFactories
 {
@@ -108,26 +71,9 @@ class EffectFactories
             factoryId(factoryId)
         {}
 
-        EffectId EffectID() const
-        {
-            return effectId;
-        }
-
-        std::shared_ptr<LEDStripEffect> CreateEffect() const
-        {
-            auto pEffect = factory();
-
-            // Disable the effect if we have one and we were asked to do so
-            if (pEffect && LoadDisabled)
-                pEffect->SetEnabled(false);
-
-            return pEffect;
-        }
-
-        FactoryId FactoryID() const
-        {
-            return factoryId;
-        }
+        EffectId EffectID() const { return effectId; }
+        std::shared_ptr<LEDStripEffect> CreateEffect() const;
+        FactoryId FactoryID() const { return factoryId; }
     };
 
   private:
@@ -138,60 +84,78 @@ class EffectFactories
 
   public:
 
-    const std::vector<NumberedFactory, psram_allocator<NumberedFactory>>& GetDefaultFactories() const
-    {
-        return defaultFactories;
-    }
+    const std::vector<NumberedFactory, psram_allocator<NumberedFactory>>& GetDefaultFactories() const { return defaultFactories; }
+    const std::map<EffectId, JSONEffectFactory, std::less<EffectId>, psram_allocator<std::pair<const EffectId, JSONEffectFactory>>>& GetJSONFactories() const { return jsonFactories; }
 
-    const std::map<EffectId, JSONEffectFactory, std::less<EffectId>, psram_allocator<std::pair<const EffectId, JSONEffectFactory>>>& GetJSONFactories() const
-    {
-        return jsonFactories;
-    }
+    NumberedFactory& AddEffect(EffectId effectId, const DefaultEffectFactory& defaultFactory, const JSONEffectFactory& jsonFactory, FactoryId factoryId = 0);
 
-    NumberedFactory& AddEffect(EffectId effectId, const DefaultEffectFactory& defaultFactory, const JSONEffectFactory& jsonFactory, FactoryId factoryId = 0)
-    {
-        auto& numberedFactory = defaultFactories.emplace_back(effectId, defaultFactory, factoryId);
-        jsonFactories.try_emplace(effectId, jsonFactory);
+    bool IsEmpty() const { return defaultFactories.empty() && jsonFactories.empty(); }
 
-        return numberedFactory;
-    }
+    void ClearDefaultFactories();
 
-    bool IsEmpty() const
-    {
-        return defaultFactories.empty() && jsonFactories.empty();
-    }
+    std::vector<FactoryId> FactoryIDs() const;
 
-    void ClearDefaultFactories()
-    {
-        defaultFactories.clear();
-        hashString.clear();
-    }
+    const String& HashString() const;
 
-    // Return the list of stored factory IDs (callers can hash/order as needed)
-    std::vector<FactoryId> FactoryIDs() const
-    {
-        std::vector<FactoryId> ids;
-        ids.reserve(defaultFactories.size());
-        for (const auto& nf : defaultFactories)
-            ids.push_back(nf.FactoryID());
-
-        return ids;
-    }
-
-    const String& HashString() const
-    {
-        if (hashString.isEmpty())
-            throw std::runtime_error("Attempt to retrieve unset hash string");
-
-        return hashString;
-    }
-
-    const String& HashString(const String& str)
-    {
-        // Accept value if length is appropriate for FactoryId or empty
-        if (str.length() == fnv1a::hash_string_length<FactoryId>() || str.isEmpty())
-            hashString = str;
-
-        return hashString;
-    }
+    const String& HashString(const String& str);
 };
+
+// ------------------------------------------------------------
+// Factory builder templates (used in effects.cpp RegisterAll calls)
+// ------------------------------------------------------------
+
+template<typename T>
+using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
+
+template<typename T>
+constexpr EffectId effect_id_of_type() {
+    static_assert(std::is_base_of_v<LEDStripEffect, remove_cvref_t<T>>,
+                  "Type must derive from LEDStripEffect");
+    return remove_cvref_t<T>::ID;
+}
+
+template<typename TEffect, typename... Args>
+constexpr FactoryId factory_id_of_instance(const Args&... args)
+{
+    FactoryId h = fnv1a::hash<FactoryId>("effect");
+    h = fnv1a::hash(effect_id_of_type<TEffect>(), h);
+    h = fnv1a::hash_pack(h, args...);
+    return h;
+}
+
+template<typename TEffect, typename... Args>
+inline EffectFactories::NumberedFactory& AddEffect(EffectFactories& factories, Args&&... args)
+{
+    return factories.AddEffect(
+        effect_id_of_type<TEffect>(),
+        [=]() -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<TEffect>(args...); },
+        [](const JsonObjectConst& jsonObject) -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<TEffect>(jsonObject); },
+        factory_id_of_instance<TEffect>(args...)
+    );
+}
+
+template<typename... Adders>
+inline void RegisterAll(EffectFactories& factories, Adders&&... adders)
+{
+    (static_cast<void>(adders(factories)), ...);
+}
+
+template<typename TEffect, typename... Args>
+inline auto Effect(Args&&... args)
+{
+    return [=](EffectFactories& factories) -> EffectFactories::NumberedFactory&
+    {
+        return AddEffect<TEffect>(factories, args...);
+    };
+}
+
+template<typename F>
+inline auto Disabled(F adder)
+{
+    return [=](EffectFactories& factories) -> EffectFactories::NumberedFactory&
+    {
+        auto& nf = adder(factories);
+        nf.LoadDisabled = true;
+        return nf;
+    };
+}

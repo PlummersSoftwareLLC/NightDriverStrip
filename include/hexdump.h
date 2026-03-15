@@ -1,5 +1,9 @@
+#pragma once
+
 #ifndef HEXDUMP_H_INCLUDED
 #define HEXDUMP_H_INCLUDED
+
+#include "globals.h"
 
 /*
   HexDump - An Arduino library for hexadecimal/ASCII dumping of data.
@@ -65,7 +69,7 @@ void HexDump( Stream& stream, void* buff, size_t len, addrT base = 0 )
   for (size_t r = 0; r < rows; ++r)
   {
     PrintHex<addrT>( stream, base + p - reinterpret_cast<uint8_t*>(buff) );
-    stream.print(F(": "));
+    stream.print(": ");
 
     char* pc = reinterpret_cast<char*>(p);
     const size_t cols = len < bytesPerRow ? len : bytesPerRow;
@@ -77,11 +81,11 @@ void HexDump( Stream& stream, void* buff, size_t len, addrT base = 0 )
       }
       else
       {
-        stream.print(F("  "));
+        stream.print("  ");
       }
-      stream.print(F(" "));
+      stream.print(" ");
     }
-    stream.print(F(" "));
+    stream.print(" ");
     yield();
 
     for (size_t i = 0; i < cols; ++i)
@@ -90,7 +94,7 @@ void HexDump( Stream& stream, void* buff, size_t len, addrT base = 0 )
       if (c >= ' ') stream.print(c);
       else          stream.print('.');
     }
-    stream.println(F(""));
+    stream.println("");
     len -= bytesPerRow;
     yield();
   }

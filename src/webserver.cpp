@@ -34,19 +34,27 @@
 
 #include "webserver.h"
 
+#include <AsyncJson.h>
+#include <FS.h>
 #include <utility>
-#include "systemcontainer.h"
-#include "soundanalyzer.h"
+
+#include "deviceconfig.h"
+#include "effectmanager.h"
 #include "improvserial.h"
+#include "ledstripeffect.h"
+#include "soundanalyzer.h"
+#include "systemcontainer.h"
+#include "taskmgr.h"
+#include "values.h"
 
 // Static member initializers
 
 // Maps settings for which a validator is available to the invocation thereof
 const std::map<String, CWebServer::ValueValidator> CWebServer::settingValidators
 {
-    { DeviceConfig::OpenWeatherApiKeyTag, [](const String& value) { return g_ptrSystem->DeviceConfig().ValidateOpenWeatherAPIKey(value); } },
-    { DeviceConfig::PowerLimitTag,        [](const String& value) { return g_ptrSystem->DeviceConfig().ValidatePowerLimit(value); } },
-    { DeviceConfig::BrightnessTag,        [](const String& value) { return g_ptrSystem->DeviceConfig().ValidateBrightness(value); } }
+    { DeviceConfig::OpenWeatherApiKeyTag, [](const String& value) { return g_ptrSystem->GetDeviceConfig().ValidateOpenWeatherAPIKey(value); } },
+    { DeviceConfig::PowerLimitTag,        [](const String& value) { return g_ptrSystem->GetDeviceConfig().ValidatePowerLimit(value); } },
+    { DeviceConfig::BrightnessTag,        [](const String& value) { return g_ptrSystem->GetDeviceConfig().ValidateBrightness(value); } }
 };
 
 std::vector<SettingSpec, psram_allocator<SettingSpec>> CWebServer::mySettingSpecs = {};
@@ -199,10 +207,10 @@ void CWebServer::begin()
     _server.onNotFound([](AsyncWebServerRequest *request)
     {
         if (request->method() == HTTP_OPTIONS) {
-            request->send(HTTP_CODE_OK);                                     // Apparently needed for CORS: https://github.com/me-no-dev/ESPAsyncWebServer
+            request->send(CWebServer::HttpOk);                                // Apparently needed for CORS: https://github.com/me-no-dev/ESPAsyncWebServer
         } else {
                 debugW("Failed GET for %s\n", request->url().c_str() );
-            request->send(HTTP_CODE_NOT_FOUND);
+            request->send(CWebServer::HttpNotFound);
         }
     });
 
@@ -233,7 +241,7 @@ void CWebServer::SendBufferOverflowResponse(AsyncWebServerRequest * pRequest)
     AddCORSHeaderAndSendResponse(
         pRequest,
         pRequest->beginResponse(
-            HTTP_CODE_INTERNAL_SERVER_ERROR,
+            CWebServer::HttpInternalServerError,
             "text/json",
             "{\"message\": \"JSON response buffer overflow\"}"
         )
@@ -246,7 +254,7 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
 
     auto response = new AsyncJsonResponse();
     auto& j = response->getRoot();
-    auto& effectManager = g_ptrSystem->EffectManager();
+    auto& effectManager = g_ptrSystem->GetEffectManager();
 
     j["currentEffect"]         = effectManager.GetCurrentEffectIndex();
     j["millisecondsRemaining"] = effectManager.GetTimeRemainingForCurrentEffect();
@@ -308,7 +316,7 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest, StatisticsType 
         j["DMA_MIN"]               = heap_caps_get_largest_free_block(MALLOC_CAP_DMA);
         j["PSRAM_FREE"]            = ESP.getFreePsram();
         j["PSRAM_MIN"]             = ESP.getMinFreePsram();
-        auto& taskManager = g_ptrSystem->TaskManager();
+        auto& taskManager = g_ptrSystem->GetTaskManager();
 
         j["CPU_USED"]              = taskManager.GetCPUUsagePercent();
         j["CPU_USED_CORE0"]        = taskManager.GetCPUUsagePercent(0);
@@ -321,21 +329,21 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest, StatisticsType 
 void CWebServer::SetCurrentEffectIndex(AsyncWebServerRequest * pRequest)
 {
     debugV("SetCurrentEffectIndex");
-    PushPostParamIfPresent<size_t>(pRequest, "currentEffectIndex", SET_VALUE(g_ptrSystem->EffectManager().SetCurrentEffectIndex(value)));
+    PushPostParamIfPresent<size_t>(pRequest, "currentEffectIndex", SET_VALUE(g_ptrSystem->GetEffectManager().SetCurrentEffectIndex(value)));
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
 void CWebServer::EnableEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("EnableEffect");
-    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_ptrSystem->EffectManager().EnableEffect(value)));
+    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_ptrSystem->GetEffectManager().EnableEffect(value)));
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
 void CWebServer::DisableEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("DisableEffect");
-    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_ptrSystem->EffectManager().DisableEffect(value)));
+    PushPostParamIfPresent<size_t>(pRequest, "effectIndex", SET_VALUE(g_ptrSystem->GetEffectManager().DisableEffect(value)));
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
@@ -350,7 +358,7 @@ void CWebServer::MoveEffect(AsyncWebServerRequest * pRequest)
         return;
     }
 
-    PushPostParamIfPresent<size_t>(pRequest, "newIndex", SET_VALUE(g_ptrSystem->EffectManager().MoveEffect(fromIndex, value)));
+    PushPostParamIfPresent<size_t>(pRequest, "newIndex", SET_VALUE(g_ptrSystem->GetEffectManager().MoveEffect(fromIndex, value)));
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
@@ -365,7 +373,7 @@ void CWebServer::CopyEffect(AsyncWebServerRequest * pRequest)
         return;
     }
 
-    auto effect = g_ptrSystem->EffectManager().CopyEffect(index);
+    auto effect = g_ptrSystem->GetEffectManager().CopyEffect(index);
     if (!effect)
     {
         AddCORSHeaderAndSendOKResponse(pRequest);
@@ -374,7 +382,7 @@ void CWebServer::CopyEffect(AsyncWebServerRequest * pRequest)
 
     ApplyEffectSettings(pRequest, effect);
 
-    if (g_ptrSystem->EffectManager().AppendEffect(effect))
+    if (g_ptrSystem->GetEffectManager().AppendEffect(effect))
         SendEffectSettingsResponse(pRequest, effect);
     else
         AddCORSHeaderAndSendOKResponse(pRequest);
@@ -391,27 +399,27 @@ void CWebServer::DeleteEffect(AsyncWebServerRequest * pRequest)
         return;
     }
 
-    if (index < g_ptrSystem->EffectManager().EffectCount() && g_ptrSystem->EffectManager().EffectsList()[index]->IsCoreEffect())
+    if (index < g_ptrSystem->GetEffectManager().EffectCount() && g_ptrSystem->GetEffectManager().EffectsList()[index]->IsCoreEffect())
     {
         AddCORSHeaderAndSendBadRequest(pRequest, "Can't delete core effect");
         return;
     }
 
-    g_ptrSystem->EffectManager().DeleteEffect(index);
+    g_ptrSystem->GetEffectManager().DeleteEffect(index);
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
 void CWebServer::NextEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("NextEffect");
-    g_ptrSystem->EffectManager().NextEffect();
+    g_ptrSystem->GetEffectManager().NextEffect();
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
 void CWebServer::PreviousEffect(AsyncWebServerRequest * pRequest)
 {
     debugV("PreviousEffect");
-    g_ptrSystem->EffectManager().PreviousEffect();
+    g_ptrSystem->GetEffectManager().PreviousEffect();
     AddCORSHeaderAndSendOKResponse(pRequest);
 }
 
@@ -479,7 +487,7 @@ const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceS
         );
         deviceSettingSpecs.insert(deviceSettingSpecs.end(), mySettingSpecs.begin(), mySettingSpecs.end());
 
-        auto deviceConfigSpecs = g_ptrSystem->DeviceConfig().GetSettingSpecs();
+        auto deviceConfigSpecs = g_ptrSystem->GetDeviceConfig().GetSettingSpecs();
         deviceSettingSpecs.insert(deviceSettingSpecs.end(), deviceConfigSpecs.begin(), deviceConfigSpecs.end());
     }
 
@@ -502,8 +510,8 @@ void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
     JsonObject jsonObject = root.to<JsonObject>();
 
     // We get the serialized JSON for the device config, without any sensitive values
-    g_ptrSystem->DeviceConfig().SerializeToJSON(jsonObject, false);
-    jsonObject["effectInterval"] = g_ptrSystem->EffectManager().GetInterval();
+    g_ptrSystem->GetDeviceConfig().SerializeToJSON(jsonObject, false);
+    jsonObject["effectInterval"] = g_ptrSystem->GetEffectManager().GetInterval();
 
     AddCORSHeaderAndSendResponse(pRequest, response);
 }
@@ -512,8 +520,8 @@ void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
 //   Composing a response is left to the invoker!
 void CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
 {
-    auto& deviceConfig = g_ptrSystem->DeviceConfig();
-    auto& effectManager = g_ptrSystem->EffectManager();
+    auto& deviceConfig = g_ptrSystem->GetDeviceConfig();
+    auto& effectManager = g_ptrSystem->GetEffectManager();
 
     PushPostParamIfPresent<size_t>(pRequest,"effectInterval", SET_VALUE(effectManager.SetInterval(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::HostnameTag, SET_VALUE(deviceConfig.SetHostname(value)));
@@ -557,7 +565,7 @@ void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
 
 bool CWebServer::CheckAndGetSettingsEffect(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect, bool post)
 {
-    auto effectsList = g_ptrSystem->EffectManager().EffectsList();
+    auto effectsList = g_ptrSystem->GetEffectManager().EffectsList();
     auto effectIndex = GetEffectIndexFromParam(pRequest, post);
 
     if (effectIndex < 0 || effectIndex >= effectsList.size())
@@ -706,7 +714,7 @@ void CWebServer::Reset(AsyncWebServerRequest * pRequest)
         // Flush any pending writes and make sure nothing is written after. We do this to make sure
         //   that what needs saving is written, but no further writes take place after any requested
         //   config resets have happened.
-        g_ptrSystem->JSONWriter().FlushWrites(true);
+        g_ptrSystem->GetJSONWriter().FlushWrites(true);
 
         // Give the device a few seconds to finish the requested writes - this also gives AsyncWebServer
         //   time to push out the response to the request before the device resets
@@ -716,7 +724,7 @@ void CWebServer::Reset(AsyncWebServerRequest * pRequest)
     if (deviceConfigResetRequested)
     {
         debugI("Removing DeviceConfig");
-        g_ptrSystem->DeviceConfig().RemovePersisted();
+        g_ptrSystem->GetDeviceConfig().RemovePersisted();
     }
 
     if (effectsConfigResetRequested)

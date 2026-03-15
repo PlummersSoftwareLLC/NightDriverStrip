@@ -1,3 +1,5 @@
+#pragma once
+
 //+--------------------------------------------------------------------------
 //
 // File:        LEDStripEffect.h
@@ -28,17 +30,20 @@
 //
 //---------------------------------------------------------------------------
 
-#pragma once
-
+#include "globals.h"
 #include "effects.h"
-#include "gfxbase.h"
-#include "jsonserializer.h"
-#include "types.h"
 #include "hashing.h"
+#include "jsonserializer.h"
 
+#include <functional>
 #include <memory>
-#include <list>
-#include <cstdlib>
+#include <vector>
+
+class GFXBase;
+
+#if HEXAGON
+class HexagonGFX;
+#endif
 
 // Declarations related to effect settings, and their SettingSpecs. The definitions revolving around
 // SettingSpecs are mainly there because getting it right is a bit finicky due to the container type
@@ -91,40 +96,7 @@ class LEDStripEffect : public IJSONSerializable
     // instances to a static vector, meaning they are loaded once for all effects. The _settingSpecReferences
     // instance variable vector only contains reference_wrappers to the actual SettingSpecs to save
     // memory.
-    static void FillBaseSettingSpecs()
-    {
-        // If the base SettingSpec instances already exist, bail out...
-        if (!_baseSettingSpecs.empty())
-            return;
-
-        // ...otherwise, create and add them
-
-        _baseSettingSpecs.emplace_back(
-            ACTUAL_NAME_OF(_friendlyName),
-            "Friendly name",
-            "The friendly name of the effect, as shown in the web UI and/or on the matrix.",
-            SettingSpec::SettingType::String
-        );
-        _baseSettingSpecs.emplace_back(
-            ACTUAL_NAME_OF(_maximumEffectTime),
-            "Maximum effect time",
-            "The maximum time in ms that the effect is shown per effect rotation. This duration is only applied if it's "
-            "shorter than the default effect interval. A value of 0 means no maximum effect time is set.",
-            SettingSpec::SettingType::PositiveBigInteger
-        );
-        _baseSettingSpecs.emplace_back(
-            "hasMaximumEffectTime",
-            "Has maximum effect time set",
-            "Indicates if the effect has a maximum effect time set.",
-            SettingSpec::SettingType::Boolean
-        ).Access = SettingSpec::SettingAccess::ReadOnly;
-        _baseSettingSpecs.emplace_back(
-            "clearMaximumEffectTime",
-            "Clear maximum effect time",
-            "Clear maximum effect time. Set to true to reset the maximum effect time to the default value.",
-            SettingSpec::SettingType::Boolean
-        ).Access = SettingSpec::SettingAccess::WriteOnly;
-    }
+    static void FillBaseSettingSpecs();
 
   protected:
 
@@ -135,145 +107,42 @@ class LEDStripEffect : public IJSONSerializable
 
     std::vector<std::shared_ptr<GFXBase>> _GFX;
 
-    // Function that assigns a value to a property if two names match
-    template <typename TProperty, typename TValue>
-    static bool SetIfNameMatches(const String& firstName, const String& secondName, TProperty& property, const TValue& value)
-    {
-        if (firstName == secondName)
-        {
-            property = value;
-            return true;
-        }
-        return false;
-    }
-
     // Helper functions for known setting types, as defined in SettingSpec::SettingType
 
-    static bool SetIfSelected(const String& settingName, const String& propertyName, int& property, const String& value)
-    {
-        return SetIfNameMatches(settingName, propertyName, property, value.toInt());
-    }
-
-    static bool SetIfSelected(const String& settingName, const String& propertyName, size_t& property, const String& value)
-    {
-        return SetIfNameMatches(settingName, propertyName, property, strtoul(value.c_str(), nullptr, 10));
-    }
-
-    static bool SetIfSelected(const String& settingName, const String& propertyName, float& property, const String& value)
-    {
-        return SetIfNameMatches(settingName, propertyName, property, value.toFloat());
-    }
-
-    static bool SetIfSelected(const String& settingName, const String& propertyName, bool& property, const String& value)
-    {
-        return SetIfNameMatches(settingName, propertyName, property, BoolFromText(value));
-    }
-
-    static bool SetIfSelected(const String& settingName, const String& propertyName, String& property, const String& value)
-    {
-        return SetIfNameMatches(settingName, propertyName, property, value);
-    }
-
-    static bool SetIfSelected(const String& settingName, const String& propertyName, CRGBPalette16& property, const String& value)
-    {
-        if (settingName != propertyName)
-            return false;
-
-        auto src = CreateJsonDocument();
-        deserializeJson(src, value);
-        CRGB colors[16];
-        int colorIndex = 0;
-
-        const auto & componentsArray = src.as<JsonArrayConst>();
-        for (const auto &v: componentsArray)
-        {
-            colors[colorIndex++] = v.as<CRGB>();
-        }
-
-        property = CRGBPalette16(colors);
-
-        return true;
-    }
-
-    static bool SetIfSelected(const String& settingName, const String& propertyName, CRGB& property, const String& value)
-    {
-        return SetIfNameMatches(settingName, propertyName, property, CRGB(strtoul(value.c_str(), NULL, 10)));
-    }
+    static bool SetIfSelected(const String& settingName, const String& propertyName, int& property, const String& value);
+    static bool SetIfSelected(const String& settingName, const String& propertyName, size_t& property, const String& value);
+    static bool SetIfSelected(const String& settingName, const String& propertyName, float& property, const String& value);
+    static bool SetIfSelected(const String& settingName, const String& propertyName, bool& property, const String& value);
+    static bool SetIfSelected(const String& settingName, const String& propertyName, String& property, const String& value);
+    static bool SetIfSelected(const String& settingName, const String& propertyName, CRGBPalette16& property, const String& value);
+    static bool SetIfSelected(const String& settingName, const String& propertyName, CRGB& property, const String& value);
 
     // Overrides of this method should fill the respective effect's SettingSpec vector and return a pointer to it.
     // Returning nullptr indicates the effect has no SettingSpec instances to add to the base set.
-    virtual EffectSettingSpecs* FillSettingSpecs()
-    {
-        return nullptr;
-    }
+    virtual EffectSettingSpecs* FillSettingSpecs() { return nullptr; }
 
-    static float fmap(const float x, const float in_min, const float in_max, const float out_min, const float out_max)
-    {
-        return (out_max - out_min) * (x - in_min) / (in_max - in_min) + out_min;
-    }
+    static float fmap(const float x, const float in_min, const float in_max, const float out_min, const float out_max);
 
   public:
 
     // Constructor doesn't take an effect number; effect identity is provided by effectId()
 
-    explicit LEDStripEffect(const String & strName)
-    {
-        if (!strName.isEmpty())
-            _friendlyName = strName;
-    }
+    explicit LEDStripEffect(const String & strName);
+    explicit LEDStripEffect(const JsonObjectConst&  jsonObject);
+    virtual ~LEDStripEffect();
 
-    explicit LEDStripEffect(const JsonObjectConst&  jsonObject)
-        : _friendlyName(jsonObject["fn"].as<String>())
-    {
-        if (jsonObject["es"].is<int>())
-            _enabled = jsonObject["es"].as<int>() == 1;
-        if (jsonObject["mt"].is<size_t>())
-            _maximumEffectTime = jsonObject["mt"];
-
-        // Pull the migrations bitmap from the JSON object if it has one, otherwise default to "nothing set"
-        uint performedMigrations = 0;
-        if (jsonObject["mi"].is<uint>())
-            performedMigrations = jsonObject["mi"];
-
-        // If we haven't migrated the "has no maximum effect time" yet, do so now
-        if (!(performedMigrations & to_value(JSONMigrations::MaximumEffectTime)) && _maximumEffectTime == UINT_MAX)
-            _maximumEffectTime = 0;
-    }
-
-    virtual ~LEDStripEffect() = default;
-
-    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx)
-    {
-        debugV("Init %s", _friendlyName.c_str());
-
-        _GFX = gfx;                                                 // There are up to 8 channel in play per effect and when we
-                                                                    //   start up, we are given copies to their graphics interfaces
-                                                                    //   so that we can call them directly later from other calls
-        _cLEDs = _GFX[0]->GetLEDCount();
-
-        debugV("Init Effect %s with %zu LEDs\n", _friendlyName.c_str(), _cLEDs);
-        return true;
-    }
+    virtual bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx);
 
     virtual void Start() {}                                         // Optional method called when time to clean/init the effect
     virtual void Draw() = 0;                                        // Your effect must implement these
 
-    std::shared_ptr<GFXBase> g(size_t channel = 0) const
-    {
-        return _GFX[channel];
-    }
+    std::shared_ptr<GFXBase> g(size_t channel = 0) const;
 
     #if HEXAGON
-      std::shared_ptr<HexagonGFX> hg(size_t channel = 0)
-      {
-        return std::static_pointer_cast<HexagonGFX>(_GFX[channel]);
-      }
+      std::shared_ptr<HexagonGFX> hg(size_t channel = 0);
     #endif
 
-    virtual bool CanDisplayVUMeter() const
-    {
-        return true;
-    }
+    virtual bool CanDisplayVUMeter() const;
 
     virtual const String & FriendlyName() const             // User-visible effect name
     {
@@ -311,315 +180,111 @@ class LEDStripEffect : public IJSONSerializable
     // If, on the other hand, it renders from scratch every time, starting with a black fill, etc., then it does not,
     // and it can override this method and return false;
 
-    virtual bool RequiresDoubleBuffering() const
-    {
-        return true;
-    }
+    virtual bool RequiresDoubleBuffering() const;
 
     // RandomRainbowColor
     //
     // Returns a random color of the rainbow
     // BUGBUG Should likely be in GFXBase, not in LEDStripEffect
 
-    static CRGB RandomRainbowColor()
-    {
-        static const CRGB colors[] =
-            {
-                CRGB::Green,
-                CRGB::Red,
-                CRGB::Blue,
-                CRGB::Orange,
-                CRGB::Indigo,
-                CRGB::Violet
-            };
-        int randomColorIndex = random_range(0U, std::size(colors));
-        return colors[randomColorIndex];
-    }
+    static CRGB RandomRainbowColor();
 
     // RandomSaturatedColor
     //
     // A random, but fully saturated, color
 
-    static CRGB RandomSaturatedColor()
-    {
-        CRGB c;
-        c.setHSV(random_range(0,255), 255, 255);
-        return c;
-    }
+    static CRGB RandomSaturatedColor();
 
     // GetBlackBodyHeatColor
     //
     // Given a temp in the 0-1 range, returns a fire-appropriate black body radiator color for it
 
-    virtual CRGB GetBlackBodyHeatColor(float temp) const
-    {
-        return ColorFromPalette(HeatColors_p, 255 * temp);
-    }
+    virtual CRGB GetBlackBodyHeatColor(float temp) const;
 
     // The variant allows you to specify a base flame color other than red, and the result
     // is interpolated from black to your color and on through yellow and white
 
-    virtual CRGB GetBlackBodyHeatColor(float temp, CRGB baseColor) const
-    {
-        if (baseColor == CRGB::Red)
-            return GetBlackBodyHeatColor(temp);
-
-        temp = std::clamp(temp, 0.0f, 1.0f);
-
-        if (temp < 0.33f)
-            return ColorFraction(baseColor, temp * 3.0f);                                                   // Interpolate from black to baseColor
-
-        if (temp < 0.66f)
-            return baseColor + ColorFraction(CRGB::Yellow - baseColor, (temp - 0.33f) * 3.0f);              // Interpolate from baseColor to Yellow
-
-        return CRGB::Yellow + ColorFraction(CRGB::Blue,  (temp - 0.66f) * 3.0f);                            // Interpolate from Yellow to White
-    }
+    virtual CRGB GetBlackBodyHeatColor(float temp, CRGB baseColor) const;
 
     // fillSolidOnAllChannels
     //
     // Fill all of the LEDs specified with the color indicated.  Can have arbitrary start, length, and step
 
-    void fillSolidOnAllChannels(CRGB color, int iStart = 0, int numToFill = 0, uint everyN = 1)
-    {
-        if (_GFX.size() == 0)
-        {
-            debugE("fillSolidOnAllChannels called with no GFX devices");
-            throw std::runtime_error("Graphics not set up properly, no GFX devices");
-        }
-
-        if (numToFill == 0)
-            numToFill = _cLEDs-iStart;
-
-        if (iStart + numToFill > _cLEDs)
-        {
-            debugE("Boundary Exceeded in FillRainbow");
-            return;
-        }
-
-        for (auto& device : _GFX)
-        {
-            for (int i = iStart; i < iStart + numToFill; i+= everyN)
-                device->setPixel(i, color);
-        }
-    }
+    void fillSolidOnAllChannels(CRGB color, int iStart = 0, int numToFill = 0, uint everyN = 1);
 
     // SetPixelsFOnAllChannels
     //
     // Smooth drawing on fractional pixels on all channels in the given color; if merge is specified,
 
-    void setPixelsFOnAllChannels(float fPos, float count, CRGB c, bool bMerge = false)
-    {
-        for (auto& device : _GFX)
-            device->setPixelsF(fPos, count, c, bMerge);
-    }
+    void setPixelsFOnAllChannels(float fPos, float count, CRGB c, bool bMerge = false);
 
     // ClearFrameOnAllChannels
     //
     // Clears ALL the channels
 
-    void ClearFrameOnAllChannels()
-    {
-        for (auto& device : _GFX)
-            device->Clear();
-    }
+    void ClearFrameOnAllChannels();
 
     // ColorFraction
     //
     // Returns a fraction of a color; abstracts the fadeToBlack away so that we can later
     // do better color correction as needed
 
-    static CRGB ColorFraction(const CRGB colorIn, float fraction)
-    {
-        fraction = std::clamp(fraction, 0.0f, 1.0f);
-        return CRGB(colorIn).fadeToBlackBy(255 * (1.0f - fraction));
-    }
+    static CRGB ColorFraction(const CRGB colorIn, float fraction);
 
     // fillRainbowAllChannels
     //
     // Fill all channels with a progressive rainbow, using arbitrary start, length, step, and initial color and hue change rate
 
-    void fillRainbowAllChannels(int iStart, int numToFill, uint8_t initialhue, uint8_t deltahue, uint8_t everyNth = 1, bool bMirrored = false)
-    {
-
-        for (int i = 0; i < numToFill; i+=everyNth)
-        {
-            CHSV hsv;
-            hsv.hue = initialhue + i * deltahue;
-            hsv.val = 255;
-            hsv.sat = 255;
-            CRGB rgb;
-            hsv2rgb_rainbow(hsv, rgb);
-            if (bMirrored)
-            {
-                setPixelOnAllChannels(iStart + i, rgb);
-                setPixelOnAllChannels(iStart + numToFill - i - 1, rgb);
-            }
-            else
-            {
-                setPixelOnAllChannels(iStart + i, rgb);
-            }
-            for (int q = 1; q < everyNth; q++)
-                setPixelOnAllChannels(iStart + i + q, CRGB::Black);
-        }
-    }
+    void fillRainbowAllChannels(int iStart, int numToFill, uint8_t initialhue, uint8_t deltahue, uint8_t everyNth = 1, bool bMirrored = false);
 
     // fadePixelToBlackOnAllChannelsBy
     //
     // Given a 0-255 fade value, fades all channels by that amount
 
-    void fadePixelToBlackOnAllChannelsBy(int pixel, uint8_t fadeValue) const
-    {
-        if (pixel >= 0 && pixel < _cLEDs)
-            for (auto& device : _GFX)
-                device->fadePixelToBlackBy(pixel, fadeValue);
+    void fadePixelToBlackOnAllChannelsBy(int pixel, uint8_t fadeValue) const;
 
-    }
+    void fadeAllChannelsToBlackBy(uint8_t fadeValue) const;
 
-    void fadeAllChannelsToBlackBy(uint8_t fadeValue) const
-    {
-        for (auto& device : _GFX)
-            for (int i = 0; i < _cLEDs; i++)
-                device->fadePixelToBlackBy(i, fadeValue);
-    }
-
-    void setAllOnAllChannels(uint8_t r, uint8_t g, uint8_t b) const
-    {
-        for (auto& device : _GFX)
-            for (int i = 0; i < _cLEDs; i++)
-                device->setPixel(i, r, g, b);
-    }
+    void setAllOnAllChannels(uint8_t r, uint8_t g, uint8_t b) const;
 
     // setPixelOnAllChannels
     //
     // Sets the indexed pixel to a given color on all channels
 
-    void setPixelOnAllChannels(int i, CRGB c)
-    {
-        for (auto& device : _GFX)
-            device->setPixel(i, c);
-    }
-
-    void setPixelOnAllChannels(int x, int y, CRGB c)
-    {
-        for (auto& device : _GFX)
-            device->setPixel(x, y, c);
-    }
+    void setPixelOnAllChannels(int i, CRGB c);
+    void setPixelOnAllChannels(int x, int y, CRGB c);
     // setPixelsOnAllChannels
     //
     // Smooth drawing on fractional pixels on all channels in the given color; if merge is specified,
     // color drawing is additive, otherwise replacement
 
-    void setPixelsOnAllChannels(float fPos, float count, CRGB c, bool bMerge = false) const
-    {
-        for (auto& device : _GFX)
-            device->setPixelsF(fPos, count, c, bMerge);
-    }
+    void setPixelsOnAllChannels(float fPos, float count, CRGB c, bool bMerge = false) const;
 
     // SerializeToJSON
     //
     // Serialize this effects parameters to a JSON document
 
-    bool SerializeToJSON(JsonObject& jsonObject) override
-    {
-        auto jsonDoc = CreateJsonDocument();
+    bool SerializeToJSON(JsonObject& jsonObject) override;
 
-        jsonDoc[PTY_EFFECTNR]       = static_cast<int>(effectId());
-        jsonDoc["fn"]               = _friendlyName;
-        jsonDoc["es"]               = _enabled ? 1 : 0;
-
-        // Migrations are done when the effect is constructed from JSON, so by definition all known
-        // migrations have been performed by the time we get here.
-        jsonDoc["mi"]               = to_value(JSONMigrations::All);
-
-        // Only add the max effect time and core effect flag if they're not the default, to save space
-        if (HasMaximumEffectTime())
-            jsonDoc["mt"]           = _maximumEffectTime;
-        if (_coreEffect)
-            jsonDoc[PTY_COREEFFECT] = 1;
-
-        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
-    }
-
-    virtual bool IsEnabled() const
-    {
-        return _enabled;
-    }
-
-    virtual void SetEnabled(bool enabled)
-    {
-        _enabled = enabled;
-    }
-
-    void MarkAsCoreEffect()
-    {
-        _coreEffect = true;
-    }
-
-    bool IsCoreEffect() const
-    {
-        return _coreEffect;
-    }
+    virtual bool IsEnabled() const;
+    virtual void SetEnabled(bool enabled);
+    void MarkAsCoreEffect();
+    bool IsCoreEffect() const;
 
     // Lazily loads the SettingsSpecs for this effect if they haven't been loaded yet, and
     // returns a vector with reference_wrappers to them.
-    virtual const std::vector<std::reference_wrapper<SettingSpec>>& GetSettingSpecs()
-    {
-        // If the SettingSpecs reference_wrapper vector is already filled, return that
-        if (!_settingSpecReferences.empty())
-            return _settingSpecReferences;
-
-        // Create the SettingSpec instances that are available for all effects
-        FillBaseSettingSpecs();
-
-        // Add reference_wrappers for the base SettingSpecs instances to the vector
-        _settingSpecReferences.insert(_settingSpecReferences.end(), _baseSettingSpecs.begin(), _baseSettingSpecs.end());
-
-        // Get any SettingSpec instances that our effect subclass has defined
-        auto pEffectSettingSpecs = FillSettingSpecs();
-
-        if (pEffectSettingSpecs)
-        {
-            // Add reference_wrappers for the effect SettingSpecs instances to the vector
-            _settingSpecReferences.insert(_settingSpecReferences.end(), pEffectSettingSpecs->begin(), pEffectSettingSpecs->end());
-        }
-
-        return _settingSpecReferences;
-    }
+    virtual const std::vector<std::reference_wrapper<SettingSpec>>& GetSettingSpecs();
 
     // Serialize the "known effect settings" for this effect to JSON. In principle, there
     // should be a SettingSpec instance returned by GetSettingSpecs() for every setting value
     // that's serialized by this function.
-    virtual bool SerializeSettingsToJSON(JsonObject& jsonObject)
-    {
-        auto jsonDoc = CreateJsonDocument();
-
-        jsonDoc[ACTUAL_NAME_OF(_friendlyName)] = _friendlyName;
-        jsonDoc[ACTUAL_NAME_OF(_maximumEffectTime)] = _maximumEffectTime;
-        jsonDoc["hasMaximumEffectTime"] = HasMaximumEffectTime();
-
-        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
-    }
+    virtual bool SerializeSettingsToJSON(JsonObject& jsonObject);
 
     // Changes the value for one "known" effect setting. All setting values are passed to this
     // function are Strings; the conversion to the target type of a member variable that
     // corresponds with a setting can be taken care of by using one of the SetIfSelected()
     // overloads (either via RETURN_IF_SET or directly).
-    virtual bool SetSetting(const String& name, const String& value)
-    {
-        RETURN_IF_SET(name, ACTUAL_NAME_OF(_friendlyName), _friendlyName, value);
-        RETURN_IF_SET(name, ACTUAL_NAME_OF(_maximumEffectTime), _maximumEffectTime, value);
-
-        bool clearMaximumEffectTime = false;
-        if (SetIfSelected(name, "clearMaximumEffectTime", clearMaximumEffectTime, value))
-        {
-            if (clearMaximumEffectTime)
-                _maximumEffectTime = 0;
-
-            return true;
-        }
-
-        return false;
-    }
+    virtual bool SetSetting(const String& name, const String& value);
 };
 
 #ifndef EFFECT_ID_DEBUG
@@ -671,17 +336,15 @@ namespace _effect_id_detail {
         return fnv1a::hash_cstr<EffectId>(type_token<T>());
     }
 
+    void debug_log_effect_id(const char* token, EffectId id);
+
     template <typename T>                                       // Optional one-time debug print of the token string and hash
     inline void debug_log_type_token_once() {
 #if EFFECT_ID_DEBUG
         static bool logged = false;
         if (!logged) {
             logged = true;
-            const char* token = type_token<T>();
-            const EffectId id = token_id_for_type<T>();
-            // Print both the raw token string and the resulting hash used as the EffectId
-            debugI("Effect ID token string: %s", token);
-            debugI("Effect ID hash: 0x%08lx", static_cast<unsigned long>(id));
+            debug_log_effect_id(type_token<T>(), token_id_for_type<T>());
         }
 #endif
     }

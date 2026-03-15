@@ -35,20 +35,23 @@
 #include <string>
 #include <string_view>
 #include <vector>
-
-#include <FS.h>
-#include <SPIFFS.h>
 #include <esp_heap_caps.h>
 #include <esp_log.h>
 #include <esp_system.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-
-#include "globals.h"
+#include <FS.h>
+#include <SPIFFS.h>
 
 #include "console.h"
 #include "debug_cli.h"
 #include "effectmanager.h"
+#include "systemcontainer.h"
+
+#include "debug_cli.h"
+#include "deviceconfig.h"
+#include "effectmanager.h"
+#include "ledstripeffect.h"
 #include "systemcontainer.h"
 
 namespace DebugCLI
@@ -306,7 +309,7 @@ std::string_view TabComplete(std::string_view partial, std::string_view full_lin
     // If we're completing an argument for 'effect'
     else if (full_line.substr(0, 6) == "effect")
     {
-        auto& effectManager = g_ptrSystem->EffectManager();
+        auto& effectManager = g_ptrSystem->GetEffectManager();
         std::string_view firstMatch = "";
         int matches = 0;
         size_t common_len = 0;
@@ -346,7 +349,7 @@ std::string_view TabComplete(std::string_view partial, std::string_view full_lin
 //
 static std::optional<size_t> ResolveEffect(std::string_view arg)
 {
-    auto& effectManager = g_ptrSystem->EffectManager();
+    auto& effectManager = g_ptrSystem->GetEffectManager();
 
     // Try as index first
     // Try as index first
@@ -404,7 +407,7 @@ static std::optional<size_t> ResolveEffect(std::string_view arg)
 //
 static void DoEffectCommand(const cli_argv &argv)
 {
-    auto& effectManager = g_ptrSystem->EffectManager();
+    auto& effectManager = g_ptrSystem->GetEffectManager();
     cli_printf("Current Effect: %s\n", effectManager.GetCurrentEffectName().c_str());
 
     if (argv.size() > 1)
@@ -544,7 +547,7 @@ static const command core_commands[] = {
     {"reboot", "Reboot system", "Rebooting. Please stand by...", [](const cli_argv &) { esp_restart(); }},
     {"clearsettings", "Reset persisted user settings", "Removing persisted settings",
      [](const cli_argv &) {
-         g_ptrSystem->DeviceConfig().RemovePersisted();
+         g_ptrSystem->GetDeviceConfig().RemovePersisted();
          RemoveEffectManagerConfig(); // Helper from effectmanager.h
      }},
     {"tasks", "Display FreeRTOS task list", "Task List:",
@@ -594,20 +597,20 @@ static const command core_commands[] = {
          if (argv.size() > 1)
          {
              int val = atoi(std::string(argv[1]).c_str());
-             g_ptrSystem->DeviceConfig().SetBrightness(val);
+             g_ptrSystem->GetDeviceConfig().SetBrightness(val);
          }
-         cli_printf("Brightness: %lu\n", (unsigned long)g_ptrSystem->DeviceConfig().GetBrightness());
+         cli_printf("Brightness: %lu\n", (unsigned long)g_ptrSystem->GetDeviceConfig().GetBrightness());
      }},
     {"ls", "Show filesytem directory", "NAME", DoDirectoryListing},                    // Function pointer
     {"effect", "[next|prev|name|index] Show/change current effect", "Effects.", DoEffectCommand}, // Function pointer
     {"+", "Nudge brightness up", "Brightness +10", [](const cli_argv &) {
-        int val = std::min(255, g_ptrSystem->DeviceConfig().GetBrightness() + 10);
-        g_ptrSystem->DeviceConfig().SetBrightness(val);
+        int val = std::min(255, g_ptrSystem->GetDeviceConfig().GetBrightness() + 10);
+        g_ptrSystem->GetDeviceConfig().SetBrightness(val);
         cli_printf("Brightness: %d\n", val);
     }},
     {"-", "Nudge brightness down", "Brightness -10", [](const cli_argv &) {
-        int val = std::max(0, g_ptrSystem->DeviceConfig().GetBrightness() - 10);
-        g_ptrSystem->DeviceConfig().SetBrightness(val);
+        int val = std::max(0, g_ptrSystem->GetDeviceConfig().GetBrightness() - 10);
+        g_ptrSystem->GetDeviceConfig().SetBrightness(val);
         cli_printf("Brightness: %d\n", val);
     }},
     {"uptime", "Show system uptime", "Showing uptime...", DoUptime},

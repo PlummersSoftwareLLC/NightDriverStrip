@@ -1,3 +1,4 @@
+#pragma once
 //+--------------------------------------------------------------------------
 //
 // File:        FireEffect.h
@@ -29,13 +30,13 @@
 //
 //---------------------------------------------------------------------------
 
-#pragma once
 
-#include "globals.h"
+#include <numeric>
+
 #include "musiceffect.h"
+#include "random_utils.h"
 #include "soundanalyzer.h"
 #include "systemcontainer.h"
-#include <numeric>
 
 class FireEffect : public EffectWithId<FireEffect>
 {
@@ -253,7 +254,7 @@ class PaletteFlameEffect : public FireEffect
     {
         temp = min(1.0f, temp);
         int index = fmap(temp, 0.0f, 1.0f, 0.0f, 240.0f);
-        auto& deviceConfig = g_ptrSystem->DeviceConfig();
+        auto& deviceConfig = g_ptrSystem->GetDeviceConfig();
         if (deviceConfig.ApplyGlobalColors() && !_ignoreGlobalColor)
         {
             auto tempPalette = CRGBPalette16(CRGB::Black, deviceConfig.GlobalColor(), CRGB::Yellow, CRGB::White);

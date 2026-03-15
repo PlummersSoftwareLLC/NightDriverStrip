@@ -1,3 +1,5 @@
+#pragma once
+
 //+--------------------------------------------------------------------------
 //
 // File:        websocketserver.h
@@ -29,11 +31,7 @@
 // History:     Dec-21-2023         Rbergen     Created
 //---------------------------------------------------------------------------
 
-#pragma once
-
 #include "globals.h"
-
-#define WEB_SOCKETS_ANY_ENABLED (COLORDATA_WEB_SOCKET_ENABLED || EFFECTS_WEB_SOCKET_ENABLED)
 
 #if WEB_SOCKETS_ANY_ENABLED
 

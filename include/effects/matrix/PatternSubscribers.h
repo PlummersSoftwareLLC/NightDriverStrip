@@ -1,3 +1,5 @@
+#pragma once
+
 
 //+--------------------------------------------------------------------------
 //
@@ -33,9 +35,11 @@
 #ifndef PatternSub_H
 #define PatternSub_H
 
+
 #if ENABLE_WIFI
 
 #include <HTTPClient.h>
+
 #include "systemcontainer.h"
 
 extern const GFXfont Apple5x7 PROGMEM;
@@ -182,7 +186,7 @@ class PatternSubscribers : public EffectWithId<PatternSubscribers>
 
     ~PatternSubscribers()
     {
-        g_ptrSystem->NetworkReader().CancelReader(readerIndex);
+        g_ptrSystem->GetNetworkReader().CancelReader(readerIndex);
     }
 
     bool SerializeToJSON(JsonObject& jsonObject) override
@@ -210,7 +214,7 @@ class PatternSubscribers : public EffectWithId<PatternSubscribers>
         if (!LEDStripEffect::Init(gfx))
             return false;
 
-        readerIndex = g_ptrSystem->NetworkReader().RegisterReader([this] { SubscriberReader(); }, SUB_READER_INTERVAL, true);
+        readerIndex = g_ptrSystem->GetNetworkReader().RegisterReader([this] { SubscriberReader(); }, SUB_READER_INTERVAL, true);
 
         return true;
     }

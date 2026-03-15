@@ -1,3 +1,5 @@
+#pragma once
+
 
 //+--------------------------------------------------------------------------
 //
@@ -116,7 +118,7 @@ class PatternPongClock : public EffectWithId<PatternPongClock>
         time_t ttime = time(0);
         tm *local_time = localtime(&ttime);
 
-        bool ampm = !g_ptrSystem->DeviceConfig().Use24HourClock();
+        bool ampm = !g_ptrSystem->GetDeviceConfig().Use24HourClock();
 
         // update score / time
         mins = local_time->tm_min;
@@ -479,7 +481,7 @@ class PatternPongClock : public EffectWithId<PatternPongClock>
             restart = 1;
 
             // update score / time
-            bool ampm = !g_ptrSystem->DeviceConfig().Use24HourClock();
+            bool ampm = !g_ptrSystem->GetDeviceConfig().Use24HourClock();
 
             mins = local_time->tm_min;
             hours = local_time->tm_hour;

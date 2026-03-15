@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @file      LV_Helper.h
  * @author    Lewis He (lewishe@outlook.com)
@@ -7,9 +9,10 @@
  *
  */
 
-#pragma once
-#include <lvgl.h>
+#include "globals.h"
+
 #include "LilyGo_Display.h"
+#include <lvgl.h>
 
 
 void beginLvglHelper(LilyGo_Display &board, bool debug = false);

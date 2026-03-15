@@ -1,3 +1,6 @@
+#pragma once
+
+#include "random_utils.h"
 //+--------------------------------------------------------------------------
 //
 // File:        PatternPulse.h

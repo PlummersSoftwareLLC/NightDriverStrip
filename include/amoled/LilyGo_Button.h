@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @file      LilyGo_Button.h
  * @author    Lewis He (lewishe@outlook.com)
@@ -7,8 +9,7 @@
  *
  */
 
-#pragma once
-
+#include "globals.h"
 
 #include <Arduino.h>
 

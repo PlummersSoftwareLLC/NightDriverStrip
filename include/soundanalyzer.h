@@ -248,8 +248,8 @@ class SoundAnalyzer : public ISoundAnalyzer // Non-audio case stub
 
 #else // Audio case
 
-void IRAM_ATTR AudioSamplerTaskEntry(void *);
-void IRAM_ATTR AudioSerialTaskEntry(void *);
+void AudioSamplerTaskEntry(void *);
+void AudioSerialTaskEntry(void *);
 
 // SoundAnalyzer
 //
@@ -262,8 +262,8 @@ class SoundAnalyzer : public ISoundAnalyzer
 {
   public:
     // Give internal audio task functions access to private members
-    friend void IRAM_ATTR AudioSamplerTaskEntry(void *);
-    friend void IRAM_ATTR AudioSerialTaskEntry(void *);
+    friend void AudioSamplerTaskEntry(void *);
+    friend void AudioSerialTaskEntry(void *);
 
     // I'm old enough I can only hear up to about 12000Hz, but feel free to adjust.  Remember from
     // school that you need to sample at double the frequency you want to process, so 24000 samples is 12000Hz

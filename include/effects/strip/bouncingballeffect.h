@@ -1,3 +1,4 @@
+#pragma once
 //+--------------------------------------------------------------------------
 //
 // File:        BouncingBallEffect.h
@@ -28,10 +29,11 @@
 //
 //---------------------------------------------------------------------------
 
-#pragma once
 
-#include "ledstripeffect.h"
 #include "effects.h"
+#include "values.h"
+#include "random_utils.h"
+#include "array_utils.h"
 
 // BouncingBallEffect
 //

@@ -1,6 +1,8 @@
+#pragma once
+
 //+--------------------------------------------------------------------------
 //
-// File:        network.h
+// File:        nd_network.h
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
@@ -25,28 +27,33 @@
 //    Network related functions and definitions
 //
 //---------------------------------------------------------------------------
-#pragma once
 
+#include "globals.h"
 #include <atomic>
 #include <functional>
 #include <utility>
-// Retire this test once Arduino3 fully lands.
+#include <vector>
+
 #include <esp_arduino_version.h>
+// Retire this test once Arduino3 fully lands.
 #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
-   #include_next <Network.h> // For wl_status_t, etc. (case matters)
+   #include <Network.h> // For wl_status_t, etc.
 #endif
 #include <WiFi.h>
+#include "esp_mac.h"
 #include "types.h"
 
-#if INCOMING_WIFI_ENABLED
-    #include "socketserver.h"
-#endif
+// NOTE: Do not include "socketserver.h" here. It pulls in "ledbuffer.h" -> "gfxbase.h",
+// which uses debug macros defined by RemoteDebug. In Arduino v3, RemoteDebug includes
+// WiFi.h, which includes Network.h; adding socketserver.h here creates a cycle where
+// gfxbase.h is parsed before those macros exist. Keep socketserver.h in .cpp files.
+
 
     // For now, just a centralized location for the port numbers for our
     // various services. Someday these might be configurable.
     // This could be an enum class, but the static_cast<int> at the
     // callers is ugly.
-    enum NetworkPort
+    enum NetworkPort : int
     {
       ColorServer  = 12000,
       IncomingWiFi  = 49152,
@@ -54,6 +61,14 @@
       Telnet = 23,
       Webserver  = 80
     };
+
+    // SetSocketBlockingEnabled
+    //
+    // In blocking mode, socket API calls wait until the operation is complete before returning control to the application.
+    // In non-blocking mode, socket API calls return immediately. If an operation cannot be completed immediately, the function
+    // returns an error (usually EWOULDBLOCK or EAGAIN).
+
+    bool SetSocketBlockingEnabled(int fd, bool blocking);
 
 #if ENABLE_WIFI
     enum class WiFiConnectResult
@@ -90,51 +105,28 @@
     #define WL_DISCONNECTED     "WL_DISCONNECTED"
     #define WL_UNKNOWN_STATUS   "WL_UNKNOWN_STATUS"
 
-    inline static const char* WLtoString(wl_status_t status)
-    {
-      switch (status) {
-        case 255: return WL_NO_SHIELD;
-        case 0: return   WL_IDLE_STATUS;
-        case 1: return   WL_NO_SSID_AVAIL;
-        case 2: return   WL_SCAN_COMPLETED;
-        case 3: return   WL_CONNECTED;
-        case 4: return   WL_CONNECT_FAILED;
-        case 5: return   WL_CONNECTION_LOST;
-        case 6: return   WL_DISCONNECTED;
-        default: return  WL_UNKNOWN_STATUS;
-      }
-    }
+    const char* WLtoString(wl_status_t status);
 
     // get_mac_address_raw
     //
     // Reads the raw MAC
 
-    inline void get_mac_address_raw(uint8_t *mac)
-    {
-        esp_efuse_mac_get_default(mac);
-    }
+    void get_mac_address_raw(uint8_t *mac);
 
     // get_mac_address
     //
     // Returns a packed (non-pretty, without colons) version of the MAC id
 
-    inline String get_mac_address()
-    {
-      uint8_t mac[6];
-      WiFi.macAddress(mac);
-      return str_sprintf("%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-    }
+    String get_mac_address();
+    String get_mac_address_pretty();
 
-    // get_mac_address_pretty()
+    // SetSocketBlockingEnabled
     //
-    // Returns a packed (non-pretty, without colons) version of the MAC id
+    // In blocking mode, socket API calls wait until the operation is complete before returning control to the application.
+    // In non-blocking mode, socket API calls return immediately. If an operation cannot be completed immediately, the function
+    // returns an error (usually EWOULDBLOCK or EAGAIN).
 
-    inline String get_mac_address_pretty()
-    {
-      uint8_t mac[6];
-      WiFi.macAddress(mac);
-      return str_sprintf("%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-    }
+    bool SetSocketBlockingEnabled(int fd, bool blocking);
 
     // NetworkReader
     //
@@ -147,41 +139,11 @@
       // We allow the main network task entry point function to access private members
       friend void NetworkHandlingLoopEntry(void *);
 
+    public:
+      struct ReaderEntry;
+
     private:
-
-      // Writer function and flag combo
-      struct ReaderEntry
-      {
-          std::function<void()> reader;
-          std::atomic_ulong readInterval;
-          std::atomic_ulong lastReadMs;
-          std::atomic_bool flag = false;
-          std::atomic_bool canceled = false;
-
-          ReaderEntry(std::function<void()> reader, unsigned long interval) :
-              reader(std::move(reader)),
-              lastReadMs(0),
-              readInterval(interval)
-          {}
-
-          ReaderEntry(std::function<void()> reader, unsigned long interval, unsigned long lastReadMs, bool flag, bool canceled) :
-              reader(std::move(reader)),
-              readInterval(interval),
-              lastReadMs(lastReadMs),
-              flag(flag),
-              canceled(canceled)
-          {}
-
-          ReaderEntry(ReaderEntry&& entry)  noexcept :
-              reader(std::move(entry.reader)),
-              readInterval(entry.readInterval.load()),
-              lastReadMs(entry.lastReadMs.load()),
-              flag(entry.flag.load()),
-              canceled(entry.canceled.load())
-          {}
-      };
-
-      std::vector<ReaderEntry, psram_allocator<ReaderEntry>> readers;
+      std::vector<std::shared_ptr<ReaderEntry>> readers;
 
     public:
 
@@ -199,4 +161,3 @@
 #endif
 
   void InitNetworkCLI();
-

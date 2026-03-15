@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @file      LilyGo_AMOLED.h
  * @author    Lewis He (lewishe@outlook.com)
@@ -7,7 +9,8 @@
  *
  */
 
-#pragma once
+#include "globals.h"
+
 #include <Arduino.h>
 
 #if ESP_ARDUINO_VERSION < ESP_ARDUINO_VERSION_VAL(2,0,5)
@@ -15,17 +18,17 @@
 #endif
 
 #include <driver/spi_master.h>
-#include <SPI.h>
-#include "XPowersLib.h"
+#include <FS.h>
 #include "initSequence.h"
+#include "LilyGo_Display.h"
+#include <SD.h>
+#include "SensorCM32181.hpp"
+#include <SPI.h>
+#include <SPIFFS.h>
+#include <sys/cdefs.h>
 #include "TouchDrvCHSC5816.hpp"
 #include "TouchDrvCSTXXX.hpp"
-#include "SensorCM32181.hpp"
-#include <FS.h>
-#include <SPIFFS.h>
-#include <SD.h>
-#include <sys/cdefs.h>
-#include "LilyGo_Display.h"
+#include "XPowersLib.h"
 #if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5,0,0)
 #include <driver/temp_sensor.h>
 #else
@@ -353,4 +356,3 @@ private:
 #ifndef LilyGo_Class
 #define LilyGo_Class LilyGo_AMOLED
 #endif
-

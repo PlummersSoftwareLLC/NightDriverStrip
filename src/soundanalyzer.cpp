@@ -29,16 +29,22 @@
 //
 //---------------------------------------------------------------------------
 
-
 #include "globals.h"
 #include "soundanalyzer.h"
+#include "values.h"
 
 #if ENABLE_AUDIO
 
 #include <algorithm>
+#include <arduinoFFT.h>
+#include <cmath>
 #include <driver/adc.h>
 #include <driver/i2s.h>
 #include <numeric>
+
+#if USE_M5
+    #include <M5Unified.h>
+#endif
 
 // Explicit implementations of template methods for SoundAnalyzer
 
@@ -563,7 +569,7 @@ void SoundAnalyzer<Params>::SetPeakDataFromRemote(const PeakData &peaks)
     _msLastRemoteAudio = millis();
     _Peaks = peaks;
     _vPeaks = _Peaks;
-    float sum = accumulate(_vPeaks);
+    float sum = std::accumulate(_vPeaks.begin(), _vPeaks.end(), 0.0f);
     UpdateVU(sum / (float)NUM_BANDS);
 }
 
@@ -605,7 +611,7 @@ void SoundAnalyzer<Params>::RunSamplerPass()
     else
     {
         // Using remote data - just update VU from existing peaks
-        float sum = accumulate(_Peaks);
+        float sum = std::accumulate(_Peaks.begin(), _Peaks.end(), 0.0f);
         UpdateVU(sum / NUM_BANDS);
     }
 }
@@ -617,3 +623,5 @@ template class SoundAnalyzer<kParamsM5Plus2>;
 template class SoundAnalyzer<kParamsI2SExternal>;
 
 #endif
+
+ProjectSoundAnalyzer g_Analyzer;

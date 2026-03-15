@@ -29,21 +29,49 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
-#include "soundanalyzer.h"
-#include "systemcontainer.h"
-#include <algorithm>
-#include "screen.h"
-
-#if defined(TOGGLE_BUTTON_0) || defined(TOGGLE_BUTTON_1)
-#include "Bounce2.h" // For Bounce button class
-#endif
 
 #if USE_SCREEN
+
+// Screen
+//
+// Handles the small OLED or TFT display that is optionally connected to the board.  It's useful for
+// showing the IP address, buffer depth, clock, etc.
+
+#include <algorithm>
+#include <ctime>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 #if USE_TFTSPI
 #include <SPI.h>
 #include <TFT_eSPI.h>
 #endif
+
+#if defined(TOGGLE_BUTTON_0) || defined(TOGGLE_BUTTON_1)
+#include "Bounce2.h"          // For Bounce button class
+#endif
+
+#if USE_M5
+#include <M5Unified.h>
+#endif
+
+#if AMOLED_S3
+#include <lvgl.h>
+#endif
+
+#include "colordata.h"
+#include "effectmanager.h"
+#include "ledbuffer.h"
+#include "ledstripeffect.h"
+#include "screen.h"
+#include "soundanalyzer.h"
+#include "systemcontainer.h"
+#include "taskmgr.h"
+#include "values.h"
 
 #define SHOW_FPS true // Indicates whether little lcd should show FPS
 
@@ -60,7 +88,7 @@ void Page::OnButtonPress(uint8_t buttonIndex)
     if (buttonIndex == 0)
     {
         // Default: advance to the next effect
-        g_ptrSystem->EffectManager().NextEffect();
+        g_ptrSystem->GetEffectManager().NextEffect();
     }
     else if (buttonIndex == 1)
     {
@@ -73,7 +101,7 @@ void Page::OnButtonPress(uint8_t buttonIndex)
 
 class BasicInfoSummaryPage final : public Page
 {
-  public:
+public:
     std::string Name() const override { return "BasicInfoSummary"; }
 
     void OnButtonPress(uint8_t buttonIndex) override
@@ -112,7 +140,7 @@ class BasicInfoSummaryPage final : public Page
         // Second param is background for clean overwrite
         display.setTextColor(display.GetTextColor(), display.GetBkgndColor());
         display.setCursor(xMargin, yMargin);
-        display.println(str_sprintf("%s:%zu %c %zuk", FLASH_VERSION_NAME, (size_t)g_ptrSystem->Devices().size(),
+        display.println(str_sprintf("%s:%zu %c %zuk", FLASH_VERSION_NAME, (size_t)g_ptrSystem->GetDevices().size(),
                                     chStatus, (size_t)(ESP.getFreeHeap() / 1024)));
 
         // WiFi info line 2
@@ -127,7 +155,7 @@ class BasicInfoSummaryPage final : public Page
         }
 
         // Buffer Status Line 3
-        auto &bufferManager = g_ptrSystem->BufferManagers()[0];
+        auto &bufferManager = g_ptrSystem->GetBufferManagers()[0];
         display.setCursor(xMargin + 0, yMargin + lineHeight * 4);
         display.println(str_sprintf("BUFR:%02lu/%02lu %lufps ", (unsigned long)bufferManager.Depth(), (unsigned long)bufferManager.BufferCount(), (unsigned long)g_Values.FPS));
 
@@ -156,7 +184,7 @@ class BasicInfoSummaryPage final : public Page
         // PSRAM/CPU Info Line 7 - only if display tall enough
         if (display.height() >= lineHeight * 7)
         {
-            auto &taskManager = g_ptrSystem->TaskManager();
+            auto &taskManager = g_ptrSystem->GetTaskManager();
             display.setCursor(xMargin + 0, yMargin + lineHeight * 6);
             display.println(str_sprintf("CPU: %3.0f%%, %3.0f%%  ", taskManager.GetCPUUsagePercent(0), taskManager.GetCPUUsagePercent(1)));
         }
@@ -214,7 +242,7 @@ inline bool IsSmallDisplay(const Screen &display)
 // Shared header/footer for effect pages
 class TitlePage : public Page
 {
-  protected:
+protected:
     // Cached content top calculated using the header text size to avoid shifting
     int _contentTop = 0;
     int ContentTop(Screen &display) const
@@ -224,7 +252,7 @@ class TitlePage : public Page
         return _contentTop > 0 ? _contentTop : (display.fontHeight() * 3 + 4);
     }
 
-  public:
+public:
     std::string Name() const override { return "Title"; }
 
     void Draw(Screen &display, bool bRedraw) override
@@ -236,7 +264,7 @@ class TitlePage : public Page
         if (IsSmallDisplay(display))
         {
             const uint16_t backColor = display.IsMonochrome() ? BLACK16 : Screen::to16bit(CRGB(0, 0, 64));
-            static int lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
+            static int lasteffect = g_ptrSystem->GetEffectManager().GetCurrentEffectIndex();
             static uint32_t lastFullDraw = 0;
 
             _contentTop = display.fontHeight() + 2;
@@ -245,7 +273,7 @@ class TitlePage : public Page
             if (bRedraw || lastFullDraw == 0 || millis() - lastFullDraw > 1000)
             {
                 lastFullDraw = millis();
-                const int currentEffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
+                const int currentEffect = g_ptrSystem->GetEffectManager().GetCurrentEffectIndex();
 
                 if (bRedraw || lasteffect != currentEffect)
                 {
@@ -255,7 +283,7 @@ class TitlePage : public Page
                     // Just show effect name, centered
                     display.setTextSize(1);
                     display.setTextColor(display.GetTextColor(), backColor);
-                    String effectName = g_ptrSystem->EffectManager().GetCurrentEffectName();
+                    String effectName = g_ptrSystem->GetEffectManager().GetCurrentEffectName();
                     auto w = display.textWidth(effectName);
                     display.setCursor((display.width() - w) / 2, 2);
                     display.print(effectName);
@@ -266,7 +294,7 @@ class TitlePage : public Page
 
         // Full header/footer for larger displays
         const uint16_t backColor = display.IsMonochrome() ? BLACK16 : Screen::to16bit(CRGB(0, 0, 64));
-        static int lasteffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
+        static int lasteffect = g_ptrSystem->GetEffectManager().GetCurrentEffectIndex();
         static String sip = WiFi.localIP().toString();
         static String lastFooter;
         static uint32_t lastFullDraw = 0;
@@ -283,7 +311,7 @@ class TitlePage : public Page
         if (bRedraw || lastFullDraw == 0 || millis() - lastFullDraw > 1000)
         {
             lastFullDraw = millis();
-            const int currentEffect = g_ptrSystem->EffectManager().GetCurrentEffectIndex();
+            const int currentEffect = g_ptrSystem->GetEffectManager().GetCurrentEffectIndex();
             const String currentIP = WiFi.localIP().toString();
 
             if (bRedraw || lasteffect != currentEffect || sip != currentIP)
@@ -299,16 +327,16 @@ class TitlePage : public Page
                 // Title lines
                 int yh = 2;
                 display.setTextColor(display.GetBorderColor(), backColor);
-                String sEffect = String("Effect: ") + String(currentEffect + 1) + String("/") + String(g_ptrSystem->EffectManager().EffectCount());
+                String sEffect = String("Effect: ") + String(currentEffect + 1) + String("/") + String(g_ptrSystem->GetEffectManager().EffectCount());
                 auto w = display.textWidth(sEffect);
                 display.setCursor(display.width() / 2 - w / 2, yh);
                 display.print(sEffect.c_str());
                 yh += display.fontHeight();
 
                 display.setTextColor(display.GetTextColor(), backColor);
-                w = display.textWidth(g_ptrSystem->EffectManager().GetCurrentEffectName());
+                w = display.textWidth(g_ptrSystem->GetEffectManager().GetCurrentEffectName());
                 display.setCursor(display.width() / 2 - w / 2, yh);
-                display.print(g_ptrSystem->EffectManager().GetCurrentEffectName());
+                display.print(g_ptrSystem->GetEffectManager().GetCurrentEffectName());
                 yh += display.fontHeight();
 
                 String sIP = WiFi.isConnected() ? currentIP.c_str() : "No Wifi";
@@ -343,7 +371,7 @@ class TitlePage : public Page
 
 class CurrentEffectSummaryPage final : public TitlePage
 {
-  public:
+public:
     std::string Name() const override { return "CurrentEffectSummary"; }
 
     void OnButtonPress(uint8_t buttonIndex) override
@@ -351,7 +379,7 @@ class CurrentEffectSummaryPage final : public TitlePage
         if (buttonIndex == 0)
         {
             debugI("Button 1 pressed so advancing to next effect");
-            g_ptrSystem->EffectManager().NextEffect();
+            g_ptrSystem->GetEffectManager().NextEffect();
         }
         else
         {
@@ -409,10 +437,10 @@ class EffectSimulatorPage final : public TitlePage
     bool bClearCompleted = false;
     uint32_t _lastEffectDrawMs = 0;
 
-  public:
+public:
     EffectSimulatorPage()
     {
-        g_ptrSystem->EffectManager().AddFrameEventListener(frameEventListener);
+        g_ptrSystem->GetEffectManager().AddFrameEventListener(frameEventListener);
     }
 
     std::string Name() const override { return "CurrentEffect"; }
@@ -478,7 +506,7 @@ class EffectSimulatorPage final : public TitlePage
         const int yOffset = contentTop + (contentHeight - drawHeight) / 2;
 
         // Fetch current graphics buffer
-        auto &effectManager = g_ptrSystem->EffectManager();
+        auto &effectManager = g_ptrSystem->GetEffectManager();
         auto gfx = effectManager.g();
         if (!gfx || gfx->leds == nullptr)
             return;
@@ -560,6 +588,63 @@ void Screen::FlipToNextPage()
     // Advance to the next page
     const int activeCount = ActivePageCount();
     g_iCurrentPage = (g_iCurrentPage + 1) % std::max(1, activeCount);
+}
+
+// Some devices, like the OLED, require that you send the whole buffer at once, but others do not.  The default impl is to do nothing.
+
+void Screen::StartFrame()
+{
+}
+
+void Screen::EndFrame()
+{
+}
+
+void Screen::ScreenStatus(const String &strStatus)
+{
+    fillScreen(GetBkgndColor());
+    setTextSize(1);
+    setTextColor(GetTextColor(), GetBkgndColor());
+    auto xh = 10;
+    auto yh = 0;
+    setCursor(xh, yh);
+    print(strStatus);
+}
+
+// fontHeight
+//
+// Returns the height of the current font
+
+int Screen::fontHeight()
+{
+    int16_t x1, y1;
+    uint16_t w, h;
+    getTextBounds(String("W"), 0, 0, &x1, &y1, &w, &h);
+    return h;
+}
+
+// textHeight
+//
+// Returns the height of a string in screen pixels
+
+int Screen::textHeight(const String & str)
+{
+    int16_t x1, y1;
+    uint16_t w, h;
+    getTextBounds(str, 0, 0, &x1, &y1, &w, &h);
+    return h;
+}
+
+// textWidth
+//
+// Returns the width of a string in screen pixels
+
+int Screen::textWidth(const String & str)
+{
+    int16_t x1, y1;
+    uint16_t w, h;
+    getTextBounds(str, 0, 0, &x1, &y1, &w, &h);
+    return w;
 }
 
 // Old free functions replaced by Screen methods below
@@ -712,9 +797,9 @@ void IRAM_ATTR ScreenUpdateLoopEntry(void *)
     // Ensure the system and display are available
     if (g_ptrSystem)
     {
-        auto &display = g_ptrSystem->Display();
+        auto &display = g_ptrSystem->GetDisplay();
         display.RunUpdateLoop();
     }
 }
 
-#endif
+#endif // USE_SCREEN

@@ -1,3 +1,5 @@
+#pragma once
+
 //+--------------------------------------------------------------------------
 //
 // File:        PatternStocks.h
@@ -36,16 +38,18 @@
 #define PatternStocks_H
 
 #include <Arduino.h>
-#include <gfxfont.h>                // Adafruit GFX font structs
 #include <string.h>
 #include <HTTPClient.h>
-#include <ledstripeffect.h>
 #include <ArduinoJson.h>
-#include "systemcontainer.h"
 #include <chrono>
 #include <thread>
 #include <vector>
 #include <map>
+#include <sstream>
+
+#include "formatsize.h"
+#include "gfxfont.h"                // Adafruit GFX font structs
+#include "systemcontainer.h"
 
 extern const GFXfont Apple5x7 PROGMEM;
 using namespace std;
@@ -359,7 +363,7 @@ public:
 
     ~PatternStocks()
     {
-        g_ptrSystem->NetworkReader().CancelReader(readerIndex);
+        g_ptrSystem->GetNetworkReader().CancelReader(readerIndex);
     }
 
     bool SerializeToJSON(JsonObject& jsonObject) override
@@ -382,11 +386,11 @@ public:
             return false;
 
         // Register a Network Reader task with no interval.  Will manually flag in Draw()
-        readerIndex = g_ptrSystem->NetworkReader().RegisterReader([this] { FetchQuotes(); });
+        readerIndex = g_ptrSystem->GetNetworkReader().RegisterReader([this] { FetchQuotes(); });
 
         // Fire off the stock data reader for an initial download of stock data
         lastUpdate = system_clock::now();
-        g_ptrSystem->NetworkReader().FlagReader(readerIndex);
+        g_ptrSystem->GetNetworkReader().FlagReader(readerIndex);
 
         return true;
     }
@@ -508,7 +512,7 @@ public:
             {
                 nextFetch = system_clock::now() + STOCKS_FETCH_INTERVAL_SECONDS;
                 // Trigger the stock data reader.
-                g_ptrSystem->NetworkReader().FlagReader(readerIndex);
+                g_ptrSystem->GetNetworkReader().FlagReader(readerIndex);
             }
         }
 
@@ -566,7 +570,7 @@ public:
             iCurrentStock = 0;
             stockData.clear();
             lastCount = SIZE_MAX;
-            g_ptrSystem->NetworkReader().FlagReader(readerIndex);
+            g_ptrSystem->GetNetworkReader().FlagReader(readerIndex);
             return true;
         }
 

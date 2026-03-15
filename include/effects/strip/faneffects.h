@@ -1,6 +1,7 @@
+#pragma once
 //+--------------------------------------------------------------------------
 //
-// File:        FireEffect.h
+// File:        faneffects.h
 //
 // NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
 //
@@ -30,12 +31,14 @@
 //
 //---------------------------------------------------------------------------
 
-#pragma once
 
 #include <cmath>
+
 #include "effects.h"
+#include "ledstripeffect.h"
 #include "paletteeffect.h"
 #include "soundanalyzer.h"
+#include "random_utils.h"
 
 // Simple definitions of what direction we're talking about
 
