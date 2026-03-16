@@ -63,7 +63,7 @@ bool LEDViewer::begin()
 
     if ((_server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-        debugW("Color data socket error\n");
+        debugE("Color data socket error\n");
         release();
         return false;
     }
@@ -109,19 +109,22 @@ int LEDViewer::CheckForConnection()
     struct timeval to;
     to.tv_sec = 1;
     to.tv_usec = 0;
-    if ((new_socket = accept(_server_fd, (struct sockaddr *)&_address, (socklen_t*)&addrlen))<0)
+    if ((new_socket = accept(_server_fd, (struct sockaddr *)&_address, (socklen_t*)&addrlen)) < 0)
     {
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+            return -1;
+        debugE("Error accepting color data connection: %s", strerror(errno));
         return -1;
     }
     if (setsockopt(new_socket, SOL_SOCKET, SO_SNDTIMEO, &to, sizeof(to)) < 0)
     {
-        debugW("Unable to set send timeout on color data socket!");
+        debugE("Unable to set send timeout on color data socket!");
         close(new_socket);
         return -1;
     }
     if (setsockopt(new_socket, SOL_SOCKET, SO_RCVTIMEO, &to, sizeof(to)) < 0)
     {
-        debugW("Unable to set receive timeout on color data socket!");
+        debugE("Unable to set receive timeout on color data socket!");
         close(new_socket);
         return -1;
     }
@@ -139,7 +142,7 @@ bool LEDViewer::SendPacket(int socket, void * pData, size_t cbSize)
 
     if (cbSize != write(socket, pData, cbSize))
     {
-        debugW("Could not write to color data socket\n");
+        debugE("Could not write to color data socket\n");
         return false;
     }
     return true;

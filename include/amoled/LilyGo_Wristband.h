@@ -10,15 +10,14 @@
  */
 
 #include "globals.h"
-
 #include <Arduino.h>
 #include <esp_lcd_types.h>
-#include "LilyGo_Button.h"
-#include "LilyGo_Display.h"
 #include <SensorBHI260AP.hpp>
 #include <SensorPCF85063.hpp>
 #include <SPI.h>
 #include <Wire.h>
+#include "LilyGo_Button.h"
+#include "LilyGo_Display.h"
 
 #define BOARD_NONE_PIN      (-1)
 

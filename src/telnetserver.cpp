@@ -37,20 +37,22 @@
 //
 //---------------------------------------------------------------------------
 
-#include <Arduino.h>
-#include <cerrno>
-#include <cstring>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <cstddef>
-#include <cassert>
-
 #include "globals.h"
+#include <Arduino.h>
+#include <arpa/inet.h>
+#include <cassert>
+#include <cerrno>
+#include <cstddef>
+#include <cstring>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
 #include "console.h"
 #include "logger.h"
-#include "network.h"
+#include "nd_network.h"
+
+
 
 #if ENABLE_WIFI
 
@@ -137,15 +139,20 @@ void IRAM_ATTR DebugLoopTaskEntry(void* pvParameters)
         return;
     }
 
+    SetSocketBlockingEnabled(listen_fd, false);
     listen(listen_fd, 1);
 
     while (true)
     {
         struct sockaddr_in cli_addr;
         socklen_t cli_len = sizeof(cli_addr);
-        int client_fd = accept(listen_fd, (struct sockaddr*)&cli_addr, &cli_len);
+        int client_fd = accept(listen_fd, (struct sockaddr *)&cli_addr, &cli_len);
 
         if (client_fd < 0) {
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                delay(100);
+                continue;
+            }
             delay(100);
             continue;
         }

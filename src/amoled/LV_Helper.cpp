@@ -11,8 +11,8 @@
 
 #if AMOLED_S3
 
-#include "amoled/LV_Helper.h"
 #include <Arduino.h>
+#include "amoled/LV_Helper.h"
 
 
 #if LV_VERSION_CHECK(9,0,0)

@@ -207,7 +207,7 @@ public:
     void StartRemoteThread();
     void StartJSONWriterThread();
 
-    void StartColorDataThread();
+
     void NotifyJSONWriterThread();
     void NotifyNetworkThread();
 

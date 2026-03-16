@@ -85,29 +85,41 @@ void ConsoleSession::Flush()
 
 void ConsoleSession::Write(LogLevel level, const char* tag, const char* message)
 {
-    // For logging, we add the level and tag prefix unless it's a raw write
-    char prefix[32];
-    const char* levelStr = "I";
-    const char* color = "";
+    if (!_sink) return;
+
+    // Assemble the entire log line into one buffer before writing to avoid
+    // interleaving from concurrent tasks calling _sink->Write() in separate calls.
+    char lv;
+    const char* color;
     const char* reset = "\x1B[0m";
 
     switch (level)
     {
-        case LogLevel::Fatal:   levelStr = "F"; color = "\x1B[1;31m"; break; // Bold Red
-        case LogLevel::Error:   levelStr = "E"; color = "\x1B[31m";   break; // Red
-        case LogLevel::Warn:    levelStr = "W"; color = "\x1B[33m";   break; // Yellow
-        case LogLevel::Info:    levelStr = "I"; color = "\x1B[32m";   break; // Green
-        case LogLevel::Debug:   levelStr = "D"; color = "\x1B[36m";   break; // Cyan
-        case LogLevel::Verbose: levelStr = "V"; color = "\x1B[39m";   break; // Default
-        case LogLevel::Trace:   levelStr = "T"; color = "\x1B[90m";   break; // Gray
+        case LogLevel::Fatal:   lv = 'F'; color = "\x1B[1;31m"; break; // Bold Red
+        case LogLevel::Error:   lv = 'E'; color = "\x1B[31m";   break; // Red
+        case LogLevel::Warn:    lv = 'W'; color = "\x1B[33m";   break; // Yellow
+        case LogLevel::Info:    lv = 'I'; color = "\x1B[32m";   break; // Green
+        case LogLevel::Debug:   lv = 'D'; color = "\x1B[36m";   break; // Cyan
+        case LogLevel::Verbose: lv = 'V'; color = "\x1B[39m";   break; // Default
+        case LogLevel::Trace:   lv = 'T'; color = "\x1B[90m";   break; // Gray
+        default:                lv = '?'; color = "";            break;
     }
 
-    WriteRaw(color);
-    snprintf(prefix, sizeof(prefix), "[%s][%s] ", levelStr, tag);
-    WriteText(prefix);
-    WriteText(message);
-    WriteText("\n");
-    WriteRaw(reset);
+    // Build the entire log line into one buffer before writing to avoid
+    // interleaving from concurrent tasks. lv is a char so operator+=(char)
+    // is a direct store — no strlen scan like operator+=(const char*) would do.
+    std::string line;
+    if (_showColors) line += color;
+    line += '[';
+    line += lv;
+    line += "][";
+    line += tag;
+    line += "] ";
+    line += message;
+    line += '\n';
+    if (_showColors) line += reset;
+
+    WriteText(line);
     Flush();
 }
 

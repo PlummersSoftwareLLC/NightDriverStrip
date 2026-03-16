@@ -28,11 +28,12 @@
 
 #pragma once
 
+#include "globals.h"
 #include <Arduino.h>
+#include <cstdarg>
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
-#include <cstdarg>
 
 //
 // LogLevel enum class as noodled by the user

@@ -155,59 +155,68 @@
 #define FASTLED_ESP32_SPI_BUS HSPI
 
 #include "globals.h"
+
+#include <algorithm>
+#include <Arduino.h>
+#include <ArduinoOTA.h>
+#include <IPAddress.h>
 #if USE_M5
 #include <M5Unified.h>
 #endif
-
-#include <algorithm>
-#include <ArduinoOTA.h>
+#include <SPIFFS.h>
+#include <WString.h>
+#if ENABLE_ESPNOW
+#include <esp_now.h>
+#endif
 #include <memory>
 #include <mutex>
 #include <nvs.h>
 #include <nvs_flash.h>
 #include <vector>
 
+#if defined(TOGGLE_BUTTON_0) || defined(TOGGLE_BUTTON_1)
+#include "Bounce2.h"
+#endif
 #include "console.h"
 #include "debug_cli.h"
-#include "logger.h"
 #include "deviceconfig.h"
 #include "effectmanager.h"
 #include "gfxbase.h"
+#if USE_HUB75
+#include "hub75gfx.h"
+#endif
+#if ENABLE_WIFI
 #include "improvserial.h"
+#endif
+#include "interfaces.h"
 #include "jsonserializer.h"
 #include "ledbuffer.h"
 #include "ledstripeffect.h"
+#include "logger.h"
+#include "nd_network.h"
 #include "ntptimeclient.h"
 #include "socketserver.h"
 #include "soundanalyzer.h"
 #include "systemcontainer.h"
 #include "taskmgr.h"
-#include "values.h"
-#include "websocketserver.h"
-#if USE_HUB75
-    #include "hub75gfx.h"
-#endif
-
 #if INCOMING_WIFI_ENABLED
 extern "C"
 {
-    #include "uzlib/src/uzlib.h"
+#include "uzlib/src/uzlib.h"
 }
 #endif
-
+#include "values.h"
+#include "websocketserver.h"
 #if USE_WS281X
-    #include "ws281xgfx.h"
+#include "ws281xgfx.h"
 #endif
 
-#if defined(TOGGLE_BUTTON_0) || defined(TOGGLE_BUTTON_1)
-  #include "Bounce2.h"                            // For Bounce button class
-#endif
+
 
 void ScreenUpdateLoopEntry(void *);
 
 #if ENABLE_ESPNOW
 #include <esp_arduino_version.h>
-#include <esp_now.h>
 #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
 void onReceiveESPNOW(const esp_now_recv_info_t *recvInfo, const uint8_t *data, int dataLen);
 #else
@@ -220,14 +229,15 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen);
 //
 
 DRAM_ATTR std::unique_ptr<SystemContainer> g_ptrSystem;
-Values g_Values;
 DRAM_ATTR std::mutex g_buffer_mutex;
 
 // The one and only instance of ImprovSerial.  We instantiate it as the type needed
 // for the serial port on this module.  That's usually HardwareSerial but can be
 // other types on the S2, etc... which is why it's a template class.
 
+#if ENABLE_WIFI
 std::unique_ptr<ImprovSerial<typeof(Serial)>> g_pImprovSerial;
+#endif
 
 // If an insulator or tree or fan has multiple rings, this table defines how those rings are laid out such
 // that they add up to FAN_SIZE pixels total per ring.
@@ -338,7 +348,7 @@ void setup()
     // Start the Task Manager which takes over the watchdog role and measures CPU usage
     auto& taskManager = g_ptrSystem->SetupTaskManager();
 
-    esp_log_level_set("*", ESP_LOG_WARN);        // set all components to an appropriate logging level
+    esp_log_level_set("*", ESP_LOG_DEBUG);       // set all components to an appropriate logging level
 
     // Display a simple startup header on the serial port
     PrintOutputHeader();
@@ -357,36 +367,36 @@ void setup()
     ESP_ERROR_CHECK(err);
 
     #if ENABLE_ESPNOW
-        WiFi.mode(WIFI_STA);  // or WIFI_AP if applicable
+        SetWiFiModeSTA();
 
         if (esp_now_init() != ESP_OK)
             throw std::runtime_error("Error initializing ESP-NOW");
         // Register receive callback function
         esp_now_register_recv_cb(onReceiveESPNOW);
-        debugI("ESP-NOW initialized with MAC address: %s", WiFi.macAddress().c_str());
+        debugI("ESP-NOW initialized with MAC address: %s", GetMacAddressPretty().c_str());
     #endif
 
     #if ENABLE_WIFI
-        String WiFi_ssid;
-        String WiFi_password;
-        bool ct_creds_selected = false;
+    String WiFi_ssid;
+    String WiFi_password;
+    bool ct_creds_selected = false;
 
-        // if we have valid compile-time creds and they differ from what was persisted as
-        // compile-time creds, adopt them as the new WiFi creds reality.
-        if (cszSSID && strlen(cszSSID) > 0 && cszPassword)
+    // if we have valid compile-time creds and they differ from what was persisted as
+    // compile-time creds, adopt them as the new WiFi creds reality.
+    if (cszSSID && strlen(cszSSID) > 0 && cszPassword)
+    {
+        String ct_ssid;
+        String ct_password;
+        if (!ReadWiFiConfig(WifiCredSource::CompileTimeCreds, ct_ssid, ct_password) || ct_ssid != cszSSID ||
+            ct_password != cszPassword)
         {
-            String ct_ssid;
-            String ct_password;
-            if (!ReadWiFiConfig(WifiCredSource::CompileTimeCreds, ct_ssid, ct_password)
-                || ct_ssid != cszSSID || ct_password != cszPassword)
-            {
-                debugI("Compile-time WiFi credentials differ from stored credentials, adopting new credentials");
-                ct_creds_selected = true;
+            debugI("Compile-time WiFi credentials differ from stored credentials, adopting new credentials");
+            ct_creds_selected = true;
 
-                // Clear any Improv creds as they are now stale
-                if (!ClearWiFiConfig(WifiCredSource::ImprovCreds))
-                    debugW("Failed clearing Improv WiFi config from NVS");
-            }
+            // Clear any Improv creds as they are now stale
+            if (!ClearWiFiConfig(WifiCredSource::ImprovCreds))
+                debugW("Failed clearing Improv WiFi config from NVS");
+        }
         }
 
         // If we didn't decide to use current compile-time credentials, then try to fetch Improv creds
@@ -420,8 +430,9 @@ void setup()
             String family = "ESP32";
         #endif
 
+#if ENABLE_WIFI
         debugW("Starting ImprovSerial for %s", family.c_str());
-        String name = "NDESP32" + get_mac_address().substring(6);
+        String name = "NDESP32" + GetMacAddress().substring(6);
         g_pImprovSerial = make_unique_psram<ImprovSerial<typeof(Serial)>>();
         g_pImprovSerial->setup(PROJECT_NAME, FLASH_VERSION_NAME, family, name.c_str(), &Serial);
 
@@ -429,6 +440,7 @@ void setup()
         g_pImprovSerial->set_on_unknown_byte([](uint8_t byte) {
             DebugCLI::ProcessCLIByte(byte, ConsoleManager::Instance().GetSerialSession());
         });
+#endif
 #endif
 
     // Setup config objects
@@ -461,13 +473,17 @@ void setup()
     // If we have a remote control enabled, set the direction on its input pin accordingly
 
     #if ENABLE_REMOTE
+    if (IR_REMOTE_PIN >= 0)
+    {
         pinMode(IR_REMOTE_PIN, INPUT);
         g_ptrSystem->SetupRemoteControl();
+    }
     #endif
 
     #if ENABLE_AUDIO
     {
         #if INPUT_PIN
+        if (INPUT_PIN >= 0)
             pinMode(INPUT_PIN, INPUT);
         #endif
         #if TTGO
@@ -611,14 +627,16 @@ void loop()
         #if ENABLE_WIFI
             EVERY_N_MILLIS(20)
             {
+#if ENABLE_WIFI
                 g_pImprovSerial->loop();
+#endif
             }
         #endif
 
         #if ENABLE_OTA
             try
             {
-                if (WiFi.isConnected())
+                if (IsWiFiConnected())
                     ArduinoOTA.handle();
             }
             catch(const std::exception& e)
@@ -632,7 +650,7 @@ void loop()
             String strOutput;
 
             #if ENABLE_WIFI
-                strOutput += str_sprintf("WiFi: %s, MAC: %s, IP: %s ", WLtoString(WiFi.status()), WiFi.macAddress().c_str(), WiFi.localIP().toString().c_str());
+                strOutput += str_sprintf("WiFi: %s, MAC: %s, IP: %s ", WLtoString(GetWiFiStatus()), GetMacAddressPretty().c_str(), GetWiFiLocalIP().c_str());
             #endif
 
             strOutput += str_sprintf("Mem: %zu, LargestBlk: %zu, PSRAM Free: %zu/%zu, ", (size_t)ESP.getFreeHeap(), (size_t)ESP.getMaxAllocHeap(), (size_t)ESP.getFreePsram(), (size_t)ESP.getPsramSize());

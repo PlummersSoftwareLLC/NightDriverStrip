@@ -29,13 +29,22 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
-
 #include <fcntl.h>
+#if ENABLE_WIFI || ENABLE_ESPNOW
+#include <WiFi.h>
+#endif
+#if ENABLE_WIFI
+#include <algorithm>
+#include <ArduinoOTA.h>
+#include <ESPmDNS.h>
+#include <nvs.h>
+#endif
 
 #include "colordata.h"
 #include "deviceconfig.h"
 #include "effectmanager.h"
 #include "ledbuffer.h"
+#include "nd_network.h"
 #include "socketserver.h"
 #include "systemcontainer.h"
 #include "taskmgr.h"
@@ -44,23 +53,93 @@
 #include "websocketserver.h"
 
 #if ENABLE_WIFI
-
-#include <algorithm>
-#include <ArduinoOTA.h>
-#include <ESPmDNS.h>
-#include <nvs.h>
-
 #include "byte_utils.h"
 #include "console.h"
 #include "debug_cli.h"
-#include "effectmanager.h"
 #include "ledviewer.h"
-#include "nd_network.h"
 #include "ntptimeclient.h"
 #include "soundanalyzer.h"
 #if USE_HUB75
     #include "hub75gfx.h"
 #endif
+#endif
+
+bool IsWiFiConnected()
+{
+#if ENABLE_WIFI
+  return WiFi.isConnected();
+#else
+  return false;
+#endif
+}
+
+int GetWiFiStatus()
+{
+#if ENABLE_WIFI
+  return (int)WiFi.status();
+#else
+  return 0; // WL_IDLE_STATUS often is 0
+#endif
+}
+
+void SetWiFiModeSTA()
+{
+#if ENABLE_WIFI || ENABLE_ESPNOW
+  WiFi.mode(WIFI_STA);
+#endif
+}
+
+int GetWiFiRSSI()
+{
+#if ENABLE_WIFI
+  return WiFi.RSSI();
+#else
+  return 0;
+#endif
+}
+
+String GetWiFiLocalIP()
+{
+#if ENABLE_WIFI
+  return WiFi.localIP().toString();
+#else
+  return String("0.0.0.0");
+#endif
+}
+
+bool GetWiFiHostByName(const char* hostname, IPAddress& ip)
+{
+#if ENABLE_WIFI
+  return WiFi.hostByName(hostname, ip) == 1;
+#else
+  return false;
+#endif
+}
+
+void GetMacAddressRaw(uint8_t *mac)
+{
+#if ENABLE_WIFI
+  WiFi.macAddress(mac);
+#else
+  esp_read_mac(mac, ESP_MAC_WIFI_STA);
+#endif
+}
+
+String GetMacAddress()
+{
+  uint8_t mac[6];
+  GetMacAddressRaw(mac);
+  return str_sprintf("%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+}
+
+String GetMacAddressPretty()
+{
+  uint8_t mac[6];
+  GetMacAddressRaw(mac);
+  return str_sprintf("%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+}
+
+#if ENABLE_WIFI
 
 // Writer function and flag combo
 struct NetworkReader::ReaderEntry
@@ -88,40 +167,23 @@ struct NetworkReader::ReaderEntry
 
 static DRAM_ATTR WiFiUDP l_Udp;              // UDP object used for NNTP, etc
 
-String get_mac_address()
-{
-  uint8_t mac[6];
-  WiFi.macAddress(mac);
-  return str_sprintf("%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-}
+// End of readers and wrappers
 
-String get_mac_address_pretty()
-{
-  uint8_t mac[6];
-  WiFi.macAddress(mac);
-  return str_sprintf("%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-}
 
-const char* WLtoString(wl_status_t status)
+const char* WLtoString(int status)
 {
     switch (status) {
-    case 255: return WL_NO_SHIELD;
-    case 0: return   WL_IDLE_STATUS;
-    case 1: return   WL_NO_SSID_AVAIL;
-    case 2: return   WL_SCAN_COMPLETED;
-    case 3: return   WL_CONNECTED;
-    case 4: return   WL_CONNECT_FAILED;
-    case 5: return   WL_CONNECTION_LOST;
-    case 6: return   WL_DISCONNECTED;
-    default: return  WL_UNKNOWN_STATUS;
+    case 255: return "WL_NO_SHIELD";
+    case 0: return   "WL_IDLE_STATUS";
+    case 1: return   "WL_NO_SSID_AVAIL";
+    case 2: return   "WL_SCAN_COMPLETED";
+    case 3: return   "WL_CONNECTED";
+    case 4: return   "WL_CONNECT_FAILED";
+    case 5: return   "WL_CONNECTION_LOST";
+    case 6: return   "WL_DISCONNECTED";
+    default: return  "WL_UNKNOWN_STATUS";
     }
 }
-
-void get_mac_address_raw(uint8_t *mac)
-{
-    esp_efuse_mac_get_default(mac);
-}
-
 
 String urlEncode(const String& str)
 {
@@ -156,7 +218,7 @@ void DoStatsCommand()
     auto& bufferManager = g_ptrSystem->GetBufferManagers()[0];
 
     DebugCLI::cli_printf("%s:%zux%d %zuK", FLASH_VERSION_NAME, g_ptrSystem->GetDevices().size(), NUM_LEDS, (size_t)(ESP.getFreeHeap() / 1024));
-    DebugCLI::cli_printf("%sdB:%s",String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
+    DebugCLI::cli_printf("%ddB:%s", abs(WiFi.RSSI()), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
     DebugCLI::cli_printf("BUFR:%02zu/%02zu [%lufps]", (size_t)bufferManager.Depth(), (size_t)bufferManager.BufferCount(), (unsigned long)g_Values.FPS);
     DebugCLI::cli_printf("DATA:%+04.2lf-%+04.2lf", bufferManager.AgeOfOldestBuffer(), bufferManager.AgeOfNewestBuffer());
 
@@ -384,11 +446,11 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
 #if ENABLE_WIFI
 
-    #define WIFI_WAIT_BASE      4000    // Initial time to wait for WiFi to come up, in ms
-    #define WIFI_WAIT_INCREASE  1000    // Increase of WiFi waiting time per cycle, in ms
+    #define WIFI_WAIT_BASE      10000   // Initial time to wait for WiFi to come up, in ms
+    #define WIFI_WAIT_INCREASE  5000    // Increase of WiFi waiting time per cycle, in ms
     #define WIFI_WAIT_MAX       60000   // Maximum gap between retries, in ms
 
-    #define WIFI_WAIT_INIT      (WIFI_WAIT_BASE - WIFI_WAIT_INCREASE)
+    #define WIFI_WAIT_INIT      WIFI_WAIT_BASE
 
     // ConnectToWiFi
     //
@@ -405,6 +467,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     WiFiConnectResult ConnectToWiFi(const String* ssid = nullptr, const String* password = nullptr)
     {
         static bool bPreviousConnection = false;
+        static bool bReportedDisconnected = false;
         static unsigned long millisAtLastAttempt = 0;
         static unsigned long retryDelay = WIFI_WAIT_INIT;
         static String WiFi_ssid;
@@ -439,20 +502,25 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             }
             else
             {
-                auto hostname = g_ptrSystem->GetDeviceConfig().GetHostname().c_str();
+                const String& hostname = g_ptrSystem->GetDeviceConfig().GetHostname();
 
-                if (hostname[0] == '\0')
+                if (hostname.length() == 0)
                 {
                     debugI("No hostname configured, so skipping setting it.");
                 }
                 else
                 {
-                    debugI("Setting host name to %s...", hostname);
-                    WiFi.setHostname(hostname);
+                    debugI("Setting host name to %s...", hostname.c_str());
+                    WiFi.setHostname(hostname.c_str());
                 }
 
-                debugV("Wifi.disconnect");
-                WiFi.disconnect();
+                // Only disconnect if we are not already trying to connect or it's been a very long time
+                if (WiFi.status() != WL_IDLE_STATUS && WiFi.status() != WL_DISCONNECTED)
+                {
+                    debugV("Wifi.disconnect");
+                    WiFi.disconnect();
+                }
+
                 debugV("Wifi.mode");
                 WiFi.mode(WIFI_STA);
                 debugW("Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %zu, PSRAM:%zu, PSRAM Free: %zu\n",
@@ -466,12 +534,17 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         if (WiFi.isConnected())
         {
+            bReportedDisconnected = false;
             debugW("Connected to AP with BSSID: \"%s\", received IP: %s", WiFi.BSSIDstr().c_str(), WiFi.localIP().toString().c_str());
         }
         else
-        // Additional services onwards are reliant on network so return if WiFi is not up (yet)
+        // Additional services onward are reliant on network so return if WiFi is not up (yet)
         {
-            debugW("Not yet connected to WiFi, waiting...");
+            if (!bReportedDisconnected)
+            {
+                debugW("Not yet connected to WiFi, waiting...");
+                bReportedDisconnected = true;
+            }
             return WiFiConnectResult::Disconnected;
         }
 
@@ -826,7 +899,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                 socketServer.release();
                 socketServer.begin();
                 socketServer.ProcessIncomingConnectionsLoop();
-                debugW("Socket connection closed.  Retrying...\n");
+                debugV("Socket connection closed.  Retrying...");
             }
             delay(500);
         }
@@ -1094,10 +1167,17 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
 bool SetSocketBlockingEnabled(int fd, bool blocking)
 {
-   if (fd < 0) return false;
+    if (fd < 0)
+        return false;
 
-   int flags = fcntl(fd, F_GETFL, 0);
-   if (flags == -1) return false;
-   flags = blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
-   return (fcntl(fd, F_SETFL, flags) == 0) ? true : false;
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags < 0)
+        return false;
+
+    if (blocking)
+        flags &= ~O_NONBLOCK;
+    else
+        flags |= O_NONBLOCK;
+
+    return fcntl(fd, F_SETFL, flags) == 0;
 }

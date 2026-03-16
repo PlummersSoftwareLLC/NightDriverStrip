@@ -31,23 +31,19 @@
 #include <cctype>
 #include <charconv>
 #include <cstring>
-#include <optional>
-#include <string>
-#include <string_view>
-#include <vector>
 #include <esp_heap_caps.h>
 #include <esp_log.h>
 #include <esp_system.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <FS.h>
+#include <optional>
 #include <SPIFFS.h>
+#include <string>
+#include <string_view>
+#include <vector>
 
 #include "console.h"
-#include "debug_cli.h"
-#include "effectmanager.h"
-#include "systemcontainer.h"
-
 #include "debug_cli.h"
 #include "deviceconfig.h"
 #include "effectmanager.h"
@@ -562,7 +558,7 @@ static const command core_commands[] = {
      }},
     {"heap", "Display heap memory info",
      "Heap usage:", [](const cli_argv &) { heap_caps_print_heap_info(MALLOC_CAP_DEFAULT); }},
-    {"log", "[tag] <level> Set log level", "Setting log level...",
+    {"log", "[tag] <level> Get/set log level", nullptr,
      [](const cli_argv &argv) {
          static const struct
          {
@@ -573,7 +569,12 @@ static const command core_commands[] = {
 
          if (argv.size() < 2)
          {
-             cli_printf("Usage: log [tag] <none|error|warn|info|debug|verbose>\n");
+             // No args: show the current global log level
+             esp_log_level_t current = esp_log_level_get("*");
+             const char *name = "unknown";
+             for (const auto &l : levels)
+                 if (l.level == current) { name = l.name; break; }
+             cli_printf("Log level: %s\n", name);
              return;
          }
          std::string_view levelStr = argv.back();
@@ -590,7 +591,7 @@ static const command core_commands[] = {
                  return;
              }
          }
-         cli_printf("Invalid level '%s'.\n", std::string(levelStr).c_str());
+         cli_printf("Invalid level '%s'. Valid: none error warn info debug verbose\n", std::string(levelStr).c_str());
      }},
     {"bright", "[level] Display/Set brightness 0-255", "Brightness:",
      [](const cli_argv &argv) {
@@ -614,8 +615,48 @@ static const command core_commands[] = {
         cli_printf("Brightness: %d\n", val);
     }},
     {"uptime", "Show system uptime", "Showing uptime...", DoUptime},
+    {"color", "[on|off] | [r g b | hex] Set or show colors", "Global Color:",
+     [](const cli_argv &argv) {
+         if (argv.size() > 1)
+         {
+             std::string_view firstArg = argv[1];
+             if (firstArg == "on" || firstArg == "off")
+             {
+                 if (_activeSession)
+                 {
+                     _activeSession->SetShowColors(firstArg == "on");
+                     cli_printf("Log colorization is now %s for this session.\n", _activeSession->ShowColors() ? "enabled" : "disabled");
+                 }
+                 return;
+             }
+
+             CRGB newColor = g_ptrSystem->GetDeviceConfig().GlobalColor();
+             if (argv.size() == 2) // Assume hex if one arg
+             {
+                 std::string hexStr(argv[1]);
+                 if (hexStr[0] == '#') hexStr.erase(0, 1);
+                 uint32_t val = strtol(hexStr.c_str(), nullptr, 16);
+                 newColor = CRGB(val);
+             }
+             else if (argv.size() == 4) // Assume R G B
+             {
+                 newColor.r = atoi(std::string(argv[1]).c_str());
+                 newColor.g = atoi(std::string(argv[2]).c_str());
+                 newColor.b = atoi(std::string(argv[3]).c_str());
+             }
+             g_ptrSystem->GetDeviceConfig().SetGlobalColor(newColor);
+         }
+         CRGB c = g_ptrSystem->GetDeviceConfig().GlobalColor();
+         cli_printf("Global Color: R:%d G:%d B:%d (0x%02X%02X%02X)\n", c.r, c.g, c.b, c.r, c.g, c.b);
+         if (_activeSession)
+         {
+             cli_printf("Log colors: %s\n", _activeSession->ShowColors() ? "ON" : "OFF");
+         }
+     }},
     {"help", "Display command line options", "Displaying system help",
-     PrintHelp} // Function pointer logic requires PrintHelp signature match. It does.
+     PrintHelp}, // Function pointer logic requires PrintHelp signature match. It does.
+    {"?", "Display command line options", "Displaying system help",
+     PrintHelp}
 };
 
 

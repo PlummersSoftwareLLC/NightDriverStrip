@@ -86,10 +86,6 @@
 
 #pragma once
 
-#include <fcntl.h>
-#include <sstream>
-#include <iomanip>
-
 //  See https://github.com/PlummersSoftwareLLC/NightDriverStrip/issues/515
 #define FASTLED_ESP32_FLASH_LOCK 1
 #define FASTLED_INTERNAL 1               // Suppresses build banners
@@ -779,5 +775,3 @@ extern const int g_aRingSizeTable[];
 #undef ENABLE_REMOTE
 #define ENABLE_REMOTE 0
 
-#include <RemoteDebug.h>
-extern RemoteDebug Debug;           // Let everyone in the project know about it.  If you don't have it, delete this

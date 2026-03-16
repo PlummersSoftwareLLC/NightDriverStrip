@@ -85,7 +85,7 @@
 #define IR_FADE    0xF7C837
 #define IR_SMOOTH  0xF7E817
 
-static const RemoteColorCode RemoteColorCodes[] = 
+static const RemoteColorCode RemoteColorCodes[] =
 {
     { IR_OFF, CRGB(0, 0, 0),       0,   "Off"          },
     { IR_R,   CRGB(255, 0, 0),     0,   "Red"          },
@@ -164,10 +164,10 @@ static const RemoteColorCode RemoteColorCodes[] =
 #define IR_FADE7  0xFFE01F  // Fade7
 
 // Map required keys for logic compatibility
-#define IR_FADE   IR_FADE3 
+#define IR_FADE   IR_FADE3
 #define IR_SMOOTH IR_AUTO   // Map Smooth to Auto
 
-static const RemoteColorCode RemoteColorCodes[] = 
+static const RemoteColorCode RemoteColorCodes[] =
 {
     { IR_OFF,   CRGB(0, 0, 0),       0,   "Off"          },
     { IR_R,     CRGB(255, 0, 0),     0,   "Red"          },
@@ -217,13 +217,13 @@ static const RemoteColorCode RemoteColorCodes[] =
 // ---------------------------------------------------------
 
 #define NEC_DECODE_MARGIN 200  // Tolerance in microseconds
-#define RMT_RESOLUTION_HZ 1000000 
+#define RMT_RESOLUTION_HZ 1000000
 
-class RemoteControlImpl 
+class RemoteControlImpl
 {
 public:
     RemoteControlImpl(int pin) : _pin(pin), _channel(RMT_CHANNEL_0) {}
-    
+
     ~RemoteControlImpl() {
         if (_begun) {
             rmt_rx_stop(_channel);
@@ -267,7 +267,7 @@ private:
     bool _begun = false;
 
     bool match(uint32_t measured, uint32_t target) {
-        return (measured >= (target - NEC_DECODE_MARGIN)) && 
+        return (measured >= (target - NEC_DECODE_MARGIN)) &&
                (measured <= (target + NEC_DECODE_MARGIN));
     }
 
@@ -285,7 +285,7 @@ private:
 
         // Leader Code (9ms Mark, 4.5ms Space / 2.25ms Repeat)
         if (!match(get_time(0), 9000)) return false;
-        
+
         if (match(get_time(1), 2250)) {
             isRepeat = true;
             return true;
@@ -299,17 +299,17 @@ private:
 
         for (int i = 2; i < 66; i += 2) {
             if (!match(get_time(i), 560)) return false;
-            
+
             data <<= 1;
-            
+
             // 560us space = '0', 1690us space = '1'
             if (match(get_time(i+1), 1690)) {
                 data |= 1;
             } else if (!match(get_time(i+1), 560)) {
-                return false; 
+                return false;
             }
         }
-        
+
         code = data;
         isRepeat = false;
         return true;
@@ -368,20 +368,20 @@ void RemoteControl::handle()
     {
         static uint lastRepeatTime = millis();
         auto kMinRepeatms = 200;
-        
+
         if (result == IR_OFF)
-            kMinRepeatms = 0;               
+            kMinRepeatms = 0;
         else if (isRepeat)
-            kMinRepeatms = 500;             
+            kMinRepeatms = 500;
         else if (result == lastResult)
-            kMinRepeatms = 50;              
+            kMinRepeatms = 50;
 
         if (millis() - lastRepeatTime <= kMinRepeatms)
             return;
 
         lastRepeatTime = millis();
     }
-    
+
     lastResult = result;
 
     auto &effectManager = g_ptrSystem->GetEffectManager();
@@ -458,9 +458,9 @@ void RemoteControl::handle()
         if (RemoteColorCode.code == result)
         {
             debugI("Remote: Color %s (0x%08lX)", RemoteColorCode.name, (unsigned long)(uint32_t) RemoteColorCode.color);
-            
+
             // Only apply color if it's not Black (used as placeholder for command keys)
-            if (RemoteColorCode.color != CRGB::Black) 
+            if (RemoteColorCode.color != CRGB::Black)
             {
                 effectManager.ApplyGlobalColor(RemoteColorCode.color);
                 #if FULL_COLOR_REMOTE_FILL
@@ -474,7 +474,7 @@ void RemoteControl::handle()
             return;
         }
     }
-    
+
     // Log unknown codes
     debugD("Remote: Unknown Code 0x%08lX", (unsigned long)result);
 }

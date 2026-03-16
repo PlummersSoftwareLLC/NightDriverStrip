@@ -97,7 +97,9 @@
 #ifndef BRIGHTNESS_MIN
     #define BRIGHTNESS_MIN          uint8_t(10)
 #endif
-#define BRIGHTNESS_MAX              uint8_t(255)
+#ifndef BRIGHTNESS_MAX
+    #define BRIGHTNESS_MAX          uint8_t(255)
+#endif
 #define POWER_LIMIT_MIN             1000
 #define POWER_LIMIT_DEFAULT         4500
 

@@ -10,9 +10,8 @@
  */
 
 #include "globals.h"
-
-#include "LilyGo_Display.h"
 #include <lvgl.h>
+#include "LilyGo_Display.h"
 
 
 void beginLvglHelper(LilyGo_Display &board, bool debug = false);

@@ -26,11 +26,10 @@
 //
 //---------------------------------------------------------------------------
 
-#include "logger.h"
-
-#include "console.h"
 #include <esp_log.h>
 #include <string_view>
+#include "console.h"
+#include "logger.h"
 
 LogLevel Logger::_level = LogLevel::Verbose;
 

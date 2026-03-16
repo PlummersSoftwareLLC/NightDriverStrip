@@ -27,8 +27,7 @@
 //---------------------------------------------------------------------------
 
 #pragma once
-
-
+#include "globals.h"
 #include <Arduino.h>
 #include <functional>
 #include <memory>
@@ -72,11 +71,15 @@ public:
     void SetEcho(bool enable) { _echo = enable; }
     bool EchoEnabled() const { return _echo; }
 
+    void SetShowColors(bool enable) { _showColors = enable; }
+    bool ShowColors() const { return _showColors; }
+
     std::string& StringBuffer() { return _buffer; }
 
 private:
     IConsoleSink* _sink;
     bool _echo = true;
+    bool _showColors = true;
     std::string _buffer;
 };
 
@@ -119,11 +122,15 @@ private:
 class SerialConsoleSink : public IConsoleSink
 {
 public:
-    void Write(const char* data, size_t len) override {
+    void Write(const char* data, size_t len) override
+    {
         Serial.write(data, len);
     }
-    void Flush() override {
+
+    void Flush() override
+    {
         Serial.flush();
     }
+
     LineEndingPolicy LinePolicy() const override { return LineEndingPolicy::CRLF; }
 };

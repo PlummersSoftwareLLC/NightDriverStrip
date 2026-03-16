@@ -79,7 +79,7 @@ public:
 
     void Draw() override
     {
-        String sIP = WiFi.isConnected() ? "http://" + WiFi.localIP().toString() : "No Wifi";
+        String sIP = IsWiFiConnected() ? "http://" + GetWiFiLocalIP() : "No Wifi";
         if (sIP != lastData)
         {
             lastData = sIP;

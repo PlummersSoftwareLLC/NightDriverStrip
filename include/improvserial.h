@@ -34,6 +34,11 @@
 
 #include "globals.h"
 
+#if ENABLE_WIFI
+#include <IPAddress.h>
+#include <WiFi.h>
+#endif
+
 #include <improv.h>
 #include <numeric>
 #include <SPIFFS.h>
