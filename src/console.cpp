@@ -132,55 +132,77 @@ static SerialConsoleSink g_SerialSink;
 
 ConsoleManager::ConsoleManager()
 {
-    _serialSession = std::make_unique<ConsoleSession>(&g_SerialSink);
+    _serialSession = std::make_shared<ConsoleSession>(&g_SerialSink);
 }
 
 void ConsoleManager::FeedSerialByte(uint8_t byte)
 {
-    std::lock_guard<std::recursive_mutex> lock(_mutex);
-    if (_byteHandler && _serialSession)
-        _byteHandler(byte, *_serialSession);
+    std::shared_ptr<ConsoleSession> session;
+    {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        session = _serialSession;
+    }
+    if (_byteHandler && session)
+        _byteHandler(byte, session);
 }
 
 void ConsoleManager::FeedTelnetByte(uint8_t byte)
 {
-    std::lock_guard<std::recursive_mutex> lock(_mutex);
-    if (_byteHandler && _telnetSession)
-        _byteHandler(byte, *_telnetSession);
+    std::shared_ptr<ConsoleSession> session;
+    {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        session = _telnetSession;
+    }
+    if (_byteHandler && session)
+        _byteHandler(byte, session);
 }
 
 void ConsoleManager::Broadcast(std::string_view data)
 {
-    std::lock_guard<std::recursive_mutex> lock(_mutex);
-    if (_serialSession) {
-        _serialSession->WriteText(data);
-        _serialSession->Flush();
+    std::shared_ptr<ConsoleSession> serial, telnet;
+    {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        serial = _serialSession;
+        telnet = _telnetSession;
     }
-    if (_telnetSession) {
-        _telnetSession->WriteText(data);
-        _telnetSession->Flush();
+    if (serial) {
+        serial->WriteText(data);
+        serial->Flush();
+    }
+    if (telnet) {
+        telnet->WriteText(data);
+        telnet->Flush();
     }
 }
 
 void ConsoleManager::Broadcast(LogLevel level, const char* tag, const char* message)
 {
-    std::lock_guard<std::recursive_mutex> lock(_mutex);
-    if (_serialSession) {
-        _serialSession->Write(level, tag, message);
+    std::shared_ptr<ConsoleSession> serial, telnet;
+    {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        serial = _serialSession;
+        telnet = _telnetSession;
     }
-    if (_telnetSession) {
-        _telnetSession->Write(level, tag, message);
+    if (serial) {
+        serial->Write(level, tag, message);
+    }
+    if (telnet) {
+        telnet->Write(level, tag, message);
     }
 }
 
 void ConsoleManager::SetTelnetSink(IConsoleSink* sink)
 {
-    std::lock_guard<std::recursive_mutex> lock(_mutex);
-    _telnetSession = std::make_unique<ConsoleSession>(sink);
-    if (_telnetSession) {
-        _telnetSession->SetEcho(true);
-        _telnetSession->SetShowColors(false);      // Default off for clean 'nc', real Telnet can call 'color on'
-        DebugCLI::RunCommand("", *_telnetSession); // Force an initial prompt
+    std::shared_ptr<ConsoleSession> session;
+    {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _telnetSession = std::make_shared<ConsoleSession>(sink);
+        session = _telnetSession;
+    }
+    if (session) {
+        session->SetEcho(true);
+        session->SetShowColors(false);      // Default off for clean 'nc', real Telnet can call 'color on'
+        DebugCLI::RunCommand("", session); // Force an initial prompt
     }
 }
 

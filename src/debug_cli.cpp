@@ -215,18 +215,18 @@ static void PrintHelp(const cli_argv &argv)
 // Set by RunCommand so that cli_printf knows where to direct output.
 // Falls back to Broadcast if called from outside a RunCommand context.
 //
-static thread_local ConsoleSession* _activeSession = nullptr;
+static thread_local std::shared_ptr<ConsoleSession> _activeSession;
 
 //
 // Parse and run cmd_line. Zero copies or allocations.
 //
-void RunCommand(std::string_view cmd_line, ConsoleSession& session)
+void RunCommand(std::string_view cmd_line, std::shared_ptr<ConsoleSession> session)
 {
     const auto argv = Tokenize(cmd_line);
 
     // Pin output to this session for the duration of the command.
-    ConsoleSession* previous = _activeSession;
-    _activeSession = &session;
+    std::shared_ptr<ConsoleSession> previous = _activeSession;
+    _activeSession = session;
 
     // If command is valid
     if (!argv.empty())
@@ -238,8 +238,8 @@ void RunCommand(std::string_view cmd_line, ConsoleSession& session)
         {
             if ((*it)->announcement)
             {
-                session.WriteText((*it)->announcement);
-                session.WriteText("\n");
+                session->WriteText((*it)->announcement);
+                session->WriteText("\n");
             }
             (*it)->helper(argv);
         }
@@ -252,8 +252,10 @@ void RunCommand(std::string_view cmd_line, ConsoleSession& session)
     _activeSession = previous;
 
     // Always emit prompt after command execution (or empty command)
-    session.WriteRaw("> ");
-    session.Flush();
+    if (session) {
+        session->WriteRaw("> ");
+        session->Flush();
+    }
 }
 
 // If you have command 'reboot', reb<TAB> will complete "reboot". Caller will
@@ -733,9 +735,10 @@ void cli_printf(const char *fmt, ...)
         free(buf);
 }
 
-void ProcessCLIByte(uint8_t byte, ConsoleSession& session)
+void ProcessCLIByte(uint8_t byte, std::shared_ptr<ConsoleSession> session)
 {
-    std::string& cmd = session.StringBuffer();
+    if (!session) return;
+    std::string& cmd = session->StringBuffer();
 
     switch (byte)
     {
@@ -748,8 +751,8 @@ void ProcessCLIByte(uint8_t byte, ConsoleSession& session)
         {
             cmd += suffix;
             cmd += " ";
-            session.WriteRaw(suffix);
-            session.WriteRaw(" ");
+            session->WriteRaw(suffix);
+            session->WriteRaw(" ");
         }
         break;
     }
@@ -758,7 +761,7 @@ void ProcessCLIByte(uint8_t byte, ConsoleSession& session)
         if (!cmd.empty())
         {
             cmd.pop_back();
-            session.WriteRaw("\b \b");
+            session->WriteRaw("\b \b");
         }
         break;
 
@@ -766,7 +769,7 @@ void ProcessCLIByte(uint8_t byte, ConsoleSession& session)
     {
         // CR triggers command dispatch. Echo the newline so the terminal
         // moves to the next line before command output appears.
-        session.WriteRaw("\r\n");
+        session->WriteRaw("\r\n");
         RunCommand(cmd, session);
         cmd.clear();
         break;
@@ -778,8 +781,8 @@ void ProcessCLIByte(uint8_t byte, ConsoleSession& session)
         break;
 
     default:
-        if (session.EchoEnabled())
-            session.WriteRaw(std::string_view(reinterpret_cast<const char*>(&byte), 1));
+        if (session->EchoEnabled())
+            session->WriteRaw(std::string_view(reinterpret_cast<const char*>(&byte), 1));
         cmd += (char)byte;
         break;
     }

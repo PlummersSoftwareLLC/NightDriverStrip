@@ -83,7 +83,7 @@ private:
     std::string _buffer;
 };
 
-using ConsoleByteHandler = void (*)(uint8_t byte, ConsoleSession& session);
+using ConsoleByteHandler = void (*)(uint8_t byte, std::shared_ptr<ConsoleSession> session);
 
 class ConsoleManager
 {
@@ -93,8 +93,8 @@ public:
         return instance;
     }
 
-    ConsoleSession& GetSerialSession() { return *_serialSession; }
-    ConsoleSession* GetTelnetSession() { return _telnetSession.get(); }
+    std::shared_ptr<ConsoleSession> GetSerialSession() { return _serialSession; }
+    std::shared_ptr<ConsoleSession> GetTelnetSession() { return _telnetSession; }
 
     void SetByteHandler(ConsoleByteHandler handler) { _byteHandler = handler; }
 
@@ -111,8 +111,8 @@ public:
 private:
     ConsoleManager();
 
-    std::unique_ptr<ConsoleSession> _serialSession;
-    std::unique_ptr<ConsoleSession> _telnetSession;
+    std::shared_ptr<ConsoleSession> _serialSession;
+    std::shared_ptr<ConsoleSession> _telnetSession;
     ConsoleByteHandler _byteHandler = nullptr;
     std::recursive_mutex _mutex;
 };
