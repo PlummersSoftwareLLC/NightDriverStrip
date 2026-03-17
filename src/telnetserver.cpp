@@ -73,34 +73,35 @@ public:
     TelnetSink(int fd) : _fd(fd) {}
     void Write(const char* data, size_t len) override {
         size_t total_sent = 0;
+        int retries = 0;
         while (total_sent < len) {
-            // Use select() to wait for the socket to be writable with a small timeout.
-            // This prevents a hanging or slow Telnet client from stalling the entire
-            // logging system (since Broadcast holds a mutex).
-            fd_set write_fds;
-            FD_ZERO(&write_fds);
-            FD_SET(_fd, &write_fds);
-
-            struct timeval tv;
-            tv.tv_sec = 0;
-            tv.tv_usec = 50000; // 50ms timeout
-
-            int res = select(_fd + 1, nullptr, &write_fds, nullptr, &tv);
-            if (res <= 0) {
-                // Timeout or error: drop the rest of this write to avoid stalling.
-                return;
-            }
-
+            // Write directly with MSG_DONTWAIT. This avoids the use of select() and FD_SET(),
+            // which can corrupt the stack in ESP-IDF if _fd >= FD_SETSIZE (default 64) due to 
+            // numerous open file/socket handles.
             int sent = send(_fd, data + total_sent, len - total_sent, MSG_DONTWAIT);
-            if (sent <= 0) {
-                // Benign disconnect or error. We stop writing here and let the
-                // main loop's recv() handle the cleanup and socket closure.
-                return;
+            
+            if (sent > 0) {
+                total_sent += sent;
+                retries = 0; // Reset retries on successful progress
+            } else if (sent < 0) {
+                if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                    retries++;
+                    if (retries > 50) {
+                        // Timeout after ~500ms of spinning to avoid stalling the logger thread
+                        return;
+                    }
+                    vTaskDelay(pdMS_TO_TICKS(10));
+                } else if (errno == EINTR) {
+                    continue; // Interrupted, try again immediately
+                } else {
+                    // Fatal socket error (broken pipe, reset, etc.). Stop writing.
+                    // The main read loop will detect this on its next recv().
+                    return; 
+                }
+            } else {
+                return; // sent == 0, peer closed
             }
-            total_sent += sent;
         }
-
-        assert(total_sent == len);
     }
     LineEndingPolicy LinePolicy() const override { return LineEndingPolicy::CRLF; }
 private:
