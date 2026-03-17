@@ -87,8 +87,6 @@ void ConsoleSession::Write(LogLevel level, const char* tag, const char* message)
 {
     if (!_sink) return;
 
-    // Assemble the entire log line into one buffer before writing to avoid
-    // interleaving from concurrent tasks calling _sink->Write() in separate calls.
     char lv;
     const char* color;
     const char* reset = "\x1B[0m";
@@ -105,9 +103,6 @@ void ConsoleSession::Write(LogLevel level, const char* tag, const char* message)
         default:                lv = '?'; color = "";            break;
     }
 
-    // Build the entire log line into one buffer before writing to avoid
-    // interleaving from concurrent tasks. lv is a char so operator+=(char)
-    // is a direct store — no strlen scan like operator+=(const char*) would do.
     std::string line;
     if (_showColors) line += color;
     line += '[';
@@ -116,7 +111,13 @@ void ConsoleSession::Write(LogLevel level, const char* tag, const char* message)
     line += tag;
     line += "] ";
     line += message;
-    line += '\n';
+
+    // Coalesce dual newlines: if the message already has a newline, don't add another.
+    if (line.empty() || line.back() != '\n')
+    {
+        line += '\n';
+    }
+
     if (_showColors) line += reset;
 
     WriteText(line);
@@ -161,12 +162,24 @@ void ConsoleManager::Broadcast(std::string_view data)
     }
 }
 
+void ConsoleManager::Broadcast(LogLevel level, const char* tag, const char* message)
+{
+    std::lock_guard<std::recursive_mutex> lock(_mutex);
+    if (_serialSession) {
+        _serialSession->Write(level, tag, message);
+    }
+    if (_telnetSession) {
+        _telnetSession->Write(level, tag, message);
+    }
+}
+
 void ConsoleManager::SetTelnetSink(IConsoleSink* sink)
 {
     std::lock_guard<std::recursive_mutex> lock(_mutex);
     _telnetSession = std::make_unique<ConsoleSession>(sink);
     if (_telnetSession) {
         _telnetSession->SetEcho(true);
+        _telnetSession->SetShowColors(false);      // Default off for clean 'nc', real Telnet can call 'color on'
         DebugCLI::RunCommand("", *_telnetSession); // Force an initial prompt
     }
 }

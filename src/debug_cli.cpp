@@ -399,6 +399,20 @@ static std::optional<size_t> ResolveEffect(std::string_view arg)
 }
 
 //
+// Log Verification Command
+//
+static void DoEmitMix(const cli_argv &)
+{
+    debugF("This is a FATAL message");
+    debugE("This is an ERROR message");
+    debugW("This is a WARNING message");
+    debugI("This is an INFO message");
+    debugD("This is a DEBUG message");
+    debugV("This is a VERBOSE message");
+    debugT("This is a TRACE message");
+}
+
+//
 // Core Commands Table
 //
 static void DoEffectCommand(const cli_argv &argv)
@@ -602,6 +616,14 @@ static const command core_commands[] = {
          }
          cli_printf("Brightness: %lu\n", (unsigned long)g_ptrSystem->GetDeviceConfig().GetBrightness());
      }},
+    {"debug", "emix | log ... Debugging utilities", nullptr,
+     [](const cli_argv &argv) {
+        if (argv.size() > 1 && StringCompareInsensitive(argv[1], "emix")) {
+            DoEmitMix(argv);
+        } else {
+            cli_printf("Usage: debug emix\n");
+        }
+     }},
     {"ls", "Show filesytem directory", "NAME", DoDirectoryListing},                    // Function pointer
     {"effect", "[next|prev|name|index] Show/change current effect", "Effects.", DoEffectCommand}, // Function pointer
     {"+", "Nudge brightness up", "Brightness +10", [](const cli_argv &) {
@@ -669,16 +691,46 @@ void cli_printf(const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    char buf[256];
-    vsnprintf(buf, sizeof(buf), fmt, args);
+
+    // Optimized buffer handling: use a 256-byte stack buffer for typical output.
+    // Use heap only for large payloads like 'tasks' or 'network stats'.
+    char stack_buf[256];
+    va_list args_copy;
+    va_copy(args_copy, args);
+    int len = vsnprintf(stack_buf, sizeof(stack_buf), fmt, args_copy);
+    va_end(args_copy);
+
+    if (len < 0)
+    {
+        va_end(args);
+        return;
+    }
+
+    char* buf = stack_buf;
+    bool must_free = false;
+
+    if (static_cast<size_t>(len) >= sizeof(stack_buf))
+    {
+        buf = static_cast<char*>(malloc(len + 1));
+        if (!buf)
+        {
+            va_end(args);
+            return; // OOM: drop output
+        }
+        must_free = true;
+        vsnprintf(buf, len + 1, fmt, args);
+    }
     va_end(args);
 
     // Direct output to the session that originated the current command, if any.
     // This prevents commands run on telnet from also spewing on serial and vice versa.
     if (_activeSession)
-        _activeSession->WriteText(buf);
+        _activeSession->WriteText(std::string_view(buf, static_cast<size_t>(len)));
     else
-        ConsoleManager::Instance().Broadcast(buf);
+        ConsoleManager::Instance().Broadcast(std::string_view(buf, static_cast<size_t>(len)));
+
+    if (must_free)
+        free(buf);
 }
 
 void ProcessCLIByte(uint8_t byte, ConsoleSession& session)

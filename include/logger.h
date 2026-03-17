@@ -40,13 +40,13 @@
 //
 enum class LogLevel
 {
+    Fatal,
     Error,
     Warn,
     Info,
     Debug,
     Verbose,
-    Trace,
-    Fatal
+    Trace
 };
 
 //

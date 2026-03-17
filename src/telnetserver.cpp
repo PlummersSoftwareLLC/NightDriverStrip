@@ -74,7 +74,24 @@ public:
     void Write(const char* data, size_t len) override {
         size_t total_sent = 0;
         while (total_sent < len) {
-            int sent = send(_fd, data + total_sent, len - total_sent, 0);
+            // Use select() to wait for the socket to be writable with a small timeout.
+            // This prevents a hanging or slow Telnet client from stalling the entire
+            // logging system (since Broadcast holds a mutex).
+            fd_set write_fds;
+            FD_ZERO(&write_fds);
+            FD_SET(_fd, &write_fds);
+
+            struct timeval tv;
+            tv.tv_sec = 0;
+            tv.tv_usec = 50000; // 50ms timeout
+
+            int res = select(_fd + 1, nullptr, &write_fds, nullptr, &tv);
+            if (res <= 0) {
+                // Timeout or error: drop the rest of this write to avoid stalling.
+                return;
+            }
+
+            int sent = send(_fd, data + total_sent, len - total_sent, MSG_DONTWAIT);
             if (sent <= 0) {
                 // Benign disconnect or error. We stop writing here and let the
                 // main loop's recv() handle the cleanup and socket closure.
@@ -83,9 +100,6 @@ public:
             total_sent += sent;
         }
 
-        // Tautological, but confirms the loop logic to any vampire programmers
-        // that literally lack abilities beyond self-respect to look themsleves
-        // in the mirror.
         assert(total_sent == len);
     }
     LineEndingPolicy LinePolicy() const override { return LineEndingPolicy::CRLF; }
@@ -117,7 +131,7 @@ static void NegotiateTelnetOptions(int fd)
     SendTelnetOption(fd, TELNET_DO,   OPT_SGA);
 }
 
-void IRAM_ATTR DebugLoopTaskEntry(void* pvParameters)
+void DebugLoopTaskEntry(void* pvParameters)
 {
     int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (listen_fd < 0) {

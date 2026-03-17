@@ -102,6 +102,7 @@ public:
     void FeedTelnetByte(uint8_t byte);
 
     void Broadcast(std::string_view data);
+    void Broadcast(LogLevel level, const char* tag, const char* message);
 
     // Internal use by TelnetServer
     void SetTelnetSink(IConsoleSink* sink);

@@ -447,8 +447,8 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 #if ENABLE_WIFI
 
     #define WIFI_WAIT_BASE      10000   // Initial time to wait for WiFi to come up, in ms
-    #define WIFI_WAIT_INCREASE  5000    // Increase of WiFi waiting time per cycle, in ms
-    #define WIFI_WAIT_MAX       60000   // Maximum gap between retries, in ms
+    #define WIFI_WAIT_INCREASE  0       // No ratcheting per user feedback
+    #define WIFI_WAIT_MAX       60000   // Maximum gap before reboot/timeout, in ms
 
     #define WIFI_WAIT_INIT      WIFI_WAIT_BASE
 
@@ -502,8 +502,26 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             }
             else
             {
-                const String& hostname = g_ptrSystem->GetDeviceConfig().GetHostname();
+                static bool bInitialized = false;
+                if (!bInitialized)
+                {
+                    WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info) {
+                        if (event == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
+                            debugW("WiFi Disconnected. Reason: %d", info.wifi_sta_disconnected.reason);
+                        }
+                    });
 
+                    debugV("Wifi.mode");
+                    WiFi.mode(WIFI_STA);
+
+                    // Disable WiFi power saving to improve DHCP reliability
+                    debugV("Wifi.setSleep(false)");
+                    WiFi.setSleep(false);
+
+                    bInitialized = true;
+                }
+
+                const String& hostname = g_ptrSystem->GetDeviceConfig().GetHostname();
                 if (hostname.length() == 0)
                 {
                     debugI("No hostname configured, so skipping setting it.");
@@ -514,15 +532,14 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                     WiFi.setHostname(hostname.c_str());
                 }
 
-                // Only disconnect if we are not already trying to connect or it's been a very long time
-                if (WiFi.status() != WL_IDLE_STATUS && WiFi.status() != WL_DISCONNECTED)
+                // Disconnect if we have new credentials or if the previous attempt failed.
+                // This ensures a clean slate for the next WiFi.begin() call.
+                if (haveNewCredentials || WiFi.status() == WL_CONNECT_FAILED)
                 {
-                    debugV("Wifi.disconnect");
+                    debugV("Wifi.disconnect (resetting status %d)", (int)WiFi.status());
                     WiFi.disconnect();
                 }
 
-                debugV("Wifi.mode");
-                WiFi.mode(WIFI_STA);
                 debugW("Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %zu, PSRAM:%zu, PSRAM Free: %zu\n",
                        WiFi_ssid.c_str(), (size_t)ESP.getFreeHeap(), (size_t)ESP.getPsramSize(), (size_t)ESP.getFreePsram());
 
@@ -1000,7 +1017,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     // Pumps the various network loops and sets the time periodically, as well as reconnecting
     // to WiFi if the connection drops.  Also pumps the OTA (Over the air updates) loop.
 
-    void IRAM_ATTR NetworkHandlingLoopEntry(void *)
+    void NetworkHandlingLoopEntry(void *)
     {
         static unsigned long millisAtLastConnected = millis();
 

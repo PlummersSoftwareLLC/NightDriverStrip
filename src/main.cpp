@@ -159,20 +159,20 @@
 #include <algorithm>
 #include <Arduino.h>
 #include <ArduinoOTA.h>
+#if ENABLE_ESPNOW
+#include <esp_now.h>
+#endif
 #include <IPAddress.h>
 #if USE_M5
 #include <M5Unified.h>
-#endif
-#include <SPIFFS.h>
-#include <WString.h>
-#if ENABLE_ESPNOW
-#include <esp_now.h>
 #endif
 #include <memory>
 #include <mutex>
 #include <nvs.h>
 #include <nvs_flash.h>
+#include <SPIFFS.h>
 #include <vector>
+#include <WString.h>
 
 #if defined(TOGGLE_BUTTON_0) || defined(TOGGLE_BUTTON_1)
 #include "Bounce2.h"
@@ -604,6 +604,7 @@ void setup()
     taskManager.StartDebugThread();
 
     DebugCLI::InitDebugCLI();
+    InitNetworkCLI();
 
     SaveEffectManagerConfig();
     // Start the main loop

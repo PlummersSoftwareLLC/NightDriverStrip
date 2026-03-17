@@ -31,14 +31,14 @@
 #include "console.h"
 #include "logger.h"
 
-LogLevel Logger::_level = LogLevel::Verbose;
+LogLevel Logger::_level = LogLevel::Info;
 
 // Mapping LogLevel to esp_log_level_t
 static esp_log_level_t ToEspLevel(LogLevel level)
 {
     switch (level)
     {
-        case LogLevel::Fatal:
+        case LogLevel::Fatal:   return ESP_LOG_ERROR;
         case LogLevel::Error:   return ESP_LOG_ERROR;
         case LogLevel::Warn:    return ESP_LOG_WARN;
         case LogLevel::Info:    return ESP_LOG_INFO;
@@ -62,7 +62,9 @@ LogLevel Logger::GetLevel()
 
 bool Logger::IsEnabled(LogLevel level)
 {
-    return level <= _level;
+    // Fatal (0), Error (1), ..., Trace (6)
+    // If _level is Info (3), we enable Error (1) and Info (3), but not Debug (4)
+    return static_cast<int>(level) <= static_cast<int>(_level);
 }
 
 void Logger::Logf(LogLevel level, const char* tag, const char* fmt, ...)
@@ -81,11 +83,37 @@ void Logger::Logv(LogLevel level, const char* tag, const char* fmt, va_list args
     if (!IsEnabled(level))
         return;
 
-    // Route through esp_log_writev. The installed vprintf hook (LogHookVprintf)
-    // intercepts the fully-formatted output and broadcasts it through
-    // ConsoleManager::Broadcast -> WriteText, which applies each sink's
-    // LineEndingPolicy (CRLF for serial and Telnet).
-    esp_log_writev(ToEspLevel(level), tag, fmt, args);
+    // Use a stack buffer for typical log lines to avoid heap fragmentation.
+    // This structured broadcast preserves ANSI colors and consistent prefixing.
+    char stack_buf[256];
+    va_list args_copy;
+    va_copy(args_copy, args);
+    int len = vsnprintf(stack_buf, sizeof(stack_buf), fmt, args_copy);
+    va_end(args_copy);
+
+    if (len < 0) return;
+
+    char* buf = stack_buf;
+    bool must_free = false;
+
+    if (static_cast<size_t>(len) >= sizeof(stack_buf))
+    {
+        buf = static_cast<char*>(malloc(len + 1));
+        if (buf)
+        {
+            must_free = true;
+            vsnprintf(buf, len + 1, fmt, args);
+        }
+        else
+        {
+            buf = stack_buf; // fallback to truncated view if OOM
+        }
+    }
+
+    ConsoleManager::Instance().Broadcast(level, tag, buf);
+
+    if (must_free)
+        free(buf);
 }
 
 // LogHookVprintf
@@ -101,28 +129,43 @@ static int LogHookVprintf(const char* fmt, va_list args)
     if (xPortInIsrContext())
         return vprintf(fmt, args);  // Fall back to default UART output
 
-    // Two-pass heap allocation: no fixed-size stack buffer of any size.
-    // A stack buffer of any fixed size either burns the caller's stack on
-    // every task that logs (the "War and Peace" problem), or silently truncates
-    // long IDF messages (WiFi scan results, cert dumps, etc.).
-    // First pass: measure the formatted length without filling any buffer.
-    // Second pass: allocate exactly that much from the heap and fill it.
-    // Falls back to direct UART output on heap exhaustion.
+    // Optimized buffer handling: use a stack buffer for typical log lines (~128 chars)
+    // to avoid heap fragmentation. Use heap only for "War and Peace" payloads.
+    char stack_buf[256];
     va_list args_copy;
     va_copy(args_copy, args);
-    int len = vsnprintf(nullptr, 0, fmt, args_copy);
+    int len = vsnprintf(stack_buf, sizeof(stack_buf), fmt, args_copy);
     va_end(args_copy);
 
-    if (len <= 0)
+    if (len < 0)
         return len;
 
-    char* buf = static_cast<char*>(malloc(len + 1));
-    if (!buf)
-        return vprintf(fmt, args);  // OOM: fall back to UART
+    char* buf = stack_buf;
+    bool must_free = false;
 
-    vsnprintf(buf, len + 1, fmt, args);
+    if (static_cast<size_t>(len) >= sizeof(stack_buf))
+    {
+        buf = static_cast<char*>(malloc(len + 1));
+        if (!buf)
+            return vprintf(fmt, args);  // OOM: fall back to UART
+        must_free = true;
+        vsnprintf(buf, len + 1, fmt, args);
+    }
+
+    // Newline Coalescing and Progress Bar protection
+    //
+    // 1. If we have \n\n at the end, drop one. This happens when a debugX macro
+    //    appends \n to a format string that already had one.
+    // 2. If the message ends in \r (progress bar), don't let it be mangled
+    //    if possible, though the logger usually appends \n after the TAG/LEVEL.
+    if (len >= 2 && buf[len-1] == '\n' && buf[len-2] == '\n')
+        len--;
+
     ConsoleManager::Instance().Broadcast(std::string_view(buf, static_cast<size_t>(len)));
-    free(buf);
+
+    if (must_free)
+        free(buf);
+
     return len;
 }
 
