@@ -36,6 +36,9 @@
 #include "deviceconfig.h"
 #include "effectmanager.h"
 #include "ledbuffer.h"
+#if ENABLE_REMOTE
+#include "remotecontrol.h"
+#endif
 #include "socketserver.h"
 #include "systemcontainer.h"
 #include "taskmgr.h"

@@ -30,8 +30,6 @@
 // History:     Jul-17-2021     Davepl      Documented
 //---------------------------------------------------------------------------
 
-#pragma once
-
 #include "globals.h"
 
 #if ENABLE_REMOTE
