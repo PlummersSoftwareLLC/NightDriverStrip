@@ -771,9 +771,3 @@ extern const int g_aRingSizeTable[];
     #include <SPI.h>
     #include <TFT_eSPI.h>
 #endif
-
-#undef ENABLE_REMOTE
-#define ENABLE_REMOTE 0
-
-#include <RemoteDebug.h>
-extern RemoteDebug Debug;           // Let everyone in the project know about it.  If you don't have it, delete this
