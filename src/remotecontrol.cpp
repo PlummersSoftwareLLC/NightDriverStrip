@@ -41,6 +41,8 @@
 
 #include "deviceconfig.h"
 #include "effectmanager.h"
+#include "gfxbase.h"
+#include "ledstripeffect.h"
 #include "remotecontrol.h"
 #include "systemcontainer.h"
 
