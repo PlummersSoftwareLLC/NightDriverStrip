@@ -31,6 +31,7 @@
 #include "globals.h"
 #include "byte_utils.h"
 #include "ledbuffer.h"
+#include "nd_network.h"
 #include "socketserver.h"
 #include "soundanalyzer.h"
 #include "systemcontainer.h"
@@ -85,10 +86,12 @@ bool SocketServer::begin()
     // Creating socket file descriptor
     if ((_server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-        debugW("socket error\n");
+        debugE("socket error\n");
         release();
         return false;
     }
+
+    SetSocketBlockingEnabled(_server_fd, false);
 
     // When an error occurs, and we close and reopen the port, we need to specify reuse flags
     // or it might be too soon to use the port again, since close doesn't actually close it
@@ -145,7 +148,7 @@ bool SocketServer::ReadUntilNBytesReceived(size_t socket, size_t cbNeeded)
 
     if (cbNeeded > MAXIMUM_PACKET_SIZE)
     {
-        debugW("Unexpected request for %d bytes in ReadUntilNBytesReceived\n", cbNeeded);
+        debugE("Unexpected request for %d bytes in ReadUntilNBytesReceived\n", cbNeeded);
         return false;
     }
 
@@ -169,7 +172,7 @@ bool SocketServer::ReadUntilNBytesReceived(size_t socket, size_t cbNeeded)
         }
         else
         {
-            debugW("ERROR: %d bytes read in ReadUntilNBytesReceived trying to read %d\n", cbRead, cbNeeded-_cbReceived);
+            debugE("ERROR: %d bytes read in ReadUntilNBytesReceived trying to read %d\n", cbRead, cbNeeded-_cbReceived);
             return false;
         }
     } while (_cbReceived < cbNeeded);
@@ -230,18 +233,27 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
 {
     if (0 >= _server_fd)
     {
-        debugW("No _server_fd, returning.");
+        debugE("No _server_fd, returning.");
         return false;
     }
 
-    int new_socket = 0;
+    int new_socket = -1;
 
-    // Accept a new incoming connection
+    // Accept loop: wait for an incoming connection, sleeping between polls to avoid busy-spinning
     int addrlen = sizeof(_address);
-    if ((new_socket = accept(_server_fd, (struct sockaddr *)&_address, (socklen_t*)&addrlen))<0)
+    while (new_socket < 0)
     {
-        debugW("Error accepting data!");
-        return false;
+        new_socket = accept(_server_fd, (struct sockaddr *)&_address, (socklen_t*)&addrlen);
+        if (new_socket < 0)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                delay(100); // No connection yet, yield and retry
+                continue;
+            }
+            debugE("Error accepting data: %s", strerror(errno));
+            return false;
+        }
     }
 
     // Report where this connection is coming from
@@ -264,7 +276,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
     to.tv_usec = 0;
     if (setsockopt(new_socket,SOL_SOCKET,SO_RCVTIMEO,&to,sizeof(to)) < 0)
     {
-        debugW("Unable to set read timeout on socket!");
+        debugE("Unable to set read timeout on socket!");
         close(new_socket);
         ResetReadBuffer();
         return false;
@@ -293,7 +305,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
 
         if (false == ReadUntilNBytesReceived(new_socket, STANDARD_DATA_HEADER_SIZE))
         {
-            debugW("Read error in getting header.\n");
+            debugE("Read error in getting header.\n");
             break;
         }
 
@@ -315,7 +327,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
 
             if (false == ReadUntilNBytesReceived(new_socket, COMPRESSED_HEADER_SIZE + compressedSize))
             {
-                debugW("Could not read compressed data from stream\n");
+                debugE("Could not read compressed data from stream\n");
                 break;
             }
             debugV("Successfully read %zu bytes", (size_t)(COMPRESSED_HEADER_SIZE + compressedSize));
@@ -334,13 +346,13 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
 
             if (!DecompressBuffer(pSourceBuffer, compressedSize, _abOutputBuffer.get(), expandedSize))
             {
-                debugW("Error decompressing data\n");
+                debugE("Error decompressing data\n");
                 break;
             }
 
             if (false == ProcessIncomingData(_abOutputBuffer, expandedSize))
             {
-                debugW("Error processing data\n");
+                debugE("Error processing data\n");
                 break;
 
             }
@@ -395,7 +407,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
                     size_t totalExpected = STANDARD_DATA_HEADER_SIZE + length32;
                     if (!ReadUntilNBytesReceived(new_socket, totalExpected))
                     {
-                        debugW("Audio disabled, failed to skip PEAKDATA payload of %zu bytes", (size_t)totalExpected);
+                        debugE("Audio disabled, failed to skip PEAKDATA payload of %zu bytes", (size_t)totalExpected);
                         break;
                     }
                     debugV("Audio disabled; skipped PEAKDATA payload (%zu bytes)", (size_t)totalExpected);
@@ -417,14 +429,14 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
                 size_t totalExpected = STANDARD_DATA_HEADER_SIZE + length32 * LED_DATA_SIZE;
                 if (totalExpected > MAXIMUM_PACKET_SIZE)
                 {
-                    debugW("Too many bytes promised (%zu) - more than we can use for our LEDs at max packet (%lu)\n", (size_t)totalExpected, (unsigned long)MAXIMUM_PACKET_SIZE);
+                    debugE("Too many bytes promised (%zu) - more than we can use for our LEDs at max packet (%lu)\n", (size_t)totalExpected, (unsigned long)MAXIMUM_PACKET_SIZE);
                     break;
                 }
 
                 debugV("Expecting %zu total bytes", (size_t)totalExpected);
                 if (false == ReadUntilNBytesReceived(new_socket, totalExpected))
                 {
-                    debugW("Error in getting pixel data from wifi\n");
+                    debugE("Error in getting pixel data from wifi\n");
                     break;
                 }
 
@@ -432,7 +444,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
 
                 if (false == ProcessIncomingData(_pBuffer, totalExpected))
                 {
-                    debugW("Error in processing pixel data from wifi\n");
+                    debugE("Error in processing pixel data from wifi\n");
                     break;
                 }
 
@@ -444,7 +456,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
             }
             else
             {
-                debugW("Unknown command in packet received: %u\n", command16);
+                debugE("Unknown command in packet received: %u\n", command16);
                 break;
             }
         }
@@ -468,7 +480,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
                                         .oldestPacket = bufferManager.AgeOfOldestBuffer(),
                                         .newestPacket = bufferManager.AgeOfNewestBuffer(),
                                         .brightness   = g_Values.Brite,
-                                        .wifiSignal   = (float) WiFi.RSSI(),
+                                        .wifiSignal   = (float) GetWiFiRSSI(),
                                         .bufferSize   = bufferManager.BufferCount(),
                                         .bufferPos    = bufferManager.Depth(),
                                         .fpsDrawing   = g_Values.FPS,
@@ -477,7 +489,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
 
             // I dont think this is fatal, and doesn't affect the read buffer, so content to ignore for now if it happens
             if (sizeof(response) != write(new_socket, &response, sizeof(response)))
-                debugW("Unable to send response back to server.");
+                debugE("Unable to send response back to server.");
         }
 
         delay(1);

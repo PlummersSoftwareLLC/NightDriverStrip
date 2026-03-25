@@ -299,8 +299,8 @@ class SoundAnalyzer : public ISoundAnalyzer
     //
 
   private:
-    float _VURatio = 1.0f;
-    float _VURatioFade = 1.0f;
+    float _VURatio = 0.0f;
+    float _VURatioFade = 0.0f;
     float _VU = 0.0f;
     float _PeakVU = 0.0f;
     float _MinVU = 0.0f;

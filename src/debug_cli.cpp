@@ -31,19 +31,19 @@
 #include <cctype>
 #include <charconv>
 #include <cstring>
-#include <optional>
-#include <string>
-#include <string_view>
-#include <vector>
-
 #include <esp_heap_caps.h>
 #include <esp_log.h>
 #include <esp_system.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <FS.h>
+#include <optional>
 #include <SPIFFS.h>
+#include <string>
+#include <string_view>
+#include <vector>
 
+#include "console.h"
 #include "debug_cli.h"
 #include "deviceconfig.h"
 #include "effectmanager.h"
@@ -211,11 +211,22 @@ static void PrintHelp(const cli_argv &argv)
 }
 
 //
+// _activeSession - thread-local pointer to the session currently dispatching a command.
+// Set by RunCommand so that cli_printf knows where to direct output.
+// Falls back to Broadcast if called from outside a RunCommand context.
+//
+static thread_local std::shared_ptr<ConsoleSession> _activeSession;
+
+//
 // Parse and run cmd_line. Zero copies or allocations.
 //
-void RunCommand(const char *cmd_line)
+void RunCommand(std::string_view cmd_line, std::shared_ptr<ConsoleSession> session)
 {
     const auto argv = Tokenize(cmd_line);
+
+    // Pin output to this session for the duration of the command.
+    std::shared_ptr<ConsoleSession> previous = _activeSession;
+    _activeSession = session;
 
     // If command is valid
     if (!argv.empty())
@@ -226,7 +237,10 @@ void RunCommand(const char *cmd_line)
         if (it != g_CommandTable.end())
         {
             if ((*it)->announcement)
-                cli_printf("%s\n", (*it)->announcement);
+            {
+                session->WriteText((*it)->announcement);
+                session->WriteText("\n");
+            }
             (*it)->helper(argv);
         }
         else
@@ -235,27 +249,13 @@ void RunCommand(const char *cmd_line)
         }
     }
 
-    // Always emit prompt after command execution (or empty command)
-    // Serial: Inline prompt (cleaner)
-    Serial.print("> ");
+    _activeSession = previous;
 
-// RemoteDebug: Direct write to TelnetClient to bypass cleaner buffering and avoid extra newline.
-// We check if the debugger is enabled (which exposes getTelnetClient) and if we have an active client.
-#ifdef DEBUGGER_ENABLED
-    if (Debug.isActive(Debug.ANY))
-    {
-        WiFiClient *client = Debug.getTelnetClient();
-        if (client && client->connected())
-        {
-            client->print("> ");
-            #if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 0, 0)
-                client->clear();
-            #else
-                client->flush();
-            #endif
-        }
+    // Always emit prompt after command execution (or empty command)
+    if (session) {
+        session->WriteRaw("> ");
+        session->Flush();
     }
-#endif
 }
 
 // If you have command 'reboot', reb<TAB> will complete "reboot". Caller will
@@ -398,6 +398,20 @@ static std::optional<size_t> ResolveEffect(std::string_view arg)
         cli_printf("Error: No effect matching '%.*s' found.\n", (int)arg.length(), arg.data());
         return std::nullopt;
     }
+}
+
+//
+// Log Verification Command
+//
+static void DoEmitMix(const cli_argv &)
+{
+    debugF("This is a FATAL message");
+    debugE("This is an ERROR message");
+    debugW("This is a WARNING message");
+    debugI("This is an INFO message");
+    debugD("This is a DEBUG message");
+    debugV("This is a VERBOSE message");
+    debugT("This is a TRACE message");
 }
 
 //
@@ -560,7 +574,7 @@ static const command core_commands[] = {
      }},
     {"heap", "Display heap memory info",
      "Heap usage:", [](const cli_argv &) { heap_caps_print_heap_info(MALLOC_CAP_DEFAULT); }},
-    {"log", "[tag] <level> Set log level", "Setting log level...",
+    {"log", "[tag] <level> Get/set log level", nullptr,
      [](const cli_argv &argv) {
          static const struct
          {
@@ -571,7 +585,12 @@ static const command core_commands[] = {
 
          if (argv.size() < 2)
          {
-             cli_printf("Usage: log [tag] <none|error|warn|info|debug|verbose>\n");
+             // No args: show the current global log level
+             esp_log_level_t current = esp_log_level_get("*");
+             const char *name = "unknown";
+             for (const auto &l : levels)
+                 if (l.level == current) { name = l.name; break; }
+             cli_printf("Log level: %s\n", name);
              return;
          }
          std::string_view levelStr = argv.back();
@@ -588,7 +607,7 @@ static const command core_commands[] = {
                  return;
              }
          }
-         cli_printf("Invalid level '%s'.\n", std::string(levelStr).c_str());
+         cli_printf("Invalid level '%s'. Valid: none error warn info debug verbose\n", std::string(levelStr).c_str());
      }},
     {"bright", "[level] Display/Set brightness 0-255", "Brightness:",
      [](const cli_argv &argv) {
@@ -598,6 +617,14 @@ static const command core_commands[] = {
              g_ptrSystem->GetDeviceConfig().SetBrightness(val);
          }
          cli_printf("Brightness: %lu\n", (unsigned long)g_ptrSystem->GetDeviceConfig().GetBrightness());
+     }},
+    {"debug", "emix | log ... Debugging utilities", nullptr,
+     [](const cli_argv &argv) {
+        if (argv.size() > 1 && StringCompareInsensitive(argv[1], "emix")) {
+            DoEmitMix(argv);
+        } else {
+            cli_printf("Usage: debug emix\n");
+        }
      }},
     {"ls", "Show filesytem directory", "NAME", DoDirectoryListing},                    // Function pointer
     {"effect", "[next|prev|name|index] Show/change current effect", "Effects.", DoEffectCommand}, // Function pointer
@@ -612,46 +639,106 @@ static const command core_commands[] = {
         cli_printf("Brightness: %d\n", val);
     }},
     {"uptime", "Show system uptime", "Showing uptime...", DoUptime},
+    {"color", "[on|off] | [r g b | hex] Set or show colors", "Global Color:",
+     [](const cli_argv &argv) {
+         if (argv.size() > 1)
+         {
+             std::string_view firstArg = argv[1];
+             if (firstArg == "on" || firstArg == "off")
+             {
+                 if (_activeSession)
+                 {
+                     _activeSession->SetShowColors(firstArg == "on");
+                     cli_printf("Log colorization is now %s for this session.\n", _activeSession->ShowColors() ? "enabled" : "disabled");
+                 }
+                 return;
+             }
+
+             CRGB newColor = g_ptrSystem->GetDeviceConfig().GlobalColor();
+             if (argv.size() == 2) // Assume hex if one arg
+             {
+                 std::string hexStr(argv[1]);
+                 if (hexStr[0] == '#') hexStr.erase(0, 1);
+                 uint32_t val = strtol(hexStr.c_str(), nullptr, 16);
+                 newColor = CRGB(val);
+             }
+             else if (argv.size() == 4) // Assume R G B
+             {
+                 newColor.r = atoi(std::string(argv[1]).c_str());
+                 newColor.g = atoi(std::string(argv[2]).c_str());
+                 newColor.b = atoi(std::string(argv[3]).c_str());
+             }
+             g_ptrSystem->GetDeviceConfig().SetGlobalColor(newColor);
+         }
+         CRGB c = g_ptrSystem->GetDeviceConfig().GlobalColor();
+         cli_printf("Global Color: R:%d G:%d B:%d (0x%02X%02X%02X)\n", c.r, c.g, c.b, c.r, c.g, c.b);
+         if (_activeSession)
+         {
+             cli_printf("Log colors: %s\n", _activeSession->ShowColors() ? "ON" : "OFF");
+         }
+     }},
     {"help", "Display command line options", "Displaying system help",
-     PrintHelp} // Function pointer logic requires PrintHelp signature match. It does.
+     PrintHelp}, // Function pointer logic requires PrintHelp signature match. It does.
+    {"?", "Display command line options", "Displaying system help",
+     PrintHelp}
 };
 
+
 //
-// Helper: cli_printf is needed to bypass the stupid (I) tags
-// forced by Debug.printf(). This outputs to both serial and telnet.
+// Helper: cli_printf routes output to the session that originated the current
+// command (_activeSession), falling back to Broadcast if called outside a
+// RunCommand context.
 //
 void cli_printf(const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    char buf[256];
-    vsnprintf(buf, sizeof(buf), fmt, args);
-    va_end(args);
 
-    // Write to Serial directly (ensure CR for every LF)
-    for (const char *p = buf; *p; p++)
+    // Optimized buffer handling: use a 256-byte stack buffer for typical output.
+    // Use heap only for large payloads like 'tasks' or 'network stats'.
+    char stack_buf[256];
+    va_list args_copy;
+    va_copy(args_copy, args);
+    int len = vsnprintf(stack_buf, sizeof(stack_buf), fmt, args_copy);
+    va_end(args_copy);
+
+    if (len < 0)
     {
-        if (*p == '\n')
-            Serial.write('\r');
-        Serial.write(*p);
+        va_end(args);
+        return;
     }
 
-    // Write to RemoteDebug (Telnet/WebSocket)
-    // We suppress the Serial echo to avoid double-printing, and use showRaw to avoid tags.
-    // Note: We assume SerialEnabled should be restored to true, which is the standard config.
-    Debug.setSerialEnabled(false);
-    Debug.showRaw(true);
-    Debug.print(buf);
-    Debug.showRaw(false);
-    Debug.setSerialEnabled(true);
+    char* buf = stack_buf;
+    bool must_free = false;
+
+    if (static_cast<size_t>(len) >= sizeof(stack_buf))
+    {
+        buf = static_cast<char*>(malloc(len + 1));
+        if (!buf)
+        {
+            va_end(args);
+            return; // OOM: drop output
+        }
+        must_free = true;
+        vsnprintf(buf, len + 1, fmt, args);
+    }
+    va_end(args);
+
+    // Direct output to the session that originated the current command, if any.
+    // This prevents commands run on telnet from also spewing on serial and vice versa.
+    if (_activeSession)
+        _activeSession->WriteText(std::string_view(buf, static_cast<size_t>(len)));
+    else
+        ConsoleManager::Instance().Broadcast(std::string_view(buf, static_cast<size_t>(len)));
+
+    if (must_free)
+        free(buf);
 }
 
-void ProcessCLIByte(uint8_t byte)
+void ProcessCLIByte(uint8_t byte, std::shared_ptr<ConsoleSession> session)
 {
-    // Essentially a global that never shrinks. We quickly reach
-    // the size of the length that people type, but it's free if
-    // never used.
-    static std::string cmd;
+    if (!session) return;
+    std::string& cmd = session->StringBuffer();
 
     switch (byte)
     {
@@ -664,8 +751,8 @@ void ProcessCLIByte(uint8_t byte)
         {
             cmd += suffix;
             cmd += " ";
-            Serial.print(suffix.data());
-            Serial.print(" ");
+            session->WriteRaw(suffix);
+            session->WriteRaw(" ");
         }
         break;
     }
@@ -674,30 +761,28 @@ void ProcessCLIByte(uint8_t byte)
         if (!cmd.empty())
         {
             cmd.pop_back();
-            cli_printf("\b \b");
+            session->WriteRaw("\b \b");
         }
         break;
 
     case '\r':
+    {
+        // CR triggers command dispatch. Echo the newline so the terminal
+        // moves to the next line before command output appears.
+        session->WriteRaw("\r\n");
+        RunCommand(cmd, session);
+        cmd.clear();
+        break;
+    }
+
     case '\n':
-        if (byte == '\r')
-            Serial.println(); // Correctly handle CRLF for local echo
-        if (cmd.empty())
-        {
-            // If buffer was empty (just Enter), RunCommand("") handles the prompt
-            RunCommand("");
-        }
-        else
-        {
-            // User entered a command
-            cli_printf("\n");
-            RunCommand(cmd.c_str());
-            cmd.clear();
-        }
+        // Swallow bare LF — it's the second byte of a \r\n pair from a
+        // terminal, or a stray newline. The \r already dispatched the command.
         break;
 
     default:
-        Serial.write(byte);
+        if (session->EchoEnabled())
+            session->WriteRaw(std::string_view(reinterpret_cast<const char*>(&byte), 1));
         cmd += (char)byte;
         break;
     }
@@ -705,7 +790,11 @@ void ProcessCLIByte(uint8_t byte)
 
 void InitDebugCLI()
 {
+    // Registration
     RegisterCommands(core_commands);
+
+    // Register the byte handler with ConsoleManager
+    ConsoleManager::Instance().SetByteHandler(ProcessCLIByte);
 }
 
 } // namespace DebugCLI

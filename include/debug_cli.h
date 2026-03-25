@@ -33,6 +33,8 @@
 #include <string_view>
 #include <vector>
 
+class ConsoleSession;
+
 namespace DebugCLI
 {
 
@@ -66,19 +68,16 @@ namespace DebugCLI
         RegisterCommands(cmds, N);
     }
 
-    // printf-style output to Debug/Serial without log-level tags
+    // printf-style output to all active console sessions
     void cli_printf(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 
-    // Process and execute command line: telnet, serial, or (someday) a script.
-    void RunCommand(const char* cmd);
+    // Process a single byte of input from a specific session.
+    void ProcessCLIByte(uint8_t byte, std::shared_ptr<ConsoleSession> session);
 
-    // Tab completion.
-    std::string_view TabComplete(std::string_view partial, std::string_view full_line);
+    // Process a single command line string.
+    void RunCommand(std::string_view line, std::shared_ptr<ConsoleSession> session);
 
-    // Process a single byte of input from the CLI.
-    void ProcessCLIByte(uint8_t byte);
-
-    // Initialization (registers core commands).
+    // Initialization (registers core commands and sets byte handler).
     void InitDebugCLI();
 
-} // namespace debug_cli
+} // namespace DebugCLI

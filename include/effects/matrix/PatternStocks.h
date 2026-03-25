@@ -506,7 +506,7 @@ public:
 
         // Periodically refetch the stock data from the server
 
-        if (WiFi.isConnected())
+        if (IsWiFiConnected())
         {
             if (system_clock::now() >= nextFetch)
             {

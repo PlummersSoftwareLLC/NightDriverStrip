@@ -29,13 +29,22 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
-
 #include <fcntl.h>
+#if ENABLE_WIFI || ENABLE_ESPNOW
+#include <WiFi.h>
+#endif
+#if ENABLE_WIFI
+#include <algorithm>
+#include <ArduinoOTA.h>
+#include <ESPmDNS.h>
+#include <nvs.h>
+#endif
 
 #include "colordata.h"
 #include "deviceconfig.h"
 #include "effectmanager.h"
 #include "ledbuffer.h"
+#include "nd_network.h"
 #if ENABLE_REMOTE
 #include "remotecontrol.h"
 #endif
@@ -47,21 +56,93 @@
 #include "websocketserver.h"
 
 #if ENABLE_WIFI
-
-#include <algorithm>
-#include <ArduinoOTA.h>
-#include <ESPmDNS.h>
-#include <nvs.h>
-
 #include "byte_utils.h"
+#include "console.h"
 #include "debug_cli.h"
 #include "ledviewer.h"
-#include "nd_network.h"
 #include "ntptimeclient.h"
 #include "soundanalyzer.h"
 #if USE_HUB75
     #include "hub75gfx.h"
 #endif
+#endif
+
+bool IsWiFiConnected()
+{
+#if ENABLE_WIFI
+  return WiFi.isConnected();
+#else
+  return false;
+#endif
+}
+
+int GetWiFiStatus()
+{
+#if ENABLE_WIFI
+  return (int)WiFi.status();
+#else
+  return 0; // WL_IDLE_STATUS often is 0
+#endif
+}
+
+void SetWiFiModeSTA()
+{
+#if ENABLE_WIFI || ENABLE_ESPNOW
+  WiFi.mode(WIFI_STA);
+#endif
+}
+
+int GetWiFiRSSI()
+{
+#if ENABLE_WIFI
+  return WiFi.RSSI();
+#else
+  return 0;
+#endif
+}
+
+String GetWiFiLocalIP()
+{
+#if ENABLE_WIFI
+  return WiFi.localIP().toString();
+#else
+  return String("0.0.0.0");
+#endif
+}
+
+bool GetWiFiHostByName(const char* hostname, IPAddress& ip)
+{
+#if ENABLE_WIFI
+  return WiFi.hostByName(hostname, ip) == 1;
+#else
+  return false;
+#endif
+}
+
+void GetMacAddressRaw(uint8_t *mac)
+{
+#if ENABLE_WIFI
+  WiFi.macAddress(mac);
+#else
+  esp_read_mac(mac, ESP_MAC_WIFI_STA);
+#endif
+}
+
+String GetMacAddress()
+{
+  uint8_t mac[6];
+  GetMacAddressRaw(mac);
+  return str_sprintf("%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+}
+
+String GetMacAddressPretty()
+{
+  uint8_t mac[6];
+  GetMacAddressRaw(mac);
+  return str_sprintf("%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+}
+
+#if ENABLE_WIFI
 
 // Writer function and flag combo
 struct NetworkReader::ReaderEntry
@@ -89,40 +170,23 @@ struct NetworkReader::ReaderEntry
 
 static DRAM_ATTR WiFiUDP l_Udp;              // UDP object used for NNTP, etc
 
-String get_mac_address()
-{
-  uint8_t mac[6];
-  WiFi.macAddress(mac);
-  return str_sprintf("%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-}
+// End of readers and wrappers
 
-String get_mac_address_pretty()
-{
-  uint8_t mac[6];
-  WiFi.macAddress(mac);
-  return str_sprintf("%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-}
 
-const char* WLtoString(wl_status_t status)
+const char* WLtoString(int status)
 {
     switch (status) {
-    case 255: return WL_NO_SHIELD;
-    case 0: return   WL_IDLE_STATUS;
-    case 1: return   WL_NO_SSID_AVAIL;
-    case 2: return   WL_SCAN_COMPLETED;
-    case 3: return   WL_CONNECTED;
-    case 4: return   WL_CONNECT_FAILED;
-    case 5: return   WL_CONNECTION_LOST;
-    case 6: return   WL_DISCONNECTED;
-    default: return  WL_UNKNOWN_STATUS;
+    case 255: return "WL_NO_SHIELD";
+    case 0: return   "WL_IDLE_STATUS";
+    case 1: return   "WL_NO_SSID_AVAIL";
+    case 2: return   "WL_SCAN_COMPLETED";
+    case 3: return   "WL_CONNECTED";
+    case 4: return   "WL_CONNECT_FAILED";
+    case 5: return   "WL_CONNECTION_LOST";
+    case 6: return   "WL_DISCONNECTED";
+    default: return  "WL_UNKNOWN_STATUS";
     }
 }
-
-void get_mac_address_raw(uint8_t *mac)
-{
-    esp_efuse_mac_get_default(mac);
-}
-
 
 String urlEncode(const String& str)
 {
@@ -157,7 +221,7 @@ void DoStatsCommand()
     auto& bufferManager = g_ptrSystem->GetBufferManagers()[0];
 
     DebugCLI::cli_printf("%s:%zux%d %zuK", FLASH_VERSION_NAME, g_ptrSystem->GetDevices().size(), NUM_LEDS, (size_t)(ESP.getFreeHeap() / 1024));
-    DebugCLI::cli_printf("%sdB:%s",String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
+    DebugCLI::cli_printf("%ddB:%s", abs(WiFi.RSSI()), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
     DebugCLI::cli_printf("BUFR:%02zu/%02zu [%lufps]", (size_t)bufferManager.Depth(), (size_t)bufferManager.BufferCount(), (unsigned long)g_Values.FPS);
     DebugCLI::cli_printf("DATA:%+04.2lf-%+04.2lf", bufferManager.AgeOfOldestBuffer(), bufferManager.AgeOfNewestBuffer());
 
@@ -270,19 +334,6 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
 
 #endif
 
-// processRemoteDebugCmd
-//
-// Callback function that the debug library (which exposes a little console over telnet and serial) calls
-// in order to allow us to add custom commands.  I've added a clock reset and stats command, for example.
-
-#if ENABLE_WIFI
-void processRemoteDebugCmd()
-{
-    String str = Debug.getLastCommand();
-    DebugCLI::RunCommand(str.c_str());
-
-}
-#endif
 
 // SetupOTA
 //
@@ -398,11 +449,11 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
 #if ENABLE_WIFI
 
-    #define WIFI_WAIT_BASE      4000    // Initial time to wait for WiFi to come up, in ms
-    #define WIFI_WAIT_INCREASE  1000    // Increase of WiFi waiting time per cycle, in ms
-    #define WIFI_WAIT_MAX       60000   // Maximum gap between retries, in ms
+    #define WIFI_WAIT_BASE      10000   // Initial time to wait for WiFi to come up, in ms
+    #define WIFI_WAIT_INCREASE  0       // No ratcheting per user feedback
+    #define WIFI_WAIT_MAX       60000   // Maximum gap before reboot/timeout, in ms
 
-    #define WIFI_WAIT_INIT      (WIFI_WAIT_BASE - WIFI_WAIT_INCREASE)
+    #define WIFI_WAIT_INIT      WIFI_WAIT_BASE
 
     // ConnectToWiFi
     //
@@ -419,6 +470,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     WiFiConnectResult ConnectToWiFi(const String* ssid = nullptr, const String* password = nullptr)
     {
         static bool bPreviousConnection = false;
+        static bool bReportedDisconnected = false;
         static unsigned long millisAtLastAttempt = 0;
         static unsigned long retryDelay = WIFI_WAIT_INIT;
         static String WiFi_ssid;
@@ -453,22 +505,44 @@ void IRAM_ATTR RemoteLoopEntry(void *)
             }
             else
             {
-                auto hostname = g_ptrSystem->GetDeviceConfig().GetHostname().c_str();
+                static bool bInitialized = false;
+                if (!bInitialized)
+                {
+                    WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info) {
+                        if (event == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
+                            debugW("WiFi Disconnected. Reason: %d", info.wifi_sta_disconnected.reason);
+                        }
+                    });
 
-                if (hostname[0] == '\0')
+                    debugV("Wifi.mode");
+                    WiFi.mode(WIFI_STA);
+
+                    // Disable WiFi power saving to improve DHCP reliability
+                    debugV("Wifi.setSleep(false)");
+                    WiFi.setSleep(false);
+
+                    bInitialized = true;
+                }
+
+                const String& hostname = g_ptrSystem->GetDeviceConfig().GetHostname();
+                if (hostname.length() == 0)
                 {
                     debugI("No hostname configured, so skipping setting it.");
                 }
                 else
                 {
-                    debugI("Setting host name to %s...", hostname);
-                    WiFi.setHostname(hostname);
+                    debugI("Setting host name to %s...", hostname.c_str());
+                    WiFi.setHostname(hostname.c_str());
                 }
 
-                debugV("Wifi.disconnect");
-                WiFi.disconnect();
-                debugV("Wifi.mode");
-                WiFi.mode(WIFI_STA);
+                // Disconnect if we have new credentials or if the previous attempt failed.
+                // This ensures a clean slate for the next WiFi.begin() call.
+                if (haveNewCredentials || WiFi.status() == WL_CONNECT_FAILED)
+                {
+                    debugV("Wifi.disconnect (resetting status %d)", (int)WiFi.status());
+                    WiFi.disconnect();
+                }
+
                 debugW("Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %zu, PSRAM:%zu, PSRAM Free: %zu\n",
                        WiFi_ssid.c_str(), (size_t)ESP.getFreeHeap(), (size_t)ESP.getPsramSize(), (size_t)ESP.getFreePsram());
 
@@ -480,12 +554,17 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
         if (WiFi.isConnected())
         {
+            bReportedDisconnected = false;
             debugW("Connected to AP with BSSID: \"%s\", received IP: %s", WiFi.BSSIDstr().c_str(), WiFi.localIP().toString().c_str());
         }
         else
-        // Additional services onwards are reliant on network so return if WiFi is not up (yet)
+        // Additional services onward are reliant on network so return if WiFi is not up (yet)
         {
-            debugW("Not yet connected to WiFi, waiting...");
+            if (!bReportedDisconnected)
+            {
+                debugW("Not yet connected to WiFi, waiting...");
+                bReportedDisconnected = true;
+            }
             return WiFiConnectResult::Disconnected;
         }
 
@@ -822,34 +901,6 @@ void IRAM_ATTR RemoteLoopEntry(void *)
         return success;
     }
 
-    // DebugLoopTaskEntry
-    //
-    // Entry point for the Debug task, pumps the Debug handler
-
-    void IRAM_ATTR DebugLoopTaskEntry(void *)
-    {
-        //debugI(">> DebugLoopTaskEntry\n");
-
-    // Initialize RemoteDebug
-
-        debugV("Starting RemoteDebug server...\n");
-
-        Debug.setResetCmdEnabled(true);                         // Enable the reset command
-        Debug.showProfiler(false);                              // Profiler (Good to measure times, to optimize codes)
-        Debug.showColors(false);                                // Colors
-        Debug.setCallBackProjectCmds(&processRemoteDebugCmd);   // Func called to handle any debug extensions we add
-
-        while (!WiFi.isConnected())                             // Wait for wifi, no point otherwise
-            delay(100);
-
-        Debug.begin(WiFi.getHostname(), RemoteDebug::INFO);     // Initialize the WiFi debug server
-
-        for (;;)                                                // Call Debug.handle() 20 times a second
-        {
-            Debug.handle();
-            delay(MILLIS_PER_SECOND / 20);
-        }
-    }
 
 #if INCOMING_WIFI_ENABLED
 
@@ -868,7 +919,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
                 socketServer.release();
                 socketServer.begin();
                 socketServer.ProcessIncomingConnectionsLoop();
-                debugW("Socket connection closed.  Retrying...\n");
+                debugV("Socket connection closed.  Retrying...");
             }
             delay(500);
         }
@@ -969,7 +1020,7 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     // Pumps the various network loops and sets the time periodically, as well as reconnecting
     // to WiFi if the connection drops.  Also pumps the OTA (Over the air updates) loop.
 
-    void IRAM_ATTR NetworkHandlingLoopEntry(void *)
+    void NetworkHandlingLoopEntry(void *)
     {
         static unsigned long millisAtLastConnected = millis();
 
@@ -1136,10 +1187,17 @@ void IRAM_ATTR RemoteLoopEntry(void *)
 
 bool SetSocketBlockingEnabled(int fd, bool blocking)
 {
-   if (fd < 0) return false;
+    if (fd < 0)
+        return false;
 
-   int flags = fcntl(fd, F_GETFL, 0);
-   if (flags == -1) return false;
-   flags = blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
-   return (fcntl(fd, F_SETFL, flags) == 0) ? true : false;
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags < 0)
+        return false;
+
+    if (blocking)
+        flags &= ~O_NONBLOCK;
+    else
+        flags |= O_NONBLOCK;
+
+    return fcntl(fd, F_SETFL, flags) == 0;
 }

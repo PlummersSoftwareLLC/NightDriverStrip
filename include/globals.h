@@ -84,6 +84,7 @@
 //
 //---------------------------------------------------------------------------
 
+#pragma once
 
 //  See https://github.com/PlummersSoftwareLLC/NightDriverStrip/issues/515
 #define FASTLED_ESP32_FLASH_LOCK 1
@@ -92,7 +93,6 @@
 extern std::mutex g_buffer_mutex;
 
 #include <FastLED.h>
-
 // If we're not using GNU C, (unlikely in embedded, especially in this
 // heavily ESP/Arduino-accented probject) elide __attribute__ - but even
 // clang defines and supports this...
@@ -205,6 +205,7 @@ extern std::mutex g_buffer_mutex;
 #define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
 #define __STDC_FORMAT_MACROS
 
+
 // Project Configuration
 //
 // One and only one of DEMO, SPECTRUM, ATOMLIGHT, etc. should be set to true by the build config for your project
@@ -246,6 +247,7 @@ extern std::mutex g_buffer_mutex;
     #define RING_SIZE_0             MATRIX_WIDTH
 #endif
 
+#include "logger.h"
 
 // Once you have a working project, selectively enable various additional features by setting
 // them to 1 in the list below.  This DEMO config assumes no audio (mic), or screen, etc.
@@ -769,6 +771,3 @@ extern const int g_aRingSizeTable[];
     #include <SPI.h>
     #include <TFT_eSPI.h>
 #endif
-
-#include <RemoteDebug.h>
-extern RemoteDebug Debug;           // Let everyone in the project know about it.  If you don't have it, delete this

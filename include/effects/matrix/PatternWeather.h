@@ -407,7 +407,7 @@ class PatternWeather : public EffectWithId<PatternWeather>
      */
     void UpdateWeather()
     {
-        while(!WiFi.isConnected())
+        while(!IsWiFiConnected())
         {
             debugW("Delaying Weather update, waiting for WiFi...");
             vTaskDelay(pdMS_TO_TICKS(WEATHER_CHECK_WIFI_WAIT));

@@ -41,6 +41,7 @@
 
 #include "array_utils.h"
 #include "effects.h"
+#include "nd_network.h"
 #include "ntptimeclient.h"
 #include "systemcontainer.h"
 #include "values.h"
@@ -395,12 +396,12 @@ class StatusEffect : public EffectWithId<StatusEffect>
 
         if (g_Values.UpdateStarted)
           color = CRGB::Purple;
-        else if (!WiFi.isConnected())
+        else if (!IsWiFiConnected())
           color = CRGB::Red;
-        #if ENABLE_NTP
+#if ENABLE_NTP
         else if (!NTPTimeClient::HasClockBeenSet())
           color = CRGB::Green;
-        #endif
+#endif
 
         if (_everyNth != 1)
           fillSolidOnAllChannels(CRGB::Black);

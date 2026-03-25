@@ -48,6 +48,7 @@
 #include <Arduino.h>
 #include <esp_arduino_version.h>
 #include <esp_task_wdt.h>
+#include <freertos/task.h>
 #include <utility>
 
 class LEDStripEffect;
@@ -61,6 +62,7 @@ class LEDStripEffect;
 #define JSON_STACK_SIZE    4096
 #define SOCKET_STACK_SIZE  4096
 #define NET_STACK_SIZE     8192
+#define COLORDATA_STACK_SIZE 4096
 #define DEBUG_STACK_SIZE   8192                 // Needs a lot of stack for output if UpdateClockFromWeb is called from debugger
 #define REMOTE_STACK_SIZE  4096
 #define SCREEN_STACK_SIZE  8192
@@ -204,6 +206,7 @@ public:
     void StartSocketThread();
     void StartRemoteThread();
     void StartJSONWriterThread();
+
 
     void NotifyJSONWriterThread();
     void NotifyNetworkThread();

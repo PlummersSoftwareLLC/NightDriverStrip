@@ -40,7 +40,7 @@ INCLUDE_DIRS = [
     os.path.join(PROJECT_ROOT, 'src'),
 ]
 
-INCLUDE_RE = re.compile(r'^\s*#\s*include\s*["<]([^">]+)[">]')
+INCLUDE_RE = re.compile(r'^\s*#\s*include\s*(["<])([^">]+)([">])')
 
 
 def collect_files():
@@ -48,7 +48,7 @@ def collect_files():
     for base in INCLUDE_DIRS:
         for root, _, filenames in os.walk(base):
             # Skip third-party source directories
-            if 'src/uzlib' in root:
+            if 'src/uzlib' in root or '.pio' in root:
                 continue
             for name in filenames:
                 if name.endswith(('.h', '.hpp', '.cpp', '.c')):
@@ -98,7 +98,7 @@ def parse_includes(files, by_rel, by_base):
                     match = INCLUDE_RE.match(line)
                     if not match:
                         continue
-                    include_path = match.group(1)
+                    include_path = match.group(2)
                     # Only track local/known includes
                     resolved = resolve_include(path, include_path, by_rel, by_base)
                     if resolved:
@@ -134,7 +134,8 @@ def rel(path):
 
 def audit_include_ordering(path, rel_path, violations):
     """
-    Check that includes within contiguous blocks are alphabetized.
+    Check that includes within contiguous blocks are correctly tiered and alphabetized.
+    Tiers: Globals > System <...> > Local "..."
     Skips effects/ directory as those are often legacy or complex.
     """
     if 'include/effects/' in rel_path:
@@ -149,8 +150,14 @@ def audit_include_ordering(path, rel_path, violations):
             for line_no, line in enumerate(lines, 1):
                 match = INCLUDE_RE.match(line)
                 if match:
-                    include_file = match.group(1)
-                    current_block.append((include_file, line.strip(), line_no))
+                    delim_start = match.group(1)
+                    include_file = match.group(2)
+                    current_block.append({
+                        'file': include_file,
+                        'delim': delim_start,
+                        'line': line.strip(),
+                        'no': line_no
+                    })
                 elif line.strip().startswith("//"):
                     # Allow comments within a block
                     continue
@@ -168,29 +175,61 @@ def audit_include_ordering(path, rel_path, violations):
         pass
 
 def verify_block_order(rel_path, block, violations):
-    # Skip globals.h as it must be first
-    if block[0][0] == "globals.h":
+    # Rule 0: globals.h must be absolute first if present
+    if block[0]['file'] == "globals.h":
+        globals_item = block[0]
+        # Check if globals.h appears again later (redundant)
+        for other in block[1:]:
+            if other['file'] == "globals.h":
+                violations.append(f"Style violation: Redundant globals.h in {rel_path} at line {other['no']}")
         block = block[1:]
+    else:
+        # If globals.h is in the block but NOT first
+        for i, item in enumerate(block):
+            if item['file'] == "globals.h":
+                violations.append(f"Style violation: globals.h must be the FIRST include in {rel_path} at line {item['no']}")
+                # We don't return here so we can find other issues in the block
         
     if len(block) <= 1:
         return
-        
-    # Extract just the filenames for comparison
-    names = [b[0] for b in block]
-    sorted_names = sorted(names, key=str.lower)
-    
-    if [n.lower() for n in names] != [n.lower() for n in sorted_names]:
-        # This check is slightly redundant but ensures we match what we sorted
-        pass
 
-    if names != sorted_names:
-        # Check if they are the same set of names but different order
-        # We find the first mismatch
-        for i, (a, b) in enumerate(zip(names, sorted_names)):
+    # Rule 1: Tiered precedence: System <...> MUST precede Local "..."
+    # Rule 2: Each tier must be alphabetized independently.
+    
+    systems = [b for b in block if b['delim'] == '<']
+    locals = [b for b in block if b['delim'] == '"']
+    
+    # Check if any local precedes a system
+    first_local_idx = -1
+    for i, b in enumerate(block):
+        if b['delim'] == '"':
+            first_local_idx = i
+            break
+            
+    if first_local_idx != -1:
+        for i in range(first_local_idx + 1, len(block)):
+            if block[i]['delim'] == '<':
+                violations.append(f"Style violation: System header {block[i]['file']} must precede local headers in {rel_path} at line {block[i]['no']}")
+                break
+
+    # Check alphabetization within systems
+    if systems:
+        sys_names = [s['file'] for s in systems]
+        sorted_sys = sorted(sys_names, key=str.lower)
+        for i, (a, b) in enumerate(zip(sys_names, sorted_sys)):
             if a != b:
-                item, text, line_no = block[i]
-                expected = b
-                violations.append(f"Style violation: Includes not alphabetized in {rel_path} at line {line_no}\n  Found: {item}, Expected: {expected}")
+                item = systems[i]
+                violations.append(f"Style violation: System includes not alphabetized in {rel_path} at line {item['no']}\n  Found: {a}, Expected: {b}")
+                break
+
+    # Check alphabetization within locals
+    if locals:
+        loc_names = [l['file'] for l in locals]
+        sorted_loc = sorted(loc_names, key=str.lower)
+        for i, (a, b) in enumerate(zip(loc_names, sorted_loc)):
+            if a != b:
+                item = locals[i]
+                violations.append(f"Style violation: Local includes not alphabetized in {rel_path} at line {item['no']}\n  Found: {a}, Expected: {b}")
                 break
 
 def main():

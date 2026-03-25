@@ -241,9 +241,9 @@
 //
 // Screen class that works with the AMOLED S3
 #if AMOLED_S3
+    #include <lvgl.h>
     #include "amoled/LilyGo_AMOLED.h"
     #include "amoled/LV_Helper.h"
-    #include <lvgl.h>
 
     class AMOLEDScreen final : public Screen
     {

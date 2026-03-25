@@ -29,18 +29,19 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
-
-#if ENABLE_NTP
 #include <ctime>
 #include <mutex>
 #include <sys/time.h>
-#include <WiFi.h>
 #include <WiFiUdp.h>
+#include "nd_network.h"
 
 #include "deviceconfig.h"
+#include "ledbuffer.h"
 #include "ntptimeclient.h"
 #include "systemcontainer.h"
 #include "values.h"
+
+#if ENABLE_NTP
 
 // NTPTimeClient
 //
@@ -94,7 +95,7 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
     chNtpPacket[0] = 0b00011011;
 
     IPAddress ipNtpServer;
-    if (WiFi.hostByName(g_ptrSystem->GetDeviceConfig().GetNTPServer().c_str(), ipNtpServer) != 1)
+    if (!GetWiFiHostByName(g_ptrSystem->GetDeviceConfig().GetNTPServer().c_str(), ipNtpServer))
         ipNtpServer.fromString("216.239.35.12"); // Use Google Time as default. The pool.ntp.org servers (IPs) don't necessarily last very long.
 
     // Send the ntp packet.

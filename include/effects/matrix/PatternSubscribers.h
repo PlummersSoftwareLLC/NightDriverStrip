@@ -87,7 +87,7 @@ class PatternSubscribers : public EffectWithId<PatternSubscribers>
 
     void UpdateSubscribers()
     {
-        if (!WiFi.isConnected())
+        if (!IsWiFiConnected())
         {
             debugW("Skipping Subscriber update, waiting for WiFi...");
             return;

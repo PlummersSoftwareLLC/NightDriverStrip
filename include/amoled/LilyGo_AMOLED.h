@@ -19,13 +19,13 @@
 
 #include <driver/spi_master.h>
 #include <FS.h>
-#include "initSequence.h"
-#include "LilyGo_Display.h"
 #include <SD.h>
-#include "SensorCM32181.hpp"
 #include <SPI.h>
 #include <SPIFFS.h>
 #include <sys/cdefs.h>
+#include "initSequence.h"
+#include "LilyGo_Display.h"
+#include "SensorCM32181.hpp"
 #include "TouchDrvCHSC5816.hpp"
 #include "TouchDrvCSTXXX.hpp"
 #include "XPowersLib.h"
