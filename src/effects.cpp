@@ -37,6 +37,7 @@
 // Include the effect classes we'll need later
 
 #include "effects/strip/fireeffect.h"           // fire effects
+#include "effects/strip/fireworkseffect.h"      // fireworks effect
 #include "effects/strip/paletteeffect.h"        // palette effects
 #include "effects/strip/doublepaletteeffect.h"  // double palette effect
 #include "effects/strip/meteoreffect.h"         // meteor blend effect
@@ -180,6 +181,7 @@ void LoadEffectFactories()
         // Simple effect set for basic LED strip projects
         RegisterAll(*g_ptrEffectFactories,
             Effect<FireEffect>("Medium Fire", NUM_LEDS, 1, 3, 100, 3, 4, true, true),
+            Effect<FireworksEffect>("Fireworks"),
             Effect<BouncingBallEffect>(3, true, true, 1),
             Effect<MeteorEffect>(4, 4, 10, 2.0, 2.0),
             Effect<StarEffect<QuietStar>>("Rainbow Twinkle Stars", RainbowColors_p, kStarEffectProbability, 1, LINEARBLEND, 2.0, 0.0, kStarEffectMusicFactor),
@@ -198,6 +200,7 @@ void LoadEffectFactories()
     #if defined(EFFECTS_DEMO)
         // Demo effect set for M5 demos and similar
         RegisterAll(*g_ptrEffectFactories,
+            Effect<FireworksEffect>("Fireworks"),
             Effect<FireEffect>("Medium Fire", NUM_LEDS, 1, 3, 100, 3, 4, true, true),
             Effect<BouncingBallEffect>(3, true, true, 1),
             Effect<BouncingBallEffect>(8, true, true, 1),
@@ -271,7 +274,8 @@ void LoadEffectFactories()
     #if defined(EFFECTS_LANTERN)
         // Lantern effect set
         RegisterAll(*g_ptrEffectFactories,
-            Effect<FireEffect>("Calm Fire", NUM_LEDS, 40, 5, 50, 3, 3, true, true)
+            Effect<FireEffect>("Calm Fire", NUM_LEDS, 40, 5, 50, 3, 3, true, true),
+            Effect<FireworksEffect>("Fireworks")
         );
     #endif
 
@@ -355,6 +359,7 @@ void LoadEffectFactories()
         RegisterAll(*g_ptrEffectFactories,
             Effect<FireEffect>("Calm Fire", NUM_LEDS, 2, 2, 75, 3, 10, true, false),
             Effect<FireEffect>("Medium Fire", NUM_LEDS, 1, 5, 100, 3, 4, true, false),
+            Effect<FireworksEffect>("Fireworks"),
             Effect<MusicalPaletteFire>("Musical Red Fire", HeatColors_p, NUM_LEDS, 1, 8, 50, 1, 24, true, false),
             Effect<MusicalPaletteFire>("Purple Fire", CRGBPalette16(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 2, 3, 150, 3, 10, true, false),
             Effect<MusicalPaletteFire>("Purple Fire", CRGBPalette16(CRGB::Black, CRGB::Purple, CRGB::MediumPurple, CRGB::LightPink), NUM_LEDS, 1, 7, 150, 3, 10, true, false),

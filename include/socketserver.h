@@ -37,6 +37,7 @@
 #include <cstring>
 #include <iostream>
 #include <memory>
+#include <new>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -114,7 +115,16 @@ public:
         _server_fd(-1),
         _cbReceived(0)
     {
-        _abOutputBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIMUM_PACKET_SIZE+1) );        // +1 for uzlib one byte overreach bug
+        try
+        {
+            _abOutputBuffer.reset(psram_allocator<uint8_t>().allocate(MAXIMUM_PACKET_SIZE + 1));    // +1 for uzlib one byte overreach bug
+        }
+        catch (const std::bad_alloc&)
+        {
+            debugE("SocketServer: unable to allocate output buffer (%u bytes)", MAXIMUM_PACKET_SIZE + 1);
+            _abOutputBuffer.reset();
+        }
+
         memset(&_address, 0, sizeof(_address));
     }
 
@@ -130,7 +140,31 @@ public:
 
     bool begin()
     {
-        _pBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIMUM_PACKET_SIZE) );
+        if (!_abOutputBuffer)
+        {
+            try
+            {
+                _abOutputBuffer.reset(psram_allocator<uint8_t>().allocate(MAXIMUM_PACKET_SIZE + 1));
+            }
+            catch (const std::bad_alloc&)
+            {
+                debugE("SocketServer: unable to allocate output buffer in begin (%u bytes)", MAXIMUM_PACKET_SIZE + 1);
+                release();
+                return false;
+            }
+        }
+
+        try
+        {
+            _pBuffer.reset(psram_allocator<uint8_t>().allocate(MAXIMUM_PACKET_SIZE));
+        }
+        catch (const std::bad_alloc&)
+        {
+            debugE("SocketServer: unable to allocate input buffer (%u bytes)", MAXIMUM_PACKET_SIZE);
+            release();
+            return false;
+        }
+
         _cbReceived = 0;
 
         // Creating socket file descriptor
@@ -176,6 +210,9 @@ public:
 
     void ResetReadBuffer()
     {
+        if (!_pBuffer)
+            return;
+
         _cbReceived = 0;
         memset(_pBuffer.get(), 0, MAXIMUM_PACKET_SIZE);
     }
@@ -186,6 +223,9 @@ public:
 
     bool ReadUntilNBytesReceived(size_t socket, size_t cbNeeded)
     {
+        if (!_pBuffer)
+            return false;
+
         if (cbNeeded <= _cbReceived)                            // If we already have that many bytes, we're already done
         {
             debugV("Already had enough data to satisfy read: requested %d, had %d", cbNeeded, _cbReceived);

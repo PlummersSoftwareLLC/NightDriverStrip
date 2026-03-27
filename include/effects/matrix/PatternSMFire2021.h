@@ -8,13 +8,13 @@ class PatternSMFire2021 : public EffectWithId<PatternSMFire2021>
 {
   private:
 
-    uint8_t Speed = 150; // 1-252 ...why is not 255?! // Setting
-    uint8_t Scale = 9;   // 1-99 is palette and scale // Setting
+    uint8_t Speed = 150; 
+    uint8_t Scale = 9;   
 
-    uint8_t pcnt;              // какой-то счётчик какого-то прогресса
-    uint8_t deltaValue;        // просто повторно используемая переменная
-    uint16_t ff_x {0} , ff_y {0} , ff_z {0} ; // большие счётчики
-    uint8_t step; // какой-нибудь счётчик кадров или последовательностей операций
+    uint8_t pcnt;              
+    uint8_t deltaValue;        
+    uint16_t ff_x {0} , ff_y {0} , ff_z {0} ; 
+    uint8_t step; 
 
     const TProgmemRGBPalette16 *curPalette;
 
@@ -27,16 +27,12 @@ class PatternSMFire2021 : public EffectWithId<PatternSMFire2021>
     {
         g()->Clear();
         if (Scale > 100U)
-            Scale = 100U; // чтобы не было проблем при прошивке без очистки памяти
-        deltaValue = Scale * 0.0899; // /100.0F * ((sizeof(palette_arr)
-                                     // /sizeof(TProgmemRGBPalette16 *))-0.01F));
+            Scale = 100U; 
         deltaValue = (((Scale - 1U) % 11U + 1U));
         step = ::map(Speed * Speed, 1U, 65025U, (deltaValue - 1U) / 2U + 1U,
-                   deltaValue * 18U + 44); // корректируем скорость эффекта в наш диапазон допустимых
-        // deltaValue = (((Scale - 1U) % 11U + 2U) << 4U); // ширина языков пламени
-        // (масштаб шума Перлина)
-        deltaValue = 0.7 * deltaValue * deltaValue + 31.3; // ширина языков пламени (масштаб шума Перлина)
-        pcnt = ::map(step, 1U, 255U, 20U, 128U); // nblend 3th param
+                   deltaValue * 18U + 44); 
+        deltaValue = 0.7 * deltaValue * deltaValue + 31.3;
+        pcnt = ::map(step, 1U, 255U, 20U, 128U);
     }
 
     void Draw() override
