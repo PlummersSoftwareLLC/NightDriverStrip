@@ -345,8 +345,21 @@ void setup()
     debugI("Startup!");
 
     // Start Debug
-    debugI("Starting DebugLoopTaskEntry");
-    taskManager.StartDebugThread();
+    #if !M5STACKCORES3
+        debugI("Starting DebugLoopTaskEntry");
+        taskManager.StartDebugThread();
+    #endif
+
+    #if M5STACKCORES3
+        auto cfg = M5.config();
+        cfg.internal_mic = false;
+        cfg.internal_spk = false;
+        M5.begin(cfg);
+        g_ptrSystem->SetupHardwareDisplay(M5.Lcd.width(), M5.Lcd.height());
+
+        debugI("Starting DebugLoopTaskEntry");
+        taskManager.StartDebugThread();
+    #endif
 
     // Initialize Non-Volatile Storage
     esp_err_t err = nvs_flash_init();
@@ -499,9 +512,11 @@ void setup()
 
     #elif USE_M5
 
-        M5.begin();
-        // M5 specific setup is now inside M5Screen constructor
-        g_ptrSystem->SetupHardwareDisplay(M5.Lcd.width(), M5.Lcd.height());
+        #if !M5STACKCORES3
+            M5.begin();
+            // M5 specific setup is now inside M5Screen constructor
+            g_ptrSystem->SetupHardwareDisplay(M5.Lcd.width(), M5.Lcd.height());
+        #endif
 
     #elif ELECROW
 
@@ -518,6 +533,11 @@ void setup()
             g_ptrSystem->SetupHardwareDisplay(128, 64);
         #endif
 
+    #endif
+
+    #if M5STACKCORES3
+        if (g_ptrSystem->HasJSONWriter())
+            taskManager.StartJSONWriterThread();
     #endif
 
     // Create the vector with devices (channels)

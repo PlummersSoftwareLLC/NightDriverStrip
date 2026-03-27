@@ -145,7 +145,7 @@ extern std::mutex g_buffer_mutex;
 // of the OLED/LCD is now controlled separately, but M5 is always equipped
 // with one (but it doesn't have to be used!).
 
-#if M5STICKC || M5STICKCPLUS || M5STICKCPLUS2 || M5STACKCORE2 || M5TAB
+#if M5STICKC || M5STICKCPLUS || M5STICKCPLUS2 || M5STACKCORE2 || M5STACKCORES3 || M5TAB
     #define USE_M5 1
 #endif
 
@@ -659,6 +659,10 @@ extern const int g_aRingSizeTable[];
 
 #ifndef M5STACKCORE2
 #define M5STACKCORE2 0
+#endif
+
+#ifndef M5STACKCORES3
+#define M5STACKCORES3 0
 #endif
 
 #ifndef COLORDATA_SERVER_ENABLED

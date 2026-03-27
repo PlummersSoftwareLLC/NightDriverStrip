@@ -265,7 +265,9 @@ void SystemContainer::SetupConfig()
     if (!_ptrJSONWriter)
     {
         _ptrJSONWriter = make_unique_psram<JSONWriter>();
-        _ptrTaskManager->StartJSONWriterThread();
+        #if !M5STACKCORES3
+            _ptrTaskManager->StartJSONWriterThread();
+        #endif
     }
 
     // Create and load device config from SPIFFS if possible
