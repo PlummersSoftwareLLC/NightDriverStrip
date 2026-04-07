@@ -89,17 +89,57 @@ struct NetworkReader::ReaderEntry
 
 static DRAM_ATTR WiFiUDP l_Udp;              // UDP object used for NNTP, etc
 
+#include <atomic>
+
+static std::atomic<bool> l_bWifiDriverReady{false};
+
+static bool l_cachedMacAddress_valid = false;
+static String l_cachedMacAddress;
+
+static bool l_cachedMacAddressPretty_valid = false;
+static String l_cachedMacAddressPretty;
+
 String get_mac_address()
 {
+  if (l_cachedMacAddress_valid)
+    return l_cachedMacAddress;
+
+#if ENABLE_WIFI
+  if (l_bWifiDriverReady)
+  {
+    uint8_t mac[6];
+    WiFi.macAddress(mac);
+    l_cachedMacAddress = str_sprintf("%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    l_cachedMacAddress_valid = true;
+    return l_cachedMacAddress;
+  }
+#endif
+
+  // Fallback if driver not ready (e.g. early boot on P4)
   uint8_t mac[6];
-  WiFi.macAddress(mac);
+  get_mac_address_raw(mac);
   return str_sprintf("%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
 String get_mac_address_pretty()
 {
+  if (l_cachedMacAddressPretty_valid)
+    return l_cachedMacAddressPretty;
+
+#if ENABLE_WIFI
+  if (l_bWifiDriverReady)
+  {
+    uint8_t mac[6];
+    WiFi.macAddress(mac);
+    l_cachedMacAddressPretty = str_sprintf("%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    l_cachedMacAddressPretty_valid = true;
+    return l_cachedMacAddressPretty;
+  }
+#endif
+
+  // Fallback if driver not ready
   uint8_t mac[6];
-  WiFi.macAddress(mac);
+  get_mac_address_raw(mac);
   return str_sprintf("%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
@@ -418,6 +458,17 @@ void IRAM_ATTR RemoteLoopEntry(void *)
     // that were saved from an earlier call if no/nullptr arguments are passed.
     WiFiConnectResult ConnectToWiFi(const String* ssid = nullptr, const String* password = nullptr)
     {
+        static bool eventRegistered = false;
+        if (!eventRegistered)
+        {
+            WiFi.onEvent([](arduino_event_id_t event, arduino_event_info_t info) {
+                if (event == ARDUINO_EVENT_WIFI_READY) {
+                    l_bWifiDriverReady = true;
+                }
+            });
+            eventRegistered = true;
+        }
+
         static bool bPreviousConnection = false;
         static unsigned long millisAtLastAttempt = 0;
         static unsigned long retryDelay = WIFI_WAIT_INIT;

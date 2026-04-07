@@ -57,7 +57,11 @@ const std::map<String, CWebServer::ValueValidator> CWebServer::settingValidators
     { DeviceConfig::BrightnessTag,        [](const String& value) { return g_ptrSystem->GetDeviceConfig().ValidateBrightness(value); } }
 };
 
-std::vector<SettingSpec, psram_allocator<SettingSpec>> CWebServer::mySettingSpecs = {};
+std::vector<SettingSpec, psram_allocator<SettingSpec>>& CWebServer::GetMySettingSpecs()
+{
+    static std::vector<SettingSpec, psram_allocator<SettingSpec>> instance;
+    return instance;
+}
 std::vector<std::reference_wrapper<SettingSpec>> CWebServer::deviceSettingSpecs{};
 
 // Member function template specializations
@@ -479,13 +483,13 @@ const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceS
 {
     if (deviceSettingSpecs.empty())
     {
-        mySettingSpecs.emplace_back(
+        GetMySettingSpecs().emplace_back(
             "effectInterval",
             "Effect interval",
             "The duration in milliseconds that an individual effect runs, before the next effect is activated.",
             SettingSpec::SettingType::PositiveBigInteger
         );
-        deviceSettingSpecs.insert(deviceSettingSpecs.end(), mySettingSpecs.begin(), mySettingSpecs.end());
+        deviceSettingSpecs.insert(deviceSettingSpecs.end(), GetMySettingSpecs().begin(), GetMySettingSpecs().end());
 
         auto deviceConfigSpecs = g_ptrSystem->GetDeviceConfig().GetSettingSpecs();
         deviceSettingSpecs.insert(deviceSettingSpecs.end(), deviceConfigSpecs.begin(), deviceConfigSpecs.end());
