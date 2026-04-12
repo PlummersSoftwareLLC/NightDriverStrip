@@ -122,6 +122,7 @@
     #include "effects/matrix/PatternSMRadialFire.h"
     #include "effects/matrix/PatternSMRadialWave.h"
     #include "effects/matrix/PatternSMRainbowTunnel.h"
+    #include "effects/matrix/PatternSMSnow.h"
     #include "effects/matrix/PatternSMSpiroPulse.h"
     #include "effects/matrix/PatternSMStarDeep.h"
     #include "effects/matrix/PatternSMStrobeDiffusion.h"
@@ -363,7 +364,8 @@ void LoadEffectFactories()
             Effect<PatternSerendipity>(),
             Effect<PatternMandala>(),
             Effect<PatternMunch>(),
-            Effect<PatternMaze>()
+            Effect<PatternMaze>(),
+            Effect<PatternSMSnow>()
         );
     #endif
 

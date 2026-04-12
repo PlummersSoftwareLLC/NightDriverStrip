@@ -148,6 +148,10 @@ class PatternWeather : public EffectWithId<PatternWeather>
     size_t readerIndex        = SIZE_MAX;
     system_clock::time_point latestUpdate = system_clock::from_time_t(0);
 
+    // Animation state
+    uint32_t _animFrame = 0;
+    int16_t  _scrollPos = 0;
+
     /**
      * @brief Should this effect show its title.
      * The weather is obviously weather, and we don't want text overlaid on top of our text
@@ -437,6 +441,113 @@ class PatternWeather : public EffectWithId<PatternWeather>
         return locationChanged || countryChanged;
     }
 
+    // Map a temperature to a hue-based color: cold=blue → mild=green → warm=orange → hot=red
+    CRGB tempToColor(float temp) const
+    {
+        bool c = g_ptrSystem->GetDeviceConfig().UseCelsius();
+        if (temp < (c ?  0.0f : 32.0f)) return CRGB( 80,  80, 255);  // freezing   – blue
+        if (temp < (c ? 10.0f : 50.0f)) return CRGB(  0, 180, 255);  // cold       – cyan
+        if (temp < (c ? 18.0f : 65.0f)) return CRGB(  0, 230, 120);  // mild       – green
+        if (temp < (c ? 27.0f : 80.0f)) return CRGB(255, 220,   0);  // warm       – yellow
+        if (temp < (c ? 35.0f : 95.0f)) return CRGB(255, 120,   0);  // hot        – orange
+        return                                  CRGB(255,  30,   0);  // very hot   – red
+    }
+
+    // Draw a weather-condition animation overlaid on one icon panel.
+    // startX/Y: top-left corner of the panel; w/h: panel dimensions.
+    void drawWeatherAnimation(int16_t startX, int16_t startY, int16_t w, int16_t h, const String& icon)
+    {
+        if (icon.length() < 2) return;
+
+        const String cond    = icon.substring(0, 2);
+        const int16_t endX   = startX + w;
+        const int16_t endY   = startY + h;
+        const bool    isNight = (icon.length() > 2 && icon[2] == 'n');
+
+        auto addPixel = [&](int16_t x, int16_t y, CRGB color)
+        {
+            if (x >= startX && x < endX && y >= startY && y < endY && g()->isValidPixel((uint)x, (uint)y))
+                g()->leds[XY(x, y)] += color;
+        };
+
+        if (cond == "09" || cond == "10")   // Rain / shower rain
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                int16_t rx = startX + (i * 5 + 2) % w;
+                int16_t ry = startY + (int16_t)((_animFrame * 2 + i * 5) % h);
+                addPixel(rx,     ry,     CRGB( 0,  60, 160));
+                addPixel(rx,     ry - 1, CRGB( 0,  20,  60));  // short trail
+            }
+        }
+        else if (cond == "13")              // Snow
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                int16_t fx = startX + (int16_t)((i * 8 + 1 + (_animFrame / 6 + i) % 3) % w);
+                int16_t fy = startY + (int16_t)((_animFrame + i * 7) % h);
+                addPixel(fx, fy, CRGB(160, 160, 255));
+            }
+        }
+        else if (cond == "11")              // Thunderstorm: rain + periodic lightning bolt
+        {
+            // Rain streaks
+            for (int i = 0; i < 5; i++)
+            {
+                int16_t rx = startX + (i * 6 + 1) % w;
+                int16_t ry = startY + (int16_t)((_animFrame * 2 + i * 4) % h);
+                addPixel(rx, ry, CRGB(0, 25, 80));
+            }
+            // Lightning bolt for 4 frames every 80 frames (~3.2 s at 25 fps)
+            uint32_t phase = _animFrame % 80;
+            if (phase < 4)
+            {
+                uint8_t bright = (phase < 2) ? 255 : 180;
+                int16_t bx = startX + w / 2;
+                for (int16_t by = startY + 1; by < startY + 9 && by < endY; by++)
+                {
+                    int16_t px = bx + ((by & 1) ? 1 : -1);
+                    if (g()->isValidPixel((uint)px, (uint)by))
+                        g()->leds[XY(px, by)] = CRGB(bright, bright, (uint8_t)(bright * 4 / 5));
+                }
+            }
+        }
+        else if (cond == "01")              // Clear sky
+        {
+            if (isNight)
+            {
+                // Twinkling stars in the upper portion of the icon
+                for (int i = 0; i < 4; i++)
+                {
+                    uint8_t twinkle = beatsin8(18 + i * 11, 0, 150, (uint16_t)(i * 64));
+                    int16_t sx = startX + (i * 9 + 4) % w;
+                    int16_t sy = startY + (i * 4 + 1) % (h / 2);
+                    addPixel(sx, sy, CRGB(twinkle, twinkle, twinkle));
+                }
+            }
+            else
+            {
+                // Pulsing warm golden shimmer near the sun centre
+                uint8_t glow = beatsin8(10, 0, 90);
+                int16_t cx = startX + w / 2;
+                int16_t cy = startY + h / 3;
+                addPixel(cx,     cy, CRGB(glow, glow / 2, 0));
+                addPixel(cx + 1, cy, CRGB(glow / 2, glow / 4, 0));
+            }
+        }
+        else if (cond == "50")              // Mist / fog: slow drifting horizontal bands
+        {
+            for (int row = 0; row < 3; row++)
+            {
+                int16_t fy = startY + 3 + row * (h / 4) + (int16_t)((_animFrame / 8) % (h / 4));
+                if (fy < startY || fy >= endY) continue;
+                int16_t shift = (int16_t)((_animFrame / 4 + row * 7) % w);
+                for (int16_t fx = 0; fx < w; fx++)
+                    addPixel(startX + (fx + shift) % w, fy, CRGB(30, 35, 40));
+            }
+        }
+    }
+
 public:
 
     /**
@@ -479,129 +590,183 @@ public:
     }
 
     /**
-     * @brief This handles the drawing of the weather data.
-     * It also triggers the network reader on intervals.
-     * Will tell the user if there is no API Key configured
-     *
+     * @brief Draw the weather display with animated header, color-coded temperatures,
+     * condition-specific animations (rain, snow, lightning, etc.), and scrolling city name.
      */
     void Draw() override
     {
+        _animFrame++;
+
         const int fontHeight = 7;
         const int fontWidth  = 5;
-        const int xHalf      = MATRIX_WIDTH / 2 - 1;
+        const int xHalf      = MATRIX_WIDTH / 2 - 1;   // = 31
 
-        g()->fillScreen(BLACK16);
-        g()->fillRect(0, 0, MATRIX_WIDTH, 9, g()->to16bit(CRGB(0,0,128)));
-        g()->setFont(&Apple5x7);
-
+        // Trigger weather fetch when interval elapses or location changes
         auto now = system_clock::now();
-
         auto secondsSinceLastUpdate = now - latestUpdate;
-
-        // If location and/or country have changed, trigger an update regardless of timer, but
-        // not more than once every half a minute
         if (secondsSinceLastUpdate >= WEATHER_INTERVAL_SECONDS || (HasLocationChanged() && secondsSinceLastUpdate >= 30s))
         {
             latestUpdate = now;
-
             debugI("Triggering thread to check weather now...");
-            // Trigger the weather reader.
             g_ptrSystem->GetNetworkReader().FlagReader(readerIndex);
         }
 
-        // Draw the graphics
+        // ── Clear ────────────────────────────────────────────────────────────
+        g()->fillScreen(BLACK16);
+
+        // ── Animated gradient header bar (rows 0–8) ──────────────────────────
+        // Slow blue-to-indigo gradient that breathes in brightness
+        uint8_t pulse = beatsin8(12, 55, 130);
+        for (int x = 0; x < MATRIX_WIDTH; x++)
+        {
+            uint8_t t  = (uint8_t)((x * 255) / (MATRIX_WIDTH - 1));
+            uint8_t bv = lerp8by8(pulse, pulse / 2, t);    // blue: bright left → dim right
+            uint8_t rv = lerp8by8(0,     pulse / 5, t);    // slight red tint on right → indigo
+            uint8_t gv = lerp8by8(0,     pulse / 9, t);
+            CRGB hc = CRGB(rv, gv, bv);
+            for (int y = 0; y <= 8; y++)
+                g()->leds[XY(x, y)] = hc;
+        }
+
+        g()->setFont(&Apple5x7);
+
+        // ── City name (truncated or scrolling) ───────────────────────────────
+        bool noKey = g_ptrSystem->GetDeviceConfig().GetOpenWeatherAPIKey().isEmpty();
+        if (noKey)
+        {
+            g()->setTextColor(g()->to16bit(CRGB(255, 80, 0)));
+            g()->setCursor(1, fontHeight);
+            g()->print("NO API KEY");
+        }
+        else
+        {
+            // Reserve right-side pixels for current temperature (up to "−20" = 3 chars)
+            const int tempReserve = 4 * fontWidth + 2;                 // 22 px
+            const int maxCityChars = (MATRIX_WIDTH - tempReserve - 2) / fontWidth;  // ≈ 8
+
+            String name = strLocationName.isEmpty() ? strLocation : strLocationName;
+            name.toUpperCase();
+
+            g()->setTextColor(WHITE16);
+            g()->setCursor(1, fontHeight);
+
+            if ((int)name.length() <= maxCityChars)
+            {
+                g()->print(name);
+            }
+            else
+            {
+                // Advance scroll by one character every 12 frames (~2× per second)
+                if (_animFrame % 12 == 0)
+                    _scrollPos = (_scrollPos + 1) % ((int)name.length() + 4);
+                String padded = name + "    ";           // trailing gap before loop-back
+                String sub = "";
+                int pLen = (int)padded.length();
+                for (int i = 0; i < maxCityChars; i++)
+                    sub += padded[(_scrollPos + i) % pLen];
+                g()->print(sub);
+            }
+
+            // ── Current temperature — right-justified, color-coded ────────────
+            if (dataReady)
+            {
+                String strTemp = String((int)temperature);
+                int tx = MATRIX_WIDTH - fontWidth * (int)strTemp.length() - 1;
+                g()->setCursor(tx, fontHeight);
+                g()->setTextColor(g()->to16bit(tempToColor(temperature)));
+                g()->print(strTemp);
+            }
+        }
+
+        // ── Gradient separator line (row 9) ──────────────────────────────────
+        // Uses the built-in gradient line helper (col1 = left, col2 = right)
+        g()->drawLineF(0, 9, MATRIX_WIDTH - 1, 9, CRGB(0, 20, 200), CRGB(0, 60, 100));
+
+        // ── Weather icons ─────────────────────────────────────────────────────
         auto iconEntry = weatherIcons.find(iconToday);
         if (iconEntry != weatherIcons.end())
         {
-            auto icon = iconEntry->second;
-            if (JDR_OK != TJpgDec.drawJpg(0, 10, icon.contents, icon.length))        // Draw the image
+            auto& icon = iconEntry->second;
+            if (JDR_OK != TJpgDec.drawJpg(0, 10, icon.contents, icon.length))
                 debugW("Could not display icon %s", iconToday.c_str());
         }
 
         iconEntry = weatherIcons.find(iconTomorrow);
         if (iconEntry != weatherIcons.end())
         {
-            auto icon = iconEntry->second;
-            if (JDR_OK != TJpgDec.drawJpg(xHalf+1, 10, icon.contents, icon.length))        // Draw the image
+            auto& icon = iconEntry->second;
+            if (JDR_OK != TJpgDec.drawJpg(xHalf + 1, 10, icon.contents, icon.length))
                 debugW("Could not display icon %s", iconTomorrow.c_str());
         }
 
-        // Print the town/city name
-        int x = 0;
-        int y = fontHeight + 1;
-        g()->setCursor(x, y);
-        g()->setTextColor(WHITE16);
-        String showLocation = strLocation;
-        showLocation.toUpperCase();
-        if (g_ptrSystem->GetDeviceConfig().GetOpenWeatherAPIKey().isEmpty())
-            g()->print("No API Key");
-        else
-            g()->print((strLocationName.isEmpty() ? showLocation : strLocationName).substring(0, (MATRIX_WIDTH - 2 * fontWidth)/fontWidth));
-
-        // Display the temperature, right-justified
-
+        // ── Condition-specific animations overlaid on icons ───────────────────
         if (dataReady)
         {
-            String strTemp((int)temperature);
-            x = MATRIX_WIDTH - fontWidth * strTemp.length();
-            g()->setCursor(x, y);
-            g()->setTextColor(g()->to16bit(CRGB(192,192,192)));
-            g()->print(strTemp);
+            const int iconH = MATRIX_HEIGHT - 10;
+            drawWeatherAnimation(0,         10, xHalf,                  iconH, iconToday);
+            drawWeatherAnimation(xHalf + 1, 10, MATRIX_WIDTH - xHalf - 1, iconH, iconTomorrow);
+        }
+        else if (!noKey)
+        {
+            // Loading: three pulsing dots centred on the lower half
+            int dotY  = 20;
+            int dotX0 = MATRIX_WIDTH / 2 - 4;
+            for (int d = 0; d < 3; d++)
+            {
+                uint8_t db = beatsin8(8, 40, 200, (uint16_t)(d * 85));
+                int dx = dotX0 + d * 4;
+                if (g()->isValidPixel((uint)dx, (uint)dotY))
+                    g()->leds[XY(dx, dotY)] = CRGB(0, db / 2, db);
+            }
         }
 
-        // Draw the separator lines
+        // ── Animated vertical divider ─────────────────────────────────────────
+        for (int y = 9; y < MATRIX_HEIGHT; y++)
+        {
+            uint8_t bright = beatsin8(18, 70, 190, (uint16_t)(y * 18));
+            g()->leds[XY(xHalf, y)] = CRGB(0, bright / 10, bright / 2);
+        }
 
-        y+=1;
-
-        g()->drawLine(0, y, MATRIX_WIDTH-1, y, CRGB(0,0,128));
-        g()->drawLine(xHalf, y, xHalf, MATRIX_HEIGHT-1, CRGB(0,0,128));
-        y+=2 + fontHeight;
-
-        // Figure out which day of the week it is
-
+        // ── Day-of-week labels ────────────────────────────────────────────────
         time_t today = time(nullptr);
-        const tm * todayTime = localtime(&today);
-        const char * pszToday = pszDaysOfWeek[todayTime->tm_wday];
-        const char * pszTomorrow = pszDaysOfWeek[ (todayTime->tm_wday + 1) % 7 ];
+        const tm* todayTime = localtime(&today);
+        const char* pszToday    = pszDaysOfWeek[todayTime->tm_wday];
+        const char* pszTomorrow = pszDaysOfWeek[(todayTime->tm_wday + 1) % 7];
 
-        // Draw the day of the week and tomorrow's day as well
         g()->setTextColor(WHITE16);
-        g()->setCursor(0, MATRIX_HEIGHT);
+        g()->setCursor(1, MATRIX_HEIGHT);
         g()->print(pszToday);
-        g()->setCursor(xHalf+2, MATRIX_HEIGHT);
+        g()->setCursor(xHalf + 2, MATRIX_HEIGHT);
         g()->print(pszTomorrow);
 
-        // Draw the temperature in lighter white
-
+        // ── Hi / Lo temperatures — warm orange for Hi, cool blue for Lo ───────
         if (dataReady)
         {
-            g()->setTextColor(g()->to16bit(CRGB(192,192,192)));
-            String strHi((int) highToday);
-            String strLo((int) loToday);
+            const int yHi = MATRIX_HEIGHT - fontHeight;
+            const int yLo = MATRIX_HEIGHT;              // baseline at bottom edge
 
-            // Draw today's HI and LO temperatures
+            String strHiToday  = String((int)highToday);
+            String strLoToday  = String((int)loToday);
+            String strHiTomor  = String((int)highTomorrow);
+            String strLoTomor  = String((int)loTomorrow);
 
-            x = xHalf - fontWidth * strHi.length();
-            y = MATRIX_HEIGHT - fontHeight;
-            g()->setCursor(x,y);
-            g()->print(strHi);
-            x = xHalf - fontWidth * strLo.length();
-            y+= fontHeight;
-            g()->setCursor(x,y);
-            g()->print(strLo);
+            // Today
+            g()->setTextColor(g()->to16bit(CRGB(255, 130,   0)));
+            g()->setCursor(xHalf - fontWidth * (int)strHiToday.length(), yHi);
+            g()->print(strHiToday);
 
-            // Draw tomorrow's HI and LO temperatures
+            g()->setTextColor(g()->to16bit(CRGB( 80, 160, 255)));
+            g()->setCursor(xHalf - fontWidth * (int)strLoToday.length(), yLo);
+            g()->print(strLoToday);
 
-            strHi = String((int)highTomorrow);
-            strLo = String((int)loTomorrow);
-            x = MATRIX_WIDTH - fontWidth * strHi.length();
-            y = MATRIX_HEIGHT - fontHeight;
-            g()->setCursor(x,y);
-            g()->print(strHi);
-            x = MATRIX_WIDTH - fontWidth * strLo.length();
-            y+= fontHeight;
-            g()->setCursor(x,y);
-            g()->print(strLo);
+            // Tomorrow
+            g()->setTextColor(g()->to16bit(CRGB(255, 130,   0)));
+            g()->setCursor(MATRIX_WIDTH - fontWidth * (int)strHiTomor.length() - 1, yHi);
+            g()->print(strHiTomor);
+
+            g()->setTextColor(g()->to16bit(CRGB( 80, 160, 255)));
+            g()->setCursor(MATRIX_WIDTH - fontWidth * (int)strLoTomor.length() - 1, yLo);
+            g()->print(strLoTomor);
         }
     }
 };

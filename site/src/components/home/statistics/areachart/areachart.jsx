@@ -1,111 +1,86 @@
-import { useState, useMemo } from "react";
-import { AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts'
-import {useTheme, Box, Typography, List, ListItem } from "@mui/material";
-import areaChartStyle from "./style";
+import { useState } from "react";
 
-const AreaStat = props => {
-    const {name, rawvalue, ignored, statsAnimateChange, maxSamples, headerFields , idleField, category, detail } = props;
-    const getChartValues = (value) => Object.entries(value)
-        .filter(entry=>!ignored.includes(entry[0]))
-        .reduce((ret,entry)=>{ret[entry[0]] = entry[1]; return ret},{});
-    const [lastStates, setLastStates] = useState([Object.entries(getChartValues(rawvalue))
-        .filter(entry=>!ignored.includes(entry[0]))
-        .reduce((ret,stat)=>{ret[stat[0]]=stat[1]; return ret},{ts: new Date().getTime()})] );
-    const getValue = (value) => value !== undefined && !Number.isInteger(value) ? (isNaN(value) ? value : value.toFixed(2)) : value;
-    const theme = useTheme();
+// CSS variable → hex color mapping for chart fills
+const CPU_COLORS  = ['var(--cc1)','var(--cc2)','var(--cc3)','var(--cc4)'];
+const MEM_COLORS  = ['var(--cm1)','var(--cm2)','var(--cm3)','var(--cm4)'];
 
-    useMemo(()=>{
-        setLastStates(lastStates === undefined ? [Object.entries(getChartValues(rawvalue))] : [...lastStates,Object.entries(getChartValues(rawvalue))
-            .filter(entry=>!ignored.includes(entry[0]))
-            .reduce((ret,stat)=>{ret[stat[0]]=stat[1]; return ret},{ts: new Date().getTime()})]
-            .filter((_val,idx,arr) => arr.length >= maxSamples ? idx > arr.length - maxSamples : true));
-    },[rawvalue]);
-    
-    const getFillColor = ({step, isIdle}) => {
-        if (isIdle) {
-            return theme.palette.taskManager.idleColor;
-        }
-        return (theme.palette.taskManager[`${category === "Memory" ? "b" : ""}color${step+1}`]);
-    };
+const AreaStat = ({ name, rawvalue, ignored, maxSamples, idleField, headerFields, category, detail, statsAnimateChange }) => {
+    const activeKeys = Object.keys(rawvalue).filter(k => !ignored.includes(k) && rawvalue[k] !== undefined);
+    const colors = category === 'Memory' ? MEM_COLORS : CPU_COLORS;
 
-    const getStatTooltip = (data, classes) => {
-        return (
-            <Box sx={classes.tooltipContent}>
-                <Box sx={classes.tooltipHeader}>{data.labelFormatter(data.label)}</Box>
-                <List sx={classes.threads}>
-                    {data.payload
-                        .sort((a,b) => sortStats(b,a))
-                        .map(stat => 
-                            <ListItem key={stat.name} sx={classes.thread}>
-                                <Box sx={classes.threadName} style={{color:stat.color}}>{stat.name}</Box>
-                                <Box sx={classes.threadValue}>{getValue(stat.value)}
-                                    <Box sx={classes.threadSummary}>
-                                ({(stat.value/data.payload.reduce((ret,stat) => ret + stat.value,0)*100).toFixed(2)}%)
-                                    </Box>
-                                </Box>
-                            </ListItem>)
-                    }
-                </List>
-            </Box>)
-    };
+    const [history, setHistory] = useState([{ ...rawvalue, _ts: Date.now() }]);
 
-    const sortStats = (a, b) => {
-        return a.name === idleField && b.name !== idleField ? 1 : (a.name !== idleField && b.name === idleField ? -1 : a.value-b.value);
-    };
+    // Append new data point when rawvalue changes (via useMemo-like pattern)
+    const lastVal = history[history.length - 1];
+    const changed = activeKeys.some(k => lastVal[k] !== rawvalue[k]);
+    if (changed) {
+        // Schedule state update outside render
+        Promise.resolve().then(() =>
+            setHistory(h => {
+                const next = [...h, { ...rawvalue, _ts: Date.now() }];
+                return next.length > maxSamples ? next.slice(next.length - maxSamples) : next;
+            })
+        );
+    }
 
-    return <Box sx={areaChartStyle.root}>
-        {detail && <Box sx={areaChartStyle.header}>
-            <Typography sx={areaChartStyle.headerLine} color="textPrimary" variant="subtitle1">{name} {headerFields && Object.values(headerFields).map(headerField=>
-                <Typography key={headerField} sx={areaChartStyle.headerField} color="textPrimary" variant="subtitle2">{headerField}: 
-                    <Typography color="textSecondary" variant="subtitle2">{rawvalue[headerField]}</Typography>
-                </Typography>)}
-            </Typography>
-            <List sx={areaChartStyle.stats}>
-                {Object.entries(rawvalue)
-                    .filter(entry=>!ignored.includes(entry[0]))
-                    .map(entry=>
-                        <ListItem sx={areaChartStyle.stats} key={entry[0]}>
-                            <Typography color="textPrimary" variant="little">{entry[0]}</Typography>:
-                            <Typography color="textSecondary" variant="little" >{getValue(entry[1])}</Typography>
-                        </ListItem>)}
-            </List>
-        </Box>}
-        <AreaChart 
-            data={lastStates}
-            height={detail ? 300 : 80}
-            width={detail ? 500 : 200}
-            stackOffset="expand">
-            <defs>
-                {Object.entries(getChartValues(rawvalue))
-                    .filter(entry => entry[1] !== undefined)
-                    .map((entry,idx,arr) => <linearGradient key={`color${entry[0]}`} id={`color${entry[0]}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={getFillColor({numOfSteps: arr.length, step: idx, isIdle: entry[0] === idleField})} stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor={getFillColor({numOfSteps: arr.length, step: idx, isIdle: entry[0] === idleField})} stopOpacity={0}/>
-                    </linearGradient>)}
-            </defs>
-            <XAxis dataKey="ts"
-                name='Time'
-                hide={!detail}
-                tickFormatter={unixTime => new Date(unixTime).toLocaleTimeString()}></XAxis>
-            <YAxis hide={true}></YAxis>
-            <CartesianGrid strokeDasharray="3 3"/>
-            {<Tooltip content={data => getStatTooltip(data, areaChartStyle)}
-                labelFormatter={t => new Date(t).toLocaleString()}></Tooltip>}
-            {Object.entries(getChartValues(rawvalue))
-                .filter(entry => entry[1] !== undefined)
-                .sort((a,b) => sortStats({name:a[0],chartValue:a[1]},{name:b[0],chartValue:b[1]}))
-                .map((entry) => 
-                    <Area
-                        key={entry[0]}
-                        isAnimationActive={statsAnimateChange}
-                        type="monotone"
-                        fillOpacity={1} 
-                        fill={`url(#color${entry[0]})`}
-                        stroke={category === "Memory" ? theme.palette.taskManager.memoryColor : theme.palette.taskManager.strokeColor}
-                        dataKey={entry[0]}
-                        stackId="1"/>)}
-        </AreaChart>
-    </Box>
+    const w = detail ? 480 : 200;
+    const h = detail ? 140 : 56;
+    const pad = 2;
+    const iw = w - pad * 2;
+    const ih = h - pad * 2;
+    const n  = history.length;
+
+    // Build stacked-normalised areas
+    const areas = activeKeys.map((key, ki) => {
+        // For each time step compute cumulative fractions
+        const pts_top = history.map((d, i) => {
+            const total = activeKeys.reduce((s, k) => s + (Number(d[k]) || 0), 0) || 1;
+            const cum = activeKeys.slice(0, ki + 1).reduce((s, k) => s + (Number(d[k]) || 0), 0);
+            const x = pad + (i / Math.max(n - 1, 1)) * iw;
+            const y = pad + ih - (cum / total) * ih;
+            return `${x},${y}`;
+        });
+        const pts_bot = history.map((d, i) => {
+            const total = activeKeys.reduce((s, k) => s + (Number(d[k]) || 0), 0) || 1;
+            const cum = activeKeys.slice(0, ki).reduce((s, k) => s + (Number(d[k]) || 0), 0);
+            const x = pad + (i / Math.max(n - 1, 1)) * iw;
+            const y = pad + ih - (cum / total) * ih;
+            return `${x},${y}`;
+        }).reverse();
+        const fill = key === idleField ? 'var(--cidle)' : colors[ki % colors.length];
+        return { key, fill, points: [...pts_top, ...pts_bot].join(' ') };
+    });
+
+    const fmt = v => v !== undefined && !Number.isInteger(v) ? (isNaN(v) ? v : Number(v).toFixed(1)) : v;
+
+    return (
+        <div>
+            {detail && (
+                <div style={{marginBottom:4}}>
+                    <span style={{fontSize:12,fontWeight:600}}>{name}</span>
+                    {headerFields && headerFields.map(f =>
+                        <span key={f} style={{fontSize:11,color:'var(--text-dim)',marginLeft:6}}>
+                            {f}: {fmt(rawvalue[f])}
+                        </span>
+                    )}
+                    <div style={{display:'flex',flexWrap:'wrap',gap:8,marginTop:4}}>
+                        {activeKeys.filter(k => !ignored.includes(k)).map(k => (
+                            <span key={k} style={{fontSize:11}}>
+                                <span style={{color:'var(--text)'}}>{k}</span>
+                                <span style={{color:'var(--text-dim)',marginLeft:2}}>{fmt(rawvalue[k])}</span>
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            )}
+            <svg width={w} height={h} style={{display:'block'}}>
+                <rect x={0} y={0} width={w} height={h} fill="rgba(0,0,0,0.15)" rx={2} />
+                {areas.map(a => (
+                    <polygon key={a.key} points={a.points} fill={a.fill} fillOpacity={0.85} stroke="none" />
+                ))}
+            </svg>
+        </div>
+    );
 };
-    
+
 export default AreaStat;

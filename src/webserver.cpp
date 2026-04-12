@@ -303,6 +303,9 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest, StatisticsType 
         j["DMA_SIZE"]              = _staticStats.DmaHeapSize;
         j["PSRAM_SIZE"]            = _staticStats.PsramSize;
         j["CODE_FREE"]             = _staticStats.FreeSketchSpace;
+        j["FS_SIZE"]               = SPIFFS.totalBytes();
+        j["FS_USED"]               = SPIFFS.usedBytes();
+        j["BUILD_INFO"]            = __DATE__ " " __TIME__;
     }
 
     if ((statsType & StatisticsType::Dynamic) != StatisticsType::None)

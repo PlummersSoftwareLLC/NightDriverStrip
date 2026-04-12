@@ -1,79 +1,46 @@
 import { createContext, useEffect, useState } from "react";
 import httpPrefix from "../espaddr";
-import PropTypes from 'prop-types';
 
 const StatsContext = createContext(undefined);
 const statsEndpoint = `${httpPrefix !== undefined ? httpPrefix : ""}/statistics/static`;
 
 const StatsProvider = ({ children }) => {
-    const [chipCores, setChipCores] = useState(1);
-    const [chipModel, setChipModel] = useState('ESP32');
-    const [chipSpeed, setChipSpeed] = useState(240);
-    const [codeFree, setCodeFree] = useState(0);
-    const [codeSize, setCodeSize] = useState(0);
-    const [dmaSize, setDmaSize] = useState(0);
-    const [effectsSocket, setEffectsSocket] = useState(false);
-    const [flashSize, setFlashSize] = useState(0);
-    const [framesSocket, setFramesSocket] = useState(false);
-    const [heapSize, setHeapSize] = useState(0);
-    const [matrixHeight, setMatrixHeight] = useState(32);
-    const [matrixWidth, setMatrixWidth] = useState(64);
-    const [progSize, setProgSize] = useState(0);
-    const [psRamSize, setPsRamSize] = useState(0);
+    const [stats, setStats] = useState({
+        buildInfo: null,
+        chipCores: 1, chipModel: 'ESP32', chipSpeed: 240,
+        codeFree: 0, codeSize: 0, dmaSize: 0,
+        effectsSocket: false, flashSize: 0, framesSocket: false,
+        fsSize: 0, fsUsed: 0,
+        heapSize: 0, matrixHeight: 32, matrixWidth: 64,
+        progSize: 0, psRamSize: 0,
+    });
 
     useEffect(() => {
-        const getDataFromDevice = async (params) => {
-            try {
-                const statistics = await fetch(statsEndpoint, params).then(r => r.json());
-                setChipCores(statistics.CHIP_CORES);
-                setChipModel(statistics.CHIP_MODEL);
-                setChipSpeed(statistics.CHIP_SPEED);
-                setCodeFree(statistics.CODE_FREE);
-                setCodeSize(statistics.CODE_SIZE);
-                setDmaSize(statistics.DMA_SIZE);
-                setEffectsSocket(statistics.EFFECTS_SOCKET);
-                setFlashSize(statistics.FLASH_SIZE);
-                setFramesSocket(statistics.FRAMES_SOCKET);
-                setHeapSize(statistics.HEAP_SIZE);
-                setMatrixHeight(statistics.MATRIX_HEIGHT);
-                setMatrixWidth(statistics.MATRIX_WIDTH);
-                setProgSize(statistics.PROG_SIZE);
-                setPsRamSize(statistics.PSRAM_SIZE);
-                console.log('frames socket update', statistics.FRAMES_SOCKET);
+        fetch(statsEndpoint)
+            .then(r => r.json())
+            .then(s => setStats({
+                chipCores:    s.CHIP_CORES,
+                chipModel:    s.CHIP_MODEL,
+                chipSpeed:    s.CHIP_SPEED,
+                codeFree:     s.CODE_FREE,
+                codeSize:     s.CODE_SIZE,
+                dmaSize:      s.DMA_SIZE,
+                buildInfo:    s.BUILD_INFO ?? null,
+                effectsSocket:s.EFFECTS_SOCKET,
+                flashSize:    s.FLASH_SIZE,
+                framesSocket: s.FRAMES_SOCKET,
+                fsSize:       s.FS_SIZE ?? 0,
+                fsUsed:       s.FS_USED ?? 0,
+                heapSize:     s.HEAP_SIZE,
+                matrixHeight: s.MATRIX_HEIGHT,
+                matrixWidth:  s.MATRIX_WIDTH,
+                progSize:     s.PROG_SIZE,
+                psRamSize:    s.PSRAM_SIZE,
+            }))
+            .catch(() => {});
+    }, []); // ← runs once on mount only
 
-            } catch (err) {
-                console.debug("Aborted Statistics update");
-            }
-        };
-        getDataFromDevice();
-    });
-    return (
-        <StatsContext.Provider value={{
-            chipCores,
-            chipModel,
-            chipSpeed,
-            codeFree,
-            codeSize,
-            dmaSize,
-            effectsSocket,
-            flashSize,
-            framesSocket,
-            heapSize,
-            matrixHeight,
-            matrixWidth,
-            progSize,
-            psRamSize
-        }}>
-            {children}
-        </StatsContext.Provider>
-    );
-};
-
-StatsProvider.propTypes = {
-    children: PropTypes.oneOfType([
-        PropTypes.arrayOf(PropTypes.node),
-        PropTypes.node
-    ]).isRequired
+    return <StatsContext.Provider value={stats}>{children}</StatsContext.Provider>;
 };
 
 export { StatsContext, StatsProvider };
