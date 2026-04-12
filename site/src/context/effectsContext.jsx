@@ -1,134 +1,119 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { httpPrefix, wsPrefix } from "../espaddr";
-import PropTypes from 'prop-types';
 import { StatsContext } from "./statsContext";
 
 const EffectsContext = createContext(undefined);
-const restEffectsEndpoint = `${httpPrefix !== undefined ? httpPrefix : ""}/effects`;
-const wsEffectsEndpoint = `${wsPrefix}/effects`;
-const refreshInterval = 30000; //30 Seconds
+const restEndpoint = `${httpPrefix !== undefined ? httpPrefix : ""}/effects`;
+const wsEndpoint   = `${wsPrefix}/effects`;
+const POLL_MS      = 30000;
 
 const EffectsProvider = ({ children }) => {
-    const [effects, setEffects] = useState([]);
-    const [activeInterval, setActiveInterval] = useState(2 ** 32);
-    const [pinnedEffect, setPinnedEffect] = useState(false);
+    const [effects,           setEffects]           = useState([]);
+    const [activeInterval,    setActiveInterval]    = useState(2 ** 32);
+    const [pinnedEffect,      setPinnedEffect]      = useState(false);
     const [remainingInterval, setRemainingInterval] = useState(0);
-    const [activeEffect, setActiveEffect] = useState(0);
-    const [effectTrigger, setEffectTrigger] = useState(false);
-    const [currentEffect, setCurrentEffect] = useState(Number(0));
-    const [reconnectSocket, setReconnectSocket] = useState(false);
+    const [currentEffect,     setCurrentEffect]     = useState(0);
 
     const { effectsSocket } = useContext(StatsContext);
-    const ws = useRef(null)
+    const ws = useRef(null);
 
-    const getDataFromDevice = async (params) => {
+    // Stable fetch function — no dependencies, never gets aborted by state changes
+    const fetchEffects = useCallback(async (signal) => {
         try {
-            const { currentEffect, millisecondsRemaining, eternalInterval, effectInterval, Effects } = await fetch(restEffectsEndpoint, params).then(r => r.json());
-            setActiveEffect(currentEffect);
-            setRemainingInterval(millisecondsRemaining);
-            setActiveInterval(effectInterval);
-            setEffects(Effects);
-            setPinnedEffect(eternalInterval);
-        } catch (err) {
-            console.debug("Aborted update");
-        }
-    };
+            const data = await fetch(restEndpoint, signal ? { signal } : {}).then(r => r.json());
+            setCurrentEffect(data.currentEffect);
+            setRemainingInterval(data.millisecondsRemaining ?? 0);
+            setActiveInterval(data.effectInterval ?? 2 ** 32);
+            setEffects(data.Effects ?? []);
+            setPinnedEffect(data.eternalInterval ?? false);
+        } catch (_) {}
+    }, []);
 
-    // Start - http polling for initial load and IFF web sockets are not available.
+    // Always fetch effects on mount to populate the initial list
     useEffect(() => {
-        if (!effectsSocket) {
-            const timer = setInterval(() => {
-                const controller = new AbortController();
-                getDataFromDevice({ signal: controller.signal });
-            }, refreshInterval);
-            getDataFromDevice();
-            return () => {
-                clearInterval(timer);
+        fetchEffects();
+    }, [fetchEffects]);
+
+    // HTTP polling when not using WebSocket (30s interval, no immediate re-fetch on mount)
+    useEffect(() => {
+        if (effectsSocket) return;
+        const ctrl = new AbortController();
+        const id = setInterval(() => fetchEffects(ctrl.signal), POLL_MS);
+        return () => { clearInterval(id); ctrl.abort(); };
+    }, [effectsSocket, fetchEffects]);
+
+    // Auto-advance: trigger a re-fetch when the current effect should have rotated
+    useEffect(() => {
+        if (effectsSocket || pinnedEffect || !remainingInterval) return;
+        const id = setTimeout(() => fetchEffects(), remainingInterval + 250);
+        return () => clearTimeout(id);
+    }, [currentEffect, activeInterval, remainingInterval, effectsSocket, pinnedEffect, fetchEffects]);
+
+    // WebSocket for live effect updates
+    useEffect(() => {
+        if (!effectsSocket) return;
+        let reconnectTimer = null;
+        let intentionalClose = false;
+
+        const connect = () => {
+            const sock = new WebSocket(wsEndpoint);
+            ws.current = sock;
+
+            sock.onopen = () => {
+                // Refresh full list when WebSocket connects (or reconnects)
+                fetchEffects();
             };
-        }
-    }, [effectTrigger, effectsSocket]);
 
-    useEffect(() => {
-        if (!effectsSocket) {
-            setCurrentEffect(activeEffect);
-            if (!pinnedEffect) {
-                const timer = setTimeout(() => {
-                    // Timer expired, trigger a resync. 
-                    setEffectTrigger(s => !s);
-                }, remainingInterval + 10);
-                return () => {
-                    clearTimeout(timer);
-                };
-            }
-        }
-    }, [activeEffect, activeInterval, effectsSocket]);
-    // End - http polling for initial load and IFF web sockets are not available.
+            sock.onmessage = (event) => {
+                try {
+                    const u = JSON.parse(event.data);
+                    if (u.currentEffectIndex !== undefined) setCurrentEffect(u.currentEffectIndex);
+                    if (u.interval !== undefined) {
+                        setActiveInterval(u.interval);
+                        setPinnedEffect(u.interval === 0);
+                    }
+                    if (u.effectListDirty) fetchEffects();
+                    if (u.effectsEnabledState) {
+                        u.effectsEnabledState.forEach(({ index, ...patch }) => {
+                            setEffects(old => {
+                                const cp = [...old];
+                                if (cp[index]) cp[index] = { ...cp[index], ...patch };
+                                return cp;
+                            });
+                        });
+                    }
+                } catch (_) {}
+            };
 
-    // Start - Logic to use Web socket if its avaiable after the initial load
-    useEffect(() => {
-        if (effectsSocket) {
-            ws.current = new WebSocket(wsEffectsEndpoint);
-            const wsCurrent = ws.current
-            ws.current.ondisconnect = () => {
-                setReconnectSocket(r => !r);
-            }
-            return () => {
-                if (wsCurrent && wsCurrent.readyState === WebSocket.OPEN) {
-                    wsCurrent.close();
+            sock.onclose = () => {
+                if (!intentionalClose) {
+                    reconnectTimer = setTimeout(connect, 3000);
                 }
             };
-        }
-    }, [effectsSocket, reconnectSocket]);
 
-    useEffect(() => {
-        if (effectsSocket && ws.current !== null) {
-            ws.current.onmessage = (event) => {
-                const update = JSON.parse(event.data);
-                if (update['currentEffectIndex'] !== undefined) {
-                    // Current effect is actually an index in http endpoint. Ws is newer
-                    // and therefore has a more accurate naming convention. 
-                    setCurrentEffect(update['currentEffectIndex']);
-                    setRemainingInterval(activeInterval);
-                }
-                if (update['interval'] !== undefined) {
-                    const interval = update['interval'];
-                    // Only one interval in the context of a ws push, therefore interval == activeInterval
-                    setActiveInterval(interval);
-                    setRemainingInterval(interval - remainingInterval);
-                    setPinnedEffect(interval === 0);
+            sock.onerror = () => sock.close();
+        };
 
-                }
-                if (update['effectListDirty']) {
-                    getDataFromDevice();
-                }
-                if (update['effectsEnabledState']) {
-                    update['effectsEnabledState'].forEach((change) => {
-                        const index = change.index
-                        delete change.index
-                        setEffects(old => {
-                            const cp = [...old];
-                            cp[index] = { ...cp[index], ...change }
-                            return cp;
-                        })
-                    });
-                }
+        connect();
+
+        return () => {
+            intentionalClose = true;
+            clearTimeout(reconnectTimer);
+            if (ws.current && ws.current.readyState !== WebSocket.CLOSED) {
+                ws.current.close();
             }
-        }
-    }, [effectsSocket, reconnectSocket, activeInterval, remainingInterval, currentEffect, effects])
+        };
+    }, [effectsSocket, fetchEffects]);
 
-    // End - Logic to use Web socket if its avaiable after the initial load
     return (
-        <EffectsContext.Provider value={{ activeInterval, remainingInterval, activeEffect, pinnedEffect, currentEffect, effects, sync: () => setEffectTrigger(s => !s) }}>
+        <EffectsContext.Provider value={{
+            activeInterval, remainingInterval, pinnedEffect,
+            currentEffect, effects,
+            sync: fetchEffects,
+        }}>
             {children}
         </EffectsContext.Provider>
     );
-};
-
-EffectsProvider.propTypes = {
-    children: PropTypes.oneOfType([
-        PropTypes.arrayOf(PropTypes.node),
-        PropTypes.node
-    ]).isRequired
 };
 
 export { EffectsContext, EffectsProvider };

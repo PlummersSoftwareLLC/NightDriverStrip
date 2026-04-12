@@ -1,52 +1,40 @@
-import { useTheme, Box, Typography } from "@mui/material";
-import barChartStyle from './style'
-import  { BarChart, Bar, XAxis, YAxis } from 'recharts'
+const CPU_COLORS = ['var(--cc1)','var(--cc2)','var(--cc3)','var(--cc4)'];
+const MEM_COLORS = ['var(--cm1)','var(--cm2)','var(--cm3)','var(--cm4)'];
 
-const BarStat = props => {
-    const { name, rawvalue, ignored, statsAnimateChange , idleField, category, detail } = props;
-    const theme = useTheme();
+const BarStat = ({ name, rawvalue, ignored, idleField, category, detail }) => {
+    const fields = Object.keys(rawvalue)
+        .filter(k => !['name', ...ignored].includes(k))
+        .sort((a, b) => a === idleField ? 1 : b === idleField ? -1 : a.localeCompare(b));
 
-    const getFillColor = ({step, isIdle}) => {
-        if (isIdle) {
-            return theme.palette.taskManager.idleColor;
-        }
-        return (theme.palette.taskManager[`${category === "Memory" ? "b" : ""}color${step+1}`]);
-    };
+    const total   = fields.reduce((s, k) => s + (Number(rawvalue[k]) || 0), 0) || 1;
+    const used    = fields.filter(k => k !== idleField).reduce((s, k) => s + (Number(rawvalue[k]) || 0), 0);
+    const pct     = ((used / total) * 100).toFixed(0);
+    const colors  = category === 'Memory' ? MEM_COLORS : CPU_COLORS;
+    const w = detail ? 100 : 50;
+    const h = detail ? 200 : 60;
 
-    const sortStats = (a, b) => {
-        return a === idleField && b !== idleField ? 1 : (a !== idleField && b === idleField ? -1 : a.localeCompare(b));
-    };
+    // Compute cumulative heights
+    let cum = 0;
+    const bars = fields.map((k, i) => {
+        const frac = (Number(rawvalue[k]) || 0) / total;
+        const barH = frac * h;
+        const y    = h - cum - barH;
+        cum += barH;
+        const fill = k === idleField ? 'var(--cidle)' : colors[i % colors.length];
+        return { k, y, barH, fill };
+    });
 
     return (
-        <Box sx={barChartStyle.summary}>
-            <BarChart
-                height={detail ? 300 : 70}
-                width={detail ? 150 : 75}
-                data={[Object.entries(rawvalue)
-                    .filter(entry=>!["name",...ignored].includes(entry[0]))
-                    .reduce((ret,entry)=>{ret[entry[0]] = entry[1]; return ret},{name:name})]}>
-                <XAxis hide={true} dataKey="name" />
-                <YAxis hide={true} />
-                {Object.keys(rawvalue)
-                    .filter(field => !ignored.includes(field))
-                    .sort(sortStats)
-                    .map((field,idx) => <Bar dataKey={field} 
-                        key={field}
-                        stackId="a" 
-                        fill={getFillColor({step: idx, isIdle: field === idleField})} 
-                        isAnimationActive={statsAnimateChange}
-                        type="monotone"
-                        fillOpacity={1}/>)
-                }
-            </BarChart>
-            <Typography variant="summary">{(Object.entries(rawvalue)
-                .filter(entry => ![idleField,...ignored].includes(entry[0]))
-                .reduce((ret,stat)=>ret+stat[1],0.0)/
-                                       Object.entries(rawvalue)
-                                           .filter(entry => !ignored.includes(entry[0]))
-                                           .reduce((ret,stat)=>ret+stat[1],0.0)*100).toFixed(0)}%</Typography>
-        </Box>)
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
+            <svg width={w} height={h} style={{display:'block'}}>
+                <rect x={0} y={0} width={w} height={h} fill="rgba(0,0,0,0.15)" rx={2} />
+                {bars.map(b => (
+                    b.barH > 0 && <rect key={b.k} x={0} y={b.y} width={w} height={b.barH} fill={b.fill} fillOpacity={0.9} />
+                ))}
+            </svg>
+            <span style={{fontSize:11,color:'var(--text-dim)'}}>{pct}%</span>
+        </div>
+    );
 };
-
 
 export default BarStat;
