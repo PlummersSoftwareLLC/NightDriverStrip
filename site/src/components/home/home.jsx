@@ -1,183 +1,157 @@
-import {useState, useMemo, useEffect, useContext} from 'react';
-import {ThemeProvider, useTheme, AppBar, Toolbar, IconButton, Icon, Typography, Box, Popper, Button} from '@mui/material';
-import { CssBaseline, Drawer, Divider, List, ListItem, ListItemIcon, ListItemText, Tooltip } from '@mui/material';
-import mainAppStyle from './style';
-import getTheme from '../../theme/theme';
-import NotificationPanel from './notifications/notifications';
+import { useState, useContext } from 'react';
+import Icon from '../Icon';
+import { EffectsContext } from '../../context/effectsContext';
+import { StatsContext } from '../../context/statsContext';
 import StatsPanel from './statistics/stats';
 import DesignerPanel from './designer/designer';
-import PropTypes from 'prop-types';
 import ConfigDialog from './config/configDialog';
-import {EffectsContext} from '../../context/effectsContext';
-import httpPrefix from "../../espaddr"
 import PreviewDialog from './designer/colordata/previewDialog';
-import { StatsContext } from '../../context/statsContext';
+import NotificationPanel from './notifications/notifications';
+import httpPrefix from '../../espaddr';
 
-const resetEndpoint = `${httpPrefix !== undefined ? httpPrefix : ""}/reset`
+const resetUrl = `${httpPrefix !== undefined ? httpPrefix : ""}/reset`;
 
 const MainApp = () => {
-    const [mode, setMode] = useState(localStorage.getItem('theme') || 'dark');
-    const theme = useMemo(
-        () => getTheme(mode),[mode]);
-
-    // save users state to storage so the page reloads where they left off. 
-    useEffect(() => {
-        localStorage.setItem('theme', mode);
-    }, [mode]);
-
-    return <ThemeProvider theme={theme}><CssBaseline /><AppPannel mode={mode} setMode={setMode} /></ThemeProvider>;
-};
-const AppPannel = (props) => {
-    const config = JSON.parse(localStorage.getItem('config'));
-    const { mode, setMode } = props;
-    const theme = useTheme();
-    const classes = mainAppStyle(theme);
-    const [drawerOpened, setDrawerOpened] = useState(config && config.drawerOpened !== undefined ? config.drawerOpened : false);
-    const [stats, setStats] = useState(config && config.stats !== undefined ? config.stats : true);
-    const [designer, setDesigner] = useState(config && config.designer !== undefined ? config.designer : true);
+    const [theme,    setTheme]    = useState(localStorage.getItem('theme') || 'dark');
+    const [drawer,   setDrawer]   = useState(false);
+    const [showStats,   setStats]   = useState(() => {
+        const c = JSON.parse(localStorage.getItem('config') || '{}');
+        return c.stats !== undefined ? c.stats : true;
+    });
+    const [showDesign,  setDesign]  = useState(() => {
+        const c = JSON.parse(localStorage.getItem('config') || '{}');
+        return c.designer !== undefined ? c.designer : true;
+    });
     const [settings, setSettings] = useState(false);
-    const [preview, setPreview] = useState(false);
-    const [deviceControlOpen, setDeviceControlOpen] = useState(false);
+    const [preview,  setPreview]  = useState(false);
+    const [devCtrl,  setDevCtrl]  = useState(null); // anchor element
     const [notifications, setNotifications] = useState([]);
-    const {sync} = useContext(EffectsContext);
-    const { framesSocket } = useContext(StatsContext);
-    
-    console.log('framesSocket is', framesSocket);
-    // save users state to storage so the page reloads where they left off. 
-    useEffect(() => {
-        localStorage.setItem('config', JSON.stringify({
-            stats,
-            designer,
-        }));
-    }, [stats, designer]);
 
-    const addNotification = (level,type,target,notification) => {
-        setNotifications(prevNotifs => {
-            const group = prevNotifs.find(notif=>(notif.level === level) && (notif.type == type) && (notif.target === target)) || {level,type,target,notifications:[]};
-            group.notifications.push({date:new Date(),notification});
-            return [...prevNotifs.filter(notif => notif !== group), group];
+    const { sync } = useContext(EffectsContext);
+    const { framesSocket } = useContext(StatsContext);
+
+    const toggleTheme = () => {
+        const next = theme === 'dark' ? 'light' : 'dark';
+        setTheme(next);
+        localStorage.setItem('theme', next);
+        document.documentElement.setAttribute('data-theme', next);
+    };
+
+    const saveLayout = (stats, designer) => {
+        localStorage.setItem('config', JSON.stringify({ stats, designer }));
+    };
+
+    const addNotification = (level, type, target, notification) => {
+        setNotifications(prev => {
+            const group = prev.find(n => n.level === level && n.type === type && n.target === target)
+                       || { level, type, target, notifications: [] };
+            group.notifications.push({ date: new Date(), notification });
+            return [...prev.filter(n => n !== group), group];
         });
     };
-    const rootClasses = drawerOpened ? classes.appbarOpened : classes.appbarClosed;
-    const drawerClosedClasses = drawerOpened ? {} : classes.drawerClosed;
-    return <Box >
-        <AppBar sx={{...classes.appbar, ...rootClasses}} >
-            <Toolbar>
-                <IconButton 
-                    aria-label="Open drawer" 
-                    onClick={()=>setDrawerOpened(!drawerOpened)} 
-                >
-                    <Icon>{drawerOpened ? "chevron" : "menu"}</Icon>
-                </IconButton>
-                <Typography
-                    sx={classes.toolbarTitle}
-                    component="h1"
-                    variant="h6">
-                        NightDriverStrip
-                </Typography>
-                {(notifications.length > 0) && <NotificationPanel notifications={notifications} clearNotifications={()=>setNotifications([])}/>}
-            </Toolbar>
-        </AppBar>
-        <Drawer
-            open={drawerOpened}
-            variant="permanent"
-            sx={{'& .MuiDrawer-paper': {...classes.drawer, ...drawerClosedClasses}}}
-        >
-            <Box sx={{...classes.drawerHeader}}>
-                <Box sx={classes.displayMode}>
-                    <IconButton onClick={()=>setMode(mode === "dark" ? "light" : "dark")} ><Icon>{mode === "dark" ? "dark_mode" : "light_mode"}</Icon></IconButton>
-                    <ListItemText primary={(mode === "dark" ? "Dark" : "Light") + " mode"}/>
-                </Box>
-                <IconButton onClick={()=>setDrawerOpened(!drawerOpened)}>
-                    <Icon>chevron_left</Icon>
-                </IconButton>
-            </Box> 
-            <Divider/>
-            <List >{
-                [
-                    {caption:"Home", flag: designer, setter: setDesigner, icon: "home"},
-                    {caption:"Statistics", flag: stats, setter: setStats, icon: "area_chart"},
-                ].map(item => 
-                    
-                    <Tooltip title={item.caption} placement="right">
-                        <ListItem key={item.icon}>
-                            <ListItemIcon><IconButton onClick={() => item.setter && item.setter(prevValue => !prevValue)}>
-                                <Icon color={item.flag ? "primary": "action"} >{item.icon}</Icon>
-                            </IconButton></ListItemIcon>
-                            <ListItemText primary={item.caption}/>
-                        </ListItem>
-                    </Tooltip>)
-            }
-            <Tooltip title="Settings" placement="right">
-                <ListItem>
-                    <ListItemIcon>
-                        <IconButton onClick={() => setSettings(settings => !settings)}>
-                            <Icon>settings</Icon>
-                        </IconButton>
-                    </ListItemIcon>
-                    <ListItemText primary="Settings"></ListItemText>
-                </ListItem>
-            </Tooltip>
-            <Tooltip title="Preview frames" placement="right">
-                <ListItem>
-                    <ListItemIcon>
-                        <IconButton disabled={!framesSocket} onClick={() => setPreview(preview => !preview)}>
-                            <Icon>smart_display</Icon>
-                        </IconButton>
-                    </ListItemIcon>
-                    <ListItemText primary="Preview frames"></ListItemText>
-                </ListItem>
-            </Tooltip>
-            <Tooltip title="Device control" placement="right">
-                <ListItem onClick={(e) => setDeviceControlOpen(a => a ? null : e.currentTarget)}>
-                    <ListItemIcon>
-                        <IconButton>
-                            <Icon>settings_power</Icon>
-                        </IconButton>
-                    </ListItemIcon>
-                    <ListItemText primary="Device Control"></ListItemText>
-                </ListItem>
-            </Tooltip>
-            </List>
-        </Drawer>
-        <Box
-            sx={{...classes.content,
-                p: 10,
-                pl: drawerOpened ? 30: 10}}>
-            <StatsPanel open={stats} addNotification={addNotification}/> 
-            <DesignerPanel open={designer} addNotification={addNotification}/>
-        </Box>
-        {settings && <ConfigDialog heading={"Device Settings"} open={settings} setOpen={setSettings} saveCallback={sync}></ConfigDialog>}
-        {preview && <PreviewDialog open={preview} onClose={() => setPreview(false)}></PreviewDialog>}
-        <Popper open={Boolean(deviceControlOpen)} placement='right' anchorEl={deviceControlOpen}>
-            <Box sx={{display: 'flex', flexDirection: 'column', bgcolor: 'background.paper'}}>
-                <Button 
-                    onClick={() => {
-                        fetch(resetEndpoint, {method:"POST", body:new URLSearchParams({board: 1})});
-                        setDeviceControlOpen(undefined);
-                    }}
-                >{"Reboot Device"}
-                </Button>
-                <Button 
-                    onClick={() => {
-                        fetch(resetEndpoint, {method:"POST", body:new URLSearchParams({board: 1, deviceConfig: 1})});
-                        setDeviceControlOpen(undefined);
-                    }}
-                >{"Reset Device Configuration"}</Button>
-                <Button 
-                    onClick={() => {
-                        fetch(resetEndpoint, {method:"POST", body:new URLSearchParams({board: 1, effectsConfig: 1})});
-                        setDeviceControlOpen(undefined);
-                    }}>
-                    {"Reset Effect Settings"}</Button>
-            </Box>
-        </Popper>
-    </Box>;
-};
 
-AppPannel.propTypes = {
-    mode: PropTypes.string.isRequired, 
-    setMode: PropTypes.func.isRequired
+    const navItems = [
+        { label: 'Home',       icon: 'home',        active: showDesign,  toggle: () => { const v = !showDesign; setDesign(v);  saveLayout(showStats, v); } },
+        { label: 'Statistics', icon: 'area_chart',  active: showStats,   toggle: () => { const v = !showStats;  setStats(v);   saveLayout(v, showDesign); } },
+    ];
+
+    return (
+        <>
+            {/* App bar */}
+            <header className={`appbar${drawer ? ' open' : ''}`}>
+                <button className="icon-btn" onClick={() => setDrawer(d => !d)} aria-label="toggle drawer">
+                    <Icon name={drawer ? 'chevron_left' : 'menu'} />
+                </button>
+                <span className="appbar-title">NightDriverStrip</span>
+                {notifications.length > 0 &&
+                    <NotificationPanel notifications={notifications} clearNotifications={() => setNotifications([])} />
+                }
+            </header>
+
+            {/* Side drawer */}
+            <nav className={`drawer${drawer ? '' : ' closed'}`}>
+                <div className="drawer-header">
+                    <div className="drawer-mode">
+                        <button className="icon-btn" onClick={toggleTheme} title="Toggle theme">
+                            <Icon name={theme === 'dark' ? 'dark_mode' : 'light_mode'} />
+                        </button>
+                        <span className="nav-label" style={{fontSize:'13px'}}>{theme === 'dark' ? 'Dark' : 'Light'} mode</span>
+                    </div>
+                    <button className="icon-btn" onClick={() => setDrawer(false)}>
+                        <Icon name="chevron_left" />
+                    </button>
+                </div>
+                <hr className="divider" />
+                <ul className="drawer-nav">
+                    {navItems.map(item => (
+                        <li key={item.icon} className="drawer-nav-item">
+                            <button
+                                className={`icon-btn${item.active ? ' active' : ''}`}
+                                onClick={item.toggle}
+                                title={item.label}
+                            >
+                                <Icon name={item.icon} />
+                            </button>
+                            <span className="nav-label" style={{fontSize:'13px'}}>{item.label}</span>
+                        </li>
+                    ))}
+                    <li className="drawer-nav-item">
+                        <button className="icon-btn" onClick={() => setSettings(s => !s)} title="Settings">
+                            <Icon name="settings" />
+                        </button>
+                        <span className="nav-label" style={{fontSize:'13px'}}>Settings</span>
+                    </li>
+                    <li className="drawer-nav-item">
+                        <button
+                            className="icon-btn"
+                            disabled={!framesSocket}
+                            onClick={() => setPreview(p => !p)}
+                            title="Preview frames"
+                        >
+                            <Icon name="smart_display" />
+                        </button>
+                        <span className="nav-label" style={{fontSize:'13px'}}>Preview</span>
+                    </li>
+                    <li className="drawer-nav-item" onClick={e => setDevCtrl(devCtrl ? null : e.currentTarget)}>
+                        <button className="icon-btn" title="Device control">
+                            <Icon name="power" />
+                        </button>
+                        <span className="nav-label" style={{fontSize:'13px'}}>Device Control</span>
+                    </li>
+                </ul>
+            </nav>
+
+            {/* Main content */}
+            <main className={`main-content${drawer ? ' open' : ''}`}>
+                <StatsPanel  open={showStats}  addNotification={addNotification} />
+                <DesignerPanel open={showDesign} addNotification={addNotification} />
+            </main>
+
+            {/* Device control menu */}
+            {devCtrl && (
+                <>
+                    <div style={{position:'fixed',inset:0,zIndex:1399}} onClick={() => setDevCtrl(null)} />
+                    <div className="dev-ctrl" style={{top: devCtrl.getBoundingClientRect().bottom + 4, left: devCtrl.getBoundingClientRect().left}}>
+                        <button className="btn" onClick={() => {
+                            fetch(resetUrl, {method:'POST', body: new URLSearchParams({board:1})});
+                            setDevCtrl(null);
+                        }}>Reboot Device</button>
+                        <button className="btn" onClick={() => {
+                            fetch(resetUrl, {method:'POST', body: new URLSearchParams({board:1, deviceConfig:1})});
+                            setDevCtrl(null);
+                        }}>Reset Device Config</button>
+                        <button className="btn" onClick={() => {
+                            fetch(resetUrl, {method:'POST', body: new URLSearchParams({board:1, effectsConfig:1})});
+                            setDevCtrl(null);
+                        }}>Reset Effect Settings</button>
+                    </div>
+                </>
+            )}
+
+            {settings && <ConfigDialog heading="Device Settings" open={settings} setOpen={setSettings} saveCallback={sync} />}
+            {preview  && <PreviewDialog open={preview} onClose={() => setPreview(false)} />}
+        </>
+    );
 };
 
 export default MainApp;

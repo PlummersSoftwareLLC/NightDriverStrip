@@ -1,26 +1,18 @@
-import { List, ListItem, Typography, Box} from '@mui/material'
-import staticStatStyle from './style';
-
-const StaticStatsPanel = props => {
-    const {stat, name, detail } = props;
-
-    return <Box sx={staticStatStyle.root}>
-        <Typography variant={detail ? "h5" : "h6"}>{name}</Typography>
-        {detail ? <List>
-            {Object.entries(stat.stat)
-                .map(entry=>
-                    <ListItem key={entry[0]}>
-                        <Typography variant="little" color="textPrimary">{entry[0]}</Typography>:
-                        <Typography variant="little" color="textSecondary">{entry[1]}</Typography>
-                    </ListItem>)}
-        </List>:
-            <List>
-                {Object.entries(stat.stat)
-                    .filter(entry => stat.headerFields.includes(entry[0]))
-                    .map(entry=><Typography key={entry[0]} variant="little" color="textSecondary" >{entry[1]}</Typography>)}
-            </List>}
-    </Box>
-};
-
+const StaticStatsPanel = ({ stat, name, detail }) => (
+    <div className="stat-block">
+        <span className="stat-bname">{name}</span>
+        {detail
+            ? Object.entries(stat.stat).map(([k, v]) => (
+                <div className="stat-row" key={k}>
+                    <span className="stat-key">{k}:</span>
+                    <span className="stat-val">{v}</span>
+                </div>
+            ))
+            : (stat.headerFields || []).map(k => (
+                <span className="stat-val" key={k}>{stat.stat[k]}</span>
+            ))
+        }
+    </div>
+);
 
 export default StaticStatsPanel;

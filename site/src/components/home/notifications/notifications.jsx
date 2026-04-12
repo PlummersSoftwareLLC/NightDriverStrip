@@ -1,90 +1,50 @@
+import { useState } from 'react';
+import Icon from '../../Icon';
 
-import notificationsStyle from "./style";
-import { useState, createRef, useEffect } from "react";
-import { Box, IconButton, Badge, Icon, Popover, Card,CardHeader, Avatar } from "@mui/material";
-import {useTheme, CardContent, Typography, CardActions } from "@mui/material";
-
-const NotificationPanel = props => {
-    const { notifications, clearNotifications } = props;
-    const [numErrors, setNumErrors] = useState(undefined);
-    const [errorTargets, setErrorTargets] = useState({});
+const NotificationPanel = ({ notifications, clearNotifications }) => {
     const [open, setOpen] = useState(false);
-    const inputRef = createRef();
-    const theme = useTheme();
-
-    useEffect(()=>{
-        setNumErrors(notifications.reduce((ret,notif) => ret+notif.notifications.length, 0));
-        setErrorTargets(notifications.reduce((ret,notif) => 
-        {return {...ret,[notif.target]:ret[notif.target] || false}}, {}));
-    },[notifications]);
+    const total = notifications.reduce((s, n) => s + n.notifications.length, 0);
 
     return (
-        <Box sx={notificationsStyle.root}>
-            <IconButton
-                id="notifications"
-                ref={inputRef}
-                onClick={() => setOpen(wasOpen=>!wasOpen)}>
-                <Badge 
-                    aria-label="Alerts" 
-                    badgeContent={numErrors} 
-                    color="secondary">
-                    <Icon>notifications</Icon>
-                </Badge>
-            </IconButton>
-            <Popover
-                open={open}
-                target="notifications"
-                onClose={()=>{setOpen(false)}}
-                anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                }}>
-                <Card sx={notificationsStyle.popup} elevation={9}>
-                    <CardHeader
-                        avatar={
-                            <Avatar sx={{ bgcolor: theme.palette.error.dark }} aria-label="error">
-                            !
-                            </Avatar>
-                        }
-                        action={
-                            <IconButton onClick={()=>setOpen(false)} aria-label="settings">
-                                <Icon>close</Icon>
-                            </IconButton>
-                        }
-                        title={`${numErrors} Errors`}
-                    />
-                    <CardContent>
-                        {Object.entries(errorTargets)
-                            .sort((a,b)=>a[0].localeCompare(b[0]))
-                            .map(target => 
-                                <CardContent key={target[0]} sx={notificationsStyle.errors}>
-                                    {Object.entries(notifications)
-                                        .filter(notif => notif[1].target === target[0])
-                                        .map(error =>
-                                            <Box key={error[0]}>
-                                                <Box sx={notificationsStyle.errorHeader} key="header">
-                                                    <Typography>{target[0]}</Typography>
-                                                    <Typography color="textSecondary">{error[1].type}</Typography>
-                                                    <Typography>{error[1].level}</Typography>
-                                                </Box>
-                                                <Box sx={notificationsStyle.errors} key="errors">
-                                                    {Object.entries(error[1].notifications.reduce((ret,error) => {return {...ret,[error.notification]:(ret[error.notification]||0)+1}},{}))
-                                                        .map(entry => <Typography key={entry[1]} variant="tiny">{`${entry[1]}X ${entry[0]}`}</Typography>)
-                                                    }
-                                                </Box>
-                                            </Box>
-                                        )}
-                                </CardContent>
-                            )}
-                    </CardContent>
-                    <CardActions disableSpacing>
-                        <IconButton onClick={()=>clearNotifications()} aria-label="Clear Errors">
-                            <Icon>delete</Icon>
-                        </IconButton>
-                    </CardActions>
-                </Card>
-            </Popover>
-        </Box>);
+        <div className="notif-wrap">
+            <button className="icon-btn" onClick={() => setOpen(o => !o)} title={`${total} notifications`}>
+                <Icon name="bell" />
+                <span className="notif-badge" />
+            </button>
+            {open && (
+                <>
+                    <div style={{position:'fixed',inset:0,zIndex:1499}} onClick={() => setOpen(false)} />
+                    <div className="notif-popup">
+                        <div className="notif-hdr">
+                            <span style={{fontSize:'13px',fontWeight:600}}>{total} Notification{total !== 1 ? 's' : ''}</span>
+                            <button className="icon-btn" style={{width:28,height:28}} onClick={() => { clearNotifications(); setOpen(false); }} title="Clear all">
+                                <Icon name="close" size={16} />
+                            </button>
+                        </div>
+                        {notifications.map((group, gi) => (
+                            <div key={gi} className="notif-item">
+                                <div style={{display:'flex',gap:6,marginBottom:2}}>
+                                    <span className="notif-level">{group.level}</span>
+                                    <span>{group.target}</span>
+                                    <span style={{color:'var(--text-dim)'}}>{group.type}</span>
+                                </div>
+                                {Object.entries(
+                                    group.notifications.reduce((acc, n) => {
+                                        acc[n.notification] = (acc[n.notification] || 0) + 1;
+                                        return acc;
+                                    }, {})
+                                ).map(([msg, count]) => (
+                                    <div key={msg} style={{fontSize:'11px',color:'var(--text-dim)',marginTop:1}}>
+                                        {count > 1 ? `${count}× ` : ''}{String(msg)}
+                                    </div>
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+                </>
+            )}
+        </div>
+    );
 };
 
 export default NotificationPanel;
