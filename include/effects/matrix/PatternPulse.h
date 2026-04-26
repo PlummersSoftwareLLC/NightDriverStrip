@@ -1,6 +1,7 @@
 #pragma once
 
 #include "random_utils.h"
+#include "effects/strip/musiceffect.h"
 //+--------------------------------------------------------------------------
 //
 // File:        PatternPulse.h
