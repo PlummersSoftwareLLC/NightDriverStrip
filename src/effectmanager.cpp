@@ -1025,11 +1025,11 @@ void EffectManager::ApplyFadeLogic()
 
     if (e < msFadeTime)
     {
-        g_Values.Fader = (255 * e) / msFadeTime; // Fade in
+        g_Values.Fader = 255.0f * ((float)e / msFadeTime); // Fade in
     }
     else if (r < msFadeTime)
     {
-        g_Values.Fader = (255 * r) / msFadeTime; // Fade out
+        g_Values.Fader = 255.0f * ((float)r / msFadeTime); // Fade out
     }
     else
     {

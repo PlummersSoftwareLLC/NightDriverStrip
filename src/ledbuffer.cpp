@@ -122,10 +122,9 @@ LEDBufferManager::LEDBufferManager(uint32_t cBuffers, const std::shared_ptr<GFXB
 
 double LEDBufferManager::AgeOfOldestBuffer() const
 {
-    if (false == IsEmpty())
-    {
-        auto pOldest = PeekOldestBuffer();
-        return (pOldest->Seconds() + pOldest->MicroSeconds() / MICROS_PER_SECOND) - g_Values.AppTime.CurrentTime();
+    auto pOldest = PeekOldestBuffer();
+    if (pOldest) {
+        return (pOldest->Seconds() + pOldest->MicroSeconds() / (float)MICROS_PER_SECOND) - g_Values.AppTime.CurrentTime();
     }
     else
     {
@@ -135,10 +134,9 @@ double LEDBufferManager::AgeOfOldestBuffer() const
 
 double LEDBufferManager::AgeOfNewestBuffer() const
 {
-    if (false == IsEmpty())
-    {
-        auto pNewest = PeekNewestBuffer();
-        return (pNewest->Seconds() + pNewest->MicroSeconds() / MICROS_PER_SECOND) - g_Values.AppTime.CurrentTime();
+    auto pNewest = PeekNewestBuffer();
+    if (pNewest) {
+        return (pNewest->Seconds() + pNewest->MicroSeconds() / (float)MICROS_PER_SECOND) - g_Values.AppTime.CurrentTime();
     }
     else
     {

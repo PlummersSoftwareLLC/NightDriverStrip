@@ -93,6 +93,7 @@ uint16_t WiFiDraw()
             if (pBuffer)
             {
                 l_usLastWifiDraw = micros();
+                g_Values.Fader = 255;
                 debugV("Calling LEDBuffer::Draw from wire with %d/%zu pixels.", pixelsDrawn, pBuffer->_pStrand->GetLEDCount());
                 pBuffer->DrawBuffer();
                 // In case we drew some pixels and then drew 0 due a failure, we want to return a positive

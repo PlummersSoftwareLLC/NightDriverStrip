@@ -62,6 +62,10 @@
 #ifndef PatternCube_H
 #define PatternCube_H
 
+#include <algorithm>
+#include <cmath>
+#include <iterator>
+
 #include "Geometry.h"
 
 // Description:
@@ -99,7 +103,7 @@ class PatternCube : public EffectWithId<PatternCube>
     squareFace face[6];
     // Edges
     EdgePoint edge[12];
-    int nbEdges;
+    uint32_t nbEdges;
     // ModelView matrix
     float m00, m01, m02, m10, m11, m12, m20, m21, m22;
 
@@ -108,13 +112,13 @@ class PatternCube : public EffectWithId<PatternCube>
     {
         nbEdges = 0;
 
-        local[0].set(-w, w, w);
-        local[1].set(w, w, w);
-        local[2].set(w, -w, w);
-        local[3].set(-w, -w, w);
-        local[4].set(-w, w, -w);
-        local[5].set(w, w, -w);
-        local[6].set(w, -w, -w);
+        local[0].set(-w,  w,  w);
+        local[1].set( w,  w,  w);
+        local[2].set( w, -w,  w);
+        local[3].set(-w, -w,  w);
+        local[4].set(-w,  w, -w);
+        local[5].set( w,  w, -w);
+        local[6].set( w, -w, -w);
         local[7].set(-w, -w, -w);
 
         face[0].set(1, 0, 3, 2);
@@ -124,36 +128,38 @@ class PatternCube : public EffectWithId<PatternCube>
         face[4].set(1, 2, 6, 5);
         face[5].set(2, 3, 7, 6);
 
-        int f, i;
-        for (f = 0; f < 6; f++)
+        for (auto& f : face)
         {
-            for (i = 0; i < face[f].length; i++)
+            for (uint32_t i = 0; i < f.length; i++)
             {
-                face[f].ed[i] = this->findEdge(face[f].sommets[i], face[f].sommets[i ? i - 1 : face[f].length - 1]);
+                f.ed[i] = findEdge(f.sommets[i], f.sommets[i ? i - 1 : f.length - 1]);
             }
         }
     }
 
     // finds edges from faces
-    int findEdge(int a, int b)
+    uint32_t findEdge(int a, int b)
     {
-        int i;
-        for (i = 0; i < nbEdges; i++)
+        for (uint32_t i = 0; i < nbEdges; i++)
+        {
             if ((edge[i].x == a && edge[i].y == b) || (edge[i].x == b && edge[i].y == a))
+            {
                 return i;
+            }
+        }
+
         edge[nbEdges++].set(a, b);
-        return i;
+        return nbEdges - 1;
     }
 
     // rotates according to angle x&y
     // Rotate and project with effective center and focal length (allows dynamic scaling to tile size)
     void rotate(float angx, float angy, float OxEff, float OyEff, float focalEff)
     {
-        int i;
-        float cx = cos(angx);
-        float sx = sin(angx);
-        float cy = cos(angy);
-        float sy = sin(angy);
+        const float cx = cosf(angx);
+        const float sx = sinf(angx);
+        const float cy = cosf(angy);
+        const float sy = sinf(angy);
 
         m00 = cy;
         m01 = 0;
@@ -165,33 +171,33 @@ class PatternCube : public EffectWithId<PatternCube>
         m21 = -sx;
         m22 = cx * cy;
 
-        for (i = 0; i < 8; i++)
+        for (uint32_t i = 0; i < 8; i++)
         {
             aligned[i].x = m00 * local[i].x + m01 * local[i].y + m02 * local[i].z;
             aligned[i].y = m10 * local[i].x + m11 * local[i].y + m12 * local[i].z;
             aligned[i].z = m20 * local[i].x + m21 * local[i].y + m22 * local[i].z + zCamera;
 
-            screen[i].x = floor((OxEff + focalEff * aligned[i].x / aligned[i].z));
-            screen[i].y = floor((OyEff - focalEff * aligned[i].y / aligned[i].z));
+            screen[i].x = floorf(OxEff + focalEff * aligned[i].x / aligned[i].z);
+            screen[i].y = floorf(OyEff - focalEff * aligned[i].y / aligned[i].z);
         }
 
-        for (i = 0; i < 12; i++)
-            edge[i].visible = false;
-
-        Point *pa, *pb, *pc;
-        for (i = 0; i < 6; i++)
+        for (auto &e : edge)
         {
-            pa = screen + face[i].sommets[0];
-            pb = screen + face[i].sommets[1];
-            pc = screen + face[i].sommets[2];
+            e.visible = false;
+        }
 
-            boolean back = ((pb->x - pa->x) * (pc->y - pa->y) - (pb->y - pa->y) * (pc->x - pa->x)) < 0;
+        for (const auto &f : face)
+        {
+            const Point *pa = &screen[f.sommets[0]];
+            const Point *pb = &screen[f.sommets[1]];
+            const Point *pc = &screen[f.sommets[2]];
+
+            const bool back = ((pb->x - pa->x) * (pc->y - pa->y) - (pb->y - pa->y) * (pc->x - pa->x)) < 0;
             if (!back)
             {
-                int j;
-                for (j = 0; j < 4; j++)
+                for (uint32_t j = 0; j < 4; j++)
                 {
-                    edge[face[i].ed[j]].visible = true;
+                    edge[f.ed[j]].visible = true;
                 }
             }
         }
@@ -229,17 +235,23 @@ class PatternCube : public EffectWithId<PatternCube>
     void Draw() override
     {
         g().Clear();
-        zCamera = beatsin8(2, 100, 140);
+        zCamera = (int)beatsin8(2, 100, 140);
         AngxSpeed = beatsin8(3, 3, 10) / 100.0f;
         AngySpeed = g().beatcos8(5, 3, 10) / 100.0f;
 
         // Update values
         Angx += AngxSpeed;
         Angy += AngySpeed;
+
         if (Angx >= TWO_PI)
+        {
             Angx -= TWO_PI;
+        }
+
         if (Angy >= TWO_PI)
+        {
             Angy -= TWO_PI;
+        }
 
         // Determine tile size (the smaller of matrix width and height)
         const int tileSize = (MATRIX_WIDTH < MATRIX_HEIGHT ? MATRIX_WIDTH : MATRIX_HEIGHT);
@@ -252,32 +264,31 @@ class PatternCube : public EffectWithId<PatternCube>
 
         rotate(Angx, Angy, OxEff, OyEff, focalEff);
 
-        // Draw cube
-        int i;
-
         // Draw as many cubes as will fit horizontally, stepping by the smaller dimension
-        for (int xOffset = 0; xOffset < MATRIX_WIDTH; xOffset += tileSize)
+        for (uint32_t xOffset = 0; (int)xOffset < MATRIX_WIDTH; xOffset += tileSize)
         {
             CRGB color = g().ColorFromCurrentPalette(hue + 64 + xOffset);
-            // Backface
-            EdgePoint *e;
-            for (i = 0; i < 12; i++)
+
+            // Backface - Drawn first to ensure they are behind frontfaces (Painter's Algorithm)
+            for (const auto &e : edge)
             {
-                e = edge + i;
-                if (!e->visible)
-                    g().BresenhamLine(screen[e->x].x + xOffset, screen[e->x].y, screen[e->y].x + xOffset,
-                                       screen[e->y].y, color);
+                if (!e.visible)
+                {
+                    g().BresenhamLine(screen[e.x].x + xOffset, screen[e.x].y, screen[e.y].x + xOffset,
+                                       screen[e.y].y, color);
+                }
             }
 
             color = g().ColorFromCurrentPalette(hue + 128 + xOffset);
 
-            // Frontface
-            for (i = 0; i < 12; i++)
+            // Frontface - Drawn second to overlap backfaces correctly
+            for (const auto &e : edge)
             {
-                e = edge + i;
-                if (e->visible)
-                    g().BresenhamLine(screen[e->x].x + xOffset, screen[e->x].y, screen[e->y].x + xOffset,
-                                       screen[e->y].y, color);
+                if (e.visible)
+                {
+                    g().BresenhamLine(screen[e.x].x + xOffset, screen[e.x].y, screen[e.y].x + xOffset,
+                                       screen[e.y].y, color);
+                }
             }
 
             step++;

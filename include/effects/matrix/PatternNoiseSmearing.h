@@ -62,6 +62,8 @@
 #ifndef PatternNoiseSmearing_H
 #define PatternNoiseSmearing_H
 
+#include <array>
+
 class PatternRainbowFlag : public EffectWithId<PatternRainbowFlag>
 {
   public:
@@ -76,22 +78,27 @@ class PatternRainbowFlag : public EffectWithId<PatternRainbowFlag>
     {
         g().DimAll(10);
 
-        CRGB rainbow[7] = {CRGB::Red, CRGB::Orange, CRGB::Yellow, CRGB::Green, CRGB::Blue, CRGB::Violet};
+        static constexpr std::array<CRGB, 6> rainbow = {
+            CRGB::Red,
+            CRGB::Orange,
+            CRGB::Yellow,
+            CRGB::Green,
+            CRGB::Blue,
+            CRGB::Violet
+        };
 
-        uint8_t y = 2;
+        uint32_t y = 2;
 
-        for (uint8_t c = 0; c < 6; c++)
+        for (uint32_t c = 0; c < rainbow.size() && y < MATRIX_HEIGHT; c++)
         {
-            for (uint8_t j = 0; j < 5; j++)
+            for (uint32_t j = 0; j < 5 && y < MATRIX_HEIGHT; j++)
             {
-                for (uint16_t x = 0; x < MATRIX_WIDTH; x++)
+                for (uint32_t x = 0; x < MATRIX_WIDTH; x++)
                 {
                     g().leds[XY(x, y)] += rainbow[c];
                 }
 
                 y++;
-                if (y >= MATRIX_HEIGHT)
-                    break;
             }
         }
 

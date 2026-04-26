@@ -100,7 +100,7 @@ bool SocketServer::begin()
     int opt = 1;
     if (setsockopt(_server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
     {
-        perror("setsockopt");
+        debugE("setsockopt SO_REUSEADDR failed on socket %d: %s (%d)", _server_fd, strerror(errno), errno);
         release();
         return false;
     }
@@ -112,16 +112,18 @@ bool SocketServer::begin()
 
     if (bind(_server_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0)       // Bind socket to port
     {
-        perror("bind failed\n");
+        debugE("bind failed on port %d, socket %d: %s (%d)", _port, _server_fd, strerror(errno), errno);
         release();
         return false;
     }
     if (listen(_server_fd, 6) < 0)                                                  // Start listening for connections
     {
-        perror("listen failed\n");
+        debugE("listen failed on port %d, socket %d: %s (%d)", _port, _server_fd, strerror(errno), errno);
         release();
         return false;
     }
+
+    debugI("Socket server %d listening on port %d", _server_fd, _port);
     return true;
 }
 
@@ -240,10 +242,10 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
     int new_socket = -1;
 
     // Accept loop: wait for an incoming connection, sleeping between polls to avoid busy-spinning
-    int addrlen = sizeof(_address);
+    socklen_t addrlen = sizeof(_address);
     while (new_socket < 0)
     {
-        new_socket = accept(_server_fd, (struct sockaddr *)&_address, (socklen_t*)&addrlen);
+        new_socket = accept(_server_fd, (struct sockaddr *)&_address, &addrlen);
         if (new_socket < 0)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -251,7 +253,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
                 delay(100); // No connection yet, yield and retry
                 continue;
             }
-            debugE("Error accepting data: %s", strerror(errno));
+            debugE("Socket server %d failed to accept connection: %s (%d)", _server_fd, strerror(errno), errno);
             return false;
         }
     }

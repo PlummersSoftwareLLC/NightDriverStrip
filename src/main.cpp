@@ -199,6 +199,7 @@
 #include "soundanalyzer.h"
 #include "systemcontainer.h"
 #include "taskmgr.h"
+
 #if INCOMING_WIFI_ENABLED
 extern "C"
 {
@@ -206,7 +207,14 @@ extern "C"
 }
 #endif
 #include "values.h"
+
+#if ENABLE_OTA
+void SetupOTA(const String &strHostname);
+void ConfirmUpdate();
+#endif
+
 #include "websocketserver.h"
+
 #if USE_WS281X
 #include "ws281xgfx.h"
 #endif
@@ -615,6 +623,9 @@ void setup()
     nd_network::InitNetworkCLI();
 
     SaveEffectManagerConfig();
+#if ENABLE_OTA
+    ConfirmUpdate();
+#endif
     // Start the main loop
 }
 

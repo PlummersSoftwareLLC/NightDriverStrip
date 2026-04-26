@@ -13,10 +13,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.11'
 
@@ -40,10 +40,10 @@ jobs:
         envname: ${{ fromJson(needs.determine-projects.outputs.envs) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
@@ -62,7 +62,7 @@ jobs:
         run: python tools/installer_buildenv.py ${{ matrix.envname }} ${{ needs.determine-projects.outputs.version }}
 
       - name: Store build output
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           overwrite: true
           path: build
@@ -75,16 +75,16 @@ jobs:
 
     steps:
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.11'
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - run: mkdir -p build
 
     - name: Retrieve composer input
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         path: build
         merge-multiple: true

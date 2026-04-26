@@ -29,12 +29,14 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
+#include <esp_ota_ops.h>
 #include <fcntl.h>
 
 #if ENABLE_WIFI
     #include <algorithm>
     #include <ArduinoOTA.h>
     #include <ESPmDNS.h>
+    #include <iterator>
     #include <nvs.h>
     #include <WiFi.h>
 #elif ENABLE_ESPNOW
@@ -263,15 +265,16 @@ namespace nd_network
         bPreviousConnection = true;
         bReportedDisconnected = false;
 
-        #if INCOMING_WIFI_ENABLED
-            g_ptrSystem->GetSocketServer().release();
-            if (false == g_ptrSystem->GetSocketServer().begin())
-                throw std::runtime_error("Could not start socket server!");
-        #endif
         #if ENABLE_OTA
             SetupOTA(String(WiFi.getHostname()));
         #endif
         #if ENABLE_NTP
+            static bool bUdpInitialized = false;
+            if (!bUdpInitialized)
+            {
+                l_Udp.begin(1234);     // Use a fixed local port for NTP responses
+                bUdpInitialized = true;
+            }
             NTPTimeClient::UpdateClockFromWeb(&l_Udp);
         #endif
         #if ENABLE_WEBSERVER
@@ -321,7 +324,7 @@ namespace nd_network
         nvs_handle_t nvsROHandle;
         if (nvs_open("storage", NVS_READONLY, &nvsROHandle) != ESP_OK) return false;
 
-        auto len = std::size(szBuffer);
+        size_t len = std::size(szBuffer);
         if (nvs_get_str(nvsROHandle, GetWiFiConfigKey(source, "WiFi_ssid").c_str(), szBuffer, &len) != ESP_OK)
         {
             nvs_close(nvsROHandle);
@@ -371,8 +374,20 @@ namespace nd_network
     {
         nvs_handle_t nvsRWHandle;
         if (nvs_open("storage", NVS_READWRITE, &nvsRWHandle) != ESP_OK) return false;
-        bool success = (nvs_erase_key(nvsRWHandle, GetWiFiConfigKey(source, "WiFi_ssid").c_str()) == ESP_OK) &&
-                       (nvs_erase_key(nvsRWHandle, GetWiFiConfigKey(source, "WiFi_password").c_str()) == ESP_OK);
+
+        // Don't allow shortcut operation here. erase BOTH keys, even
+        // if first one errors.
+        bool success = true;
+        esp_err_t err = nvs_erase_key(nvsRWHandle, GetWiFiConfigKey(source, "WiFi_ssid").c_str());
+        if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) {
+            success = false;
+        }
+
+        err = nvs_erase_key(nvsRWHandle, GetWiFiConfigKey(source, "WiFi_password").c_str());
+        if (err != ESP_OK && err != ESP_ERR_NVS_NOT_FOUND) {
+            success = false;
+        }
+
         if (success) nvs_commit(nvsRWHandle);
         nvs_close(nvsRWHandle);
         return success;
@@ -482,18 +497,43 @@ namespace nd_network
         }
     }
 
+    void DoStatsCommand(const DebugCLI::cli_argv &)
+    {
+        auto &bufferManager = g_ptrSystem->GetBufferManagers()[0];
+
+        DebugCLI::cli_printf("%s:%zux%zu %zuK %ddB:%s",
+            FLASH_VERSION_NAME, g_ptrSystem->GetDevices().size(),
+            g_ptrSystem->GetDeviceConfig().GetActiveLEDCount(), (size_t)(ESP.getFreeHeap()/1024), abs(WiFi.RSSI()),
+            WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
+        DebugCLI::cli_printf("BUFR:%02zu/%02zu [%lufps]",
+            (size_t)bufferManager.Depth(), (size_t)bufferManager.BufferCount(),
+            (unsigned long)g_Values.FPS);
+        DebugCLI::cli_printf("DATA:%+04.2f-%+04.2f",
+            (float)bufferManager.AgeOfOldestBuffer(), (float)bufferManager.AgeOfNewestBuffer());
+
+        #if ENABLE_AUDIO
+        DebugCLI::cli_printf("g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f",
+            g_Analyzer.VU(), g_Analyzer.MinVU(), g_Analyzer.PeakVU(), g_Analyzer.VURatio());
+        #endif
+
+        #if INCOMING_WIFI_ENABLED
+        DebugCLI::cli_printf("Socket Buffer _cbReceived: %zu", g_ptrSystem->GetSocketServer()._cbReceived);
+        #endif
+    }
+
     void InitNetworkCLI()
     {
         static const DebugCLI::command cmds[] = {
             #if ENABLE_NTP
-            {"clock", "Refresh time", "Refreshing", [](const DebugCLI::cli_argv &) { NTPTimeClient::UpdateClockFromWeb(&l_Udp); }},
+            { "clock", "Refresh time from server", "Refreshing Time from Server",
+                [](const DebugCLI::cli_argv &) { NTPTimeClient::UpdateClockFromWeb(&l_Udp); }
+            },
             #endif
-            {"stats", "Display stats", "Displaying", [](const DebugCLI::cli_argv &) {
-                const auto& config = g_ptrSystem->GetDeviceConfig();
-                DebugCLI::cli_printf("%s:%zux%zu %zuK %ddB:%s", FLASH_VERSION_NAME, g_ptrSystem->GetDevices().size(), config.GetActiveLEDCount(), (size_t)(ESP.getFreeHeap()/1024), abs(WiFi.RSSI()), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
-            }}
+            {"stats", "Display stats", "Displaying",
+                DoStatsCommand
+            }
         };
-        DebugCLI::RegisterCommands(cmds, sizeof(cmds) / sizeof(cmds[0]));
+        DebugCLI::RegisterCommands(cmds, std::size(cmds));
     }
 
 #else
@@ -578,20 +618,59 @@ void SetupOTA(const String &strHostname)
 {
 #if ENABLE_OTA
     ArduinoOTA.setRebootOnSuccess(true);
-    if (!strHostname.isEmpty()) ArduinoOTA.setHostname(strHostname.c_str());
-    else                        ArduinoOTA.setMdnsEnabled(false);
+    if (!strHostname.isEmpty())
+        ArduinoOTA.setHostname(strHostname.c_str());
+    else
+        ArduinoOTA.setMdnsEnabled(false);
 
     ArduinoOTA.onStart([]() {
         g_Values.UpdateStarted = true;
+
+        debugI("Start updating from OTA %s",
+            ArduinoOTA.getCommand() == U_FLASH ? "sketch" : "filesystem");
+
         #if ENABLE_REMOTE
             g_ptrSystem->GetRemoteControl().end();
         #endif
     }).onEnd([]() {
+        debugI("\nEnd OTA");
         g_Values.UpdateStarted = false;
-    }).onError([](ota_error_t) {
+    }).onProgress([](unsigned int progress, unsigned int total) {
+        static uint last_time = millis();
+        if (millis() - last_time > 1000)
+        {
+            last_time = millis();
+            auto p = (progress / (total / 100));
+            debugI("OTA Progress: %u%%\r", p);
+
+            #if USE_HUB75
+                auto pMatrix = std::static_pointer_cast<HUB75GFX>(g_ptrSystem->GetEffectManager().GetBaseGraphics()[0]);
+                pMatrix->SetCaption(str_sprintf("Update:%d%%", p), CAPTION_TIME);
+            #endif
+        }
+        else
+        {
+            debugV("OTA Progress: %u%%\r", (progress / (total / 100)));
+        }
+    }).onError([](ota_error_t error) {
         g_Values.UpdateStarted = false;
+        debugE("OTA Error [%u]: ", error);
+
+        if (error == OTA_AUTH_ERROR) debugW("Auth Failed");
+        else if (error == OTA_BEGIN_ERROR) debugW("Begin Failed");
+        else if (error == OTA_CONNECT_ERROR) debugW("Connect Failed");
+        else if (error == OTA_RECEIVE_ERROR) debugW("Receive Failed");
+        else if (error == OTA_END_ERROR) debugW("End Failed");
+        throw std::runtime_error("OTA Flash update failed.");
     });
     ArduinoOTA.begin();
+#endif
+}
+
+void ConfirmUpdate()
+{
+#if ENABLE_OTA
+    esp_ota_mark_app_valid_cancel_rollback();
 #endif
 }
 
@@ -607,29 +686,101 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t[]> &payloadData, size_t payload
         return false;
     #else
         uint16_t command16 = payloadData[1] << 8 | payloadData[0];
-        if (command16 == WIFI_COMMAND_PEAKDATA) {
-            #if ENABLE_AUDIO
-                PeakData peaks{};
-                const float *pFloats = reinterpret_cast<const float *>(payloadData.get() + STANDARD_DATA_HEADER_SIZE);
-                std::copy_n(pFloats, std::min<size_t>(NUM_BANDS, (payloadLength - STANDARD_DATA_HEADER_SIZE)/sizeof(float)), peaks.begin());
-                g_Analyzer.SetPeakDataFromRemote(peaks);
-            #endif
-            return true;
-        }
-        if (command16 == WIFI_COMMAND_PIXELDATA64) {
-            uint16_t channel16 = WORDFromMemory(&payloadData[2]);
-            if (channel16 == 0) channel16 = 1;
-            std::lock_guard<std::mutex> guard(g_buffer_mutex);
-            for (int i = 0; i < g_ptrSystem->GetBufferManagers().size(); i++) {
-                if (channel16 & (1 << i)) {
-                    auto &bm = g_ptrSystem->GetBufferManagers()[i];
-                    auto pBuf = bm.GetNewBuffer();
-                    pBuf->UpdateFromWire(payloadData, payloadLength);
-                }
+
+        debugV("payloadLength: %zu, command16: %d", payloadLength, command16);
+
+        switch (command16)
+        {
+            // WIFI_COMMAND_PEAKDATA has a header plus NUM_BANDS floats that
+            // will be used to set the audio peaks
+            case WIFI_COMMAND_PEAKDATA:
+            {
+                #if ENABLE_AUDIO
+                    uint16_t numbands  = WORDFromMemory(&payloadData[2]);
+                    uint32_t length32  = DWORDFromMemory(&payloadData[4]);
+                    uint64_t seconds   = ULONGFromMemory(&payloadData[8]);
+                    uint64_t micros    = ULONGFromMemory(&payloadData[16]);
+
+                    debugV("ProcessIncomingData -- Bands: %u, Length: %lu, Seconds: %llu, Micros: %llu ... ",
+                           (unsigned int)numbands, (unsigned long)length32, seconds, micros);
+
+                    // Data is transmitted as NUM_BANDS floats following the standard header
+                    const uint8_t* dataStart = payloadData.get() + STANDARD_DATA_HEADER_SIZE;
+                    const size_t availableFloats = (payloadLength > STANDARD_DATA_HEADER_SIZE)
+                                                    ? (payloadLength - STANDARD_DATA_HEADER_SIZE) / sizeof(float)
+                                                    : 0;
+                    const size_t copyCount = std::min<size_t>(NUM_BANDS, std::min<size_t>(numbands, availableFloats));
+
+                    PeakData peaks{}; // zero-initialized for any bands not provided
+                    if (copyCount > 0)
+                    {
+                        auto pFloats = reinterpret_cast<const float *>(dataStart);
+                        std::copy_n(pFloats, copyCount, peaks.begin());
+                    }
+                    g_Analyzer.SetPeakDataFromRemote(peaks);
+                #endif
+                return true;
             }
-            return true;
+
+            // WIFI_COMMAND_PIXELDATA64 has a header plus length32 CRGBs
+            case WIFI_COMMAND_PIXELDATA64:
+            {
+                uint16_t channel16 = WORDFromMemory(&payloadData[2]);
+                uint32_t length32  = DWORDFromMemory(&payloadData[4]);
+                uint64_t seconds   = ULONGFromMemory(&payloadData[8]);
+                uint64_t micros    = ULONGFromMemory(&payloadData[16]);
+
+                debugV("ProcessIncomingData -- Channel: %u, Length: %lu, Seconds: %llu, Micros: %llu ... ",
+                       (unsigned int)channel16, (unsigned long)length32, seconds, micros);
+
+                // The very old original implementation used channel numbers, not a mask, and only channel 0 was supported at that time, so if
+                // we see a Channel 0 asked for, it must be very old, and we massage it into the mask for Channel0 instead
+                // Another option here would be to draw on all channels (0xff) instead of just one (0x01) if 0 is specified
+                if (channel16 == 0)
+                    channel16 = 1;
+
+                // Go through the channel mask to see which bits are set in the channel16 specifier, and send the data to each and every
+                // channel that matches the mask.  So if the send channel 7, that means the lowest 3 channels will be set.
+                std::lock_guard<std::mutex> guard(g_buffer_mutex);
+
+                for (int iChannel = 0, channelMask = 1; iChannel < g_ptrSystem->GetBufferManagers().size(); iChannel++, channelMask <<= 1)
+                {
+                    if ((channelMask & channel16) != 0)
+                    {
+                        debugV("Processing for Channel %d", iChannel);
+
+                        bool bDone = false;
+                        auto &bufferManager = g_ptrSystem->GetBufferManagers()[iChannel];
+
+                        if (!bufferManager.IsEmpty())
+                        {
+                            auto pNewestBuffer = bufferManager.PeekNewestBuffer();
+                            if (micros != 0 && pNewestBuffer->MicroSeconds() == micros && pNewestBuffer->Seconds() == seconds)
+                            {
+                                debugV("Updating existing buffer");
+                                if (!pNewestBuffer->UpdateFromWire(payloadData, payloadLength))
+                                    return false;
+                                bDone = true;
+                            }
+                        }
+                        if (!bDone)
+                        {
+                            debugV("No match so adding new buffer");
+                            auto pNewBuffer = bufferManager.GetNewBuffer();
+                            if (!pNewBuffer->UpdateFromWire(payloadData, payloadLength))
+                                return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            default:
+            {
+                debugV("ProcessIncomingData -- Unknown command: 0x%x", command16);
+                return false;
+            }
         }
-        return false;
     #endif
 }
 
@@ -646,9 +797,16 @@ void IRAM_ATTR SocketServerTaskEntry(void *)
             auto &socketServer = g_ptrSystem->GetSocketServer();
 
             socketServer.release();
-            socketServer.begin();
-            socketServer.ProcessIncomingConnectionsLoop();
-            debugV("Socket connection closed.  Retrying...");
+            if (socketServer.begin())
+            {
+                socketServer.ProcessIncomingConnectionsLoop();
+                debugV("Socket connection closed.  Retrying...");
+            }
+            else
+            {
+                debugE("Failed to start socket server, retrying in 5 seconds...");
+                delay(5000);
+            }
         }
         delay(500);
     }
