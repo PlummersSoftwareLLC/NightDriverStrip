@@ -102,7 +102,7 @@ class Boid
     uint8_t colorIndex = 0;
     float mass;
 
-    boolean enabled = true;
+    bool enabled = true;
 
     Boid() {}
 
