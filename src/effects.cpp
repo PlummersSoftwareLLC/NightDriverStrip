@@ -69,6 +69,13 @@
 #include <TJpg_Decoder.h>
 #endif // EFFECTS_MATRIX
 
+// Optionally discard larger effects that are are to optimize away.
+#if EFFECTS_TINYLED
+    #define LIMITED_EFFECTS 1
+#else
+    #define LIMITED_EFFECTS 0
+#endif
+
 //
 // Externals
 //
@@ -83,7 +90,7 @@
 
 #if USE_MATRIX
 
-    #if ENABLE_WIFI
+    #if ENABLE_WIFI && !LIMITED_EFFECTS
         #include "effects/matrix/PatternStocks.h"
         #include "effects/matrix/PatternSubscribers.h"
         #include "effects/matrix/PatternWeather.h"
@@ -94,8 +101,19 @@
         #include "effects/matrix/PatternSMSmoke.h"
     #endif
 
+    #if defined(EFFECTS_TINYLED)
         #include "effects/matrix/PatternAlienText.h"
+        #include "effects/matrix/PatternCube.h"
+        #include "effects/matrix/PatternLife.h"
+        #include "effects/matrix/PatternRadar.h"
+        #include "effects/matrix/PatternSMNoise.h"
+        #include "effects/matrix/PatternSMRainbowTunnel.h"
+        #include "effects/matrix/PatternSwirl.h"
+    #else
+        #include "effects/matrix/PatternAlienText.h"
+#if !LIMITED_EFFECTS
         #include "effects/matrix/PatternAnimatedGIF.h"
+#endif
         #include "effects/matrix/PatternBounce.h"
         #include "effects/matrix/PatternCircuit.h"
         #include "effects/matrix/PatternCube.h"
@@ -132,6 +150,7 @@
         #include "effects/matrix/PatternSpiro.h"
         #include "effects/matrix/PatternSwirl.h"
         #include "effects/matrix/PatternWave.h"
+    #endif
 #endif
 
 // Global effect set version
@@ -140,7 +159,7 @@
 
 // Inform the linker which effects have setting specs, and in which class member
 
-#if USE_MATRIX && ENABLE_WIFI
+#if USE_MATRIX && ENABLE_WIFI && !LIMITED_EFFECTS
     INIT_EFFECT_SETTING_SPECS(PatternSubscribers, mySettingSpecs);
     INIT_EFFECT_SETTING_SPECS(PatternStocks, mySettingSpecs);
 #endif
@@ -298,21 +317,29 @@ void LoadEffectFactories()
             Effect<SpectrumAnalyzerEffect>("Spectrum", NUM_BANDS, spectrumAltColors, false, 0, 0, 1.6, 1.6),
             Effect<SpectrumAnalyzerEffect>("AudioWave", MATRIX_WIDTH, CRGB(0,0,40), 0, 1.25, 1.25, true),
             Effect<PatternSMRadialWave>(),
+#if !LIMITED_EFFECTS
             Effect<PatternAnimatedGIF>("Fire Log", GIFIdentifier::Firelog),
             Effect<PatternAnimatedGIF>("Pacman", GIFIdentifier::Pacman),
+#endif
             Effect<PatternPongClock>(),
+#if !LIMITED_EFFECTS
             Effect<PatternAnimatedGIF>("Colorball", GIFIdentifier::ColorSphere),
+#endif
             Effect<PatternSMFire2021>(),
             Effect<GhostWave>("GhostWave", 0, 30, false, 10),
             Effect<PatternSMGamma>(),
+#if !LIMITED_EFFECTS
             Effect<PatternAnimatedGIF>("Rings", GIFIdentifier::ThreeRings),
             Effect<PatternAnimatedGIF>("Atomic", GIFIdentifier::Atomic),
             Effect<PatternAnimatedGIF>("Bananaman", GIFIdentifier::Banana, true, CRGB::DarkBlue),
+#endif
             Effect<PatternSMMetaBalls>(),
             Effect<PatternSMSupernova>(),
             Effect<PatternCube>(),
+#if !LIMITED_EFFECTS
             Effect<PatternAnimatedGIF>("Tesseract", GIFIdentifier::Tesseract),
             Effect<PatternAnimatedGIF>("Nyancat", GIFIdentifier::Nyancat),
+#endif
             Effect<PatternLife>(),
             Effect<PatternCircuit>(),
             Effect<SpectrumAnalyzerEffect>("USA", NUM_BANDS, USAColors_p, true, 0, 0, 0.75, 0.75),

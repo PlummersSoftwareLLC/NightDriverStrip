@@ -33,7 +33,7 @@
 // History:     May-26-2022         Davepl      Converted from Aurora
 //
 //---------------------------------------------------------------------------
-
+#if ENABLE_AUDIO
 /*
  * Aurora: https://github.com/pixelmatix/aurora
  * Copyright (c) 2014 Jason Coon
@@ -227,4 +227,5 @@ class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar> 
         // effects.standardNoiseSmearing();
     }
 };
+#endif // ENABLE_AUDIO
 #endif
