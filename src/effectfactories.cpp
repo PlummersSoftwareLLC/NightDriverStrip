@@ -68,7 +68,7 @@
 //            - An optional factory ID.
 //            It returns a reference to the NumberedFactory that was created around the
 //            DefaultEffectFactory.
-// IsEmpty: Returns a boolean indicating whether both defaultFactories and jsonFactories are empty.
+// IsEmpty: Returns a bool indicating whether both defaultFactories and jsonFactories are empty.
 // ClearDefaultFactories: Clears the vector of default factories and the hash string.
 // FactoryIDs: Returns a vector of the factory IDs from the default factories.
 // HashString (getter): Returns the stored hash string. Throws an error if it hasn't been set.
