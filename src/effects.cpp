@@ -83,7 +83,7 @@
 
 #if USE_MATRIX
 
-    #if ENABLE_WIFI && !defined(TINYLED)
+    #if ENABLE_WIFI
         #include "effects/matrix/PatternStocks.h"
         #include "effects/matrix/PatternSubscribers.h"
         #include "effects/matrix/PatternWeather.h"
@@ -94,15 +94,6 @@
         #include "effects/matrix/PatternSMSmoke.h"
     #endif
 
-    #if defined(EFFECTS_TINYLED)
-        #include "effects/matrix/PatternAlienText.h"
-        #include "effects/matrix/PatternCube.h"
-        #include "effects/matrix/PatternLife.h"
-        #include "effects/matrix/PatternRadar.h"
-        #include "effects/matrix/PatternSMNoise.h"
-        #include "effects/matrix/PatternSMRainbowTunnel.h"
-        #include "effects/matrix/PatternSwirl.h"
-    #else
         #include "effects/matrix/PatternAlienText.h"
         #include "effects/matrix/PatternAnimatedGIF.h"
         #include "effects/matrix/PatternBounce.h"
@@ -141,7 +132,6 @@
         #include "effects/matrix/PatternSpiro.h"
         #include "effects/matrix/PatternSwirl.h"
         #include "effects/matrix/PatternWave.h"
-    #endif
 #endif
 
 // Global effect set version
@@ -150,8 +140,7 @@
 
 // Inform the linker which effects have setting specs, and in which class member
 
-//#if USE_HUB75 && ENABLE_WIFI
-#if USE_MATRIX && ENABLE_WIFI && !defined(TINYLED)
+#if USE_MATRIX && ENABLE_WIFI
     INIT_EFFECT_SETTING_SPECS(PatternSubscribers, mySettingSpecs);
     INIT_EFFECT_SETTING_SPECS(PatternStocks, mySettingSpecs);
 #endif
