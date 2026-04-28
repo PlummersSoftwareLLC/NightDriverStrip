@@ -57,14 +57,14 @@ class LEDStripEffect;
 #define DEFAULT_STACK_SIZE (2048 + 512)
 
 #define IDLE_STACK_SIZE    2048
-#define DRAWING_STACK_SIZE 4096
-#define AUDIO_STACK_SIZE   4096
+#define DRAWING_STACK_SIZE 3072
+#define AUDIO_STACK_SIZE   3072
 #define JSON_STACK_SIZE    4096
-#define SOCKET_STACK_SIZE  4096
-#define NET_STACK_SIZE     8192
+#define SOCKET_STACK_SIZE  3072
+#define NET_STACK_SIZE     6144
 #define COLORDATA_STACK_SIZE 4096
-#define DEBUG_STACK_SIZE   8192                 // Needs a lot of stack for output if UpdateClockFromWeb is called from debugger
-#define REMOTE_STACK_SIZE  4096
+#define DEBUG_STACK_SIZE   4096                 // Needs a lot of stack for output if UpdateClockFromWeb is called from debugger
+#define REMOTE_STACK_SIZE  3072
 #define SCREEN_STACK_SIZE  8192
 
 class IdleTask
@@ -141,6 +141,7 @@ public:
     static void CheckHeap();
 
     void begin();
+    virtual String GetStackUsageSummary() const;
 
 };
 
@@ -209,6 +210,7 @@ public:
 
     void NotifyJSONWriterThread();
     void NotifyNetworkThread();
+    String GetStackUsageSummary() const override;
 
     // Effect threads run with NET priority and on the NET core by default. It seems a sensible choice
     //   because effect threads tend to pull things from the Internet that they want to show
