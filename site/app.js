@@ -89,7 +89,13 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     preview: {
       socket: null,
       connected: false,
-      frame: null
+      frame: null,
+      latestFrame: null,
+      dirty: false,
+      animationFrameId: 0,
+      lastRenderMs: 0,
+      shouldReconnect: false,
+      reconnectTimer: null
     },
     drag: {
       effectIndex: null,
@@ -1304,6 +1310,12 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
   }
 
   function connectPreviewSocket() {
+    state.preview.shouldReconnect = true;
+    if (state.preview.reconnectTimer) {
+      window.clearTimeout(state.preview.reconnectTimer);
+      state.preview.reconnectTimer = null;
+    }
+
     if (state.preview.socket) {
       return;
     }
@@ -1318,6 +1330,11 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     socket.binaryType = "arraybuffer";
     socket.onopen = function () {
       state.preview.connected = true;
+      state.preview.lastRenderMs = 0;
+      if (state.preview.reconnectTimer) {
+        window.clearTimeout(state.preview.reconnectTimer);
+        state.preview.reconnectTimer = null;
+      }
       els.previewStatus.textContent = "Preview connected";
       toast("Frame preview connected.", "success");
       refreshPreviewVisibility();
@@ -1326,18 +1343,23 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
       state.preview.connected = false;
       state.preview.socket = null;
       state.preview.frame = null;
-      els.previewStatus.textContent = "Preview offline";
+      state.preview.latestFrame = null;
+      state.preview.dirty = false;
+      state.preview.lastRenderMs = 0;
+      stopPreviewRenderLoop();
+      els.previewStatus.textContent = state.preview.shouldReconnect ? "Preview reconnecting..." : "Preview offline";
       refreshPreviewVisibility();
+      schedulePreviewReconnect();
     };
     socket.onerror = function () {
-      handleError("Preview socket error");
-      els.previewStatus.textContent = "Preview unavailable";
-      refreshPreviewVisibility();
+      console.warn("Preview socket error");
     };
     socket.onmessage = function (event) {
       try {
-        state.preview.frame = new Uint8Array(event.data);
-        drawPreviewFrame();
+        state.preview.latestFrame = new Uint8Array(event.data);
+        state.preview.dirty = true;
+        refreshPreviewVisibility();
+        ensurePreviewRenderLoop();
       } catch (error) {
         handleError("Failed to render preview frame", error);
       }
@@ -1346,31 +1368,89 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
   }
 
   function disconnectPreviewSocket() {
+    state.preview.shouldReconnect = false;
+    if (state.preview.reconnectTimer) {
+      window.clearTimeout(state.preview.reconnectTimer);
+      state.preview.reconnectTimer = null;
+    }
     if (state.preview.socket) {
       state.preview.socket.close();
       state.preview.socket = null;
     }
     state.preview.connected = false;
     state.preview.frame = null;
+    state.preview.latestFrame = null;
+    state.preview.dirty = false;
+    state.preview.lastRenderMs = 0;
+    stopPreviewRenderLoop();
     els.previewStatus.textContent = "Preview offline";
     refreshPreviewVisibility();
   }
 
+  function schedulePreviewReconnect() {
+    if (!state.preview.shouldReconnect || state.preview.socket || state.preview.reconnectTimer) {
+      return;
+    }
+
+    state.preview.reconnectTimer = window.setTimeout(function () {
+      state.preview.reconnectTimer = null;
+      if (state.preview.shouldReconnect && !state.preview.socket) {
+        connectPreviewSocket();
+      }
+    }, 1000);
+  }
+
+  function ensurePreviewRenderLoop() {
+    if (state.preview.animationFrameId) {
+      return;
+    }
+
+    state.preview.animationFrameId = window.requestAnimationFrame(runPreviewRenderLoop);
+  }
+
+  function stopPreviewRenderLoop() {
+    if (!state.preview.animationFrameId) {
+      return;
+    }
+
+    window.cancelAnimationFrame(state.preview.animationFrameId);
+    state.preview.animationFrameId = 0;
+  }
+
+  function runPreviewRenderLoop(timestamp) {
+    const frameIntervalMs = 1000 / 30;
+    state.preview.animationFrameId = 0;
+
+    if (!state.preview.connected) {
+      return;
+    }
+
+    if (state.preview.dirty && timestamp - state.preview.lastRenderMs >= frameIntervalMs) {
+      state.preview.frame = state.preview.latestFrame;
+      state.preview.dirty = false;
+      state.preview.lastRenderMs = timestamp;
+      drawPreviewFrame();
+    }
+
+    if (state.preview.dirty) {
+      ensurePreviewRenderLoop();
+    }
+  }
+
   function drawPreviewFrame() {
-    const frame = state.preview.frame;
+    const frame = state.preview.latestFrame || state.preview.frame;
     const staticStats = state.staticStats;
     const canvas = els.previewCanvas;
     if (!canvas || !frame || !staticStats) {
       return;
     }
 
+    refreshPreviewVisibility();
     const metrics = getPreviewDisplayMetrics();
     const width = metrics.width;
     const height = metrics.height;
-    refreshPreviewVisibility();
     const dpr = window.devicePixelRatio || 1;
     canvas.classList.toggle("preview-canvas-thin", metrics.displayHeight <= 12);
-    canvas.style.maxWidth = "none";
     canvas.style.width = `${metrics.displayWidth}px`;
     canvas.style.height = `${metrics.displayHeight}px`;
     canvas.width = Math.max(1, Math.round(metrics.displayWidth * dpr));
@@ -1403,17 +1483,23 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
         width: 1,
         height: 1,
         displayWidth: 1,
-        displayHeight: 4,
+        displayHeight: 10,
         pixelWidth: 1,
-        pixelHeight: 4
+        pixelHeight: 10
       };
     }
 
     const width = Number(staticStats.ACTIVE_MATRIX_WIDTH || staticStats.CONFIGURED_MATRIX_WIDTH || 1);
     const height = Number(staticStats.ACTIVE_MATRIX_HEIGHT || staticStats.CONFIGURED_MATRIX_HEIGHT || 1);
-    const availableWidth = Math.max(1, (canvas.parentElement ? canvas.parentElement.clientWidth : 0) || width);
+    const parent = canvas.parentElement;
+    let parentContentWidth = 0;
+    if (parent) {
+      const ps = getComputedStyle(parent);
+      parentContentWidth = parent.clientWidth - parseFloat(ps.paddingLeft) - parseFloat(ps.paddingRight);
+    }
+    const availableWidth = Math.max(1, parentContentWidth || width);
     const pixelWidth = availableWidth / Math.max(1, width);
-    const pixelHeight = Math.max(pixelWidth, 4);
+    const pixelHeight = Math.max(pixelWidth, 10);
     return {
       width,
       height,
@@ -1425,7 +1511,8 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
   }
 
   function refreshPreviewVisibility() {
-    const hasFrame = !!(state.preview.connected && state.preview.frame && state.preview.frame.length > 0);
+    const currentFrame = state.preview.latestFrame || state.preview.frame;
+    const hasFrame = !!(state.preview.connected && currentFrame && currentFrame.length > 0);
     if (els.previewWrap) {
       els.previewWrap.classList.toggle("is-empty", !hasFrame);
     }

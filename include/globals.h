@@ -203,7 +203,7 @@ extern std::recursive_mutex g_effect_manager_mutex;
 #define SOCKET_CORE             1
 #define REMOTE_CORE             1
 #define JSONWRITER_CORE         0
-#define COLORDATA_CORE          1
+#define COLORDATA_CORE          0
 
 #define FASTLED_INTERNAL            1   // Suppresses the compilation banner from FastLED
 #define __STDC_FORMAT_MACROS

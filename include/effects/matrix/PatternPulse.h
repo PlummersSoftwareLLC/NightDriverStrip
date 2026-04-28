@@ -137,6 +137,47 @@ class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar> 
     float fadeRate = 0.9;
     int diff;
 
+    static constexpr float Clamp01(float value)
+    {
+        return std::max(0.0f, std::min(1.0f, value));
+    }
+
+    static size_t ComputeBurstCount(const BeatInfo& beat)
+    {
+        const float normalizedConfidence = Clamp01(beat.confidence / 1.5f);
+        const float normalizedStrength = Clamp01(beat.strength / 2.5f);
+        const float normalizedBass = Clamp01(beat.bass);
+        const float majorBonus = beat.major ? 0.25f : 0.0f;
+        const float burstScore = Clamp01(
+            normalizedConfidence * 0.40f +
+            normalizedStrength * 0.35f +
+            normalizedBass * 0.15f +
+            majorBonus);
+
+        return 1U + static_cast<size_t>(burstScore >= 0.60f);
+    }
+
+    static int ComputeMaxSteps(const BeatInfo& beat)
+    {
+        const float normalizedStrength = Clamp01(beat.strength / 2.5f);
+        const int minSteps = beat.major ? 7 : 5;
+        const int maxSteps = beat.major ? 13 : 10;
+        return minSteps + static_cast<int>(normalizedStrength * static_cast<float>(maxSteps - minSteps));
+    }
+
+    void SpawnPulsars(const BeatInfo& beat)
+    {
+        const size_t burstCount = ComputeBurstCount(beat);
+        const int maxSteps = ComputeMaxSteps(beat);
+
+        for (size_t i = 0; i < burstCount; ++i)
+        {
+            PulsePop pop;
+            pop.maxSteps = maxSteps + random_range(0, 3);
+            _pops.push_back(pop);
+        }
+    }
+
   public:
     PatternPulsar() :
         BeatEffectBase(1.5, 0.25 ),
@@ -155,34 +196,31 @@ class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar> 
         return 30;
     }
 
-    virtual void HandleBeat(bool bMajor, float elapsed, float span) override
+    virtual void HandleBeat(bool, float, float) override
     {
-        if (span > 1.5)
-        {
-            for (int i = 0; i < random(2)+2; i ++)
-                _pops.push_back( PulsePop() );
-        }
-        else
-        {
-            PulsePop small;
-            small.maxSteps = random(8)+4;
-            _pops.push_back( small );
-        }
+        // PatternPulsar uses the richer BeatInfo path in OnBeat() rather than
+        // the older HandleBeat(bool, elapsed, span) compatibility adapter.
+    }
 
+    virtual void OnBeat(const BeatInfo& beat) override
+    {
+        if (!beat.major)
+            return;
+
+        SpawnPulsars(beat);
+        _lastBeat = g_Values.AppTime.CurrentTime();
     }
 
     void Draw() override
     {
-        ProcessAudio();
         fadeAllChannelsToBlackBy(10);
 
-        // Add some sparkle
-
+        // Keep the light audio-reactive sparkle layer that makes the effect feel alive
+        // between beats, while pulsar creation itself remains strictly beat-driven.
         const int maxNewStarsPerFrame = 8;
         for (int i = 0; i < maxNewStarsPerFrame; i++)
             if (random(4) < g_Analyzer.VURatio())
                 g().drawPixel(random(MATRIX_WIDTH), random(MATRIX_HEIGHT), RandomSaturatedColor());
-
 
         for (auto pop = _pops.begin(); pop != _pops.end();)
         {

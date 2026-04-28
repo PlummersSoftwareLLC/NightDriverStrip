@@ -106,9 +106,6 @@ int LEDViewer::CheckForConnection()
     int new_socket = -1;
     // Accept a new incoming connection
     int addrlen = sizeof(_address);
-    struct timeval to;
-    to.tv_sec = 1;
-    to.tv_usec = 0;
     if ((new_socket = accept(_server_fd, (struct sockaddr *)&_address, (socklen_t*)&addrlen)) < 0)
     {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -116,34 +113,46 @@ int LEDViewer::CheckForConnection()
         debugE("Error accepting color data connection: %s", strerror(errno));
         return -1;
     }
-    if (setsockopt(new_socket, SOL_SOCKET, SO_SNDTIMEO, &to, sizeof(to)) < 0)
+
+    // Preview transport is strictly best-effort; keep the client socket non-blocking so
+    // a stalled viewer never back-pressures drawing or the WiFi servicing tasks.
+    if (!nd_network::SetSocketBlockingEnabled(new_socket, false))
     {
-        debugE("Unable to set send timeout on color data socket!");
+        debugE("Unable to make color data client socket non-blocking!");
         close(new_socket);
         return -1;
     }
-    if (setsockopt(new_socket, SOL_SOCKET, SO_RCVTIMEO, &to, sizeof(to)) < 0)
-    {
-        debugE("Unable to set receive timeout on color data socket!");
-        close(new_socket);
-        return -1;
-    }
+
     Serial.println("Accepted new ColorData Client!");
     return new_socket;
 }
 
-bool LEDViewer::SendPacket(int socket, void * pData, size_t cbSize)
+LEDViewer::SendResult LEDViewer::SendPacket(int socket, const void * pData, size_t cbSize)
 {
-    // Send data to the emulator's virtual serial port
+    // Send data to the preview client without ever blocking the device. If the socket
+    // cannot accept a whole frame immediately, we either drop the frame (no bytes sent)
+    // or fail the connection (partial frame written, which corrupts the byte stream).
 
     const byte * pb = (byte *)pData;
     debugV("Sending Packet:  %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X,...",
                             pb[0], pb[1], pb[2], pb[3], pb[4], pb[5], pb[6], pb[7], pb[8], pb[9], pb[10], pb[11]);
 
-    if (cbSize != write(socket, pData, cbSize))
+    const auto bytesSent = send(socket, pData, cbSize, MSG_DONTWAIT);
+
+    if (bytesSent < 0)
     {
-        debugE("Could not write to color data socket\n");
-        return false;
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+            return SendResult::WouldBlock;
+
+        debugE("Could not write to color data socket: %s", strerror(errno));
+        return SendResult::Failed;
     }
-    return true;
+
+    if (static_cast<size_t>(bytesSent) != cbSize)
+    {
+        debugE("Color data socket wrote partial frame (%zd/%zu bytes), closing client", bytesSent, cbSize);
+        return SendResult::Failed;
+    }
+
+    return SendResult::Sent;
 }
