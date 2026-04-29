@@ -96,7 +96,7 @@ extern std::mutex g_buffer_mutex;
 // cannot reconfigure device buffers while a frame is being prepared, drawn, or emitted.
 // Splitting this into two mutexes (render and effect manager) allows effects to change without 
 // blocking the entire render pipeline, which is important for effects that need to update every 
-// frame like the spectrum analyzer, but it looks redundant in many cases when acquried!
+// frame like the spectrum analyzer, but it looks redundant in many cases when acquired!
 
 extern std::recursive_mutex g_render_mutex;
 

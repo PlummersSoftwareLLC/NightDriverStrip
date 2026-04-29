@@ -285,12 +285,12 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         uint16_t localPixelsDrawn   = 0;
         uint16_t wifiPixelsDrawn    = 0;
         double frameStartTime       = g_Values.AppTime.FrameStartTime();
-        auto& graphics = *g_ptrSystem->GetDevices()[0];
 
         {
             // Hold the render mutex for the frame pipeline so runtime topology/output
             // changes cannot reconfigure the active buffers mid-frame.
             std::lock_guard<std::recursive_mutex> renderGuard(g_render_mutex);
+            auto& graphics = *g_ptrSystem->GetDevices()[0];
 
             graphics.PrepareFrame();
 
