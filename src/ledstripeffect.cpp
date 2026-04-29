@@ -233,8 +233,14 @@ void LEDStripEffect::fillSolidOnAllChannels(CRGB color, int iStart, int numToFil
 
     for (auto& device : _GFX)
     {
-        for (int i = iStart; i < iStart + numToFill; i+= everyN)
-            device->setPixel(i, color);
+        if (everyN == 1)
+        {
+            fill_solid(device->leds + iStart, numToFill, color);
+            continue;
+        }
+
+        for (int i = iStart; i < iStart + numToFill; i += everyN)
+            device->leds[i] = color;
     }
 }
 
@@ -311,15 +317,15 @@ void LEDStripEffect::fadePixelToBlackOnAllChannelsBy(int pixel, uint8_t fadeValu
 void LEDStripEffect::fadeAllChannelsToBlackBy(uint8_t fadeValue) const
 {
     for (auto& device : _GFX)
-        for (int i = 0; i < (int)_cLEDs; i++)
-            device->fadePixelToBlackBy(i, fadeValue);
+        for (size_t i = 0; i < _cLEDs; ++i)
+            GFXBase::FadePixelInPlace(device->leds[i], fadeValue);
 }
 
 void LEDStripEffect::setAllOnAllChannels(uint8_t r, uint8_t g, uint8_t b) const
 {
+    const CRGB color(r, g, b);
     for (auto& device : _GFX)
-        for (int i = 0; i < (int)_cLEDs; i++)
-            device->setPixel(i, r, g, b);
+        fill_solid(device->leds, _cLEDs, color);
 }
 
 // setPixelOnAllChannels

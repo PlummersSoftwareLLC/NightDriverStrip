@@ -92,7 +92,15 @@
 #include <mutex>
 extern std::mutex g_buffer_mutex;
 
-// Protects against drawing during config changes and vice versa
+// Protects the active render/configuration pipeline so runtime topology/output changes
+// cannot reconfigure device buffers while a frame is being prepared, drawn, or emitted.
+// Splitting this into two mutexes (render and effect manager) allows effects to change without 
+// blocking the entire render pipeline, which is important for effects that need to update every 
+// frame like the spectrum analyzer, but it looks redundant in many cases when acquried!
+
+extern std::recursive_mutex g_render_mutex;
+
+// Protects effect state transitions and effect-manager mutations.
 extern std::recursive_mutex g_effect_manager_mutex;
 
 #include <FastLED.h>

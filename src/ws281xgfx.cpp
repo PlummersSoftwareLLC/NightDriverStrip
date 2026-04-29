@@ -153,15 +153,13 @@ void WS281xGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsD
         auto& graphics = effectManager.g(i);
         const auto ledCount = graphics.GetLEDCount();
         const auto activePixels = std::min<size_t>(pixelsDrawn, ledCount);
-
-        fadeLightBy(graphics.leds, activePixels, 255 - deviceConfig.GetBrightness());
         if (activePixels < ledCount)
             fill_solid(graphics.leds + activePixels, ledCount - activePixels, CRGB::Black);
     }
 
     static auto lastDrawTime = millis();
     auto& outputManager = g_ptrSystem->GetWS281xOutputManager();
-    outputManager.Show(g_ptrSystem->GetDevices(), pixelsDrawn, g_Values.Fader);
+    outputManager.Show(g_ptrSystem->GetDevices(), pixelsDrawn, deviceConfig.GetBrightness(), g_Values.Fader);
     g_Values.FPS = 1000.0 / max(1UL, millis() - lastDrawTime);
     lastDrawTime = millis();
     #ifdef POWER_LIMIT_MW

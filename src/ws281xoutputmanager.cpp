@@ -110,34 +110,60 @@ namespace
         *itemNum = outputItems;
     }
 
-    // Runtime color order is a settings concern rather than a template concern,
-    // so we materialize the final byte order explicitly into the per-channel
-    // output buffer before handing bytes to the RMT driver.
+    template <uint8_t RIndex, uint8_t GIndex, uint8_t BIndex>
+    void PackChannelPixels(uint8_t* output,
+                           const CRGB* source,
+                           size_t activeLedCount,
+                           size_t pixelsToShow,
+                           uint8_t brightness,
+                           uint8_t fader)
+    {
+        for (size_t pixelIndex = 0; pixelIndex < activeLedCount; ++pixelIndex)
+        {
+            CRGB color = pixelIndex < pixelsToShow ? source[pixelIndex] : CRGB::Black;
 
-    void WriteColorOrderedBytes(uint8_t* dest, const CRGB& color, DeviceConfig::WS281xColorOrder colorOrder)
+            // Preserve the compiled-path semantics without first mutating the effect buffer:
+            // scale by configured brightness, then apply the global master fader.
+            nscale8x3_video(color.r, color.g, color.b, brightness);
+            nscale8x3_video(color.r, color.g, color.b, fader);
+
+            const size_t offset = pixelIndex * 3;
+            output[offset + RIndex] = color.r;
+            output[offset + GIndex] = color.g;
+            output[offset + BIndex] = color.b;
+        }
+    }
+
+    void PackChannelPixelsForColorOrder(uint8_t* output,
+                                        const CRGB* source,
+                                        size_t activeLedCount,
+                                        size_t pixelsToShow,
+                                        uint8_t brightness,
+                                        uint8_t fader,
+                                        DeviceConfig::WS281xColorOrder colorOrder)
     {
         switch (colorOrder)
         {
             case DeviceConfig::WS281xColorOrder::RGB:
-                dest[0] = color.r; dest[1] = color.g; dest[2] = color.b;
+                PackChannelPixels<0, 1, 2>(output, source, activeLedCount, pixelsToShow, brightness, fader);
                 return;
             case DeviceConfig::WS281xColorOrder::RBG:
-                dest[0] = color.r; dest[1] = color.b; dest[2] = color.g;
+                PackChannelPixels<0, 2, 1>(output, source, activeLedCount, pixelsToShow, brightness, fader);
                 return;
             case DeviceConfig::WS281xColorOrder::GRB:
-                dest[0] = color.g; dest[1] = color.r; dest[2] = color.b;
+                PackChannelPixels<1, 0, 2>(output, source, activeLedCount, pixelsToShow, brightness, fader);
                 return;
             case DeviceConfig::WS281xColorOrder::GBR:
-                dest[0] = color.g; dest[1] = color.b; dest[2] = color.r;
+                PackChannelPixels<2, 0, 1>(output, source, activeLedCount, pixelsToShow, brightness, fader);
                 return;
             case DeviceConfig::WS281xColorOrder::BRG:
-                dest[0] = color.b; dest[1] = color.r; dest[2] = color.g;
+                PackChannelPixels<1, 2, 0>(output, source, activeLedCount, pixelsToShow, brightness, fader);
                 return;
             case DeviceConfig::WS281xColorOrder::BGR:
-                dest[0] = color.b; dest[1] = color.g; dest[2] = color.r;
+                PackChannelPixels<2, 1, 0>(output, source, activeLedCount, pixelsToShow, brightness, fader);
                 return;
             default:
-                dest[0] = color.g; dest[1] = color.r; dest[2] = color.b;
+                PackChannelPixels<1, 0, 2>(output, source, activeLedCount, pixelsToShow, brightness, fader);
                 return;
         }
     }
@@ -363,7 +389,7 @@ bool WS281xOutputManager::ApplyConfig(const DeviceConfig& config, const std::vec
     return true;
 }
 
-void WS281xOutputManager::Show(const std::vector<std::shared_ptr<GFXBase>>& devices, uint16_t pixelsDrawn, uint8_t brightness)
+void WS281xOutputManager::Show(const std::vector<std::shared_ptr<GFXBase>>& devices, uint16_t pixelsDrawn, uint8_t brightness, uint8_t fader)
 {
     // The same mutex used by ApplyConfig() keeps live transport mutations from
     // colliding with the draw loop while it is filling buffers or transmitting.
@@ -374,7 +400,6 @@ void WS281xOutputManager::Show(const std::vector<std::shared_ptr<GFXBase>>& devi
         return;
 
     const size_t pixelsToShow = std::min(static_cast<size_t>(pixelsDrawn), _activeLEDCount);
-    const uint8_t scale = brightness;
 
     // First build packed output bytes for every active channel.  The GFX layer
     // owns CRGB frame buffers; the runtime transport owns these temporary-once-
@@ -388,12 +413,7 @@ void WS281xOutputManager::Show(const std::vector<std::shared_ptr<GFXBase>>& devi
 
         const auto& device = devices[channelIndex];
         auto* output = state.outputBytes.get();
-        for (size_t pixelIndex = 0; pixelIndex < _activeLEDCount; ++pixelIndex)
-        {
-            CRGB color = pixelIndex < pixelsToShow ? device->leds[pixelIndex] : CRGB::Black;
-            nscale8x3_video(color.r, color.g, color.b, scale);
-            WriteColorOrderedBytes(output + (pixelIndex * 3), color, _colorOrder);
-        }
+        PackChannelPixelsForColorOrder(output, device->leds, _activeLEDCount, pixelsToShow, brightness, fader, _colorOrder);
     }
 
     const auto showStartMicros = micros();

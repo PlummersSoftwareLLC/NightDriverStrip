@@ -130,6 +130,7 @@ void InitEffectsManager()
 
 void EffectManager::StartEffect()
 {
+    std::lock_guard<std::recursive_mutex> renderGuard(g_render_mutex);
     std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
 
     // If there's a temporary effect override from the remote control active, we start that, else
@@ -236,6 +237,8 @@ EffectManager::~EffectManager()
 
 void EffectManager::SetTempEffect(std::shared_ptr<LEDStripEffect> effect)
 {
+    std::lock_guard<std::recursive_mutex> renderGuard(g_render_mutex);
+    std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
     _tempEffect = effect;
 }
 
@@ -334,6 +337,7 @@ const String & EffectManager::GetCurrentEffectName() const
 
 void EffectManager::SetCurrentEffectIndex(size_t i)
 {
+    std::lock_guard<std::recursive_mutex> renderGuard(g_render_mutex);
     std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
 
     if (i >= _vEffects.size())
@@ -972,6 +976,7 @@ bool EffectManager::DeleteEffect(size_t index)
 
 void EffectManager::CheckEffectTimerExpired()
 {
+    std::lock_guard<std::recursive_mutex> renderGuard(g_render_mutex);
     std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
 
     if (IsIntervalEternal() && !GetCurrentEffect().HasMaximumEffectTime())
@@ -995,6 +1000,7 @@ void EffectManager::CheckEffectTimerExpired()
 
 void EffectManager::NextEffect(bool skipSave)
 {
+    std::lock_guard<std::recursive_mutex> renderGuard(g_render_mutex);
     std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
 
     auto enabled = AreEffectsEnabled();
@@ -1016,6 +1022,7 @@ void EffectManager::NextEffect(bool skipSave)
 
 void EffectManager::PreviousEffect()
 {
+    std::lock_guard<std::recursive_mutex> renderGuard(g_render_mutex);
     std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
 
     auto enabled = AreEffectsEnabled();
@@ -1041,6 +1048,7 @@ void EffectManager::PreviousEffect()
 
 void EffectManager::Update()
 {
+    std::lock_guard<std::recursive_mutex> renderGuard(g_render_mutex);
     std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
 
     if ((_gfx[0])->GetLEDCount() == 0)
