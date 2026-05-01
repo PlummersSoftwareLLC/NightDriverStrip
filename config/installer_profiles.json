@@ -44,6 +44,7 @@
       "summary": "M5StickC Plus/Plus2 setup using the Grove LED output path.",
       "description": "Use this when the controller is an M5Stick-style device. The default data pin is GPIO 32 for the Grove connector, with audio-capable firmware and the device web UI enabled.",
       "card": "card-orange",
+      "flashBaudRate": 2000000,
       "defaults": {
         "ledCount": 144,
         "pin": 32,

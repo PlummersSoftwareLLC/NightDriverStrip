@@ -927,6 +927,10 @@
       els.guidedInstallButton.manifest = manifest;
       els.wifiInstallButton.manifest = manifest;
       els.selectedManifestText.textContent = `${profile.name}: ${manifest}`;
+      // Apply per-profile recommended flash baud rate. Profiles without a
+      // flashBaudRate stay on the wizard's overall default. The user can
+      // still override via the Advanced Flash Settings dropdown.
+      updateInstallBaudRate(Number(profile.flashBaudRate) || defaultFlashBaudRate);
       updatePayloadPreview();
     }
 
@@ -1083,9 +1087,10 @@
         return;
       }
       try {
-        const response = await fetch(`${url}/api/v1/setup`, {
+        const response = await fetch(`${url}/api/v1/settings`, {
           method: "POST",
-          body: buildSetupForm()
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(buildPayload())
         });
         if (!response.ok) {
           const text = await response.text();
@@ -1096,27 +1101,6 @@
       } catch (error) {
         setStatus(els.applyStatus, `Configuration failed: ${error.message}`, "error");
       }
-    }
-
-    function buildSetupForm() {
-      const profile = state.selectedProfile;
-      const form = new URLSearchParams();
-      if (profile && profile.kind === "matrix") {
-        form.set("kind", "matrix");
-        form.set("width", String(numberValue(els.matrixWidth, 64)));
-        form.set("height", String(numberValue(els.matrixHeight, 32)));
-        form.set("brightness", String(percentToBrightness(numberValue(els.matrixBrightness, 100))));
-        form.set("powerLimit", String(numberValue(els.matrixPowerLimit, 4500)));
-      } else {
-        form.set("kind", "strip");
-        form.set("ledCount", String(numberValue(els.stripLedCount, 144)));
-        form.set("pin", String(numberValue(els.stripPin, 5)));
-        form.set("colorOrder", els.stripColorOrder.value);
-        form.set("brightness", String(percentToBrightness(numberValue(els.stripBrightness, 100))));
-        form.set("powerLimit", String(numberValue(els.stripPowerLimit, 4500)));
-        form.set("effectInterval", String(numberValue(els.stripEffectInterval, 20) * 1000));
-      }
-      return form;
     }
 
 
