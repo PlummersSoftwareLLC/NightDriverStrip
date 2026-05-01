@@ -91,6 +91,13 @@ namespace nd_network
     int         GetWiFiStatus();
     const char* WLtoString(int status);
 
+    // Latest STA disconnect reason recorded by the WiFi event hook.
+    // Used by Improv provisioning to fast-fail on auth failures (wrong
+    // password, handshake timeout) without waiting for the full timeout.
+    int      GetLastWifiDisconnectReason();
+    uint32_t GetLastWifiDisconnectMs();
+    void     ClearLastWifiDisconnect();
+
     // Persistence
     void UpdateNTPTime();
     bool ReadWiFiConfig(WifiCredSource source, String &WiFi_ssid, String &WiFi_password);

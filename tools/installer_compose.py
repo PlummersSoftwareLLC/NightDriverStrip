@@ -33,11 +33,31 @@
 import glob
 import json
 import os
+import argparse
 import sys
 import shutil
 import installer_vars
 
-def compose_installer(release_name: str):
+GUIDED_PROJECT_TAGS = ['installer_strip', 'installer_matrix', 'installer_m5']
+
+def project_artifacts_exist(project_dir: str) -> bool:
+    return os.path.exists(os.path.join(project_dir, installer_vars.Files.manifest))
+
+def read_project_features(project_dir: str, tag: str, allow_missing: bool):
+    features_path = os.path.join(project_dir, installer_vars.Files.features)
+    try:
+        with open(features_path, "r", encoding='utf-8') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as error:
+        if allow_missing:
+            print('=== Skipping feature flags for ' + tag + ' because ' + features_path + ' could not be read: ' + str(error))
+            return []
+
+        raise RuntimeError(
+            'Invalid Web Installer feature artifact for ' + tag + ': ' + features_path +
+            '. Rebuild it with tools/installer_buildenv.py before composing the full installer.') from error
+
+def compose_installer(release_name: str, project_tags = None, allow_missing: bool = False):
 
     print('=== Setting up base directory and file structure for web installer')
 
@@ -65,12 +85,18 @@ def compose_installer(release_name: str):
         webprojects = json.load(f)
         devices = webprojects['devices']
 
+    requested_tags = set(project_tags) if project_tags else None
     used_features = []
+    missing_projects = []
 
     # Process output for each project
     for device in devices:
+        composed_projects = []
         for project in device['projects']:
             tag = project['tag']
+            if requested_tags is not None and tag not in requested_tags:
+                continue
+
             project_dir = os.path.join(installer_vars.Dirs.build, tag)
 
             print('===')
@@ -78,6 +104,14 @@ def compose_installer(release_name: str):
             print('=== Processing Web Installer project ' + tag)
             print('=' * 79)
             print('===', flush = True)
+
+            if not project_artifacts_exist(project_dir):
+                missing_projects.append(tag)
+                if allow_missing:
+                    print('=== Skipping Web Installer project ' + tag + ' because ' + os.path.join(project_dir, installer_vars.Files.manifest) + ' does not exist')
+                    continue
+
+                continue
 
             firmware_target_dir = os.path.join(firmware_target_root, tag)
             if not os.path.exists(firmware_target_dir):
@@ -97,17 +131,28 @@ def compose_installer(release_name: str):
 
             feature_letters = []
 
-            with open(os.path.join(project_dir, installer_vars.Files.features), "r", encoding='utf-8') as f:
-                for feature_tag in json.load(f):
-                    feature = known_features[feature_tag]
-                    # Only report features we should
-                    if feature['show']:
-                        feature_letters.append(feature['letter'])
-                        if feature_tag not in used_features:
-                            used_features.append(feature_tag)
+            for feature_tag in read_project_features(project_dir, tag, allow_missing):
+                feature = known_features[feature_tag]
+                # Only report features we should
+                if feature['show']:
+                    feature_letters.append(feature['letter'])
+                    if feature_tag not in used_features:
+                        used_features.append(feature_tag)
 
             if len(feature_letters) > 0:
                 project['name'] = project['name'] + ' (' + ','.join(feature_letters) + ')'
+            composed_projects.append(project)
+
+        if requested_tags is not None or allow_missing:
+            device['projects'] = composed_projects
+
+    if len(missing_projects) > 0 and not allow_missing:
+        raise FileNotFoundError(
+            'Missing Web Installer build artifacts for: ' + ', '.join(missing_projects) +
+            '. Build each environment with tools/installer_buildenv.py, or use --allow-missing for a local partial installer.')
+
+    if requested_tags is not None or allow_missing:
+        devices[:] = [device for device in devices if len(device['projects']) > 0]
 
     print('===')
     print('=' * 79)
@@ -116,6 +161,18 @@ def compose_installer(release_name: str):
     print('=== Writing web projects JSON file')
     with open(os.path.join(installer_vars.Dirs.webinstaller, installer_vars.Files.webprojects), 'w', encoding='utf-8') as f:
         json.dump(webprojects, fp=f)
+
+    print('=== Copying installer profiles JSON file')
+    shutil.copy(
+        os.path.join(installer_vars.Dirs.config, installer_vars.Files.installer_profiles),
+        os.path.join(installer_vars.Dirs.webinstaller, installer_vars.Files.installer_profiles))
+
+    print('=== Copying installer assets')
+    installer_assets_dir = os.path.join(installer_vars.Dirs.webinstaller, installer_vars.Dirs.assets)
+    os.makedirs(installer_assets_dir, exist_ok=True)
+    shutil.copy(
+        os.path.join(installer_vars.Dirs.assets, installer_vars.Files.logo),
+        os.path.join(installer_assets_dir, installer_vars.Files.logo))
 
     print('=== Writing index.html')
     legend_entries = []
@@ -135,4 +192,38 @@ def compose_installer(release_name: str):
         f.write(index_template.replace('$$FEATURE_LEGEND$$', ', '.join(legend_entries)))
 
 if __name__ == '__main__':
-    compose_installer(sys.argv[1] if len(sys.argv) > 1 else 'unnamed')
+    parser = argparse.ArgumentParser(description='Compose the Web Installer from previously built firmware and manifests.')
+    parser.add_argument('release_name', nargs='?', default='unnamed')
+    parser.add_argument(
+        '--guided',
+        action='store_true',
+        help='Include only the guided setup starter images: installer_strip, installer_matrix, and installer_m5.')
+    parser.add_argument(
+        '--projects',
+        help='Comma-separated environment tags to include, for example installer_strip,installer_matrix,installer_m5.')
+    parser.add_argument(
+        '--allow-missing',
+        action='store_true',
+        help='Skip projects whose build/<tag>/manifest.json does not exist. Intended for local partial installer testing.')
+    args = parser.parse_args()
+
+    if args.guided and args.projects:
+        parser.error('--guided and --projects cannot be used together.')
+
+    selected_projects = None
+    if args.guided:
+        selected_projects = GUIDED_PROJECT_TAGS
+    elif args.projects:
+        selected_projects = [tag.strip() for tag in args.projects.split(',') if tag.strip()]
+
+    try:
+        compose_installer(args.release_name, selected_projects, args.allow_missing)
+    except (FileNotFoundError, RuntimeError) as error:
+        print('ERROR: ' + str(error), file=sys.stderr)
+        print('', file=sys.stderr)
+        print('For local guided setup testing, run:', file=sys.stderr)
+        print('  python3 tools/installer_compose.py local --guided', file=sys.stderr)
+        print('', file=sys.stderr)
+        print('If you intentionally want a partial installer from whatever artifacts exist, run:', file=sys.stderr)
+        print('  python3 tools/installer_compose.py local --guided --allow-missing', file=sys.stderr)
+        sys.exit(2)

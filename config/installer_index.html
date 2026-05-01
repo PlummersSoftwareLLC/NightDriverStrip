@@ -1,211 +1,1175 @@
-<!DOCTYPE html>
-<html class="img-no-display">
+<!doctype html>
+<html lang="en">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<link rel="shortcut icon" type="image/x-icon" href="assets/favicon.ico">
-<title>NightDriverLED ESP32 Installation Wizard</title>
-<style>
-html {
-  height: 100%;
-  overflow: auto;
-}
-body {
-  background: black no-repeat center center fixed;
-  -webkit-background-size: cover;
-  -moz-background-size: cover;
-  -o-background-size: cover;
-  background-size: cover;
-  color: white;
-  font-family:Arial, Helvetica, sans-serif
-}
-div#outer {
-  display: table;
-  height: 100%;
-  width: 100%;
-}
-div#container {
-	display: table-cell;
-  text-align: center;
-  vertical-align: middle;
-}
-#paragraph {
-	padding: 20px 0 30px 40px;
-	margin: 0 auto;
-	text-align: left;
-	width: 560px;
-	color: #146b9d;
-	font-size: 11pt;
-	font-weight: bold;
-	font-family: Verdana;
-}
-.invisible {
-  visibility: hidden;
-}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" type="image/x-icon" href="assets/favicon.ico">
+  <title>NightDriverStrip Setup</title>
+  <script src="esp32webtools/install-button.js?v=setupui-20260430-2"></script>
+  <script>
+    (() => {
+      const installerScriptFallbacks = [
+        "../WebInstaller/esp32webtools/install-button.js?v=setupui-20260430-2",
+        "/WebInstaller/esp32webtools/install-button.js?v=setupui-20260430-2"
+      ];
+      let fallbackIndex = 0;
 
- <script
-  src="esp32webtools/install-button.js"
-></script>
+      function loadNextFallback() {
+        if (customElements.get("esp-web-install-button") || fallbackIndex >= installerScriptFallbacks.length)
+          return;
 
+        const script = document.createElement("script");
+        script.src = installerScriptFallbacks[fallbackIndex++];
+        script.onerror = loadNextFallback;
+        document.head.appendChild(script);
+      }
+
+      window.addEventListener("load", () => {
+        if (!customElements.get("esp-web-install-button"))
+          loadNextFallback();
+      });
+    })();
+  </script>
+  <style>
+    :root {
+      --bg: #030712;
+      --panel: rgba(7, 14, 29, 0.84);
+      --panel-strong: rgba(10, 18, 38, 0.96);
+      --line: rgba(74, 222, 255, 0.28);
+      --line-strong: rgba(74, 222, 255, 0.56);
+      --ink: #eff8ff;
+      --muted: #8ea7c8;
+      --accent: #4adeff;
+      --accent-warm: #ffcf40;
+      --accent-hot: #ff5b88;
+      --accent-good: #39ff88;
+      --shadow: rgba(0, 0, 0, 0.36);
+      --card-rgb: 74, 222, 255;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    body {
+      font-family: "Source Code Pro", "SFMono-Regular", Menlo, Consolas, monospace;
+      overflow-x: hidden;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    .backdrop,
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .backdrop {
+      z-index: -2;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(74, 222, 255, 0.20), transparent 28%),
+        radial-gradient(circle at 88% 12%, rgba(255, 91, 136, 0.16), transparent 28%),
+        radial-gradient(circle at 48% 110%, rgba(57, 255, 136, 0.12), transparent 36%),
+        linear-gradient(160deg, #02040d 0%, #071021 54%, #060914 100%);
+    }
+
+    .grid-overlay {
+      z-index: -1;
+      opacity: 0.34;
+      background-image:
+        linear-gradient(rgba(74, 222, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(74, 222, 255, 0.08) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9), transparent 92%);
+    }
+
+    .shell {
+      width: min(1180px, calc(100vw - 24px));
+      margin: 0 auto;
+      padding: 20px 0 32px;
+    }
+
+    .panel {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(var(--card-rgb), 0.34);
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at top left, rgba(var(--card-rgb), 0.22), transparent 42%),
+        radial-gradient(circle at bottom right, rgba(var(--card-rgb), 0.12), transparent 38%),
+        linear-gradient(145deg, rgba(var(--card-rgb), 0.16), transparent 34%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 22%),
+        var(--panel);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        0 14px 40px var(--shadow),
+        0 0 30px rgba(var(--card-rgb), 0.22),
+        0 0 64px rgba(var(--card-rgb), 0.10);
+      backdrop-filter: blur(10px);
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(120deg, rgba(var(--card-rgb), 0.92), rgba(var(--card-rgb), 0.2), rgba(255, 255, 255, 0.14));
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0.62;
+      pointer-events: none;
+    }
+
+    .card-blue { --card-rgb: 64, 140, 255; }
+    .card-cyan { --card-rgb: 0, 224, 255; }
+    .card-green { --card-rgb: 57, 255, 136; }
+    .card-orange { --card-rgb: 255, 149, 0; }
+    .card-pink { --card-rgb: 255, 62, 131; }
+    .card-purple { --card-rgb: 191, 90, 242; }
+    .card-red { --card-rgb: 255, 40, 40; }
+    .card-yellow { --card-rgb: 255, 214, 10; }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 18px;
+      align-items: center;
+      padding: 18px 22px;
+      margin-bottom: 16px;
+    }
+
+    .logo {
+      width: min(240px, 42vw);
+      height: auto;
+      display: block;
+    }
+
+    .title-block h1 {
+      margin: 0;
+      font-size: clamp(1.9rem, 4vw, 3.4rem);
+      line-height: 1.02;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(74, 222, 255, 0.24);
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      max-width: 58ch;
+    }
+
+    .release-pill,
+    .status-pill,
+    .step-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(74, 222, 255, 0.26);
+      background: rgba(4, 10, 22, 0.9);
+      box-shadow: inset 0 0 18px rgba(74, 222, 255, 0.09);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .eyebrow,
+    .field span,
+    .section-kicker,
+    .step-label,
+    .choice-kicker,
+    .status-label {
+      margin: 0 0 6px;
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgb(var(--card-rgb));
+      text-shadow: 0 0 12px rgba(var(--card-rgb), 0.28);
+    }
+
+    .mode-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .mode-tab,
+    .action-button,
+    .project-card {
+      border: 1px solid rgba(74, 222, 255, 0.24);
+      color: var(--ink);
+      background: rgba(4, 10, 22, 0.88);
+      box-shadow: inset 0 0 18px rgba(74, 222, 255, 0.08);
+    }
+
+    .mode-tab,
+    .action-button {
+      min-height: 44px;
+      padding: 0 16px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .mode-tab.active,
+    .action-button.accent {
+      border-color: rgba(74, 222, 255, 0.72);
+      background: linear-gradient(135deg, rgba(74, 222, 255, 0.26), rgba(4, 10, 22, 0.92));
+      box-shadow: 0 0 24px rgba(74, 222, 255, 0.20), inset 0 0 22px rgba(74, 222, 255, 0.14);
+    }
+
+    .action-button.warning {
+      border-color: rgba(255, 207, 64, 0.58);
+      color: #fff4bf;
+    }
+
+    .action-button.good {
+      border-color: rgba(57, 255, 136, 0.58);
+      color: #caffdc;
+    }
+
+    .view[hidden],
+    .step[hidden],
+    .profile-fields[hidden],
+    .is-hidden {
+      display: none !important;
+    }
+
+    .wizard-grid {
+      display: grid;
+      grid-template-columns: minmax(230px, 0.75fr) minmax(0, 1.6fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .steps-panel,
+    .content-panel,
+    .advanced-panel {
+      padding: 18px;
+    }
+
+    .step-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .step-pill {
+      width: 100%;
+      justify-content: flex-start;
+      border-radius: 12px;
+      min-height: 54px;
+    }
+
+    .step-pill.active {
+      color: var(--ink);
+      border-color: rgba(57, 255, 136, 0.52);
+      box-shadow: 0 0 22px rgba(57, 255, 136, 0.12), inset 0 0 18px rgba(57, 255, 136, 0.10);
+    }
+
+    .step-index {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      color: #00130a;
+      background: var(--accent-good);
+      font-weight: 700;
+    }
+
+    .step h2 {
+      margin: 4px 0 8px;
+      font-size: clamp(1.45rem, 3vw, 2.25rem);
+      line-height: 1.05;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .step-copy,
+    .help-text,
+    .choice-copy,
+    .status-copy {
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .project-card {
+      border-radius: 16px;
+      padding: 16px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .project-card[aria-pressed="true"] {
+      border-color: rgba(57, 255, 136, 0.66);
+      background:
+        radial-gradient(circle at top left, rgba(57, 255, 136, 0.18), transparent 48%),
+        rgba(4, 10, 22, 0.94);
+      box-shadow: 0 0 28px rgba(57, 255, 136, 0.14), inset 0 0 20px rgba(57, 255, 136, 0.10);
+    }
+
+    .project-card h3 {
+      margin: 0 0 8px;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      min-height: 46px;
+      border: 1px solid rgba(74, 222, 255, 0.25);
+      border-radius: 12px;
+      color: var(--ink);
+      background: rgba(3, 8, 18, 0.86);
+      padding: 0 12px;
+      outline: none;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: rgba(74, 222, 255, 0.76);
+      box-shadow: 0 0 0 3px rgba(74, 222, 255, 0.12);
+    }
+
+    .field-note {
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 18px;
+    }
+
+    esp-web-install-button {
+      --esp-tools-button-color: #0b1326;
+      --esp-tools-button-text-color: #eff8ff;
+      display: inline-block;
+    }
+
+    esp-web-install-button button {
+      min-height: 46px;
+      border: 1px solid rgba(74, 222, 255, 0.72);
+      border-radius: 999px;
+      color: var(--ink);
+      background: linear-gradient(135deg, rgba(74, 222, 255, 0.28), rgba(4, 10, 22, 0.94));
+      box-shadow: 0 0 24px rgba(74, 222, 255, 0.18), inset 0 0 20px rgba(74, 222, 255, 0.12);
+      padding: 0 18px;
+      cursor: pointer;
+    }
+
+    .install-message {
+      display: block;
+      max-width: 520px;
+      margin-top: 10px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .advanced-settings {
+      max-width: 520px;
+      margin-top: 14px;
+      border: 1px solid rgba(74, 222, 255, 0.20);
+      border-radius: 14px;
+      background: rgba(4, 10, 22, 0.66);
+      padding: 12px 14px 14px;
+    }
+
+    .advanced-settings summary {
+      cursor: pointer;
+      color: var(--muted);
+    }
+
+    .advanced-settings .field {
+      margin-top: 12px;
+    }
+
+    .summary-box,
+    .notice {
+      border: 1px solid rgba(74, 222, 255, 0.20);
+      border-radius: 14px;
+      background: rgba(4, 10, 22, 0.72);
+      padding: 14px;
+      margin-top: 16px;
+    }
+
+    .summary-box code {
+      display: block;
+      white-space: pre-wrap;
+      color: #caffdc;
+    }
+
+    .status-box {
+      min-height: 48px;
+      margin-top: 14px;
+      border-left: 3px solid var(--accent);
+      padding: 10px 12px;
+      color: var(--muted);
+      background: rgba(4, 10, 22, 0.72);
+    }
+
+    .status-box.good {
+      border-left-color: var(--accent-good);
+      color: #caffdc;
+    }
+
+    .status-box.error {
+      border-left-color: var(--accent-hot);
+      color: #ffd0dc;
+    }
+
+    .advanced-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+      max-width: 720px;
+    }
+
+    .advanced-note {
+      margin-top: 14px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 860px) {
+      .topbar,
+      .wizard-grid,
+      .project-grid,
+      .field-grid,
+      .advanced-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        text-align: left;
+      }
+
+      .release-pill {
+        justify-self: start;
+      }
+    }
+  </style>
 </head>
 <body>
-    <center>
+  <div class="backdrop"></div>
+  <div class="grid-overlay"></div>
 
-    <div class="content">
-      <img src="assets/NightDriverLogo-small.png" style="width: 640px; height: 380px" />
-      <h1>NightDriverLED ESP32 Installation Wizard</h1>
+  <main class="shell">
+    <header class="topbar panel card-blue">
+      <img class="logo" src="assets/NightDriverLogo-small-transparent.png" onerror="this.onerror=null;this.src='../assets/NightDriverLogo-small-transparent.png';" alt="NightDriverStrip">
+      <div class="title-block">
+        <p class="eyebrow">First Run Setup</p>
+        <h1>NightDriverStrip</h1>
+        <p class="subtitle">Flash firmware, provision WiFi, apply runtime LED settings, and open the device UI.</p>
+      </div>
+      <div class="release-pill">
+        <span>Release</span>
+        <strong>$$RELEASE_NAME$$</strong>
+      </div>
+    </header>
 
-      <em><small>Release: $$RELEASE_NAME$$</small></em>
+    <nav class="mode-tabs" aria-label="Setup mode">
+      <button id="noviceTab" class="mode-tab active" type="button">Guided Setup</button>
+      <button id="advancedTab" class="mode-tab" type="button">Advanced Installer</button>
+    </nav>
 
-      <br/><br/>
+    <section id="noviceView" class="view wizard-grid">
+      <aside class="steps-panel panel card-purple">
+        <p class="eyebrow">Setup Flow</p>
+        <div class="step-list" id="stepList"></div>
+      </aside>
 
-      <label for="devices-dropdown">Select your device type:</label>
-      <select id="devices-dropdown"></select>
+      <article class="content-panel panel card-cyan">
+        <section class="step" data-step="0">
+          <p class="section-kicker">Project Type</p>
+          <h2>Pick The Thing You Built</h2>
+          <p class="step-copy">Choose the starter image closest to your hardware. Specific legacy builds remain available under Advanced Installer.</p>
+          <div id="projectGrid" class="project-grid"></div>
+          <div class="button-row">
+            <button id="projectNextButton" class="action-button accent" type="button">Continue</button>
+          </div>
+        </section>
 
-      <br/><br/>
+        <section class="step" data-step="1" hidden>
+          <p class="section-kicker">Runtime Configuration</p>
+          <h2>Set The LED Output</h2>
+          <p class="step-copy" id="profileDescription"></p>
 
-      <label for="projects-dropdown">Then, select a project:</label>
-      <select id="projects-dropdown" disabled></select>
+          <div id="stripFields" class="profile-fields field-grid">
+            <label class="field">
+              <span>LED Count</span>
+              <input id="stripLedCount" type="number" min="1" max="512" step="1" value="144">
+            </label>
+            <label class="field">
+              <span>Data GPIO</span>
+              <input id="stripPin" type="number" min="0" max="48" step="1" value="5">
+            </label>
+            <label class="field">
+              <span>Color Order</span>
+              <select id="stripColorOrder">
+                <option>GRB</option>
+                <option>RGB</option>
+                <option>BRG</option>
+                <option>BGR</option>
+                <option>GBR</option>
+                <option>RBG</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Brightness</span>
+              <input id="stripBrightness" type="number" min="5" max="100" step="1" value="100">
+            </label>
+            <label class="field">
+              <span>Power Limit mW</span>
+              <input id="stripPowerLimit" type="number" min="1000" step="100" value="4500">
+            </label>
+            <label class="field">
+              <span>Effect Rotation sec</span>
+              <input id="stripEffectInterval" type="number" min="0" step="1" value="20">
+            </label>
+          </div>
 
-      <br/><br/>
+          <div id="matrixFields" class="profile-fields field-grid" hidden>
+            <label class="field">
+              <span>Matrix Width</span>
+              <input id="matrixWidth" type="number" min="1" step="1" value="64">
+            </label>
+            <label class="field">
+              <span>Matrix Height</span>
+              <input id="matrixHeight" type="number" min="1" step="1" value="32">
+            </label>
+            <label class="field">
+              <span>Brightness</span>
+              <input id="matrixBrightness" type="number" min="5" max="100" step="1" value="100">
+            </label>
+            <label class="field">
+              <span>Power Limit mW</span>
+              <input id="matrixPowerLimit" type="number" min="1000" step="100" value="4500">
+            </label>
+          </div>
 
-      <em><small>(Enabled features: $$FEATURE_LEGEND$$)</small></em>
+          <div class="summary-box">
+            <p class="eyebrow">Settings Payload</p>
+            <code id="payloadPreview"></code>
+          </div>
 
-      <br/><br/>
+          <div class="button-row">
+            <button class="action-button" type="button" data-back>Back</button>
+            <button id="settingsNextButton" class="action-button accent" type="button">Continue</button>
+          </div>
+        </section>
 
-      <div id="connect-message">After that, you can connect to the device using the button that appears below.</div>
+        <section class="step" data-step="2" hidden>
+          <p class="section-kicker">Flash</p>
+          <h2>Connect And Install</h2>
+          <p class="step-copy">Connect the ESP32 over USB, then use the installer dialog to flash the selected image. When prompted, enter WiFi credentials so the device can join your network.</p>
+          <div class="notice">
+            <div class="status-label">Selected firmware</div>
+            <div id="selectedManifestText" class="status-copy">No project selected.</div>
+          </div>
+          <details class="advanced-settings">
+            <summary>Advanced Flash Settings</summary>
+            <label class="field full">
+              <span>Flash Baud Rate</span>
+              <select id="guidedBaudRate">
+                <option value="115200">115200 - slowest compatibility</option>
+                <option value="460800" selected>460800 - default</option>
+                <option value="921600">921600 - faster</option>
+                <option value="1500000">1500000 - faster</option>
+                <option value="2000000">2000000 - fastest</option>
+              </select>
+              <small class="field-note">The ROM and WiFi provisioning handshake starts at 115200; firmware writing uses this selected rate after the stub is running.</small>
+            </label>
+          </details>
+          <div class="button-row">
+            <button class="action-button" type="button" data-back>Back</button>
+            <esp-web-install-button id="guidedInstallButton" baud-rate="460800">
+              <button slot="activate" type="button">Connect & Flash</button>
+              <span class="install-message" slot="unsupported">Use Chrome, Edge, or another browser with Web Serial support.</span>
+              <span class="install-message" slot="not-allowed">Open this installer over HTTPS or localhost to use Web Serial.</span>
+            </esp-web-install-button>
+            <button id="flashNextButton" class="action-button accent" type="button">I flashed and joined WiFi</button>
+          </div>
+          <div id="installerRuntimeStatus" class="status-box">Loading the serial installer runtime.</div>
+        </section>
 
-      <!--
-      <br><br>
+        <section class="step" data-step="3" hidden>
+          <p class="section-kicker">Device URL</p>
+          <h2>Apply Setup</h2>
+          <p class="step-copy">Configure WiFi over USB if the serial dialog did not already show the WiFi form. When the device joins the network, its URL should appear here automatically.</p>
+          <label class="field full">
+            <span>Device URL or IP</span>
+            <input id="deviceUrlInput" type="text" inputmode="url" placeholder="http://x.x.x.x">
+          </label>
+          <div id="applyStatus" class="status-box">Waiting for a device URL.</div>
+          <div class="button-row">
+            <button class="action-button" type="button" data-back>Back</button>
+            <esp-web-install-button id="wifiInstallButton" baud-rate="460800" provision-on-connect>
+              <button slot="activate" type="button">Configure WiFi Over USB</button>
+              <span class="install-message" slot="unsupported">Use Chrome, Edge, or another browser with Web Serial support.</span>
+              <span class="install-message" slot="not-allowed">Open this installer over HTTPS or localhost to use Web Serial.</span>
+            </esp-web-install-button>
+            <button id="probeButton" class="action-button" type="button">Probe Device</button>
+            <button id="applyConfigButton" class="action-button accent" type="button">Apply Runtime Config</button>
+          </div>
+        </section>
 
-      <label for="bitrates-dropdown">Optionally, select a different flash speed:</label>
-      <select id="bitrates-dropdown">
-        <option value="115200" selected>115,200 bps</option>
-        <option value="921600">921,600 bps</option>
-        <option value="1500000">1,500,000 bps</option>
-      </select>
-      -->
+        <section class="step" data-step="4" hidden>
+          <p class="section-kicker">Launch</p>
+          <h2>Open The Web UI</h2>
+          <p class="step-copy">If the test pattern worked, continue into the device UI to choose effects, tune settings, and monitor performance.</p>
+          <div id="finishStatus" class="status-box good">Setup is ready once the device URL responds.</div>
+          <div class="button-row">
+            <button class="action-button" type="button" data-back>Back</button>
+            <a id="launchDeviceButton" class="action-button accent" href="#" target="_blank" rel="noopener">Launch Web Interface</a>
+          </div>
+        </section>
+      </article>
+    </section>
 
-      <p class="button-row" align="center">
-        <esp-web-install-button class="invisible"></esp-web-install-button>
-      </p>
-      <b>Note:</b> if the web server is enabled in the image you're flashing,
-      it can take some time for it to come up after the device connects to WiFi for the first time.
-    </div>
+    <section id="advancedView" class="view advanced-panel panel card-orange" hidden>
+      <p class="eyebrow">Advanced Installer</p>
+      <h2>All Firmware Images</h2>
+      <p class="step-copy">This preserves the existing installer behavior for project-specific images and maintainer workflows.</p>
+      <div class="advanced-grid">
+        <label class="field">
+          <span>Device Type</span>
+          <select id="devicesDropdown"></select>
+        </label>
+        <label class="field">
+          <span>Project</span>
+          <select id="projectsDropdown" disabled></select>
+        </label>
+        <label class="field">
+          <span>Flash Baud Rate</span>
+          <select id="advancedBaudRate">
+            <option value="115200">115200 - slowest compatibility</option>
+            <option value="460800" selected>460800 - default</option>
+            <option value="921600">921600 - faster</option>
+            <option value="1500000">1500000 - faster</option>
+            <option value="2000000">2000000 - fastest</option>
+          </select>
+          <small class="field-note">The ROM and WiFi provisioning handshake starts at 115200; firmware writing uses this selected rate after the stub is running.</small>
+        </label>
+      </div>
+      <p class="advanced-note">Enabled features: $$FEATURE_LEGEND$$</p>
+      <div class="button-row">
+        <esp-web-install-button id="advancedInstallButton" class="is-hidden" baud-rate="460800">
+          <button slot="activate" type="button">Connect & Flash Selected Project</button>
+          <span class="install-message" slot="unsupported">Use Chrome, Edge, or another browser with Web Serial support.</span>
+          <span class="install-message" slot="not-allowed">Open this installer over HTTPS or localhost to use Web Serial.</span>
+        </esp-web-install-button>
+      </div>
+    </section>
+  </main>
 
-    </center>
+  <script>
+    const defaultFlashBaudRate = 460800;
+    const steps = ["Project", "Configure", "Flash", "Apply", "Launch"];
+    const state = {
+      devices: [],
+      profiles: [],
+      selectedProfile: null,
+      step: 0
+    };
 
-    <script>
-      const devicesDropdown = document.getElementById("devices-dropdown");
-      const projectsDropdown = document.getElementById("projects-dropdown");
-      // const bitratesDropdown = document.getElementById("bitrates-dropdown");
-      const connectMessage = document.getElementById("connect-message");
-      const installButton = document.querySelector('esp-web-install-button');
-      let devices = [];
+    const els = {
+      noviceTab: document.getElementById("noviceTab"),
+      advancedTab: document.getElementById("advancedTab"),
+      noviceView: document.getElementById("noviceView"),
+      advancedView: document.getElementById("advancedView"),
+      stepList: document.getElementById("stepList"),
+      projectGrid: document.getElementById("projectGrid"),
+      projectNextButton: document.getElementById("projectNextButton"),
+      profileDescription: document.getElementById("profileDescription"),
+      stripFields: document.getElementById("stripFields"),
+      matrixFields: document.getElementById("matrixFields"),
+      payloadPreview: document.getElementById("payloadPreview"),
+      settingsNextButton: document.getElementById("settingsNextButton"),
+      selectedManifestText: document.getElementById("selectedManifestText"),
+      guidedBaudRate: document.getElementById("guidedBaudRate"),
+      guidedInstallButton: document.getElementById("guidedInstallButton"),
+      wifiInstallButton: document.getElementById("wifiInstallButton"),
+      installerRuntimeStatus: document.getElementById("installerRuntimeStatus"),
+      flashNextButton: document.getElementById("flashNextButton"),
+      deviceUrlInput: document.getElementById("deviceUrlInput"),
+      applyStatus: document.getElementById("applyStatus"),
+      probeButton: document.getElementById("probeButton"),
+      applyConfigButton: document.getElementById("applyConfigButton"),
+      finishStatus: document.getElementById("finishStatus"),
+      launchDeviceButton: document.getElementById("launchDeviceButton"),
+      devicesDropdown: document.getElementById("devicesDropdown"),
+      projectsDropdown: document.getElementById("projectsDropdown"),
+      advancedBaudRate: document.getElementById("advancedBaudRate"),
+      advancedInstallButton: document.getElementById("advancedInstallButton"),
+      stripLedCount: document.getElementById("stripLedCount"),
+      stripPin: document.getElementById("stripPin"),
+      stripColorOrder: document.getElementById("stripColorOrder"),
+      stripBrightness: document.getElementById("stripBrightness"),
+      stripPowerLimit: document.getElementById("stripPowerLimit"),
+      stripEffectInterval: document.getElementById("stripEffectInterval"),
+      matrixWidth: document.getElementById("matrixWidth"),
+      matrixHeight: document.getElementById("matrixHeight"),
+      matrixBrightness: document.getElementById("matrixBrightness"),
+      matrixPowerLimit: document.getElementById("matrixPowerLimit")
+    };
 
-      // This is made global to allow the modified code in install-button.js to read its value.
-      // window.selectedBaudRate = parseInt(bitratesDropdown.value);
-      window.selectedBaudRate = 115200; // statically set to 115200 baud, because other values don't work
+    init();
 
-      // Load JSON file
-      fetch("web_projects.json")
-        .then(response => response.json())
-        .then(data => {
-          devices = data.devices;
-          populateDevicesDropdown(devices);
-        });
+    async function init() {
+      renderSteps();
+      bindEvents();
+      updateInstallBaudRate(defaultFlashBaudRate);
+      monitorInstallerRuntime();
+      await Promise.all([loadProjects(), loadProfiles()]);
+      renderProfiles();
+      populateDevicesDropdown();
+      selectProfile(state.profiles[0]?.id);
+      setStep(0);
+    }
 
-      // Show/hide connect message and connect button, dependent on if a manifest file name is passed
-      function setManifest(manifest) {
-        if (manifest !== undefined) {
-          installButton.manifest = manifest;
-          if (!connectMessage.classList.contains('invisible'))
-            connectMessage.classList.add('invisible');
-          installButton.classList.remove('invisible');
-        }
-        else {
-          delete installButton.manifest;
-          connectMessage.classList.remove('invisible');
-          if (!installButton.classList.contains('invisible'))
-            installButton.classList.add('invisible');
-        }
-      }
-
-      // Show connect message and hide connect button
-      function clearManifest() {
-        setManifest(undefined);
-      }
-
-      // Set or clear manifest based on project dropdown selection
-      function updateManifest() {
-        let tag = projectsDropdown.value;
-
-        if (tag)
-          setManifest(`manifests/manifest_${tag}.json`);
-        else
-          clearManifest();
-      }
-
-      // Populate devices dropdown
-      function populateDevicesDropdown(devices) {
-        if (devices.length > 1) {
-          let option = document.createElement("option");
-          option.value = "";
-          option.text = "-- Select device --";
-          devicesDropdown.appendChild(option);
-        }
-
-        for (let device of devices) {
-          let option = document.createElement("option");
-          option.value = device.tag;
-          option.text = device.name;
-          devicesDropdown.appendChild(option);
-        }
-      }
-
-      // Populate projects dropdown
-      function populateProjectsDropdown(projects) {
-        projectsDropdown.innerHTML = "";
-
-        if (projects === undefined) {
-          projectsDropdown.disabled = true;
-        }
-        else {
-          if (projects.length > 1) {
-            let option = document.createElement("option");
-            option.value = "";
-            option.text = "-- Select project --";
-            projectsDropdown.appendChild(option);
-          }
-
-          for (let project of projects) {
-            let option = document.createElement("option");
-            option.value = project.tag;
-            option.text = project.name;
-            projectsDropdown.appendChild(option);
-          }
-
-          projectsDropdown.disabled = false;
-        }
-
-        updateManifest();
-      }
-
-      devicesDropdown.addEventListener("change", function() {
-        let tag = devicesDropdown.value;
-        let selectedDevice = devices.find(device => device.tag === tag);
-
+    function bindEvents() {
+      els.noviceTab.addEventListener("click", () => setMode("novice"));
+      els.advancedTab.addEventListener("click", () => setMode("advanced"));
+      els.projectNextButton.addEventListener("click", () => setStep(1));
+      els.settingsNextButton.addEventListener("click", () => setStep(2));
+      els.flashNextButton.addEventListener("click", () => setStep(3));
+      els.probeButton.addEventListener("click", probeDevice);
+      els.applyConfigButton.addEventListener("click", applyRuntimeConfig);
+      document.querySelectorAll("[data-back]").forEach((button) => button.addEventListener("click", () => setStep(Math.max(0, state.step - 1))));
+      [els.stripLedCount, els.stripPin, els.stripColorOrder, els.stripBrightness, els.stripPowerLimit, els.stripEffectInterval,
+       els.matrixWidth, els.matrixHeight, els.matrixBrightness, els.matrixPowerLimit].forEach((input) => {
+        input.addEventListener("input", updatePayloadPreview);
+        input.addEventListener("change", updatePayloadPreview);
+      });
+      els.deviceUrlInput.addEventListener("input", updateLaunchUrl);
+      els.devicesDropdown.addEventListener("change", () => {
+        const selectedDevice = state.devices.find((device) => device.tag === els.devicesDropdown.value);
         populateProjectsDropdown(selectedDevice?.projects);
       });
+      els.projectsDropdown.addEventListener("change", updateAdvancedManifest);
+      els.guidedBaudRate.addEventListener("change", () => updateInstallBaudRate(els.guidedBaudRate.value));
+      els.advancedBaudRate.addEventListener("change", () => updateInstallBaudRate(els.advancedBaudRate.value));
+      document.addEventListener("nds-device-url", handleProvisionedDeviceUrl);
+      document.addEventListener("nds-flash-complete", handleFlashComplete);
+    }
 
-      projectsDropdown.addEventListener("change", updateManifest);
+    function monitorInstallerRuntime() {
+      const maxChecks = 20;
+      let checks = 0;
 
-      /*
-      bitratesDropdown.addEventListener("change", function() {
-        window.selectedBaudRate = parseInt(bitratesDropdown.value);
+      const update = () => {
+        const loaded = customElements.get("esp-web-install-button");
+        els.installerRuntimeStatus.classList.toggle("good", Boolean(loaded));
+        els.installerRuntimeStatus.classList.toggle("error", !loaded && checks >= maxChecks);
+
+        if (loaded) {
+          if (window.location.protocol === "file:") {
+            els.installerRuntimeStatus.textContent =
+              `Serial installer runtime loaded. Firmware write baud: ${els.guidedBaudRate.value}. Initial connection still uses 115200. If manifest download fails from this file URL, serve the repo and open http://localhost:8791/config/installer_index.html.`;
+          } else {
+            els.installerRuntimeStatus.textContent = `Serial installer runtime loaded. Firmware write baud: ${els.guidedBaudRate.value}. Initial connection still uses 115200. Connect your controller over USB, then click Connect & Flash.`;
+          }
+          return;
+        }
+
+        if (checks >= maxChecks) {
+          els.installerRuntimeStatus.textContent =
+            "Serial installer runtime did not load. Open WebInstaller/index.html, or serve the repository root so esp32webtools/install-button.js is available.";
+          return;
+        }
+
+        checks += 1;
+        setTimeout(update, 250);
+      };
+
+      update();
+    }
+
+    function updateInstallBaudRate(value) {
+      const baudRate = Number(value) || defaultFlashBaudRate;
+      const baudRateText = String(baudRate);
+
+      els.guidedBaudRate.value = baudRateText;
+      els.advancedBaudRate.value = baudRateText;
+      [els.guidedInstallButton, els.wifiInstallButton, els.advancedInstallButton].forEach((button) => {
+        button.setAttribute("baud-rate", baudRateText);
+        button.baudRate = baudRate;
       });
-      */
-    </script>
-  </body>
-  </html>
+
+      if (els.installerRuntimeStatus.classList.contains("good")) {
+        els.installerRuntimeStatus.textContent = window.location.protocol === "file:"
+          ? `Serial installer runtime loaded. Firmware write baud: ${baudRateText}. Initial connection still uses 115200. If manifest download fails from this file URL, serve the repo and open http://localhost:8791/config/installer_index.html.`
+          : `Serial installer runtime loaded. Firmware write baud: ${baudRateText}. Initial connection still uses 115200. Connect your controller over USB, then click Connect & Flash.`;
+      }
+    }
+
+    async function loadProjects() {
+      const response = await fetch("web_projects.json");
+      const data = await response.json();
+      state.devices = data.devices || [];
+    }
+
+    async function loadProfiles() {
+      const response = await fetch("installer_profiles.json");
+      const data = await response.json();
+      state.profiles = data.profiles || [];
+    }
+
+    function setMode(mode) {
+      const advanced = mode === "advanced";
+      els.noviceTab.classList.toggle("active", !advanced);
+      els.advancedTab.classList.toggle("active", advanced);
+      els.noviceView.hidden = advanced;
+      els.advancedView.hidden = !advanced;
+    }
+
+    function renderSteps() {
+      els.stepList.replaceChildren(...steps.map((label, index) => {
+        const item = document.createElement("div");
+        item.className = "step-pill";
+        item.dataset.stepPill = String(index);
+        item.innerHTML = `<span class="step-index">${index + 1}</span><span class="step-label">${label}</span>`;
+        return item;
+      }));
+    }
+
+    function setStep(step) {
+      state.step = step;
+      document.querySelectorAll(".step").forEach((node) => {
+        node.hidden = Number(node.dataset.step) !== step;
+      });
+      document.querySelectorAll("[data-step-pill]").forEach((node) => {
+        node.classList.toggle("active", Number(node.dataset.stepPill) === step);
+      });
+      updatePayloadPreview();
+      updateLaunchUrl();
+    }
+
+    function renderProfiles() {
+      els.projectGrid.replaceChildren(...state.profiles.map((profile) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `project-card ${profile.card || "card-cyan"}`;
+        button.setAttribute("aria-pressed", "false");
+        button.dataset.profileId = profile.id;
+        button.innerHTML = `
+          <p class="choice-kicker">${profile.kicker}</p>
+          <h3>${profile.name}</h3>
+          <p class="choice-copy">${profile.summary}</p>
+        `;
+        button.addEventListener("click", () => selectProfile(profile.id));
+        return button;
+      }));
+    }
+
+    function selectProfile(id) {
+      state.selectedProfile = state.profiles.find((profile) => profile.id === id) || null;
+      document.querySelectorAll(".project-card").forEach((card) => {
+        card.setAttribute("aria-pressed", String(card.dataset.profileId === id));
+      });
+      if (!state.selectedProfile) {
+        return;
+      }
+
+      const profile = state.selectedProfile;
+      els.profileDescription.textContent = profile.description || profile.summary || "";
+      els.stripFields.hidden = profile.kind === "matrix";
+      els.matrixFields.hidden = profile.kind !== "matrix";
+      applyProfileDefaults(profile);
+      const manifest = getManifestPath(profile.projectTag);
+      els.guidedInstallButton.manifest = manifest;
+      els.wifiInstallButton.manifest = manifest;
+      els.selectedManifestText.textContent = `${profile.name}: ${manifest}`;
+      updatePayloadPreview();
+    }
+
+    function getManifestPath(tag) {
+      const manifestFile = `manifest_${tag}.json`;
+      const path = window.location.pathname || "";
+
+      if (path.includes("/config/") || path.endsWith("/installer_index.html")) {
+        return `../WebInstaller/manifests/${manifestFile}`;
+      }
+
+      return `manifests/${manifestFile}`;
+    }
+
+    function applyProfileDefaults(profile) {
+      const defaults = profile.defaults || {};
+      if (profile.kind === "matrix") {
+        els.matrixWidth.value = defaults.width || 64;
+        els.matrixHeight.value = defaults.height || 32;
+        els.matrixBrightness.value = defaults.brightnessPercent || 100;
+        els.matrixPowerLimit.value = defaults.powerLimit || 4500;
+        els.matrixWidth.disabled = !!defaults.fixedTopology;
+        els.matrixHeight.disabled = !!defaults.fixedTopology;
+      } else {
+        els.stripLedCount.value = defaults.ledCount || 144;
+        els.stripPin.value = defaults.pin || 5;
+        els.stripColorOrder.value = defaults.colorOrder || "GRB";
+        els.stripBrightness.value = defaults.brightnessPercent || 100;
+        els.stripPowerLimit.value = defaults.powerLimit || 4500;
+        els.stripEffectInterval.value = defaults.effectIntervalSeconds ?? 20;
+      }
+    }
+
+    function buildPayload() {
+      const profile = state.selectedProfile;
+      if (!profile) {
+        return {};
+      }
+
+      if (profile.kind === "matrix") {
+        return {
+          topology: {
+            width: numberValue(els.matrixWidth, 64),
+            height: numberValue(els.matrixHeight, 32),
+            serpentine: false
+          },
+          outputs: {
+            driver: "hub75"
+          },
+          device: {
+            brightness: percentToBrightness(numberValue(els.matrixBrightness, 100)),
+            powerLimit: numberValue(els.matrixPowerLimit, 4500)
+          }
+        };
+      }
+
+      return {
+        topology: {
+          width: numberValue(els.stripLedCount, 144),
+          height: 1,
+          serpentine: true
+        },
+        outputs: {
+          driver: "ws281x",
+          ws281x: {
+            channelCount: 1,
+            colorOrder: els.stripColorOrder.value,
+            pins: [numberValue(els.stripPin, 5)]
+          }
+        },
+        device: {
+          brightness: percentToBrightness(numberValue(els.stripBrightness, 100)),
+          powerLimit: numberValue(els.stripPowerLimit, 4500)
+        },
+        effects: {
+          effectInterval: numberValue(els.stripEffectInterval, 20) * 1000
+        }
+      };
+    }
+
+    function updatePayloadPreview() {
+      els.payloadPreview.textContent = JSON.stringify(buildPayload(), null, 2);
+    }
+
+    function percentToBrightness(percent) {
+      const clamped = Math.max(5, Math.min(100, percent));
+      return Math.round(10 + ((255 - 10) * clamped / 100));
+    }
+
+    function numberValue(input, fallback) {
+      const value = Number(input.value);
+      return Number.isFinite(value) ? value : fallback;
+    }
+
+    function normalizeDeviceUrl() {
+      let value = els.deviceUrlInput.value.trim();
+      if (!value) {
+        return "";
+      }
+      if (!/^https?:\/\//i.test(value)) {
+        value = `http://${value}`;
+      }
+      return value.replace(/\/+$/, "");
+    }
+
+    function updateLaunchUrl() {
+      const url = normalizeDeviceUrl();
+      els.launchDeviceButton.href = url || "#";
+      els.finishStatus.textContent = url ? `Ready to open ${url}` : "Enter the device URL before launching the web UI.";
+    }
+
+    function handleProvisionedDeviceUrl(event) {
+      const url = event.detail?.url;
+      if (!url) {
+        return;
+      }
+
+      els.deviceUrlInput.value = url;
+      updateLaunchUrl();
+      setStatus(els.applyStatus, `Detected device URL: ${url}`, "good");
+      setStep(3);
+    }
+
+    function handleFlashComplete() {
+      setStatus(
+        els.applyStatus,
+        "Firmware installed. Configure WiFi over USB, or enter the IP shown in the serial logs.",
+        "good"
+      );
+      setStep(3);
+    }
+
+    async function probeDevice() {
+      const url = normalizeDeviceUrl();
+      if (!url) {
+        setStatus(els.applyStatus, "Enter the device URL shown by ESP Web Tools.", "error");
+        return;
+      }
+      try {
+        const response = await fetch(`${url}/api/v1/settings`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        setStatus(els.applyStatus, "Device API responded. Runtime configuration can be applied.", "good");
+      } catch (error) {
+        setStatus(els.applyStatus, `Could not reach device API: ${error.message}`, "error");
+      }
+    }
+
+    async function applyRuntimeConfig() {
+      const url = normalizeDeviceUrl();
+      if (!url) {
+        setStatus(els.applyStatus, "Enter the device URL shown by ESP Web Tools.", "error");
+        return;
+      }
+      try {
+        const response = await fetch(`${url}/api/v1/setup`, {
+          method: "POST",
+          body: buildSetupForm()
+        });
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(text || `HTTP ${response.status}`);
+        }
+        setStatus(els.applyStatus, "Runtime configuration applied.", "good");
+        setStep(4);
+      } catch (error) {
+        setStatus(els.applyStatus, `Configuration failed: ${error.message}`, "error");
+      }
+    }
+
+    function buildSetupForm() {
+      const profile = state.selectedProfile;
+      const form = new URLSearchParams();
+      if (profile && profile.kind === "matrix") {
+        form.set("kind", "matrix");
+        form.set("width", String(numberValue(els.matrixWidth, 64)));
+        form.set("height", String(numberValue(els.matrixHeight, 32)));
+        form.set("brightness", String(percentToBrightness(numberValue(els.matrixBrightness, 100))));
+        form.set("powerLimit", String(numberValue(els.matrixPowerLimit, 4500)));
+      } else {
+        form.set("kind", "strip");
+        form.set("ledCount", String(numberValue(els.stripLedCount, 144)));
+        form.set("pin", String(numberValue(els.stripPin, 5)));
+        form.set("colorOrder", els.stripColorOrder.value);
+        form.set("brightness", String(percentToBrightness(numberValue(els.stripBrightness, 100))));
+        form.set("powerLimit", String(numberValue(els.stripPowerLimit, 4500)));
+        form.set("effectInterval", String(numberValue(els.stripEffectInterval, 20) * 1000));
+      }
+      return form;
+    }
+
+
+    function setStatus(node, message, type) {
+      node.textContent = message;
+      node.classList.remove("good", "error");
+      if (type) {
+        node.classList.add(type);
+      }
+    }
+
+    function populateDevicesDropdown() {
+      els.devicesDropdown.innerHTML = "";
+      if (state.devices.length > 1) {
+        els.devicesDropdown.appendChild(new Option("-- Select device --", ""));
+      }
+      state.devices.forEach((device) => {
+        els.devicesDropdown.appendChild(new Option(device.name, device.tag));
+      });
+      const selectedDevice = state.devices.find((device) => device.tag === els.devicesDropdown.value) || state.devices[0];
+      if (selectedDevice) {
+        els.devicesDropdown.value = selectedDevice.tag;
+        populateProjectsDropdown(selectedDevice.projects);
+      }
+    }
+
+    function populateProjectsDropdown(projects) {
+      els.projectsDropdown.innerHTML = "";
+      if (!projects || projects.length === 0) {
+        els.projectsDropdown.disabled = true;
+        updateAdvancedManifest();
+        return;
+      }
+      if (projects.length > 1) {
+        els.projectsDropdown.appendChild(new Option("-- Select project --", ""));
+      }
+      projects.forEach((project) => {
+        els.projectsDropdown.appendChild(new Option(project.name, project.tag));
+      });
+      els.projectsDropdown.disabled = false;
+      updateAdvancedManifest();
+    }
+
+    function updateAdvancedManifest() {
+      const tag = els.projectsDropdown.value;
+      if (tag) {
+        els.advancedInstallButton.manifest = getManifestPath(tag);
+        els.advancedInstallButton.classList.remove("is-hidden");
+      } else {
+        delete els.advancedInstallButton.manifest;
+        els.advancedInstallButton.classList.add("is-hidden");
+      }
+    }
+  </script>
+</body>
+</html>

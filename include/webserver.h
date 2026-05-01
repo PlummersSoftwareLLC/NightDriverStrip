@@ -184,6 +184,7 @@ class CWebServer
     static void GetUnifiedSettings(AsyncWebServerRequest * pRequest);
     static void GetUnifiedSettingsSchema(AsyncWebServerRequest * pRequest);
     static void SetUnifiedSettings(AsyncWebServerRequest * pRequest, JsonVariantConst json);
+    static void ApplySetup(AsyncWebServerRequest * pRequest);
     static void GetEffectSettingSpecs(AsyncWebServerRequest * pRequest);
     static void GetEffectSettings(AsyncWebServerRequest * pRequest);
     static void SetEffectSettings(AsyncWebServerRequest * pRequest);

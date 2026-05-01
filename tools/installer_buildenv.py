@@ -47,7 +47,7 @@ def build_env(tag: str, version: str):
         sys.exit(1)
 
     # Build the firmware and the merged image
-    subprocess.run(['pio', 'run', '-e', tag])
+    subprocess.run(['pio', 'run', '-e', tag], check=True)
 
     project_dir = os.path.join(installer_vars.Dirs.build, tag)
 

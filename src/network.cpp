@@ -78,6 +78,13 @@ namespace nd_network
     // Private State
     static std::atomic<bool> l_bWifiDriverReady{false};
 
+    // Latest STA disconnect reason and the millis() at which it was observed.
+    // Improv provisioning polls these to fast-fail on authentication errors
+    // (wrong password, handshake timeout) instead of waiting for the full
+    // provisioning timeout.
+    static std::atomic<int>      l_LastWifiDisconnectReason{0};
+    static std::atomic<uint32_t> l_LastWifiDisconnectMs{0};
+
 #if ENABLE_WIFI
     static DRAM_ATTR WiFiUDP l_Udp;
 
@@ -187,7 +194,12 @@ namespace nd_network
                 if (event == ARDUINO_EVENT_WIFI_READY)
                     l_bWifiDriverReady = true;
                 else if (event == ARDUINO_EVENT_WIFI_STA_DISCONNECTED)
-                    debugW("WiFi Disconnected. Reason: %d", info.wifi_sta_disconnected.reason);
+                {
+                    const int reason = info.wifi_sta_disconnected.reason;
+                    l_LastWifiDisconnectReason.store(reason);
+                    l_LastWifiDisconnectMs.store(millis());
+                    debugW("WiFi Disconnected. Reason: %d", reason);
+                }
             });
             WiFi.mode(WIFI_STA);
             WiFi.setSleep(false);
@@ -201,10 +213,13 @@ namespace nd_network
         static String WiFi_ssid;
         static String WiFi_password;
 
-        bool haveNewCredentials = (ssid != nullptr && password != nullptr && (WiFi_ssid != *ssid || WiFi_password != *password));
+        bool explicitCredentials = (ssid != nullptr && password != nullptr);
+        bool haveNewCredentials = explicitCredentials && (WiFi_ssid != *ssid || WiFi_password != *password);
 
-        // If we have new credentials then always reconnect using them
-        if (haveNewCredentials)
+        // If credentials are explicitly supplied, always start a fresh connection attempt.
+        // This matters for USB provisioning, where the same SSID may be submitted with a
+        // corrected or intentionally repeated password.
+        if (explicitCredentials)
         {
             WiFi_ssid = *ssid;
             WiFi_password = *password;
@@ -216,8 +231,8 @@ namespace nd_network
             return WiFiConnectResult::Connected;
         }
 
-        // (Re)connect if credentials have changed, or our last attempt was long enough ago
-        if (haveNewCredentials || millisAtLastAttempt == 0 || millis() - millisAtLastAttempt >= retryDelay)
+        // (Re)connect if credentials were explicitly provided, or our last attempt was long enough ago
+        if (explicitCredentials || millisAtLastAttempt == 0 || millis() - millisAtLastAttempt >= retryDelay)
         {
             millisAtLastAttempt = millis();
             retryDelay = std::min<unsigned long>(retryDelay + WIFI_WAIT_INCREASE, WIFI_WAIT_MAX);
@@ -232,7 +247,7 @@ namespace nd_network
             if (hostname.length() > 0)
                 WiFi.setHostname(hostname.c_str());
 
-            if (haveNewCredentials || WiFi.status() == WL_CONNECT_FAILED)
+            if (explicitCredentials || WiFi.status() == WL_CONNECT_FAILED)
                 WiFi.disconnect();
 
             debugW("Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %zu, PSRAM:%zu, PSRAM Free: %zu\n",
@@ -362,6 +377,30 @@ namespace nd_network
         if (success) nvs_commit(nvsRWHandle);
         nvs_close(nvsRWHandle);
         return success;
+    }
+
+    // GetLastWifiDisconnectReason
+    //
+    // Returns the most recently observed esp-idf STA disconnect reason
+    // (e.g. WIFI_REASON_AUTH_FAIL = 202, WIFI_REASON_HANDSHAKE_TIMEOUT = 204).
+    // Zero if no disconnect has been seen since boot or the value was cleared.
+    int GetLastWifiDisconnectReason() { return l_LastWifiDisconnectReason.load(); }
+
+    // GetLastWifiDisconnectMs
+    //
+    // Returns the millis() timestamp at which the most recent STA disconnect
+    // event was observed, or 0 if none.
+    uint32_t GetLastWifiDisconnectMs() { return l_LastWifiDisconnectMs.load(); }
+
+    // ClearLastWifiDisconnect
+    //
+    // Resets the cached disconnect reason and timestamp. Improv calls this
+    // when starting a new provisioning attempt so a stale auth failure from
+    // a previous attempt isn't re-used to fast-fail the new one.
+    void ClearLastWifiDisconnect()
+    {
+        l_LastWifiDisconnectReason.store(0);
+        l_LastWifiDisconnectMs.store(0);
     }
 
     // ClearWiFiConfig
@@ -565,6 +604,10 @@ namespace nd_network
     bool ReadWiFiConfig(WifiCredSource, String &, String &) { return false; }
     bool WriteWiFiConfig(WifiCredSource, const String &, const String &) { return false; }
     bool ClearWiFiConfig(WifiCredSource) { return false; }
+
+    int      GetLastWifiDisconnectReason() { return 0; }
+    uint32_t GetLastWifiDisconnectMs()     { return 0; }
+    void     ClearLastWifiDisconnect()     {}
 
     void NetworkHandlingLoopEntry(void *) { for (;;) delay(1000); }
     void InitNetworkCLI() {}

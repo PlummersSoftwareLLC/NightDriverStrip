@@ -443,8 +443,14 @@ void setup()
 #if ENABLE_WIFI
         debugW("Starting ImprovSerial for %s", family.c_str());
         String name = "NDESP32" + nd_network::GetMacAddress().substring(6);
+
+        // Build stamp surfaces in Improv's GET_DEVICE_INFO response so the
+        // WebInstaller dialog can display exactly which firmware is running.
+        // Updated automatically every compile via __DATE__ / __TIME__.
+        static const String improv_version = String(FLASH_VERSION_NAME) + " (" + __DATE__ + " " + __TIME__ + ")";
+
         g_pImprovSerial = make_unique_psram<ImprovSerial<typeof(Serial)>>();
-        g_pImprovSerial->setup(PROJECT_NAME, FLASH_VERSION_NAME, family, name.c_str(), &Serial);
+        g_pImprovSerial->setup(PROJECT_NAME, improv_version, family, name.c_str(), &Serial);
 
         // Improv will feed unknown bytes to the Serial session's CLI processor
         g_pImprovSerial->set_on_unknown_byte([](uint8_t byte) {
@@ -640,20 +646,21 @@ void loop()
 {
     while(true)
     {
-        // Feed any direct serial bytes to the console manager (if not handled by Improv)
-        while (Serial.available())
-        {
-            ConsoleManager::Instance().FeedSerialByte(Serial.read());
-        }
-
-        #if ENABLE_WIFI
-            EVERY_N_MILLIS(20)
-            {
+        // Improv owns the serial stream when WiFi is enabled. It forwards any
+        // non-Improv bytes to the serial CLI through its unknown-byte callback.
 #if ENABLE_WIFI
-                g_pImprovSerial->loop();
+        if (g_pImprovSerial)
+        {
+            g_pImprovSerial->loop();
+        }
+        else
 #endif
+        {
+            while (Serial.available())
+            {
+                ConsoleManager::Instance().FeedSerialByte(Serial.read());
             }
-        #endif
+        }
 
         #if ENABLE_OTA
             try

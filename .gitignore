@@ -27,6 +27,7 @@ tools/__pycache__
 WebInstaller/assets/**
 WebInstaller/firmware/**
 WebInstaller/index.html
+WebInstaller/installer_profiles.json
 WebInstaller/manifests/**
 WebInstaller/web_projects.json
 x.cc

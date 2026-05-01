@@ -50,6 +50,7 @@ class Manifest:
 
 class Files:
     webprojects = 'web_projects.json'
+    installer_profiles = 'installer_profiles.json'
     feature_flags = 'feature_flags.json'
     features = 'features.json'
     manifest = 'manifest.json'
@@ -57,6 +58,7 @@ class Files:
     globals_h = 'globals.h'
     index_template = 'installer_index.html'
     index = 'index.html'
+    logo = 'NightDriverLogo-small.png'
 
 def get_project_tree():
     with open(os.path.join(Dirs.config, Files.webprojects), "r", encoding='utf-8') as f:

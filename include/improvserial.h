@@ -109,7 +109,7 @@ public:
         }();
 
         const uint32_t now = millis();
-        if (now - this->last_read_byte_ > 50)
+        if (now - this->last_read_byte_ > this->serial_packet_idle_timeout_ms_)
         {
             this->rx_buffer_.clear();
             this->last_read_byte_ = now;
@@ -118,19 +118,65 @@ public:
         while (this->available_())
         {
             uint8_t byte = this->read_byte_();
+            const uint32_t byteNow = millis();
             if (this->parse_improv_serial_byte_(byte))
-                this->last_read_byte_ = now;
+                this->last_read_byte_ = byteNow;
             else
+            {
                 this->rx_buffer_.clear();
+                this->last_read_byte_ = byteNow;
+            }
+        }
+
+        const uint32_t postReadNow = millis();
+
+        if (this->state_ == improv::STATE_PROVISIONING &&
+            this->provisioning_started_at_ != 0 &&
+            postReadNow - this->provisioning_started_at_ > this->provisioning_timeout_ms_)
+        {
+            this->on_wifi_connect_timeout_();
+        }
+
+        if (this->state_ == improv::STATE_PROVISIONING &&
+            (WiFi.getMode() != WIFI_STA || !WiFi.isConnected()))
+        {
+            this->provisioning_seen_disconnected_ = true;
+        }
+
+        // Fast-fail on definitive authentication failures so a wrong password
+        // or non-existent SSID reports ERROR_UNABLE_TO_CONNECT in ~1-2 s
+        // instead of waiting the full provisioning_timeout_ms_. We only honor
+        // disconnect reasons observed AFTER the new attempt actually started
+        // (after the settle window AND after we have seen a disconnect of the
+        // prior link), and ignore ASSOC_LEAVE (8) which is what gets emitted
+        // when WE call WiFi.disconnect() ourselves.
+        if (this->state_ == improv::STATE_PROVISIONING &&
+            this->provisioning_started_at_ != 0 &&
+            this->provisioning_seen_disconnected_ &&
+            postReadNow - this->provisioning_started_at_ >= this->provisioning_minimum_settle_ms_)
+        {
+            const uint32_t disconnectMs = nd_network::GetLastWifiDisconnectMs();
+            if (disconnectMs != 0 && (int32_t)(disconnectMs - this->provisioning_started_at_) >= 0)
+            {
+                const int reason = nd_network::GetLastWifiDisconnectReason();
+                if (is_auth_failure_reason_(reason))
+                {
+                    log_write("Auth-failure disconnect reason %d during provisioning, failing fast", reason);
+                    debugW("Improv provisioning auth failure: WiFi disconnect reason %d", reason);
+                    this->on_wifi_connect_timeout_();
+                }
+            }
         }
 
         if (this->state_ != improv::STATE_PROVISIONED)
         {
-            if (WiFi.getMode() == WIFI_AP || (WiFi.getMode() == WIFI_STA && WiFi.isConnected()))
+            if (this->is_connected_to_requested_wifi_())
             {
                 log_write("Responding that wiFi is connected.");
                 debugI("Sending Improv packets to indicate WiFi is connected. Ignore any IMPROV lines that follow this one.");
                 this->set_state_(improv::STATE_PROVISIONED);
+                this->provisioning_started_at_ = 0;
+                this->provisioning_seen_disconnected_ = false;
 
                 // Only send the URL to connect to if there's a webserver listening to the resulting requests
                 if constexpr (ENABLE_WEBSERVER)
@@ -286,6 +332,20 @@ protected:
                 String WiFi_ssid = command.ssid.c_str();
                 String WiFi_password = command.password.c_str();
 
+                #if ENABLE_WIFI
+                    // Drop any stale auth-failure tracking so we only fast-fail
+                    // on disconnect events that occur during THIS attempt.
+                    nd_network::ClearLastWifiDisconnect();
+                #endif
+
+                this->set_state_(improv::STATE_PROVISIONING);
+
+                this->command_.command  = command.command;
+                this->command_.ssid     = command.ssid;
+                this->command_.password = command.password;
+                this->provisioning_started_at_ = millis();
+                this->provisioning_seen_disconnected_ = false;
+
                 // These lines actually require WiFi to be enabled in the project
                 #if ENABLE_WIFI
                     if (!WriteWiFiConfig(WifiCredSource::ImprovCreds, WiFi_ssid, WiFi_password))
@@ -295,12 +355,6 @@ protected:
 
                     ConnectToWiFi(WiFi_ssid, WiFi_password);
                 #endif
-
-                this->set_state_(improv::STATE_PROVISIONING);
-
-                this->command_.command  = command.command;
-                this->command_.ssid     = command.ssid;
-                this->command_.password = command.password;
 
                 return true;
             }
@@ -429,8 +483,61 @@ protected:
     {
         this->set_error_(improv::ERROR_UNABLE_TO_CONNECT);
         this->set_state_(improv::STATE_AUTHORIZED);
+        this->provisioning_started_at_ = 0;
+        this->provisioning_seen_disconnected_ = false;
         log_write("Timed out trying to connect to given WiFi network.");
         WiFi.disconnect();
+    }
+
+    // Maps esp-idf STA disconnect reason codes to "this is an authentication
+    // failure, give up immediately" verdicts. Only the truly unambiguous
+    // codes go in here. Reasons like 15 (4-way handshake timeout), 16 (group
+    // key update timeout), 204 (handshake timeout), and 23 (802.1X) are all
+    // commonly transient on ESP32 — a correct password can throw a 15 on
+    // the first attempt and succeed on the retry a couple seconds later.
+    // We let those ride and rely on the overall provisioning_timeout_ms_
+    // to bound the total wait. Reason 8 (ASSOC_LEAVE) is what gets emitted
+    // when WE call WiFi.disconnect() ourselves and is intentionally excluded.
+    static bool is_auth_failure_reason_(int reason)
+    {
+        switch (reason)
+        {
+            case 201:  // WIFI_REASON_NO_AP_FOUND  (SSID does not exist)
+            case 202:  // WIFI_REASON_AUTH_FAIL    (wrong password, definitive)
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    bool is_connected_to_requested_wifi_()
+    {
+        if (WiFi.getMode() == WIFI_AP)
+            return true;
+
+        if (WiFi.getMode() != WIFI_STA || !WiFi.isConnected())
+            return false;
+
+        if (this->state_ != improv::STATE_PROVISIONING || this->command_.ssid.empty())
+            return true;
+
+        const uint32_t elapsed = millis() - this->provisioning_started_at_;
+        if (elapsed < this->provisioning_minimum_settle_ms_)
+            return false;
+
+        // We must have observed an actual disconnect of the prior link.
+        // Without this, "we never disconnected" can look identical to
+        // "we reconnected to the same network" and we would report a
+        // false success while still running the OLD credentials. The
+        // disconnect event from WiFi.disconnect() reliably fires within
+        // a few ms on ESP32, so this is a strict gate, not an 8s grace.
+        if (!this->provisioning_seen_disconnected_)
+            return false;
+
+        // After a real disconnect was observed, matching the requested
+        // SSID is sufficient — connecting to the same BSSID is a
+        // legitimate outcome on single-AP networks (the common case).
+        return WiFi.SSID() == String(this->command_.ssid.c_str());
     }
 
     std::vector<uint8_t> build_rpc_settings_response_(improv::Command command)
@@ -479,6 +586,11 @@ protected:
 
     std::vector<uint8_t> rx_buffer_;
     uint32_t last_read_byte_{0};
+    uint32_t provisioning_started_at_{0};
+    bool provisioning_seen_disconnected_{false};
+    static constexpr uint32_t provisioning_minimum_settle_ms_ = 1500;
+    static constexpr uint32_t provisioning_timeout_ms_ = 12000;
+    static constexpr uint32_t serial_packet_idle_timeout_ms_ = 250;
     improv::State state_{improv::STATE_AUTHORIZED};
     improv::ImprovCommand command_{improv::Command::UNKNOWN, "", ""};
 

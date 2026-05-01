@@ -36,6 +36,8 @@
 
 #include <AsyncJson.h>
 #include <FS.h>
+#include <algorithm>
+#include <limits>
 #include <utility>
 
 #include "deviceconfig.h"
@@ -50,6 +52,22 @@
 
 namespace
 {
+    int GetPostInt(AsyncWebServerRequest* request, const char* name, int fallback)
+    {
+        if (!request->hasParam(name, true, false))
+            return fallback;
+
+        return request->getParam(name, true, false)->value().toInt();
+    }
+
+    String GetPostString(AsyncWebServerRequest* request, const char* name, const String& fallback)
+    {
+        if (!request->hasParam(name, true, false))
+            return fallback;
+
+        return request->getParam(name, true, false)->value();
+    }
+
     void AppendPins(JsonArray target, const std::array<int8_t, NUM_CHANNELS>& pins)
     {
         for (auto pin : pins)
@@ -246,6 +264,78 @@ namespace
 
         return true;
     }
+
+    bool ApplySetupRequest(AsyncWebServerRequest* request, String* errorMessage)
+    {
+        auto& deviceConfig = g_ptrSystem->GetDeviceConfig();
+        auto runtimeConfig = deviceConfig.GetRuntimeConfig();
+
+        const String kind = GetPostString(request, "kind", runtimeConfig.outputs.driver == DeviceConfig::OutputDriver::HUB75 ? "matrix" : "strip");
+
+        if (kind == "matrix")
+        {
+            runtimeConfig.outputs.driver = DeviceConfig::OutputDriver::HUB75;
+            runtimeConfig.topology.width = GetPostInt(request, "width", runtimeConfig.topology.width);
+            runtimeConfig.topology.height = GetPostInt(request, "height", runtimeConfig.topology.height);
+            runtimeConfig.topology.serpentine = false;
+        }
+        else
+        {
+            runtimeConfig.outputs.driver = DeviceConfig::OutputDriver::WS281x;
+            runtimeConfig.topology.width = GetPostInt(request, "ledCount", runtimeConfig.topology.width);
+            runtimeConfig.topology.height = 1;
+            runtimeConfig.topology.serpentine = true;
+            runtimeConfig.outputs.channelCount = 1;
+            runtimeConfig.outputs.outputPins[0] = GetPostInt(request, "pin", runtimeConfig.outputs.outputPins[0]);
+
+            const String colorOrder = GetPostString(request, "colorOrder", DeviceConfig::GetColorOrderName(runtimeConfig.outputs.colorOrder));
+            if (colorOrder == "RGB") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::RGB;
+            else if (colorOrder == "RBG") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::RBG;
+            else if (colorOrder == "GRB") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::GRB;
+            else if (colorOrder == "GBR") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::GBR;
+            else if (colorOrder == "BRG") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::BRG;
+            else if (colorOrder == "BGR") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::BGR;
+        }
+
+        auto [isValid, validationMessage] = deviceConfig.ValidateRuntimeConfig(runtimeConfig);
+        if (!isValid)
+        {
+            if (errorMessage)
+                *errorMessage = validationMessage;
+            return false;
+        }
+
+        const int brightness = GetPostInt(request, DeviceConfig::BrightnessTag, deviceConfig.GetBrightness());
+        auto [brightnessValid, brightnessMessage] = deviceConfig.ValidateBrightness(brightness);
+        if (!brightnessValid)
+        {
+            if (errorMessage)
+                *errorMessage = brightnessMessage;
+            return false;
+        }
+
+        const int powerLimit = GetPostInt(request, DeviceConfig::PowerLimitTag, deviceConfig.GetPowerLimit());
+        auto [powerLimitValid, powerLimitMessage] = deviceConfig.ValidatePowerLimit(powerLimit);
+        if (!powerLimitValid)
+        {
+            if (errorMessage)
+                *errorMessage = powerLimitMessage;
+            return false;
+        }
+
+        const int effectInterval = GetPostInt(request, "effectInterval", g_ptrSystem->GetEffectManager().GetInterval());
+
+        if (!ApplyRuntimeConfigTransaction(runtimeConfig, errorMessage))
+            return false;
+
+        deviceConfig.SetBrightness(brightness);
+        deviceConfig.SetPowerLimit(powerLimit);
+        g_ptrSystem->GetEffectManager().SetInterval(std::max(0, effectInterval));
+
+        if (errorMessage)
+            *errorMessage = "";
+        return true;
+    }
 }
 
 // Static member initializers
@@ -394,6 +484,7 @@ void CWebServer::begin()
     _server.on("/settings",              HTTP_POST, SetSettings);
     _server.on("/api/v1/settings/schema",HTTP_GET,  GetUnifiedSettingsSchema);
     _server.on("/api/v1/settings",       HTTP_GET,  GetUnifiedSettings);
+    _server.on("/api/v1/setup",          HTTP_POST, ApplySetup);
 
     auto settingsHandler = new AsyncCallbackJsonWebHandler("/api/v1/settings",
         [](AsyncWebServerRequest* pRequest, JsonVariant& json)
@@ -1133,6 +1224,18 @@ void CWebServer::SetUnifiedSettings(AsyncWebServerRequest * pRequest, JsonVarian
         auto effects = root["effects"].as<JsonObjectConst>();
         if (effects["effectInterval"].is<size_t>())
             effectManager.SetInterval(effects["effectInterval"].as<size_t>());
+    }
+
+    GetUnifiedSettings(pRequest);
+}
+
+void CWebServer::ApplySetup(AsyncWebServerRequest * pRequest)
+{
+    String errorMessage;
+    if (!ApplySetupRequest(pRequest, &errorMessage))
+    {
+        AddCORSHeaderAndSendBadRequest(pRequest, errorMessage);
+        return;
     }
 
     GetUnifiedSettings(pRequest);

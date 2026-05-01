@@ -34,6 +34,7 @@
 #include <algorithm>
 #include <ArduinoOTA.h>
 #include <cmath>
+#include <limits>
 #include <mutex>
 
 #include "colordata.h"
@@ -299,7 +300,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
             // If we didn't draw now, and it's been a while since we did, and we have at least one local effect, then draw the local effect instead
 
-            if (wifiPixelsDrawn == 0)
+            if (wifiPixelsDrawn == 0 && localPixelsDrawn == 0)
                 localPixelsDrawn = LocalDraw();
 
             // If we drew any pixels by any method, we'll call that a frame and track it for FPS purposes.  We also notify the
