@@ -58,7 +58,7 @@ class Files:
     globals_h = 'globals.h'
     index_template = 'installer_index.html'
     index = 'index.html'
-    logo = 'NightDriverLogo-small.png'
+    logo = 'NightDriverLogo-small-transparent.png'
 
 def get_project_tree():
     with open(os.path.join(Dirs.config, Files.webprojects), "r", encoding='utf-8') as f:

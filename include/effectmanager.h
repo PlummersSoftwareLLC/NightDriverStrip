@@ -120,6 +120,7 @@ class  EffectManager : public IJSONSerializable
     std::atomic_bool _newFrameAvailable = false;
     String _effectSetHashString = "";
     uint32_t _lastBeatSequence = 0;
+    uint32_t _lastNearBeatSequence = 0;
 
     std::vector<std::shared_ptr<GFXBase>> _gfx;
     std::shared_ptr<LEDStripEffect> _tempEffect;

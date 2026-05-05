@@ -142,9 +142,6 @@ void WS281xGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsD
 
     if (!g_ptrSystem->HasWS281xOutputManager())
     {
-        static auto lastDrawTime = millis();
-        g_Values.FPS = 1000.0 / max(1UL, millis() - lastDrawTime);
-        lastDrawTime = millis();
         return;
     }
 
@@ -157,11 +154,8 @@ void WS281xGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsD
             fill_solid(graphics.leds + activePixels, ledCount - activePixels, CRGB::Black);
     }
 
-    static auto lastDrawTime = millis();
     auto& outputManager = g_ptrSystem->GetWS281xOutputManager();
     outputManager.Show(g_ptrSystem->GetDevices(), pixelsDrawn, deviceConfig.GetBrightness(), g_Values.Fader);
-    g_Values.FPS = 1000.0 / max(1UL, millis() - lastDrawTime);
-    lastDrawTime = millis();
     #ifdef POWER_LIMIT_MW
         g_Values.Brite = 100.0 * calculate_max_brightness_for_power_mW(deviceConfig.GetBrightness(), POWER_LIMIT_MW) / 255;
     #else

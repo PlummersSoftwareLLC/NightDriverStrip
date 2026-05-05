@@ -66,7 +66,7 @@ def compose_installer(release_name: str, project_tags = None, allow_missing: boo
     if not os.path.exists(assets_target_dir):
         os.makedirs(assets_target_dir)
     shutil.copy(os.path.join(installer_vars.Dirs.assets, 'favicon.ico'), assets_target_dir)
-    shutil.copy(os.path.join(installer_vars.Dirs.assets, 'NightDriverLogo-small.png'), assets_target_dir)
+    shutil.copy(os.path.join(installer_vars.Dirs.assets, installer_vars.Files.logo), assets_target_dir)
 
     # ...then the firmware and manifest directories
     firmware_target_root = os.path.join(installer_vars.Dirs.webinstaller, installer_vars.Dirs.firmware)
@@ -166,13 +166,6 @@ def compose_installer(release_name: str, project_tags = None, allow_missing: boo
     shutil.copy(
         os.path.join(installer_vars.Dirs.config, installer_vars.Files.installer_profiles),
         os.path.join(installer_vars.Dirs.webinstaller, installer_vars.Files.installer_profiles))
-
-    print('=== Copying installer assets')
-    installer_assets_dir = os.path.join(installer_vars.Dirs.webinstaller, installer_vars.Dirs.assets)
-    os.makedirs(installer_assets_dir, exist_ok=True)
-    shutil.copy(
-        os.path.join(installer_vars.Dirs.assets, installer_vars.Files.logo),
-        os.path.join(installer_assets_dir, installer_vars.Files.logo))
 
     print('=== Writing index.html')
     legend_entries = []

@@ -24,6 +24,7 @@ site/yarn-error.log
 src/-defines-.cpp
 src/uzlib/src/*.o
 tools/__pycache__
+__pycache__/
 WebInstaller/assets/**
 WebInstaller/firmware/**
 WebInstaller/index.html

@@ -141,6 +141,7 @@ class LEDStripEffect : public IJSONSerializable
     virtual void Start() {}                                         // Optional method called when time to clean/init the effect
     virtual void Draw() = 0;                                        // Your effect must implement these
     virtual void OnBeat(const BeatInfo&) {}                         // Optional beat callback for audio-reactive effects
+    virtual void OnNearBeat(const BeatInfo&) {}                     // Optional callback for near-miss beat detections
 
     GFXBase& g(size_t channel = 0);
     const GFXBase& g(size_t channel = 0) const;

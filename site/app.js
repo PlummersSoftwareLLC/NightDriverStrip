@@ -67,6 +67,8 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     unifiedSettings: null,
     unifiedSchema: null,
     effects: null,
+    effectIntervalInputDirty: false,
+    effectIntervalPendingMs: null,
     effectDraft: {},
     deviceDraft: {},
     deviceErrors: new Set(),
@@ -148,6 +150,14 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     els.nextEffectButton.addEventListener("click", () => postForm("/nextEffect").then(loadEffectsOnly));
     els.refreshEffectsButton.addEventListener("click", () => loadEffectsOnly());
     els.saveIntervalButton.addEventListener("click", applyEffectInterval);
+    els.effectIntervalInput.addEventListener("input", () => {
+      state.effectIntervalInputDirty = true;
+      state.effectIntervalPendingMs = null;
+    });
+    els.effectIntervalInput.addEventListener("change", () => {
+      state.effectIntervalInputDirty = true;
+      state.effectIntervalPendingMs = null;
+    });
     els.reloadSettingsButton.addEventListener("click", () => loadSettingsOnly());
     els.applySettingsButton.addEventListener("click", () => applyDeviceSettings(false));
     els.applySettingsRebootButton.addEventListener("click", () => applyDeviceSettings(true));
@@ -415,8 +425,27 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     els.summaryHeap.textContent = formatBytes(dynamicStats.HEAP_FREE);
     els.summaryPsram.textContent = `PSRAM ${formatBytes(dynamicStats.PSRAM_FREE)}`;
 
-    els.effectIntervalInput.value = String(Math.round(intervalMs / 1000));
+    syncEffectIntervalInput(intervalMs);
     els.effectsMeta.textContent = `${effectList.length} effects / active ${currentIndex}`;
+  }
+
+  function syncEffectIntervalInput(serverIntervalMs) {
+    const serverSeconds = Math.round(serverIntervalMs / 1000);
+
+    if (state.effectIntervalPendingMs !== null) {
+      const pendingSeconds = Math.round(state.effectIntervalPendingMs / 1000);
+      if (pendingSeconds === serverSeconds) {
+        state.effectIntervalPendingMs = null;
+        state.effectIntervalInputDirty = false;
+      } else if (!state.effectIntervalInputDirty && document.activeElement !== els.effectIntervalInput) {
+        els.effectIntervalInput.value = String(pendingSeconds);
+      }
+      return;
+    }
+
+    if (!state.effectIntervalInputDirty && document.activeElement !== els.effectIntervalInput) {
+      els.effectIntervalInput.value = String(serverSeconds);
+    }
   }
 
   function renderEffects() {
@@ -1075,11 +1104,17 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
 
   async function applyEffectInterval() {
     const seconds = clampInt(els.effectIntervalInput.value, 0, 2147483, 0);
+    const intervalMs = seconds * 1000;
+    els.effectIntervalInput.value = String(seconds);
+    state.effectIntervalPendingMs = intervalMs;
+    state.effectIntervalInputDirty = false;
     try {
-      await postForm("/settings", { effectInterval: seconds * 1000 });
+      await postForm("/settings", { effectInterval: intervalMs });
       toast(`Effect interval set to ${seconds} sec.`, "success");
       await Promise.all([loadEffectsOnly(), loadSettingsOnly()]);
     } catch (error) {
+      state.effectIntervalPendingMs = null;
+      state.effectIntervalInputDirty = true;
       handleError("Failed to set effect interval", error);
     }
   }

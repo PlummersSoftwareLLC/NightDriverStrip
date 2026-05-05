@@ -47,6 +47,8 @@
 
 static DRAM_ATTR CRGB l_SinglePixel = CRGB::Blue;
 static DRAM_ATTR uint64_t l_usLastWifiDraw = 0;
+static uint32_t l_FrameCountThisSecond = 0;
+static uint32_t l_LastSecondBoundaryMs = 0;
 
 // The g_buffer_mutex is a global mutex used to protect access while adding or removing frames
 // from the led buffer.
@@ -314,8 +316,21 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
                 ShowOnboardPixel();
                 ShowOnboardRGBLED();
 
-                g_Values.FPS = FastLED.getFPS();
+                ++l_FrameCountThisSecond;
                 g_ptrSystem->GetEffectManager().ReportNewFrameAvailable();
+            }
+
+            // Count actual frames emitted by the draw loop over completed
+            // clock-second windows. This avoids FastLED's internal estimate
+            // and lets an idle device report 0 after a full second passes.
+            const uint32_t nowMs = millis();
+            if (l_LastSecondBoundaryMs == 0)
+                l_LastSecondBoundaryMs = nowMs;
+            while (nowMs - l_LastSecondBoundaryMs >= MILLIS_PER_SECOND)
+            {
+                g_Values.FPS = l_FrameCountThisSecond;
+                l_FrameCountThisSecond = 0;
+                l_LastSecondBoundaryMs += MILLIS_PER_SECOND;
             }
 
             graphics.PostProcessFrame(localPixelsDrawn, wifiPixelsDrawn);

@@ -91,12 +91,15 @@ namespace nd_network
     int         GetWiFiStatus();
     const char* WLtoString(int status);
 
-    // Latest STA disconnect reason recorded by the WiFi event hook.
-    // Used by Improv provisioning to fast-fail on auth failures (wrong
-    // password, handshake timeout) without waiting for the full timeout.
-    int      GetLastWifiDisconnectReason();
-    uint32_t GetLastWifiDisconnectMs();
-    void     ClearLastWifiDisconnect();
+    // Provisioning ownership flag. Improv flips this true while it owns
+    // the WiFi state machine (between WIFI_SETTINGS arriving and either
+    // a successful connection or a timeout). The network thread's
+    // background reconnect loop checks this and steps aside so the two
+    // code paths don't race on WiFi.disconnect() / WiFi.begin().
+    bool IsProvisioningActive();
+    void SetProvisioningActive(bool active);
+    int  GetLastWiFiDisconnectReason();
+    void ClearLastWiFiDisconnectReason();
 
     // Persistence
     void UpdateNTPTime();
@@ -165,4 +168,3 @@ using nd_network::NetworkHandlingLoopEntry;
 void SetupOTA(const String &strHostname);
 void IRAM_ATTR RemoteLoopEntry(void *);
 String urlEncode(const String &str);
-

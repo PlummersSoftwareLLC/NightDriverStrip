@@ -145,6 +145,7 @@ void EffectManager::StartEffect()
 
     effect->Start();
     _lastBeatSequence = g_Analyzer.LastBeat().sequence;
+    _lastNearBeatSequence = g_Analyzer.LastNearBeat().sequence;
     _effectStartTime = millis();
 }
 
@@ -153,16 +154,23 @@ void EffectManager::DispatchBeatIfNeeded()
 #if ENABLE_AUDIO
     std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
 
-    const auto beat = g_Analyzer.LastBeat();
-    if (beat.sequence == 0 || beat.sequence == _lastBeatSequence)
-        return;
-
     // Beat callbacks are sequenced here so every active effect sees the same
     // detector output, including BeatEffectBase-derived effects via OnBeat().
     auto& currentEffect = GetCurrentEffect();
-    currentEffect.OnBeat(beat);
 
-    _lastBeatSequence = beat.sequence;
+    const auto nearBeat = g_Analyzer.LastNearBeat();
+    if (nearBeat.sequence != 0 && nearBeat.sequence != _lastNearBeatSequence)
+    {
+        currentEffect.OnNearBeat(nearBeat);
+        _lastNearBeatSequence = nearBeat.sequence;
+    }
+
+    const auto beat = g_Analyzer.LastBeat();
+    if (beat.sequence != 0 && beat.sequence != _lastBeatSequence)
+    {
+        currentEffect.OnBeat(beat);
+        _lastBeatSequence = beat.sequence;
+    }
 #endif
 }
 

@@ -78,12 +78,11 @@ namespace nd_network
     // Private State
     static std::atomic<bool> l_bWifiDriverReady{false};
 
-    // Latest STA disconnect reason and the millis() at which it was observed.
-    // Improv provisioning polls these to fast-fail on authentication errors
-    // (wrong password, handshake timeout) instead of waiting for the full
-    // provisioning timeout.
-    static std::atomic<int>      l_LastWifiDisconnectReason{0};
-    static std::atomic<uint32_t> l_LastWifiDisconnectMs{0};
+    // True while Improv owns WiFi during a provisioning attempt. Gates the
+    // background reconnect loop so it doesn't race Improv on WiFi.begin /
+    // WiFi.disconnect.
+    static std::atomic<bool> l_ProvisioningActive{false};
+    static std::atomic<int> l_LastWiFiDisconnectReason{0};
 
 #if ENABLE_WIFI
     static DRAM_ATTR WiFiUDP l_Udp;
@@ -195,10 +194,8 @@ namespace nd_network
                     l_bWifiDriverReady = true;
                 else if (event == ARDUINO_EVENT_WIFI_STA_DISCONNECTED)
                 {
-                    const int reason = info.wifi_sta_disconnected.reason;
-                    l_LastWifiDisconnectReason.store(reason);
-                    l_LastWifiDisconnectMs.store(millis());
-                    debugW("WiFi Disconnected. Reason: %d", reason);
+                    l_LastWiFiDisconnectReason.store(info.wifi_sta_disconnected.reason);
+                    debugW("WiFi Disconnected. Reason: %d", info.wifi_sta_disconnected.reason);
                 }
             });
             WiFi.mode(WIFI_STA);
@@ -214,7 +211,6 @@ namespace nd_network
         static String WiFi_password;
 
         bool explicitCredentials = (ssid != nullptr && password != nullptr);
-        bool haveNewCredentials = explicitCredentials && (WiFi_ssid != *ssid || WiFi_password != *password);
 
         // If credentials are explicitly supplied, always start a fresh connection attempt.
         // This matters for USB provisioning, where the same SSID may be submitted with a
@@ -248,7 +244,22 @@ namespace nd_network
                 WiFi.setHostname(hostname.c_str());
 
             if (explicitCredentials || WiFi.status() == WL_CONNECT_FAILED)
-                WiFi.disconnect();
+            {
+                // Explicit credentials mean Improv or startup asked for a new
+                // connection attempt. Clear the driver's STA AP config so
+                // WiFi.begin cannot short-circuit as "already connected" when
+                // the SSID is unchanged.
+                WiFi.disconnect(false, explicitCredentials);
+                bPreviousConnection = false;
+                bReportedDisconnected = false;
+
+                const unsigned long disconnectStarted = millis();
+                while (WiFi.isConnected() && millis() - disconnectStarted < 2000)
+                    delay(20);
+
+                if (WiFi.isConnected())
+                    debugW("WiFi remained connected after disconnect request; starting the new attempt anyway.");
+            }
 
             debugW("Connecting to Wifi SSID: \"%s\" - ESP32 Free Memory: %zu, PSRAM:%zu, PSRAM Free: %zu\n",
                    WiFi_ssid.c_str(), (size_t)ESP.getFreeHeap(), (size_t)ESP.getPsramSize(), (size_t)ESP.getFreePsram());
@@ -379,29 +390,10 @@ namespace nd_network
         return success;
     }
 
-    // GetLastWifiDisconnectReason
-    //
-    // Returns the most recently observed esp-idf STA disconnect reason
-    // (e.g. WIFI_REASON_AUTH_FAIL = 202, WIFI_REASON_HANDSHAKE_TIMEOUT = 204).
-    // Zero if no disconnect has been seen since boot or the value was cleared.
-    int GetLastWifiDisconnectReason() { return l_LastWifiDisconnectReason.load(); }
-
-    // GetLastWifiDisconnectMs
-    //
-    // Returns the millis() timestamp at which the most recent STA disconnect
-    // event was observed, or 0 if none.
-    uint32_t GetLastWifiDisconnectMs() { return l_LastWifiDisconnectMs.load(); }
-
-    // ClearLastWifiDisconnect
-    //
-    // Resets the cached disconnect reason and timestamp. Improv calls this
-    // when starting a new provisioning attempt so a stale auth failure from
-    // a previous attempt isn't re-used to fast-fail the new one.
-    void ClearLastWifiDisconnect()
-    {
-        l_LastWifiDisconnectReason.store(0);
-        l_LastWifiDisconnectMs.store(0);
-    }
+    bool IsProvisioningActive() { return l_ProvisioningActive.load(); }
+    void SetProvisioningActive(bool active) { l_ProvisioningActive.store(active); }
+    int  GetLastWiFiDisconnectReason() { return l_LastWiFiDisconnectReason.load(); }
+    void ClearLastWiFiDisconnectReason() { l_LastWiFiDisconnectReason.store(0); }
 
     // ClearWiFiConfig
     //
@@ -480,31 +472,38 @@ namespace nd_network
             ulTaskNotifyTake(pdTRUE, notifyWait);
             EVERY_N_SECONDS(1)
             {
-                auto res = ConnectToWiFi();
-                if (res == WiFiConnectResult::Connected)
+                // While Improv is actively provisioning, it owns the WiFi
+                // state machine. Skipping our reconnect retry here prevents
+                // both code paths from concurrently calling WiFi.disconnect /
+                // WiFi.begin and confusing the ESP-IDF driver.
+                if (!l_ProvisioningActive.load())
                 {
-                    lastConnected = millis();
-                    #if WEB_SOCKETS_ANY_ENABLED
-                        // AsyncWebSocket client cleanup is useful, but doing it every second while
-                        // frame preview traffic is active can churn otherwise healthy clients. Keep
-                        // it periodic and infrequent so it only reaps genuinely stale connections.
-                        if (millis() - lastWebSocketCleanup >= 15000)
-                        {
-                            lastWebSocketCleanup = millis();
-                        g_ptrSystem->GetWebSocketServer().CleanupClients();
-                        }
-                    #endif
-                }
-                else
-                {
-                    #if WAIT_FOR_WIFI
-                        if (res != WiFiConnectResult::NoCredentials && (millis() - lastConnected) > WIFI_WAIT_MAX)
-                        {
-                            debugE("Rebooting due to no Wifi.");
-                            delay(5000);
-                            ESP.restart();
-                        }
-                    #endif
+                    auto res = ConnectToWiFi();
+                    if (res == WiFiConnectResult::Connected)
+                    {
+                        lastConnected = millis();
+                        #if WEB_SOCKETS_ANY_ENABLED
+                            // AsyncWebSocket client cleanup is useful, but doing it every second while
+                            // frame preview traffic is active can churn otherwise healthy clients. Keep
+                            // it periodic and infrequent so it only reaps genuinely stale connections.
+                            if (millis() - lastWebSocketCleanup >= 15000)
+                            {
+                                lastWebSocketCleanup = millis();
+                                g_ptrSystem->GetWebSocketServer().CleanupClients();
+                            }
+                        #endif
+                    }
+                    else
+                    {
+                        #if WAIT_FOR_WIFI
+                            if (res != WiFiConnectResult::NoCredentials && (millis() - lastConnected) > WIFI_WAIT_MAX)
+                            {
+                                debugE("Rebooting due to no Wifi.");
+                                delay(5000);
+                                ESP.restart();
+                            }
+                        #endif
+                    }
                 }
             }
 
@@ -605,9 +604,10 @@ namespace nd_network
     bool WriteWiFiConfig(WifiCredSource, const String &, const String &) { return false; }
     bool ClearWiFiConfig(WifiCredSource) { return false; }
 
-    int      GetLastWifiDisconnectReason() { return 0; }
-    uint32_t GetLastWifiDisconnectMs()     { return 0; }
-    void     ClearLastWifiDisconnect()     {}
+    bool IsProvisioningActive()            { return false; }
+    void SetProvisioningActive(bool)       {}
+    int  GetLastWiFiDisconnectReason()     { return 0; }
+    void ClearLastWiFiDisconnectReason()   {}
 
     void NetworkHandlingLoopEntry(void *) { for (;;) delay(1000); }
     void InitNetworkCLI() {}
