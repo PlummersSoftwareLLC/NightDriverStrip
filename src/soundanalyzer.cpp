@@ -159,14 +159,15 @@ void SoundAnalyzerBase::TeardownAudioInput()
 // Reset
 //
 // Reset and clear the FFT buffers. Leaves the analyzer in a benign default
-// state: VU/ratio metrics restored to their startup values (1.0f) so any
-// effect that scales by VURatio() before the sampler has produced its first
-// frame still renders something visible rather than going dark or dividing
-// by zero. Beat detection is cleared. The audio sampler task overwrites
-// these on its first iteration so the values here only matter when audio
-// is stopped, has never been started, or is mid-reconfigure.
-// AudioService::Stop() relies on this to give direct g_Analyzer readers
-// safe-default values during a reconfigure.
+// state using the shared "neutral fallback" contract:
+//   VURatio / VURatioFade => 1.0f  (neutral — effects scale by 1, no change)
+//   VU / PeakVU / MinVU   => 0.0f  (truly silent)
+//
+// This matches the NullAudioSource fallback returned by AudioService::Source()
+// when audio is stopped, so both access paths (g_Analyzer directly and via
+// AudioService::Source()) produce consistent behavior during reconfigure or
+// when audio has never been started. Beat detection is cleared. The audio
+// sampler task overwrites these on its first iteration.
 
 void SoundAnalyzerBase::Reset()
 {

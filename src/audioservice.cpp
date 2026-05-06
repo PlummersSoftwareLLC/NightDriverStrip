@@ -55,8 +55,17 @@
 namespace
 {
     // The fallback source returned by Source() when audio is stopped or
-    // unavailable. Implements ISoundAnalyzer with all-zero/false/empty returns
-    // so effects can call into it harmlessly.
+    // unavailable. Implements ISoundAnalyzer so effects can call into it
+    // harmlessly. The chosen "silent fallback" contract is:
+    //
+    //   VURatio / VURatioFade => 1.0f  (neutral — no scaling change)
+    //   VU / PeakVU / MinVU   => 0.0f  (truly silent)
+    //
+    // This matches SoundAnalyzerBase::Reset(), which also sets the ratio
+    // metrics to 1.0f. Effects that scale brightness/speed by VURatio treat
+    // 1.0f as "no change", so both access paths (AudioService::Source() and
+    // direct g_Analyzer reads) produce the same neutral behavior while audio
+    // is stopped or being reconfigured.
     class NullAudioSource : public ISoundAnalyzer
     {
       public:
@@ -71,9 +80,12 @@ namespace
         bool  IsRemoteAudioActive() const override { return false; }
 
         // --- VU Metrics ---
+        // VU/PeakVU/MinVU are zero (truly silent). VURatio and VURatioFade
+        // are 1.0f (neutral) so effects that scale by these values are
+        // unaffected, matching the behavior of SoundAnalyzerBase::Reset().
         float VU() const override { return 0.0f; }
-        float VURatio() const override { return 0.0f; }
-        float VURatioFade() const override { return 0.0f; }
+        float VURatio() const override { return 1.0f; }
+        float VURatioFade() const override { return 1.0f; }
         float PeakVU() const override { return 0.0f; }
         float MinVU() const override { return 0.0f; }
 
