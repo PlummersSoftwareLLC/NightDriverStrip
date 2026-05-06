@@ -2,9 +2,9 @@
 
 //+--------------------------------------------------------------------------
 //
-// File:        drawing.h
+// File:        renderservice.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2026 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -24,16 +24,30 @@
 //
 // Description:
 //
-//    Drawing loop declarations.
+//    RenderService is the heart of the system: the per-frame rendering
+//    loop that pulls from either incoming WiFi color data or the local
+//    EffectManager and pushes pixels to the GFXBase devices. Pinned to
+//    DRAWING_CORE at DRAWING_PRIORITY. Inherits ITaskService for the
+//    standard lifecycle. Implementation lives in drawing.cpp alongside
+//    WiFiDraw / LocalDraw / CalcDelayUntilNextFrame.
 //
-// History:     May-11-2021         Davepl      Commented
+// History:     May-04-2026         Davepl      Created
 //
 //---------------------------------------------------------------------------
 
-// NOTE: This header is intentionally minimal. The historical free-function
-// drawing entry point (DrawLoopTaskEntry) was migrated into RenderService and
-// is now hosted by ITaskService::Run(). No symbols are currently exported
-// from drawing.cpp; this header is retained as a stable include site for any
-// future drawing-related declarations and to avoid breaking #includes in
-// downstream code. Do not add `#include "globals.h"` here -- pull what you
-// actually need at the call site.
+#include "globals.h"
+
+#include "itaskservice.h"
+
+class RenderService : public ITaskService
+{
+  public:
+    RenderService() = default;
+    ~RenderService() override { Stop(); }
+
+    const char* Name() const override { return "RenderService"; }
+
+  protected:
+    TaskConfig GetTaskConfig() const override;
+    void Run() override;
+};

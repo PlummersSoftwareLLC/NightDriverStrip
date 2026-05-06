@@ -47,13 +47,18 @@ class JSONWriter;
 class DeviceConfig;
 class LEDBuffer;
 class LEDBufferManager;
-class NightDriverTaskManager;
+class TaskManager;
 class RemoteControl;
 class Screen;
 class SocketServer;
 class WebSocketServer;
 class CWebServer;
 class WS281xOutputManager;
+class AudioService;
+class AudioSerialBridge;
+class DebugConsole;
+class ColorStreamerService;
+class RenderService;
 namespace nd_network { class NetworkReader; }
 using nd_network::NetworkReader;
 
@@ -72,7 +77,7 @@ class SystemContainer
     std::unique_ptr<DeviceContainer> _ptrDevices;
     std::unique_ptr<BufferManagerContainer> _ptrBufferManagers;
     std::unique_ptr<EffectManager> _ptrEffectManager;
-    std::unique_ptr<NightDriverTaskManager> _ptrTaskManager;
+    std::unique_ptr<TaskManager> _ptrTaskManager;
     std::unique_ptr<JSONWriter> _ptrJSONWriter;
     std::unique_ptr<DeviceConfig> _ptrDeviceConfig;
 
@@ -104,6 +109,27 @@ class SystemContainer
         std::unique_ptr<Screen> _ptrDisplay;
     #endif
 
+    // AudioService is constructed in audio-enabled and non-audio builds alike.
+    // The service exposes a stable interface and degrades to a silent stub
+    // when ENABLE_AUDIO is 0, which keeps consumers (e.g. webserver, drawing
+    // VU meter) free of #if guards.
+
+    std::unique_ptr<AudioService> _ptrAudioService;
+
+    #if ENABLE_AUDIOSERIAL
+        std::unique_ptr<AudioSerialBridge> _ptrAudioSerialBridge;
+    #endif
+
+    #if ENABLE_WIFI
+        std::unique_ptr<DebugConsole> _ptrDebugConsole;
+    #endif
+
+    #if COLORDATA_SERVER_ENABLED
+        std::unique_ptr<ColorStreamerService> _ptrColorStreamerService;
+    #endif
+
+    std::unique_ptr<RenderService> _ptrRenderService;
+
     // Helper method that checks if a pointer is initialized.
     void CheckPointer(bool initialized, const char* name) const;
 
@@ -129,9 +155,9 @@ class SystemContainer
     EffectManager& GetEffectManager() const;
 
     // TaskManager
-    NightDriverTaskManager& SetupTaskManager();
+    TaskManager& SetupTaskManager();
     bool HasTaskManager() const { return !!_ptrTaskManager; }
-    NightDriverTaskManager& GetTaskManager() const;
+    TaskManager& GetTaskManager() const;
 
     // Config objects
     void SetupConfig();
@@ -183,6 +209,35 @@ class SystemContainer
         bool HasDisplay() const { return !!_ptrDisplay; }
         Screen& GetDisplay() const;
     #endif
+
+    // AudioService. SetupAudioService() creates the service in stopped state;
+    // call Start() on the returned reference once DeviceConfig is available.
+
+    AudioService& SetupAudioService();
+    bool HasAudioService() const { return nullptr != _ptrAudioService; }
+    AudioService& GetAudioService() const;
+
+    #if ENABLE_AUDIOSERIAL
+        AudioSerialBridge& SetupAudioSerialBridge();
+        bool HasAudioSerialBridge() const { return nullptr != _ptrAudioSerialBridge; }
+        AudioSerialBridge& GetAudioSerialBridge() const;
+    #endif
+
+    #if ENABLE_WIFI
+        DebugConsole& SetupDebugConsole();
+        bool HasDebugConsole() const { return nullptr != _ptrDebugConsole; }
+        DebugConsole& GetDebugConsole() const;
+    #endif
+
+    #if COLORDATA_SERVER_ENABLED
+        ColorStreamerService& SetupColorStreamerService();
+        bool HasColorStreamerService() const { return nullptr != _ptrColorStreamerService; }
+        ColorStreamerService& GetColorStreamerService() const;
+    #endif
+
+    RenderService& SetupRenderService();
+    bool HasRenderService() const { return nullptr != _ptrRenderService; }
+    RenderService& GetRenderService() const;
 };
 
 extern std::unique_ptr<SystemContainer> g_ptrSystem;

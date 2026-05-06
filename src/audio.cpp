@@ -40,80 +40,16 @@
 #include <unistd.h>
 
 #if ENABLE_AUDIO
+#include "audioserialbridge.h"
 #include "nd_network.h"
 #include "soundanalyzer.h"
 #include "systemcontainer.h"
+#include "taskmgr.h"     // AUDIOSERIAL_PRIORITY / AUDIOSERIAL_CORE / DEFAULT_STACK_SIZE
 #include "time_utils.h"
 
-// AudioSamplerTaskEntry
-// A background task that samples audio, computes the VU, stores it for effect use, etc.
-
-void IRAM_ATTR AudioSamplerTaskEntry(void *)
-{
-    debugI(">>> Sampler Task Started");
-
-    // M5 boards sample through M5.Mic/M5Unified, not the generic AUDIO_INPUT_PIN path.
-    // Only configure AUDIO_INPUT_PIN for the external mic configurations that actually consume it.
-    #if !USE_M5
-    const auto audioInputPin = g_ptrSystem->GetConfiguredAudioInputPin();
-    if (audioInputPin >= 0)
-        pinMode(audioInputPin, INPUT);
-    #endif
-
-    g_Analyzer.InitAudioInput();
-
-    for (;;)
-    {
-        auto lastFrame = millis();
-
-        g_Analyzer.RunSamplerPass();
-        g_Analyzer.UpdatePeakData();
-        g_Analyzer.DecayPeaks();
-
-        // VURatio with a fadeout
-
-        static auto lastVU = 0.0f;
-        constexpr auto VU_DECAY_PER_SECOND = 9.00;
-
-        // Get the elapsed time since the last frame. We'll calculate this at the right spot from the first loop onwards
-        static auto frameDurationSeconds = (millis() - lastFrame) / 1000.0;
-
-        // Fade out the VU ratio
-
-        if (g_Analyzer.VURatio() > lastVU)
-            lastVU = g_Analyzer.VURatio();
-        else
-            lastVU -= frameDurationSeconds * VU_DECAY_PER_SECOND;
-
-        g_Analyzer._VURatioFade = std::clamp(lastVU, 0.0f, 2.0f);
-
-        // Instantaneous VURatio
-
-        assert(g_Analyzer.PeakVU() >= g_Analyzer.MinVU());
-
-        g_Analyzer._VURatio = (g_Analyzer.PeakVU() == g_Analyzer.MinVU()) ?
-                                0.0 :
-                                (g_Analyzer.VU() - g_Analyzer.MinVU()) / std::max(g_Analyzer.PeakVU() - g_Analyzer.MinVU(), (float) MIN_VU) * 2.0f;
-
-        debugV("VU: %f\n", g_Analyzer.VU());
-        debugV("PeakVU: %f\n", g_Analyzer.PeakVU());
-        debugV("MinVU: %f\n", g_Analyzer.MinVU());
-        debugV("VURatio: %f\n", g_Analyzer.VURatio());
-        debugV("VURatioFade: %f\n", g_Analyzer.VURatioFade());
-
-        // Delay enough time to yield 60fps max
-        // We wait a minimum even if busy so we don't Bogart the CPU
-
-        constexpr auto kMaxFPS = 60;
-        const auto targetDelay = PERIOD_FROM_FREQ(kMaxFPS) * MILLIS_PER_SECOND / MICROS_PER_SECOND;
-        delay(max(1.0, targetDelay - (millis() - lastFrame)));
-
-        auto duration = millis() - lastFrame;
-        frameDurationSeconds = duration / 1000.0;
-        g_Analyzer._AudioFPS = FPS(duration);
-        debugV("AudioFPS: %d\n", g_Analyzer.AudioFPS());
-    }
-}
+// The audio sampler loop body has moved into AudioService::Run() (an
+// ITaskService-managed task). This file now hosts only the optional
+// AudioSerialBridge service, gated by ENABLE_AUDIOSERIAL.
 
 #if ENABLE_AUDIOSERIAL
 
@@ -243,12 +179,25 @@ struct SerialData
     uint8_t tail;               // (0x0D)
 };
 
-void IRAM_ATTR AudioSerialTaskEntry(void *)
-{
-    //  SoftwareSerial Serial64(SERIAL_PINRX, SERIAL_PINTX);
-    debugI(">>> Sampler Task Started");
+// AudioSerialBridge ITaskService hooks
+//
+// Start/Stop/IsRunning are inherited final from ITaskService; this class
+// only supplies the task config and the C64/PET serial output loop body.
 
-    SoundAnalyzer Analyzer;
+ITaskService::TaskConfig AudioSerialBridge::GetTaskConfig() const
+{
+    return TaskConfig {
+        "Audio Serial Loop",
+        DEFAULT_STACK_SIZE,
+        AUDIOSERIAL_PRIORITY,
+        AUDIOSERIAL_CORE,
+        500    // Stop timeout: loop yields every few ms.
+    };
+}
+
+void IRAM_ATTR AudioSerialBridge::Run()
+{
+    debugI(">>> Audio Serial Task Started");
 
 #if ENABLE_VICE_SERVER
     VICESocketServer socketServer(NetworkPort::VICESocketServer);
@@ -266,8 +215,9 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
     debugI("    Opened Serial2 on pins %d,%d\n", SERIAL_PINRX, SERIAL_PINTX);
 
     int socket = -1;
+    int lastFrame = millis();
 
-    for (;;)
+    while (!ShouldShutdown())
     {
         unsigned long startTime = millis();
 
@@ -296,24 +246,9 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
         {
             Serial2.write((uint8_t *)&data, sizeof(data));
             // Serial2.flush(true);
-            static int lastFrame = millis();
-            g_Analyzer._serialFPS = FPS(lastFrame, millis());
+            g_Analyzer.SetSerialFPS(FPS(lastFrame, millis()));
             lastFrame = millis();
         }
-
-        /* PETROCK no longer sends these confirmation stars, but we could add it back...
-        // When the CBM processes a packet, it sends us a * to ACK.  We count those to determine the number
-        // of packets per second being processed
-
-        while (Serial2.available() > 0)
-        {
-            char read = Serial2.read();
-            Serial.print(read);
-            if (read == '*')
-            {
-            }
-        }
-        */
 
 #if ENABLE_VICE_SERVER
         // If we have a socket open, send our packet to its virtual serial port now as well.
@@ -341,6 +276,11 @@ void IRAM_ATTR AudioSerialTaskEntry(void *)
         else
             delay(1);
     }
+
+#if ENABLE_VICE_SERVER
+    if (socket >= 0)
+        close(socket);
+#endif
 }
 
 #endif // ENABLE_AUDIOSERIAL

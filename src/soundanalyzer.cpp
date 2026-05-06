@@ -103,28 +103,71 @@ SoundAnalyzerBase::SoundAnalyzerBase()
 
 SoundAnalyzerBase::~SoundAnalyzerBase()
 {
+    TeardownAudioInput();
+}
+
+// TeardownAudioInput
+//
+// Idempotent counterpart to InitAudioInput. Called by AudioService::Stop()
+// during a runtime audio reconfigure, and also by ~SoundAnalyzerBase at
+// program end. The _hardwareInstalled guard makes double-uninstall safe.
+void SoundAnalyzerBase::TeardownAudioInput()
+{
+    if (!_hardwareInstalled)
+        return;
+
+    debugI("Audio: tearing down audio input driver");
+
 #if IS_IDF5
     // Stop the hardware first to kill any active DMA transfers
     if (_rx_handle)
     {
-        i2s_channel_disable(_rx_handle);
-        i2s_del_channel(_rx_handle);
+        const esp_err_t disableErr = i2s_channel_disable(_rx_handle);
+        if (disableErr != ESP_OK)
+            debugW("Audio: i2s_channel_disable returned %d", (int)disableErr);
+        const esp_err_t delErr = i2s_del_channel(_rx_handle);
+        if (delErr != ESP_OK)
+            debugW("Audio: i2s_del_channel returned %d", (int)delErr);
+        _rx_handle = nullptr;
     }
     if (_adc_handle)
     {
-        adc_continuous_stop(_adc_handle);
-        adc_continuous_deinit(_adc_handle);
+        const esp_err_t stopErr = adc_continuous_stop(_adc_handle);
+        if (stopErr != ESP_OK)
+            debugW("Audio: adc_continuous_stop returned %d", (int)stopErr);
+        const esp_err_t deinitErr = adc_continuous_deinit(_adc_handle);
+        if (deinitErr != ESP_OK)
+            debugW("Audio: adc_continuous_deinit returned %d", (int)deinitErr);
+        _adc_handle = nullptr;
     }
 #else
-    // Legacy cleanup - i2s_stop terminates DMA
-    i2s_stop(I2S_NUM_0);
-    i2s_driver_uninstall(I2S_NUM_0);
+    #if !USE_M5
+        // Legacy cleanup - i2s_stop terminates DMA. M5Unified manages its own
+        // mic teardown in M5.Mic.end() so we don't double-stop the I2S peripheral.
+        i2s_stop(I2S_NUM_0);
+        i2s_driver_uninstall(I2S_NUM_0);
+    #endif
 #endif
+
+#if USE_M5
+    M5.Mic.end();
+#endif
+
+    _hardwareInstalled = false;
 }
 
 // Reset
 //
-// Reset and clear the FFT buffers
+// Reset and clear the FFT buffers. Leaves the analyzer in a benign default
+// state: VU/ratio metrics restored to their startup values (1.0f) so any
+// effect that scales by VURatio() before the sampler has produced its first
+// frame still renders something visible rather than going dark or dividing
+// by zero. Beat detection is cleared. The audio sampler task overwrites
+// these on its first iteration so the values here only matter when audio
+// is stopped, has never been started, or is mid-reconfigure.
+// AudioService::Stop() relies on this to give direct g_Analyzer readers
+// safe-default values during a reconfigure.
+
 void SoundAnalyzerBase::Reset()
 {
     debugI("Audio analyzer full reset");
@@ -293,8 +336,17 @@ float SoundAnalyzerBase::BeatEnhance(float amt)
 // InitAudioInput
 //
 // Entry point for configuring board-specific audio input (M5, I2S Digital, or I2S ADC Analog).
+// Idempotent: if the hardware is already installed, this is a no-op so a stale Start()
+// after an aborted Stop() can't double-install the I2S/ADC driver.
+
 void SoundAnalyzerBase::InitAudioInput()
 {
+    if (_hardwareInstalled)
+    {
+        debugI("Audio: InitAudioInput skipped, hardware already installed");
+        return;
+    }
+
     const auto inputPin = GetConfiguredAudioInputPin();
 
     if (inputPin < 0)
@@ -316,6 +368,7 @@ void SoundAnalyzerBase::InitAudioInput()
     InitADC_Modern();
     InitADC_Legacy();
 #endif
+    _hardwareInstalled = true;
     debugV("InitAudioInput Complete\n");
 }
 

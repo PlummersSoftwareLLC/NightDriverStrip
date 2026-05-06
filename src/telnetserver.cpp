@@ -49,9 +49,10 @@
 #include <unistd.h>
 
 #include "console.h"
+#include "debugconsole.h"
 #include "logger.h"
 #include "nd_network.h"
-
+#include "taskmgr.h"   // DEBUG_STACK_SIZE / DEBUG_PRIORITY / DEBUG_CORE
 
 
 #if ENABLE_WIFI
@@ -132,14 +133,30 @@ static void NegotiateTelnetOptions(int fd)
     SendTelnetOption(fd, TELNET_DO,   OPT_SGA);
 }
 
-void DebugLoopTaskEntry(void* pvParameters)
+// DebugConsole ITaskService hooks
+//
+// Start/Stop/IsRunning are inherited final from ITaskService; this class
+// only supplies the task config and the telnet accept/process loop body.
+
+ITaskService::TaskConfig DebugConsole::GetTaskConfig() const
+{
+    return TaskConfig {
+        "Debug Loop",
+        DEBUG_STACK_SIZE,
+        DEBUG_PRIORITY,
+        DEBUG_CORE,
+        2000   // Stop timeout: outer accept() polls non-blocking with delay(100).
+    };
+}
+
+void DebugConsole::Run()
 {
     int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (listen_fd < 0) {
         debugE("Failed to create telnet socket");
-        vTaskDelete(NULL);
         return;
     }
+    _listenFd.store(listen_fd);
 
     struct sockaddr_in serv_addr;
     memset(&serv_addr, 0, sizeof(serv_addr));
@@ -149,15 +166,21 @@ void DebugLoopTaskEntry(void* pvParameters)
 
     if (bind(listen_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
         debugE("Failed to bind telnet socket");
-        close(listen_fd);
-        vTaskDelete(NULL);
+        const int fd = _listenFd.exchange(-1);
+        if (fd >= 0) close(fd);
         return;
     }
 
     nd_network::SetSocketBlockingEnabled(listen_fd, false);
-    listen(listen_fd, 1);
+    if (listen(listen_fd, 1) < 0)
+    {
+        debugE("Failed to listen on telnet socket");
+        const int fd = _listenFd.exchange(-1);
+        if (fd >= 0) close(fd);
+        return;
+    }
 
-    while (true)
+    while (!ShouldShutdown())
     {
         struct sockaddr_in cli_addr;
         socklen_t cli_len = sizeof(cli_addr);
@@ -168,11 +191,21 @@ void DebugLoopTaskEntry(void* pvParameters)
                 delay(100);
                 continue;
             }
+            // If our listening fd was closed under us by OnBeforeWaitForStop,
+            // accept() will return EBADF — fall through to the shutdown check.
+            if (ShouldShutdown())
+                break;
             delay(100);
             continue;
         }
 
         debugI("Telnet client connected from %s", inet_ntoa(cli_addr.sin_addr));
+
+        // Non-blocking client so recv() can also observe ShouldShutdown()
+        // without sitting in a blocking syscall that only OnBeforeWaitForStop
+        // could rescue. We poll with a short delay between empty reads.
+        nd_network::SetSocketBlockingEnabled(client_fd, false);
+        _clientFd.store(client_fd);
 
         // Negotiate character-at-a-time mode and server-side echo before
         // registering the sink, so the client is in the right mode before
@@ -196,7 +229,7 @@ void DebugLoopTaskEntry(void* pvParameters)
         RecvState state = RecvState::Normal;
 
         uint8_t buf[128];
-        while (true)
+        while (!ShouldShutdown())
         {
             int n = recv(client_fd, buf, sizeof(buf), 0);
             if (n == 0)
@@ -206,8 +239,17 @@ void DebugLoopTaskEntry(void* pvParameters)
             }
             if (n < 0)
             {
+                if (errno == EAGAIN || errno == EWOULDBLOCK)
+                {
+                    // No data available right now; sleep briefly and re-check
+                    // ShouldShutdown() at the top of the loop.
+                    delay(50);
+                    continue;
+                }
                 if (errno == EINTR)
                     continue;   // Signal interrupted syscall, retry
+                if (errno == EBADF)
+                    break;      // OnBeforeWaitForStop closed us; exit cleanly
                 // Use Serial directly to avoid any risk of recursion through
                 // the Telnet sink that may itself be in a broken state.
                 Serial.printf("[TelnetServer] recv error: %s\n", strerror(errno));
@@ -300,8 +342,39 @@ void DebugLoopTaskEntry(void* pvParameters)
         }
 
         ConsoleManager::Instance().ClearTelnetSink();
-        close(client_fd);
+        {
+            const int fd = _clientFd.exchange(-1);
+            if (fd >= 0)
+                close(fd);
+        }
         debugI("Telnet client disconnected");
+    }
+
+    {
+        const int fd = _listenFd.exchange(-1);
+        if (fd >= 0)
+            close(fd);
+    }
+}
+
+void DebugConsole::OnBeforeWaitForStop()
+{
+    // Close the listening socket and any active client connection from the
+    // Stop() thread so the task's accept()/recv() return promptly with EBADF
+    // and the loop can observe ShouldShutdown(). Both fds are atomic<int>
+    // so the exchange is the only point at which they're consumed.
+
+    const int listen_fd = _listenFd.exchange(-1);
+    if (listen_fd >= 0)
+    {
+        shutdown(listen_fd, SHUT_RDWR);
+        close(listen_fd);
+    }
+    const int client_fd = _clientFd.exchange(-1);
+    if (client_fd >= 0)
+    {
+        shutdown(client_fd, SHUT_RDWR);
+        close(client_fd);
     }
 }
 

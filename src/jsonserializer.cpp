@@ -158,7 +158,37 @@ struct JSONWriter::WriterEntry
 };
 
 JSONWriter::JSONWriter() {}
-JSONWriter::~JSONWriter() {}
+JSONWriter::~JSONWriter() { Stop(); }
+
+// ITaskService hooks
+//
+// Start/Stop/IsRunning are inherited final from ITaskService; this class
+// only supplies the task config, the loop body, and the wake-on-stop hook.
+
+ITaskService::TaskConfig JSONWriter::GetTaskConfig() const
+{
+    return TaskConfig {
+        "JSON Writer Loop",
+        JSON_STACK_SIZE,
+        JSONWRITER_PRIORITY,
+        JSONWRITER_CORE,
+        1000   // Stop timeout: task wakes from ulTaskNotifyTake on the wake nudge.
+    };
+}
+
+void JSONWriter::OnBeforeWaitForStop()
+{
+    // Flush whatever is pending so a config change isn't lost on shutdown,
+    // and wake the task out of its long ulTaskNotifyTake so it sees the
+    // shutdown flag promptly.
+    flushRequested.store(true);
+    WakeTask();
+}
+
+void JSONWriter::NotifyTask()
+{
+    WakeTask();
+}
 
 bool BoolFromText(const String& text)
 {
@@ -267,7 +297,7 @@ void JSONWriter::FlagWriter(size_t index)
     entry->flag.store(true);
     latestFlagMs.store(millis());
 
-    g_ptrSystem->GetTaskManager().NotifyJSONWriterThread();
+    NotifyTask();
 }
 
 void JSONWriter::FlushWrites(bool halt)
@@ -277,13 +307,18 @@ void JSONWriter::FlushWrites(bool halt)
     flushRequested.store(true);
     haltWrites.store(halt);
 
-    g_ptrSystem->GetTaskManager().NotifyJSONWriterThread();
+    NotifyTask();
 }
 
-// JSONWriterTaskEntry
+// JSONWriter::Run
 //
-// Invoke functions that write serialized JSON objects to SPIFFS at request, with some delay
-void IRAM_ATTR JSONWriterTaskEntry(void *)
+// Invoke functions that write serialized JSON objects to SPIFFS at request,
+// with some delay. Wakes from ulTaskNotifyTake on either a flag/flush/stop
+// signal or the JSON_WRITER_DELAY hold-point timeout, then runs one pass
+// over the registered writers and goes back to sleep. Exits cleanly when
+// ShouldShutdown() is true so a config change isn't dropped between the
+// flush request and the actual disk write.
+void JSONWriter::Run()
 {
     for(;;)
     {
@@ -294,23 +329,22 @@ void IRAM_ATTR JSONWriterTaskEntry(void *)
             // Wait until we're woken up by a writer being flagged, or until we've reached the hold point
             ulTaskNotifyTake(pdTRUE, notifyWait);
 
-            if (!g_ptrSystem->HasJSONWriter())
-                continue;
-
-            auto& jsonWriter = g_ptrSystem->GetJSONWriter();
+            // Stop requested: drop straight into a final flush pass below.
+            if (ShouldShutdown())
+                break;
 
             // If a flush was requested then we execute pending writes now
-            if (jsonWriter.flushRequested.load())
+            if (flushRequested.load())
             {
-                jsonWriter.flushRequested.store(false);
+                flushRequested.store(false);
                 break;
             }
 
             // If writes are halted, we don't do anything
-            if (jsonWriter.haltWrites.load())
+            if (haltWrites.load())
                 continue;
 
-            unsigned long holdUntil = jsonWriter.latestFlagMs.load() + JSON_WRITER_DELAY;
+            unsigned long holdUntil = latestFlagMs.load() + JSON_WRITER_DELAY;
             unsigned long now = millis();
             if (now >= holdUntil)
                 break;
@@ -320,9 +354,8 @@ void IRAM_ATTR JSONWriterTaskEntry(void *)
 
         std::vector<std::shared_ptr<JSONWriter::WriterEntry>> writersSnapshot;
         {
-            auto& jsonWriter = g_ptrSystem->GetJSONWriter();
-            std::lock_guard<std::mutex> lock(jsonWriter.writersMutex);
-            writersSnapshot = jsonWriter.writers;
+            std::lock_guard<std::mutex> lock(writersMutex);
+            writersSnapshot = writers;
         }
 
         for (auto &entryPtr : writersSnapshot)
@@ -332,6 +365,12 @@ void IRAM_ATTR JSONWriterTaskEntry(void *)
             if (entry.flag.exchange(false))
                 entry.writer();
         }
+
+        // Honor the shutdown request after the flush pass so any pending writes
+        // are persisted before the task exits. ITaskService::TaskEntryThunk
+        // handles the actual NotifyTaskExited / vTaskDelete on return.
+        if (ShouldShutdown())
+            return;
     }
 }
 

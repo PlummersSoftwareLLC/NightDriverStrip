@@ -39,6 +39,8 @@
 #include <mutex>
 #include <vector>
 
+#include "itaskservice.h"
+
 template <class E>
 constexpr auto to_value(E e) noexcept
 {
@@ -87,24 +89,38 @@ bool RemoveJSONFile(const String & fileName);
 
 #define JSON_WRITER_DELAY 3000
 
-class JSONWriter
-{
-    // We allow the main JSON Writer task entry point function to access private members
-    friend void JSONWriterTaskEntry(void *);
+// JSONWriter
+//
+// Background SPIFFS writer. Implementers register a write callback once and
+// call FlagWriter / FlushWrites when something has been mutated; the writer
+// task batches flagged writes through JSON_WRITER_DELAY of quiet time so
+// rapid mutations don't thrash the flash. Inherits ITaskService so launch
+// and shutdown discipline are shared with the other task-owning services.
 
+class JSONWriter : public ITaskService
+{
   private:
 
     struct WriterEntry;
 
     std::vector<std::shared_ptr<WriterEntry>> writers;
     mutable std::mutex       writersMutex;
-    std::atomic_ulong        latestFlagMs;
-    std::atomic_bool         flushRequested;
-    std::atomic_bool         haltWrites;
+    std::atomic_ulong        latestFlagMs{0};
+    std::atomic_bool         flushRequested{false};
+    std::atomic_bool         haltWrites{false};
+
+    // Wakes the writer task from its long ulTaskNotifyTake. Used both by
+    // FlagWriter/FlushWrites (the public API) and by Stop() (via
+    // OnBeforeWaitForStop) to break the task out of its blocking wait.
+    
+    void NotifyTask();
 
   public:
     JSONWriter();
-    ~JSONWriter();
+    ~JSONWriter() override;
+
+    // IService::Name
+    const char* Name() const override { return "JSONWriter"; }
 
     // Add a writer to the collection. Returns the index of the added writer, for use with FlagWriter()
     size_t RegisterWriter(const std::function<void()>& writer);
@@ -114,4 +130,10 @@ class JSONWriter
 
     // Flush pending writes now
     void FlushWrites(bool halt = false);
+
+  protected:
+    // ITaskService hooks
+    TaskConfig GetTaskConfig() const override;
+    void Run() override;
+    void OnBeforeWaitForStop() override;
 };

@@ -43,6 +43,7 @@
 #include <vector>
 
 #include "gfxbase.h"
+#include "itaskservice.h"
 
 class Screen;
 std::unique_ptr<Screen> CreateHardwareScreen(int w, int h);
@@ -81,7 +82,7 @@ class Page
 // - screen_tft.h
 // - screen_amoled.h
 
-class Screen : public GFXBase
+class Screen : public GFXBase, public ITaskService
 {
   public:
     static std::mutex _screenMutex;
@@ -89,6 +90,9 @@ class Screen : public GFXBase
     Screen(int w, int h) : GFXBase(w, h)
     {
     }
+
+    // IService::Name. Used by ITaskService for log lines.
+    const char* Name() const override { return "Screen"; }
 
     // Some devices, like the OLED, require that you send the whole buffer at once, but others do not.  The default impl is to do nothing.
 
@@ -130,12 +134,15 @@ class Screen : public GFXBase
     // Render the current page into this screen.
     void Update(bool bRedraw);
 
-    // Run the screen update loop (button handling + periodic redraw)
-    void RunUpdateLoop();
-
     // Flip to the next page and handle effect-rotation pause/resume semantics.
     // Safe to call from button handlers.
     static void FlipToNextPage();
+
+  protected:
+    // ITaskService hooks. Run() is the screen update loop (button handling
+    // + periodic redraw); GetTaskConfig() supplies the FreeRTOS task config.
+    TaskConfig GetTaskConfig() const override;
+    void Run() override;
 
   private:
     // Cached screen refresh FPS (updated each loop iteration)

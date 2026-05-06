@@ -177,8 +177,12 @@
 #if defined(TOGGLE_BUTTON_0) || defined(TOGGLE_BUTTON_1)
 #include "Bounce2.h"
 #endif
+#include "audioserialbridge.h"
+#include "audioservice.h"
+#include "colorstreamerservice.h"
 #include "console.h"
 #include "debug_cli.h"
+#include "debugconsole.h"
 #include "deviceconfig.h"
 #include "effectmanager.h"
 #include "gfxbase.h"
@@ -195,6 +199,9 @@
 #include "logger.h"
 #include "nd_network.h"
 #include "ntptimeclient.h"
+#include "remotecontrol.h"
+#include "renderservice.h"
+#include "screen.h"
 #include "socketserver.h"
 #include "soundanalyzer.h"
 #include "systemcontainer.h"
@@ -221,7 +228,7 @@ void ConfirmUpdate();
 
 
 
-void ScreenUpdateLoopEntry(void *);
+// ScreenUpdateLoopEntry was migrated into Screen::Run() (ITaskService).
 
 #if ENABLE_ESPNOW
 #include <esp_arduino_version.h>
@@ -609,10 +616,27 @@ void setup()
 
     // Start things that do not depend on the network
 
-    taskManager.StartDrawThread();
-    taskManager.StartScreenThread();
-    taskManager.StartAudioThread();
-    taskManager.StartRemoteThread();
+    g_ptrSystem->SetupRenderService().Start();
+
+    #if USE_SCREEN
+        if (g_ptrSystem->HasDisplay())
+            g_ptrSystem->GetDisplay().Start();
+    #endif
+
+    // Audio is owned by AudioService so it can be reconfigured at runtime
+    // (e.g. moving the I2S DIN pin from the SetupUI) without a reboot. We
+    // construct the service unconditionally so consumers can ask "is audio
+    // available?" via a stable interface, and start it now if this build
+    // has ENABLE_AUDIO. DeviceConfig has already been loaded above, so
+    // AudioConfig::FromCurrentSettings() picks up any persisted pin.
+
+    auto& audioService = g_ptrSystem->SetupAudioService();
+    audioService.Reconfigure(AudioConfig::FromCurrentSettings());
+
+    #if ENABLE_REMOTE
+        if (g_ptrSystem->HasRemoteControl())
+            g_ptrSystem->GetRemoteControl().Start();
+    #endif
 
     #if ENABLE_WIFI
         debugI("Making initial attempt to connect to WiFi.");
@@ -621,11 +645,25 @@ void setup()
 
     // Start the network-dependent services.  These will be NOPs on a non-wifi build.
 
-    taskManager.StartSerialThread();
-    taskManager.StartNetworkThread();
-    taskManager.StartColorDataThread();
-    taskManager.StartSocketThread();
-    taskManager.StartDebugThread();
+    #if ENABLE_AUDIOSERIAL
+        g_ptrSystem->SetupAudioSerialBridge().Start();
+    #endif
+    #if ENABLE_WIFI
+        // NetworkReader was constructed earlier (so effects could register).
+        // Start its task here, after WiFi credentials are loaded.
+        if (g_ptrSystem->HasNetworkReader())
+            g_ptrSystem->GetNetworkReader().Start();
+    #endif
+    #if COLORDATA_SERVER_ENABLED
+        g_ptrSystem->SetupColorStreamerService().Start();
+    #endif
+    #if INCOMING_WIFI_ENABLED
+        if (g_ptrSystem->HasSocketServer())
+            g_ptrSystem->GetSocketServer().Start();
+    #endif
+    #if ENABLE_WIFI
+        g_ptrSystem->SetupDebugConsole().Start();
+    #endif
 
     DebugCLI::InitDebugCLI();
     nd_network::InitNetworkCLI();

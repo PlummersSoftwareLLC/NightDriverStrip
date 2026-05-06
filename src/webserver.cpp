@@ -40,6 +40,7 @@
 #include <limits>
 #include <utility>
 
+#include "audioservice.h"
 #include "deviceconfig.h"
 #include "effectmanager.h"
 #include "gfxbase.h"
@@ -49,6 +50,7 @@
 #include "systemcontainer.h"
 #include "taskmgr.h"
 #include "values.h"
+#include "websocketserver.h"   // Stop() tears down our websocket clients first
 
 namespace
 {
@@ -193,7 +195,7 @@ namespace
     // The API currently accepts both the legacy flat device.audioInputPin field
     // and the nested device.audio.inputPin field, so validation/apply can consume
     // one resolved value instead of duplicating that lookup logic.
-    
+
     std::optional<int> GetRequestedUnifiedAudioInputPin(JsonObjectConst device)
     {
         std::optional<int> requestedAudioInputPin;
@@ -315,6 +317,82 @@ void CWebServer::AddCORSHeaderAndSendResponse<AsyncJsonResponse>(AsyncWebServerR
 }
 
 // Member function implementations
+
+// IService::Start - delegates to begin(). begin() does the heavy lifting of
+// registering route handlers and calling AsyncWebServer::begin(); Start just
+// sets the running flag and reports the result.
+bool CWebServer::Start()
+{
+    if (_running.load())
+        return true;
+
+    if (_everStarted.load())
+    {
+        debugW("WebServer: Start() after Stop() - AsyncWebServer/AsyncTCP "
+               "may not have fully released its listening socket on this "
+               "platform; if subsequent requests fail, a reboot is the "
+               "documented workaround.");
+    }
+
+    debugI("WebServer: starting on port %d", (int)NetworkPort::Webserver);
+    begin();
+    _everStarted.store(true);
+    _running.store(true);
+    return true;
+}
+
+// IService::Stop - shut down the AsyncWebServer. Safe to call before Start().
+void CWebServer::Stop()
+{
+    if (!_running.load())
+        return;
+
+    debugI("WebServer: stop requested");
+    // The WebSocketServer's listening sockets and handler registration are
+    // owned here, so its lifecycle is entirely delegated to ours: tear down
+    // any websocket client connections first so they don't outlast end().
+    #if WEB_SOCKETS_ANY_ENABLED
+        if (g_ptrSystem && g_ptrSystem->HasWebSocketServer())
+            g_ptrSystem->GetWebSocketServer().Stop();
+    #endif
+    _server.end();
+    _running.store(false);
+    debugI("WebServer: stop completed");
+}
+
+// ApplyAudioInputPinChange - factored out of SetSettingsIfPresent /
+// SetUnifiedSettings. Compares the current persisted pin against `oldPin`;
+// if the pin actually changed and the build supports a live reconfigure
+// (and AudioService is present), pushes the new AudioConfig through
+// AudioService::Reconfigure(). Reverts the persisted pin on failure so the
+// caller's serialized response matches the live state. Safe to call when
+// g_ptrSystem is null or AudioService isn't constructed.
+bool CWebServer::ApplyAudioInputPinChange(int oldPin)
+{
+    if (!g_ptrSystem || !g_ptrSystem->HasDeviceConfig())
+        return true;
+
+    auto& deviceConfig = g_ptrSystem->GetDeviceConfig();
+    const int newPin = deviceConfig.GetAudioInputPin();
+
+    if (newPin == oldPin)
+        return true;
+
+    if (!deviceConfig.SupportsLiveAudioInputReconfigure())
+        return true;
+
+    if (!g_ptrSystem->HasAudioService())
+        return true;
+
+    auto& audioService = g_ptrSystem->GetAudioService();
+    if (!audioService.Reconfigure(AudioConfig::FromCurrentSettings()))
+    {
+        debugW("Audio: live reconfigure failed; reverting persisted pin to %d", oldPin);
+        deviceConfig.SetAudioInputPin(oldPin);
+        return false;
+    }
+    return true;
+}
 
 // begin - register page load handlers and start serving pages
 void CWebServer::begin()
@@ -777,7 +855,7 @@ bool CWebServer::ValidateLegacyDeviceSettings(AsyncWebServerRequest * pRequest, 
     // Validate the constrained settings first so the legacy POST path behaves like the unified JSON API:
     // either the nontrivial request is coherent as a whole, or we reject it before any setters persist a
     // partially applied config.
-    
+
     if (pRequest->hasParam(DeviceConfig::OpenWeatherApiKeyTag, true, false))
     {
         auto [isValid, validationMessage] =
@@ -974,7 +1052,20 @@ bool CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest, String* 
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::RememberCurrentEffectTag, SET_VALUE(deviceConfig.SetRememberCurrentEffect(value)));
     PushPostParamIfPresent<int>(pRequest, DeviceConfig::PowerLimitTag, SET_VALUE(deviceConfig.SetPowerLimit(value)));
     PushPostParamIfPresent<int>(pRequest, DeviceConfig::BrightnessTag, SET_VALUE(deviceConfig.SetBrightness(value)));
-    PushPostParamIfPresent<int>(pRequest, DeviceConfig::AudioInputPinTag, SET_VALUE(deviceConfig.SetAudioInputPin(value)));
+
+    // Audio input pin: persist the new pin and, when supported, ask AudioService
+    // to apply it live so the user doesn't need to reboot.
+    {
+        const int oldPin = deviceConfig.GetAudioInputPin();
+        const bool audioInputPinChanged =
+            PushPostParamIfPresent<int>(pRequest, DeviceConfig::AudioInputPinTag, SET_VALUE(deviceConfig.SetAudioInputPin(value)));
+        if (audioInputPinChanged && !ApplyAudioInputPinChange(oldPin))
+        {
+            if (errorMessage)
+                *errorMessage = "Audio input pin live apply failed";
+            return false;
+        }
+    }
 
     #if SHOW_VU_METER
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::ShowVUMeterTag, SET_VALUE(effectManager.ShowVU(value)));
@@ -1119,7 +1210,15 @@ void CWebServer::SetUnifiedSettings(AsyncWebServerRequest * pRequest, JsonVarian
         if (device[DeviceConfig::PowerLimitTag].is<int>()) deviceConfig.SetPowerLimit(device[DeviceConfig::PowerLimitTag].as<int>());
         if (device[DeviceConfig::BrightnessTag].is<int>()) deviceConfig.SetBrightness(device[DeviceConfig::BrightnessTag].as<int>());
         if (const auto requestedAudioInputPin = GetRequestedUnifiedAudioInputPin(device); requestedAudioInputPin.has_value())
+        {
+            const int oldPin = deviceConfig.GetAudioInputPin();
             deviceConfig.SetAudioInputPin(requestedAudioInputPin.value());
+            if (!ApplyAudioInputPinChange(oldPin))
+            {
+                AddCORSHeaderAndSendBadRequest(pRequest, "Audio input pin live apply failed");
+                return;
+            }
+        }
 
         std::optional<CRGB> globalColor = {};
         std::optional<CRGB> secondColor = {};

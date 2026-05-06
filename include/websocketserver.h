@@ -35,13 +35,35 @@
 
 #if WEB_SOCKETS_ANY_ENABLED
 
+#include <atomic>
+
 #include "effectmanager.h"
+#include "iservice.h"
 #include "webserver.h"
 
-class WebSocketServer : public IEffectEventListener
+// WebSocketServer
+//
+// Pushes frame and effect-change events to connected web clients. The
+// listening socket and per-handler routing live inside CWebServer's
+// underlying AsyncWebServer; this service is responsible for binding
+// its handlers when the bound CWebServer is running and unbinding them
+// on Stop. Lifecycle:
+//
+//   - Construction is metadata-only: no handlers are registered yet.
+//   - Start() requires the bound CWebServer to be running. It registers
+//     the handlers and flips IsRunning() to true.
+//   - Stop() closes any open client connections, removes the handlers,
+//     and flips IsRunning() to false so the next Start() is a clean re-bind.
+//
+// Always Start CWebServer before WebSocketServer, and Stop in reverse
+// order; otherwise Start() refuses (Stop is harmless).
+
+class WebSocketServer : public IEffectEventListener, public IService
 {
     AsyncWebSocket _colorDataSocket;
     AsyncWebSocket _effectChangeSocket;
+    CWebServer&    _webServer;
+    std::atomic<bool> _running{false};
     static constexpr size_t _maxColorNumberLen = sizeof(NAME_OF(16777215)) - 1; // (uint32_t)CRGB(255,255,255) == 16777215
     static constexpr size_t _maxCountLen = sizeof(NAME_OF(4294967295)) - 1;     // SIZE_MAX == 4294967295
 
@@ -49,16 +71,62 @@ public:
 
     WebSocketServer(CWebServer& webServer) :
         _colorDataSocket("/ws/frames"),
-        _effectChangeSocket("/ws/effects")
+        _effectChangeSocket("/ws/effects"),
+        _webServer(webServer)
     {
+        // Handler registration deferred to Start() so construction is
+        // metadata-only and IsRunning() reflects the actual bound state.
+    }
+
+    ~WebSocketServer() override { Stop(); }
+
+    // IService lifecycle. Start binds our handlers into the bound
+    // CWebServer and flips our running flag; Stop unbinds them. We track
+    // an independent running flag rather than aliasing CWebServer's so
+    // callers can distinguish "websockets configured" from "web server up".
+    bool Start() override
+    {
+        if (_running.load())
+            return true;
+        if (!_webServer.IsRunning())
+        {
+            debugW("WebSocketServer::Start ignored, bound CWebServer is not running");
+            return false;
+        }
+
         #if COLORDATA_WEB_SOCKET_ENABLED
-        webServer.AddWebSocket(_colorDataSocket);
+            _webServer.AddWebSocket(_colorDataSocket);
+        #endif
+        #if EFFECTS_WEB_SOCKET_ENABLED
+            _webServer.AddWebSocket(_effectChangeSocket);
         #endif
 
-        #if EFFECTS_WEB_SOCKET_ENABLED
-        webServer.AddWebSocket(_effectChangeSocket);
-        #endif
+        _running.store(true);
+        return true;
     }
+
+    void Stop() override
+    {
+        if (!_running.load())
+            return;
+
+        // Close any open client connections so they don't outlast the
+        // handler-removal step.
+        _colorDataSocket.closeAll();
+        _effectChangeSocket.closeAll();
+
+        #if COLORDATA_WEB_SOCKET_ENABLED
+            _webServer.RemoveWebSocket(_colorDataSocket);
+        #endif
+        #if EFFECTS_WEB_SOCKET_ENABLED
+            _webServer.RemoveWebSocket(_effectChangeSocket);
+        #endif
+
+        _running.store(false);
+    }
+
+    bool IsRunning() const override   { return _running.load(); }
+    const char* Name() const override { return "WebSocketServer"; }
 
     void CleanupClients()
     {

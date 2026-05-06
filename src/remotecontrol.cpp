@@ -45,6 +45,7 @@
 #include "ledstripeffect.h"
 #include "remotecontrol.h"
 #include "systemcontainer.h"
+#include "taskmgr.h"   // REMOTE_STACK_SIZE / REMOTE_PRIORITY / REMOTE_CORE
 
 #include "effects/strip/misceffects.h"
 
@@ -337,11 +338,12 @@ private:
 // ---------------------------------------------------------
 
 RemoteControl::RemoteControl() : _pImpl(std::make_unique<RemoteControlImpl>(IR_REMOTE_PIN)) {}
-RemoteControl::~RemoteControl() = default;
+RemoteControl::~RemoteControl() { Stop(); }
 
 // begin
 //
-// Starts the IR remote task and sets up the IR receiver
+// Sets up the IR receiver hardware. Called from Run() once ITaskService::Start
+// has launched the polling task on its own FreeRTOS thread.
 
 bool RemoteControl::begin() {
     debugW("Native Remote Control Decoding Started (RMT Legacy)");
@@ -350,10 +352,45 @@ bool RemoteControl::begin() {
 
 // end
 //
-// Stops the IR remote task
+// Public-facing teardown. Used by the OTA "onStart" hook to make sure the IR
+// polling task isn't competing with the firmware update for CPU/RMT
+// resources. Delegates to the inherited ITaskService::Stop() so the
+// shutdown is the same idempotent path used during normal service teardown.
 
 void RemoteControl::end() {
     debugW("Native Remote Control Decoding Stopped");
+    Stop();
+}
+
+// ITaskService hooks
+//
+// Start/Stop/IsRunning are inherited final from ITaskService; this class only
+// supplies the task config and the IR polling loop body.
+
+ITaskService::TaskConfig RemoteControl::GetTaskConfig() const
+{
+    return TaskConfig {
+        "IR Remote Loop",
+        REMOTE_STACK_SIZE,
+        REMOTE_PRIORITY,
+        REMOTE_CORE,
+        250    // Stop timeout: polling loop yields every 20ms.
+    };
+}
+
+// RemoteControl::Run
+//
+// Initializes the IR receiver and then polls for codes every 20ms until
+// ShouldShutdown() is true. ITaskService::TaskEntryThunk handles the
+// post-Run vTaskDelete and running-state bookkeeping when this returns.
+void RemoteControl::Run()
+{
+    begin();
+    while (!ShouldShutdown())
+    {
+        handle();
+        delay(20);
+    }
 }
 
 #define BRIGHTNESS_STEP     20

@@ -161,6 +161,17 @@ public:
 
     void ReportNewFrameAvailable();
     void AddFrameEventListener(IFrameEventListener& listener);
+    
+    // RemoveFrameEventListener
+    //
+    // Removes a previously registered frame event listener by address.
+    // Safe to call even if the listener was never registered (no-op).
+    // Required for any listener whose lifetime is shorter than the
+    // EffectManager's (e.g. a listener owned by a service that can be
+    // Stop()-ed and have its task exit), since EffectManager stores
+    // listeners by reference.
+
+    void RemoveFrameEventListener(IFrameEventListener& listener);
     void AddEffectEventListener(IEffectEventListener& listener);
 
     void LoadDefaultEffects();

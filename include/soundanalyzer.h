@@ -163,8 +163,7 @@ inline constexpr AudioInputParams kParamsI2SExternal
   #define MIN_VU 0.05f
 #endif
 
-void AudioSamplerTaskEntry(void *);
-void AudioSerialTaskEntry(void *);
+// AudioSerialTaskEntry was migrated into AudioSerialBridge::Run() (ITaskService).
 
 #ifndef GAINDAMPEN
     #define GAINDAMPEN 10      // How slowly brackets narrow in for spectrum bands
@@ -349,9 +348,6 @@ class SoundAnalyzer : public ISoundAnalyzer // Non-audio case stub
 
 #else // Audio case
 
-void AudioSamplerTaskEntry(void *);
-void AudioSerialTaskEntry(void *);
-
 // SoundAnalyzerBase
 //
 // Non-template base class containing hardware-specific logic and shared state
@@ -371,6 +367,18 @@ class SoundAnalyzerBase : public ISoundAnalyzer
     virtual ~SoundAnalyzerBase();
 
     void InitAudioInput();
+
+    // Idempotent. Stops DMA and uninstalls the I2S/ADC driver if (and only if)
+    // InitAudioInput previously installed it. Safe to call multiple times.
+    // Used by AudioService::Stop() to release the hardware on disable/reconfigure
+    // without waiting for global destruction at program end.
+
+    void TeardownAudioInput();
+
+    // True between a successful InitAudioInput and the next TeardownAudioInput.
+
+    bool IsHardwareInstalled() const { return _hardwareInstalled; }
+
     void RunSamplerPass() override;
     void SimulateBeatPass() override;
     void SetPeakDecayRates(float r1, float r2) override;
@@ -509,10 +517,26 @@ class SoundAnalyzerBase : public ISoundAnalyzer
     // amt in [0..1] controls how strongly the ratio influences the result.
     float BeatEnhance(float amt);
 
+    // Zero out VU/peak/ratio state and clear the FFT buffers. Public so that
+    // AudioService::Stop() can leave g_Analyzer in a true "silent" state when
+    // audio is disabled or being reconfigured. Cheap, safe to call from any
+    // thread that already holds the analyzer's locking discipline.
+
+    void Reset();
+
+    // Public writeback setters for the audio task loops. Floats and ints
+    // are read atomically on Xtensa for naturally-aligned 4-byte values, so
+    // the many-readers / single-writer pattern needs no extra locking.
+    // Replaces the prior friend-based direct-member-access pattern that
+    // assumed AudioSamplerTaskEntry / AudioSerialTaskEntry were free
+    // functions.
+
+    void SetVURatio(float v)     { _VURatio = v; }
+    void SetVURatioFade(float v) { _VURatioFade = v; }
+    void SetAudioFPS(int fps)    { _AudioFPS = fps; }
+    void SetSerialFPS(int fps)   { _serialFPS = fps; }
+
   protected:
-    // Give internal audio task functions access to private members
-    friend void AudioSamplerTaskEntry(void *);
-    friend void AudioSerialTaskEntry(void *);
 
     float _VURatio = 1.0f;
     float _VURatioFade = 1.0f;
@@ -576,11 +600,16 @@ class SoundAnalyzerBase : public ISoundAnalyzer
     adc_continuous_handle_t _adc_handle = nullptr;
 #endif
 
+    // Tracked per-instance so AudioService::Stop can call TeardownAudioInput
+    // without risk of double-uninstalling the I2S/ADC driver. Set true on
+    // a successful InitAudioInput, cleared by TeardownAudioInput.
+
+    bool _hardwareInstalled = false;
+
     // The FFT object is now a member variable to avoid ctor/dtor overhead per frame.
     // Declaration order ensures _vReal and _vImaginary address are stable when _FFT is initialized.
     ArduinoFFT<float> _FFT;
 
-    void Reset();
     void FFT();
     void SampleAudio();
     void UpdateVU(float newval);

@@ -2,9 +2,9 @@
 
 //+--------------------------------------------------------------------------
 //
-// File:        RemoteControl.h
+// File:        audioserialbridge.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2026 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -22,58 +22,37 @@
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
 //
-//
 // Description:
 //
-//    Handles a simple IR remote for changing effects, brightness, etc.
+//    AudioSerialBridge sends compact spectrum/VU packets at 2400 baud out
+//    Serial2 (and optionally a TCP socket for the VICE C64 emulator) so
+//    the PETROCK project on a connected Commodore 64/PET can render the
+//    visualization. Gated by ENABLE_AUDIOSERIAL.
 //
-// History:     Jul-17-2021     Davepl      Documented
+//    Inherits ITaskService for the standard launch/shutdown discipline.
+//    The task body lives in audio.cpp alongside the VICE socket helper.
+//
+// History:     May-04-2026         Davepl      Created
+//
 //---------------------------------------------------------------------------
 
 #include "globals.h"
 
-#if ENABLE_REMOTE
+#if ENABLE_AUDIOSERIAL
 
 #include "itaskservice.h"
 
-struct RemoteColorCode
+class AudioSerialBridge : public ITaskService
 {
-    uint32_t code;
-    CRGB     color;
-    uint8_t  hue;
-    const char* name;
-};
-
-// Pimpl to hide RMT driver details from the 115 files including this header
-class RemoteControlImpl;
-
-// RemoteControl
-//
-// Polls an IR receiver for remote codes and dispatches them to effect/config
-// changes. Inherits ITaskService so the polling task lifecycle, shutdown
-// signaling, and force-delete fallback are shared with the other task-owning
-// services rather than reimplemented here.
-
-class RemoteControl : public ITaskService
-{
-  private:
-    std::unique_ptr<RemoteControlImpl> _pImpl;
-
   public:
-    RemoteControl();
-    ~RemoteControl() override;
+    AudioSerialBridge() = default;
+    ~AudioSerialBridge() override { Stop(); }
 
-    // IService::Name
-    const char* Name() const override { return "RemoteControl"; }
-
-    bool begin();
-    void end();
-    void handle();
+    const char* Name() const override { return "AudioSerialBridge"; }
 
   protected:
-    // ITaskService hooks
     TaskConfig GetTaskConfig() const override;
     void Run() override;
 };
 
-#endif
+#endif // ENABLE_AUDIOSERIAL

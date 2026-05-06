@@ -71,7 +71,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     effectIntervalPendingMs: null,
     effectDraft: {},
     deviceDraft: {},
-    deviceErrors: new Set(),
+    deviceErrors: new Map(),
     effectDialog: {
       open: false,
       effectIndex: null,
@@ -79,7 +79,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
       specs: [],
       values: {},
       draft: {},
-      errors: new Set()
+      errors: new Map()
     },
     autoRefresh: true,
     statsRefreshSeconds: Number(localStorage.getItem("nd.statsRefreshSeconds") || 3),
@@ -784,7 +784,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     const setFieldError = (hasError, message) => {
       const help = wrapper.querySelector(".field-help");
       if (hasError) {
-        errorSet.add(key);
+        errorSet.set(key, message);
         help.textContent = message;
         help.classList.add("field-error");
       } else {
@@ -855,6 +855,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
       help.className = "field-help";
       help.innerHTML = (spec.description || "") + " Disable rotation to keep the current effect active indefinitely.";
       meta.appendChild(help);
+      applyStoredFieldError(wrapper, errorSet, key);
 
       if (isEffectDialog) {
         wrapper.dataset.dialogField = "1";
@@ -1035,9 +1036,18 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
         }
         control.value = currentDraft ?? "";
         control.readOnly = readOnly;
+        control.addEventListener("input", () => {
+          const validation = validateFieldValue(spec, control.value);
+          if (validation.valid) {
+            setDraftValue(coerceFieldValue(spec, control.value));
+          } else {
+            draftStore[key] = control.value;
+          }
+        });
         control.addEventListener("change", () => {
           const validation = validateFieldValue(spec, control.value);
           if (!validation.valid) {
+            draftStore[key] = control.value;
             setFieldError(true, validation.message);
             return;
           }
@@ -1054,12 +1064,27 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     help.className = "field-help";
     help.innerHTML = spec.description || "";
     meta.appendChild(help);
+    applyStoredFieldError(wrapper, errorSet, key);
 
     if (isEffectDialog) {
       wrapper.dataset.dialogField = "1";
     }
 
     return wrapper;
+  }
+
+  function applyStoredFieldError(wrapper, errorMap, key) {
+    if (!errorMap || !errorMap.has(key)) {
+      return;
+    }
+
+    const help = wrapper.querySelector(".field-help");
+    if (!help) {
+      return;
+    }
+
+    help.textContent = errorMap.get(key);
+    help.classList.add("field-error");
   }
 
   function validateFieldValue(spec, rawValue) {
@@ -1150,10 +1175,92 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     }
   }
 
-  async function applyDeviceSettings(rebootAfter) {
-    if (state.deviceErrors.size > 0) {
-      toast("Fix invalid settings before applying.", "error");
+  function collectDeviceValidationErrors() {
+    const errors = new Map();
+    const specs = getOrderedDeviceSettingSpecs();
+
+    specs.forEach((spec) => {
+      if (!Object.prototype.hasOwnProperty.call(state.deviceDraft, spec.name)) {
+        return;
+      }
+
+      const validation = validateFieldValue(spec, state.deviceDraft[spec.name]);
+      if (!validation.valid) {
+        errors.set(spec.name, validation.message);
+      }
+    });
+
+    addTopologyValidationErrors(errors);
+    return errors;
+  }
+
+  function addTopologyValidationErrors(errors) {
+    const maxLeds = getCompiledMaxLEDs();
+    if (!maxLeds) {
       return;
+    }
+
+    const width = Number(getDraftOrCurrentDeviceSetting("matrixWidth"));
+    const height = Number(getDraftOrCurrentDeviceSetting("matrixHeight"));
+    if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+      return;
+    }
+
+    const requestedLeds = width * height;
+    if (requestedLeds <= maxLeds) {
+      return;
+    }
+
+    const message = `Matrix dimensions ${width} x ${height} require ${requestedLeds} LEDs, but this firmware supports ${maxLeds}. Lower width/height or flash a build compiled for more LEDs.`;
+    if (!errors.has("matrixWidth")) {
+      errors.set("matrixWidth", message);
+    }
+    if (!errors.has("matrixHeight")) {
+      errors.set("matrixHeight", message);
+    }
+  }
+
+  function getCompiledMaxLEDs() {
+    const topologyMax = Number((((state.unifiedSchema || {}).topology || {}).compiledMaxLEDs) || 0);
+    if (topologyMax > 0) {
+      return topologyMax;
+    }
+
+    const staticMax = Number((state.staticStats || {}).COMPILED_NUM_LEDS || 0);
+    return staticMax > 0 ? staticMax : 0;
+  }
+
+  function getDraftOrCurrentDeviceSetting(name) {
+    if (Object.prototype.hasOwnProperty.call(state.deviceDraft, name)) {
+      return state.deviceDraft[name];
+    }
+
+    const spec = getOrderedDeviceSettingSpecs().find((candidate) => candidate.name === name) || { name };
+    return getCurrentDeviceSettingValue(spec);
+  }
+
+  function summarizeValidationErrors(errorMap, specs) {
+    const specsByName = new Map((specs || []).map((spec) => [spec.name, spec]));
+    const entries = Array.from(errorMap.entries());
+    const visibleEntries = entries.slice(0, 4).map(([name, message]) => {
+      const spec = specsByName.get(name);
+      const label = spec ? (spec.friendlyName || spec.name) : name;
+      return `${label}: ${message}`;
+    });
+    const remaining = entries.length - visibleEntries.length;
+    return visibleEntries.join(" ") + (remaining > 0 ? ` ${remaining} more invalid setting${remaining === 1 ? "" : "s"}.` : "");
+  }
+
+  async function applyDeviceSettings(rebootAfter) {
+    const hadDeviceErrors = state.deviceErrors.size > 0;
+    state.deviceErrors = collectDeviceValidationErrors();
+    if (state.deviceErrors.size > 0) {
+      renderSettingsForm();
+      toast(`Fix invalid settings before applying. ${summarizeValidationErrors(state.deviceErrors, getOrderedDeviceSettingSpecs())}`, "error");
+      return;
+    }
+    if (hadDeviceErrors) {
+      renderSettingsForm();
     }
 
     const { legacyPayload, unifiedPayload } = splitDeviceDraftPayloads(state.deviceDraft);
@@ -1203,7 +1310,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
         specs,
         values,
         draft: {},
-        errors: new Set()
+        errors: new Map()
       };
       renderEffectDialogForm();
       if (!els.effectSettingsDialog.open) {
@@ -1217,7 +1324,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
   function closeEffectDialog() {
     state.effectDialog.open = false;
     state.effectDialog.draft = {};
-    state.effectDialog.errors = new Set();
+    state.effectDialog.errors = new Map();
     if (els.effectSettingsDialog.open) {
       els.effectSettingsDialog.close();
     }
@@ -1229,7 +1336,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
       return;
     }
     if (dialog.errors.size > 0) {
-      toast("Fix invalid effect settings before applying.", "error");
+      toast(`Fix invalid effect settings before applying. ${summarizeValidationErrors(dialog.errors, dialog.specs)}`, "error");
       return;
     }
     const payload = { effectIndex: dialog.effectIndex, ...dialog.draft };

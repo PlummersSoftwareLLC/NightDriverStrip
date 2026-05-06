@@ -35,6 +35,7 @@
 #include "socketserver.h"
 #include "soundanalyzer.h"
 #include "systemcontainer.h"
+#include "taskmgr.h"   // SOCKET_STACK_SIZE / SOCKET_PRIORITY / SOCKET_CORE
 #include "values.h"
 
 #include <arpa/inet.h>
@@ -61,21 +62,79 @@ extern "C"
 SocketServer::SocketServer(int port, int numLeds) :
     _port(port),
     _numLeds(numLeds),
-    _server_fd(-1),
     _cbReceived(0)
 {
     _abOutputBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIMUM_PACKET_SIZE+1) );        // +1 for uzlib one byte overreach bug
     memset(&_address, 0, sizeof(_address));
 }
 
+// ITaskService hooks
+//
+// Start/Stop/IsRunning are inherited final from ITaskService; this class only
+// supplies the task config, the accept loop body, and the listening-socket
+// shutdown nudge that breaks accept() out of its blocking call.
+
+ITaskService::TaskConfig SocketServer::GetTaskConfig() const
+{
+    return TaskConfig {
+        "Socket Server Loop",
+        SOCKET_STACK_SIZE,
+        SOCKET_PRIORITY,
+        SOCKET_CORE,
+        1500   // Stop timeout: accept() can block for ~1s before returning EBADF.
+    };
+}
+
+void SocketServer::OnBeforeWaitForStop()
+{
+    // Closing the listening socket from this thread breaks the task out of
+    // any blocking accept/read call so it can see ShouldShutdown() promptly.
+    release();
+}
+
+// SocketServer::Run
+//
+// Repeatedly opens the socket and processes incoming connections. Runs until
+// ShouldShutdown() is true; ITaskService::TaskEntryThunk handles the actual
+// vTaskDelete and the running-state bookkeeping when this returns.
+void SocketServer::Run()
+{
+    while (!ShouldShutdown())
+    {
+        if (nd_network::IsWiFiConnected())
+        {
+            release();
+            if (ShouldShutdown())
+                break;
+
+            if (begin())
+            {
+                ProcessIncomingConnectionsLoop();
+                debugV("Socket connection closed.  Retrying...");
+            }
+            else
+            {
+                debugE("Failed to start socket server, retrying in 5 seconds...");
+                delay(5000);
+            }
+        }
+        delay(500);
+    }
+
+    // Drop the listening socket if Stop() didn't already, so we leave the
+    // service in a clean state regardless of which path we exited through.
+    release();
+}
+
 void SocketServer::release()
 {
     _pBuffer.reset();
-    if (_server_fd >= 0)
-    {
-        close(_server_fd);
-        _server_fd = -1;
-    }
+    // Atomic exchange: only the caller that observed a non-negative fd does
+    // the close(). The other (Run loop vs. OnBeforeWaitForStop) sees -1 and
+    // becomes a no-op, eliminating a double-close race.
+    int fd = _server_fd.exchange(-1);
+    if (fd >= 0)
+        close(fd);
 }
 
 bool SocketServer::begin()
@@ -83,25 +142,31 @@ bool SocketServer::begin()
     _pBuffer.reset( psram_allocator<uint8_t>().allocate(MAXIMUM_PACKET_SIZE) );
     _cbReceived = 0;
 
-    // Creating socket file descriptor
-    if ((_server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    // Build the socket on a local fd and only publish it into the atomic
+    // _server_fd member after listen() succeeds. That keeps release() (which
+    // can run on a different thread via OnBeforeWaitForStop) from closing a
+    // half-configured descriptor or racing with bind/listen.
+
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0)
     {
         debugE("socket error\n");
-        release();
+        _pBuffer.reset();
         return false;
     }
 
-    nd_network::SetSocketBlockingEnabled(_server_fd, false);
+    nd_network::SetSocketBlockingEnabled(fd, false);
 
     // When an error occurs, and we close and reopen the port, we need to specify reuse flags
     // or it might be too soon to use the port again, since close doesn't actually close it
     // until the socket is no longer in use.
 
     int opt = 1;
-    if (setsockopt(_server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
     {
-        debugE("setsockopt SO_REUSEADDR failed on socket %d: %s (%d)", _server_fd, strerror(errno), errno);
-        release();
+        debugE("setsockopt SO_REUSEADDR failed on socket %d: %s (%d)", fd, strerror(errno), errno);
+        close(fd);
+        _pBuffer.reset();
         return false;
     }
 
@@ -110,20 +175,23 @@ bool SocketServer::begin()
     _address.sin_addr.s_addr = INADDR_ANY;
     _address.sin_port = htons( _port );
 
-    if (bind(_server_fd, (struct sockaddr *)&_address, sizeof(_address)) < 0)       // Bind socket to port
+    if (bind(fd, (struct sockaddr *)&_address, sizeof(_address)) < 0)       // Bind socket to port
     {
-        debugE("bind failed on port %d, socket %d: %s (%d)", _port, _server_fd, strerror(errno), errno);
-        release();
+        debugE("bind failed on port %d, socket %d: %s (%d)", _port, fd, strerror(errno), errno);
+        close(fd);
+        _pBuffer.reset();
         return false;
     }
-    if (listen(_server_fd, 6) < 0)                                                  // Start listening for connections
+    if (listen(fd, 6) < 0)                                                  // Start listening for connections
     {
-        debugE("listen failed on port %d, socket %d: %s (%d)", _port, _server_fd, strerror(errno), errno);
-        release();
+        debugE("listen failed on port %d, socket %d: %s (%d)", _port, fd, strerror(errno), errno);
+        close(fd);
+        _pBuffer.reset();
         return false;
     }
 
-    debugI("Socket server %d listening on port %d", _server_fd, _port);
+    _server_fd.store(fd);
+    debugI("Socket server %d listening on port %d", fd, _port);
     return true;
 }
 
@@ -233,7 +301,8 @@ bool SocketServer::DecompressBuffer(const uint8_t * pBuffer, size_t cBuffer, uin
 
 bool SocketServer::ProcessIncomingConnectionsLoop()
 {
-    if (0 >= _server_fd)
+    int listen_fd = _server_fd.load();
+    if (0 >= listen_fd)
     {
         debugE("No _server_fd, returning.");
         return false;
@@ -245,7 +314,12 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
     socklen_t addrlen = sizeof(_address);
     while (new_socket < 0)
     {
-        new_socket = accept(_server_fd, (struct sockaddr *)&_address, &addrlen);
+        // Re-read each iteration so a release() from another thread (Stop)
+        // is observed as -1 and we exit promptly via EBADF/-1 fall-through.
+        listen_fd = _server_fd.load();
+        if (listen_fd < 0)
+            return false;
+        new_socket = accept(listen_fd, (struct sockaddr *)&_address, &addrlen);
         if (new_socket < 0)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -253,7 +327,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
                 delay(100); // No connection yet, yield and retry
                 continue;
             }
-            debugE("Socket server %d failed to accept connection: %s (%d)", _server_fd, strerror(errno), errno);
+            debugE("Socket server %d failed to accept connection: %s (%d)", listen_fd, strerror(errno), errno);
             return false;
         }
     }

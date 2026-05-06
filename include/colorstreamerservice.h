@@ -2,9 +2,9 @@
 
 //+--------------------------------------------------------------------------
 //
-// File:        RemoteControl.h
+// File:        colorstreamerservice.h
 //
-// NightDriverStrip - (c) 2018 Plummer's Software LLC.  All Rights Reserved.
+// NightDriverStrip - (c) 2026 Plummer's Software LLC.  All Rights Reserved.
 //
 // This file is part of the NightDriver software project.
 //
@@ -22,58 +22,36 @@
 //    along with Nightdriver.  It is normally found in copying.txt
 //    If not, see <https://www.gnu.org/licenses/>.
 //
-//
 // Description:
 //
-//    Handles a simple IR remote for changing effects, brightness, etc.
+//    ColorStreamerService pushes per-frame LED color data out over a
+//    TCP socket (LEDViewer protocol) and/or the WebSocket frame channel
+//    so external tools and the local web UI can preview the strip.
+//    Gated by COLORDATA_SERVER_ENABLED. Inherits ITaskService for
+//    lifecycle. Implementation lives in network.cpp alongside the
+//    LEDViewer + frame-event-listener machinery.
 //
-// History:     Jul-17-2021     Davepl      Documented
+// History:     May-04-2026         Davepl      Created
+//
 //---------------------------------------------------------------------------
 
 #include "globals.h"
 
-#if ENABLE_REMOTE
+#if COLORDATA_SERVER_ENABLED
 
 #include "itaskservice.h"
 
-struct RemoteColorCode
+class ColorStreamerService : public ITaskService
 {
-    uint32_t code;
-    CRGB     color;
-    uint8_t  hue;
-    const char* name;
-};
-
-// Pimpl to hide RMT driver details from the 115 files including this header
-class RemoteControlImpl;
-
-// RemoteControl
-//
-// Polls an IR receiver for remote codes and dispatches them to effect/config
-// changes. Inherits ITaskService so the polling task lifecycle, shutdown
-// signaling, and force-delete fallback are shared with the other task-owning
-// services rather than reimplemented here.
-
-class RemoteControl : public ITaskService
-{
-  private:
-    std::unique_ptr<RemoteControlImpl> _pImpl;
-
   public:
-    RemoteControl();
-    ~RemoteControl() override;
+    ColorStreamerService() = default;
+    ~ColorStreamerService() override { Stop(); }
 
-    // IService::Name
-    const char* Name() const override { return "RemoteControl"; }
-
-    bool begin();
-    void end();
-    void handle();
+    const char* Name() const override { return "ColorStreamerService"; }
 
   protected:
-    // ITaskService hooks
     TaskConfig GetTaskConfig() const override;
     void Run() override;
 };
 
-#endif
+#endif // COLORDATA_SERVER_ENABLED

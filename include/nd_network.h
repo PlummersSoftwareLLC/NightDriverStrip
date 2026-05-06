@@ -30,6 +30,7 @@
 
 #include "globals.h"
 #include "esp_mac.h"
+#include "itaskservice.h"
 #include "types.h"
 
 #include <atomic>
@@ -73,8 +74,6 @@ namespace nd_network
     enum class WiFiConnectResult { Connected, Disconnected, NoCredentials };
     enum WifiCredSource { ImprovCreds = 0, CompileTimeCreds = 1 };
 
-    // Lifecycle & Loop
-    void NetworkHandlingLoopEntry(void *);
     void InitNetworkCLI();
 
     // Configuration & Connection
@@ -122,11 +121,13 @@ namespace nd_network
     // Allows functions to be registered that are called at regular intervals and/or on request, in the
     // background. As the name of the class implies, this is intended to be used to execute network
     // requests, like for effects that require data from RESTful APIs.
-    class NetworkReader
-    {
-        // We allow the main network task entry point function to access private members
-        friend void NetworkHandlingLoopEntry(void *);
+    //
+    // Inherits ITaskService: NetworkReader owns the network handling task that
+    // also drives WiFi reconnect/OTA/mDNS pumping. Run() is the absorbed
+    // body of what used to be NetworkHandlingLoopEntry.
 
+    class NetworkReader : public ITaskService
+    {
     public:
         struct ReaderEntry;
 
@@ -134,6 +135,10 @@ namespace nd_network
         std::vector<std::shared_ptr<ReaderEntry>> readers;
 
     public:
+
+        ~NetworkReader() override { Stop(); }
+        const char* Name() const override { return "NetworkReader"; }
+
         // Add a reader to the collection. Returns the index of the added reader, for use with FlagReader().
         //   Note that if an interval (in ms) is specified, the reader will run for the first time after
         //   the interval has passed, unless "true" is passed to the last parameter.
@@ -144,6 +149,11 @@ namespace nd_network
 
         // Cancel a reader. After this, it will no longer be invoked.
         void CancelReader(size_t index);
+
+    protected:
+        // ITaskService hooks
+        TaskConfig GetTaskConfig() const override;
+        void Run() override;
     };
 #endif
 
@@ -157,7 +167,6 @@ using nd_network::UpdateNTPTime;
 using nd_network::ReadWiFiConfig;
 using nd_network::WriteWiFiConfig;
 using nd_network::ClearWiFiConfig;
-using nd_network::NetworkHandlingLoopEntry;
 
 #if ENABLE_WIFI
     using nd_network::NetworkReader;
@@ -166,5 +175,4 @@ using nd_network::NetworkHandlingLoopEntry;
 
 // Helper prototypes used by network.cpp
 void SetupOTA(const String &strHostname);
-void IRAM_ATTR RemoteLoopEntry(void *);
 String urlEncode(const String &str);

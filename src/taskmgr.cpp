@@ -6,7 +6,10 @@
 //
 // Description:
 //
-//    Implementations for NightDriverTaskManager
+//    Implementations for TaskManager. Owns the two pinned idle-priority
+//    CPU-measurement tasks and the per-effect ad-hoc task launcher. All
+//    project-level service tasks live as Run() methods on their respective
+//    IService classes via ITaskService and are launched there.
 //
 // History:     Feb-25-2026         Created to thin taskmgr.h
 //
@@ -89,33 +92,21 @@ void TaskManager::CheckHeap()
     }
 }
 
-// NightDriverTaskManager
-//
-// A superclass of the base TaskManager that knows how to start and track the tasks specific to this project
-
-NightDriverTaskManager::EffectTaskParams::EffectTaskParams(EffectTaskFunction function, LEDStripEffect* pEffect)
+TaskManager::EffectTaskParams::EffectTaskParams(EffectTaskFunction function, LEDStripEffect* pEffect)
   : function(std::move(function)),
     pEffect(pEffect)
 {}
 
-NightDriverTaskManager::~NightDriverTaskManager()
+TaskManager::~TaskManager()
 {
     for (auto& task : _vEffectTasks)
         vTaskDelete(task);
 
-    DELETE_TASK(_taskDraw);
-    DELETE_TASK(_taskScreen);
-    DELETE_TASK(_taskRemote);
-    DELETE_TASK(_taskSerial);
-    DELETE_TASK(_taskColorData);
-    DELETE_TASK(_taskAudio);
-    DELETE_TASK(_taskSocket);
-    DELETE_TASK(_taskNetwork);
-    DELETE_TASK(_taskJSONWriter);
-    DELETE_TASK(_taskDebug);
+    // The two idle tasks are intentionally not deleted; they're the entire
+    // reason this object exists and they run for the lifetime of the chip.
 }
 
-void NightDriverTaskManager::EffectTaskEntry(void *pVoid)
+void TaskManager::EffectTaskEntry(void *pVoid)
 {
     auto *pTaskParams = static_cast<EffectTaskParams *>(pVoid);
 
@@ -128,116 +119,10 @@ void NightDriverTaskManager::EffectTaskEntry(void *pVoid)
     function(*pEffect);
 }
 
-void NightDriverTaskManager::StartScreenThread()
-{
-    #if USE_SCREEN
-        Serial.print( str_sprintf(">> Launching Screen Thread.  Mem: %zu, LargestBlk: %zu, PSRAM Free: %zu/%zu, ", (size_t)ESP.getFreeHeap(), (size_t)ESP.getMaxAllocHeap(), (size_t)ESP.getFreePsram(), (size_t)ESP.getPsramSize()) );
-        xTaskCreatePinnedToCore(ScreenUpdateLoopEntry, "Screen Loop", SCREEN_STACK_SIZE, nullptr, SCREEN_PRIORITY, &_taskScreen, SCREEN_CORE);
-        CheckHeap();
-    #endif
-}
-
-void NightDriverTaskManager::StartSerialThread()
-{
-    #if ENABLE_AUDIOSERIAL
-        Serial.print( str_sprintf(">> Launching Serial Thread.  Mem: %zu, LargestBlk: %zu, PSRAM Free: %zu/%zu, ", (size_t)ESP.getFreeHeap(), (size_t)ESP.getMaxAllocHeap(), (size_t)ESP.getFreePsram(), (size_t)ESP.getPsramSize()) );
-        xTaskCreatePinnedToCore(AudioSerialTaskEntry, "Audio Serial Loop", DEFAULT_STACK_SIZE, nullptr, AUDIOSERIAL_PRIORITY, &_taskSerial, AUDIOSERIAL_CORE);
-        CheckHeap();
-    #endif
-}
-
-void NightDriverTaskManager::StartColorDataThread()
-{
-    #if COLORDATA_SERVER_ENABLED
-        Serial.print( str_sprintf(">> Launching ColorData Thread.  Mem: %zu, LargestBlk: %zu, PSRAM Free: %zu/%zu, ", (size_t)ESP.getFreeHeap(), (size_t)ESP.getMaxAllocHeap(), (size_t)ESP.getFreePsram(), (size_t)ESP.getPsramSize()) );
-        xTaskCreatePinnedToCore(ColorDataTaskEntry, "ColorData Loop", DEFAULT_STACK_SIZE, nullptr, COLORDATA_PRIORITY, &_taskColorData, COLORDATA_CORE);
-        CheckHeap();
-    #endif
-}
-
-void NightDriverTaskManager::StartDrawThread()
-{
-    Serial.print( str_sprintf(">> Launching Drawing Thread.  Mem: %zu, LargestBlk: %zu, PSRAM Free: %zu/%zu, ", (size_t)ESP.getFreeHeap(), (size_t)ESP.getMaxAllocHeap(), (size_t)ESP.getFreePsram(), (size_t)ESP.getPsramSize()) );
-    xTaskCreatePinnedToCore(DrawLoopTaskEntry, "Draw Loop", DRAWING_STACK_SIZE, nullptr, DRAWING_PRIORITY, &_taskDraw, DRAWING_CORE);
-    CheckHeap();
-}
-
-void NightDriverTaskManager::StartAudioThread()
-{
-    #if ENABLE_AUDIO
-        Serial.print( str_sprintf(">> Launching Audio Thread.  Mem: %zu, LargestBlk: %zu, PSRAM Free: %zu/%zu, ", (size_t)ESP.getFreeHeap(), (size_t)ESP.getMaxAllocHeap(), (size_t)ESP.getFreePsram(), (size_t)ESP.getPsramSize()) );
-        xTaskCreatePinnedToCore(AudioSamplerTaskEntry, "Audio Sampler Loop", AUDIO_STACK_SIZE, nullptr, AUDIO_PRIORITY, &_taskAudio, AUDIO_CORE);
-        CheckHeap();
-    #endif
-}
-
-void NightDriverTaskManager::StartNetworkThread()
-{
-    #if ENABLE_WIFI
-        Serial.print( str_sprintf(">> Launching Network Thread.  Mem: %zu, LargestBlk: %zu, PSRAM Free: %zu/%zu, ", (size_t)ESP.getFreeHeap(), (size_t)ESP.getMaxAllocHeap(), (size_t)ESP.getFreePsram(), (size_t)ESP.getPsramSize()) );
-        xTaskCreatePinnedToCore(NetworkHandlingLoopEntry, "NetworkHandlingLoop", NET_STACK_SIZE, nullptr, NET_PRIORITY, &_taskNetwork, NET_CORE);
-        CheckHeap();
-    #endif
-}
-
-void NightDriverTaskManager::StartDebugThread()
-{
-    #if ENABLE_WIFI
-        Serial.print( str_sprintf(">> Launching Debug Thread.  Mem: %zu, LargestBlk: %zu, PSRAM Free: %zu/%zu, ", (size_t)ESP.getFreeHeap(), (size_t)ESP.getMaxAllocHeap(), (size_t)ESP.getFreePsram(), (size_t)ESP.getPsramSize()) );
-        xTaskCreatePinnedToCore(DebugLoopTaskEntry, "Debug Loop", DEBUG_STACK_SIZE, nullptr, DEBUG_PRIORITY, &_taskDebug, DEBUG_CORE);
-        CheckHeap();
-    #endif
-}
-
-void NightDriverTaskManager::StartSocketThread()
-{
-    #if INCOMING_WIFI_ENABLED
-        Serial.print( str_sprintf(">> Launching Socket Thread.  Mem: %zu, LargestBlk: %zu, PSRAM Free: %zu/%zu, ", (size_t)ESP.getFreeHeap(), (size_t)ESP.getMaxAllocHeap(), (size_t)ESP.getFreePsram(), (size_t)ESP.getPsramSize()) );
-        xTaskCreatePinnedToCore(SocketServerTaskEntry, "Socket Server Loop", SOCKET_STACK_SIZE, nullptr, SOCKET_PRIORITY, &_taskSocket, SOCKET_CORE);
-        CheckHeap();
-    #endif
-}
-
-void NightDriverTaskManager::StartRemoteThread()
-{
-    #if ENABLE_REMOTE
-        Serial.print( str_sprintf(">> Launching Remote Thread.  Mem: %zu, LargestBlk: %zu, PSRAM Free: %zu/%zu, ", (size_t)ESP.getFreeHeap(), (size_t)ESP.getMaxAllocHeap(), (size_t)ESP.getFreePsram(), (size_t)ESP.getPsramSize()) );
-        xTaskCreatePinnedToCore(RemoteLoopEntry, "IR Remote Loop", REMOTE_STACK_SIZE, nullptr, REMOTE_PRIORITY, &_taskRemote, REMOTE_CORE);
-        CheckHeap();
-    #endif
-}
-
-void NightDriverTaskManager::StartJSONWriterThread()
-{
-    Serial.print( str_sprintf(">> Launching JSON Writer Thread.  Mem: %zu, LargestBlk: %zu, PSRAM Free: %zu/%zu, ", (size_t)ESP.getFreeHeap(), (size_t)ESP.getMaxAllocHeap(), (size_t)ESP.getFreePsram(), (size_t)ESP.getPsramSize()) );
-    xTaskCreatePinnedToCore(JSONWriterTaskEntry, "JSON Writer Loop", JSON_STACK_SIZE, nullptr, JSONWRITER_PRIORITY, &_taskJSONWriter, JSONWRITER_CORE);
-    CheckHeap();
-}
-
-void NightDriverTaskManager::NotifyJSONWriterThread()
-{
-    if (_taskJSONWriter == nullptr)
-        return;
-
-    debugW(">> Notifying JSON Writer Thread");
-    // Wake up the writer invoker task if it's sleeping, or request another write cycle if it isn't
-    xTaskNotifyGive(_taskJSONWriter);
-}
-
-void NightDriverTaskManager::NotifyNetworkThread()
-{
-    if (_taskNetwork == nullptr)
-        return;
-
-    debugW(">> Notifying Network Thread");
-    // Wake up the network task if it's sleeping, or request another read cycle if it isn't
-    xTaskNotifyGive(_taskNetwork);
-}
-
 // Effect threads run with NET priority and on the NET core by default. It seems a sensible choice
 //   because effect threads tend to pull things from the Internet that they want to show
 
-TaskHandle_t NightDriverTaskManager::StartEffectThread(EffectTaskFunction function, LEDStripEffect* pEffect, const char* name, UBaseType_t priority, BaseType_t core)
+TaskHandle_t TaskManager::StartEffectThread(EffectTaskFunction function, LEDStripEffect* pEffect, const char* name, UBaseType_t priority, BaseType_t core)
 {
     // We use a raw pointer here just to cross the thread/task boundary. The EffectTaskEntry method
     //   deletes the object as soon as it can.

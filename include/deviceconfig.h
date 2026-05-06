@@ -366,7 +366,17 @@ class DeviceConfig : public IJSONSerializable
             return false;
         #endif
     }
-    bool SupportsLiveAudioInputReconfigure() const { return false; }
+
+    // True when AudioService can install/uninstall the audio driver at runtime.
+    // Today this matches the SupportsConfigurableAudioInputPin set: M5 onboard
+    // audio is managed by M5Unified itself, and the analog ADC path uses a
+    // fixed channel, so neither benefits from a live restart.
+
+    bool SupportsLiveAudioInputReconfigure() const
+    {
+        return SupportsConfigurableAudioInputPin();
+    }
+
     String GetAudioInputModeName() const
     {
         #if !ENABLE_AUDIO

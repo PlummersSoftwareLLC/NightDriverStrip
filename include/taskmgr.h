@@ -49,7 +49,9 @@
 #include <esp_arduino_version.h>
 #include <esp_task_wdt.h>
 #include <freertos/task.h>
+#include <functional>
 #include <utility>
+#include <vector>
 
 class LEDStripEffect;
 
@@ -104,12 +106,28 @@ class IdleTask
 
 // TaskManager
 //
-// TaskManager runs two tasks at just over idle priority that do nothing but try to burn CPU, and they
-// keep track of how much they can burn.   It's assumed that everything else runs at a higher priority
-// and thus they "starve" the idle tasks when doing work.
+// Owns the two pinned idle-priority "CPU monitor" tasks that measure how much
+// CPU the rest of the system *isn't* using, and the per-effect task launcher
+// (StartEffectThread) for effects that want to spin off their own background
+// thread. All project-level service threads (AudioService, AudioSerialBridge,
+// ColorStreamerService, DebugConsole, JSONWriter, NetworkReader,
+// RemoteControl, RenderService, Screen, SocketServer) live as Run() methods
+// on their respective IService classes via ITaskService and are launched
+// through g_ptrSystem->Get*().Start() — TaskManager doesn't track them.
 
 class TaskManager
 {
+public:
+    using EffectTaskFunction = std::function<void(LEDStripEffect&)>;
+
+    struct EffectTaskParams
+    {
+        EffectTaskFunction function;
+        LEDStripEffect* pEffect;
+
+        EffectTaskParams(EffectTaskFunction function, LEDStripEffect* pEffect);
+    };
+
 protected:
     TaskHandle_t _hIdle0 = nullptr;
     TaskHandle_t _hIdle1 = nullptr;
@@ -117,7 +135,14 @@ protected:
     IdleTask _taskIdle0;
     IdleTask _taskIdle1;
 
+private:
+    std::vector<TaskHandle_t> _vEffectTasks;
+
+    static void EffectTaskEntry(void *pVoid);
+
 public:
+    TaskManager() = default;
+    ~TaskManager();
 
     float GetCPUUsagePercent(int iCore = -1) const
     {
@@ -131,9 +156,6 @@ public:
             throw std::runtime_error("Invalid core passed to GetCPUUsagePercentCPU");
     }
 
-    TaskManager()
-    = default;
-
     // CheckHeap
     //
     // Quick and dirty debug test to make sure the heap has not been corrupted
@@ -141,74 +163,6 @@ public:
     static void CheckHeap();
 
     void begin();
-
-};
-
-// NightDriverTaskManager
-//
-// A superclass of the base TaskManager that knows how to start and track the tasks specific to this project
-
-void ScreenUpdateLoopEntry(void *);
-void AudioSerialTaskEntry(void *);
-void DrawLoopTaskEntry(void *);
-void AudioSamplerTaskEntry(void *);
-void DebugLoopTaskEntry(void *);
-void SocketServerTaskEntry(void *);
-void RemoteLoopEntry(void *);
-void JSONWriterTaskEntry(void *);
-void ColorDataTaskEntry(void *);
-
-#define DELETE_TASK(handle) if (handle != nullptr) vTaskDelete(handle)
-
-class NightDriverTaskManager : public TaskManager
-{
-public:
-
-    using EffectTaskFunction = std::function<void(LEDStripEffect&)>;
-
-    struct EffectTaskParams
-    {
-        EffectTaskFunction function;
-        LEDStripEffect* pEffect;
-
-        EffectTaskParams(EffectTaskFunction function, LEDStripEffect* pEffect);
-    };
-
-private:
-
-    TaskHandle_t _taskScreen        = nullptr;
-    TaskHandle_t _taskNetwork       = nullptr;
-    TaskHandle_t _taskDraw          = nullptr;
-    TaskHandle_t _taskDebug         = nullptr;
-    TaskHandle_t _taskAudio         = nullptr;
-    TaskHandle_t _taskRemote        = nullptr;
-    TaskHandle_t _taskSocket        = nullptr;
-    TaskHandle_t _taskSerial        = nullptr;
-    TaskHandle_t _taskColorData     = nullptr;
-    TaskHandle_t _taskJSONWriter    = nullptr;
-
-    std::vector<TaskHandle_t> _vEffectTasks;
-
-    static void EffectTaskEntry(void *pVoid);
-
-public:
-
-    ~NightDriverTaskManager();
-
-    void StartScreenThread();
-    void StartSerialThread();
-    void StartColorDataThread();
-    void StartDrawThread();
-    void StartAudioThread();
-    void StartNetworkThread();
-    void StartDebugThread();
-    void StartSocketThread();
-    void StartRemoteThread();
-    void StartJSONWriterThread();
-
-
-    void NotifyJSONWriterThread();
-    void NotifyNetworkThread();
 
     // Effect threads run with NET priority and on the NET core by default. It seems a sensible choice
     //   because effect threads tend to pull things from the Internet that they want to show

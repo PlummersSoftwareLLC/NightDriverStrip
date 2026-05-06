@@ -32,9 +32,12 @@
 
 #include "globals.h"
 
+#include <atomic>
 #include <memory>
 #include <netinet/in.h>
 #include <sys/socket.h>
+
+#include "itaskservice.h"
 
 #define STANDARD_DATA_HEADER_SIZE   24                                             // Size of the header for expanded data
 #define COMPRESSED_HEADER_SIZE      16                                             // Size of the header for compressed data
@@ -81,15 +84,24 @@ static_assert( sizeof(SocketResponse) == 72, "SocketResponse struct size is not 
 
 // SocketServer
 //
-// Handles incoming connections from the server and pass the data that comes in
+// Handles incoming connections from the server and passes the data that comes
+// in. Inherits ITaskService so the accept/read loop, shutdown signaling, and
+// listening-socket teardown all share the standard service lifecycle.
 
-class SocketServer
+class SocketServer : public ITaskService
 {
 private:
 
     int                         _port;
     int                         _numLeds;
-    int                         _server_fd;
+
+    // Listening socket fd. atomic<int> because release() can be invoked from
+    // both the SocketServer task (Run/begin failure paths) and from the
+    // service-stop path (OnBeforeWaitForStop, called on the caller's thread).
+    // Using atomic exchange ensures only one of those callers actually
+    // close()s the descriptor; the other observes -1 and is a no-op.
+    
+    std::atomic<int>            _server_fd{-1};
     struct sockaddr_in          _address;
     std::unique_ptr<uint8_t []> _pBuffer;
     std::unique_ptr<uint8_t []> _abOutputBuffer;
@@ -99,11 +111,24 @@ public:
     size_t                      _cbReceived;
 
     SocketServer(int port, int numLeds);
+    ~SocketServer() override { Stop(); }
+
+    // IService::Name
+    const char* Name() const override { return "SocketServer"; }
+
     void release();
     bool begin();
     void ResetReadBuffer();
     void SetLEDCount(size_t numLeds) { _numLeds = numLeds; }
     size_t GetLEDCount() const { return _numLeds; }
+
+  protected:
+    // ITaskService hooks
+    TaskConfig GetTaskConfig() const override;
+    void Run() override;
+    void OnBeforeWaitForStop() override;
+
+  public:
 
     // ReadUntilNBytesReceived
     //

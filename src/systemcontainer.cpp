@@ -28,7 +28,12 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
+#include "audioservice.h"
+#include "audioserialbridge.h"
+#include "colorstreamerservice.h"
+#include "debugconsole.h"
 #include "deviceconfig.h"
+#include "renderservice.h"
 #include "effectmanager.h"
 #include "gfxbase.h"
 #include "jsonserializer.h"
@@ -107,7 +112,7 @@ EffectManager& SystemContainer::GetEffectManager() const
     return *_ptrEffectManager;
 }
 
-NightDriverTaskManager& SystemContainer::GetTaskManager() const
+TaskManager& SystemContainer::GetTaskManager() const
 {
     CheckPointer(!!_ptrTaskManager, "TaskManager");
     return *_ptrTaskManager;
@@ -254,11 +259,11 @@ EffectManager& SystemContainer::SetupEffectManager(const ArduinoJson::JsonObject
 }
 
 // Creates, begins and returns the TaskManager
-NightDriverTaskManager& SystemContainer::SetupTaskManager()
+TaskManager& SystemContainer::SetupTaskManager()
 {
     if (!_ptrTaskManager)
     {
-        _ptrTaskManager = make_unique_psram<NightDriverTaskManager>();
+        _ptrTaskManager = make_unique_psram<TaskManager>();
         _ptrTaskManager->begin();
     }
 
@@ -275,11 +280,13 @@ void SystemContainer::SetupConfig()
         throw std::runtime_error("Attempt to setup config objects without TaskManager");
     }
 
-    // Create the JSON writer and start its background thread
+    // Create the JSON writer and start its background thread. JSONWriter is an
+    // IService so it owns its own task; we just call Start() here.
+    
     if (!_ptrJSONWriter)
     {
         _ptrJSONWriter = make_unique_psram<JSONWriter>();
-        _ptrTaskManager->StartJSONWriterThread();
+        _ptrJSONWriter->Start();
     }
 
     // Create and load device config from SPIFFS if possible
@@ -423,3 +430,74 @@ Screen& SystemContainer::SetupHardwareDisplay(int w, int h)
     return *_ptrDisplay;
 }
 #endif
+
+AudioService& SystemContainer::SetupAudioService()
+{
+    if (!_ptrAudioService)
+        _ptrAudioService = make_unique_psram<AudioService>();
+    return *_ptrAudioService;
+}
+
+AudioService& SystemContainer::GetAudioService() const
+{
+    CheckPointer(!!_ptrAudioService, "AudioService");
+    return *_ptrAudioService;
+}
+
+#if ENABLE_AUDIOSERIAL
+AudioSerialBridge& SystemContainer::SetupAudioSerialBridge()
+{
+    if (!_ptrAudioSerialBridge)
+        _ptrAudioSerialBridge = make_unique_psram<AudioSerialBridge>();
+    return *_ptrAudioSerialBridge;
+}
+
+AudioSerialBridge& SystemContainer::GetAudioSerialBridge() const
+{
+    CheckPointer(!!_ptrAudioSerialBridge, "AudioSerialBridge");
+    return *_ptrAudioSerialBridge;
+}
+#endif
+
+#if ENABLE_WIFI
+DebugConsole& SystemContainer::SetupDebugConsole()
+{
+    if (!_ptrDebugConsole)
+        _ptrDebugConsole = make_unique_psram<DebugConsole>();
+    return *_ptrDebugConsole;
+}
+
+DebugConsole& SystemContainer::GetDebugConsole() const
+{
+    CheckPointer(!!_ptrDebugConsole, "DebugConsole");
+    return *_ptrDebugConsole;
+}
+#endif
+
+#if COLORDATA_SERVER_ENABLED
+ColorStreamerService& SystemContainer::SetupColorStreamerService()
+{
+    if (!_ptrColorStreamerService)
+        _ptrColorStreamerService = make_unique_psram<ColorStreamerService>();
+    return *_ptrColorStreamerService;
+}
+
+ColorStreamerService& SystemContainer::GetColorStreamerService() const
+{
+    CheckPointer(!!_ptrColorStreamerService, "ColorStreamerService");
+    return *_ptrColorStreamerService;
+}
+#endif
+
+RenderService& SystemContainer::SetupRenderService()
+{
+    if (!_ptrRenderService)
+        _ptrRenderService = make_unique_psram<RenderService>();
+    return *_ptrRenderService;
+}
+
+RenderService& SystemContainer::GetRenderService() const
+{
+    CheckPointer(!!_ptrRenderService, "RenderService");
+    return *_ptrRenderService;
+}

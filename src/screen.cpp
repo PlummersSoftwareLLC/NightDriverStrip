@@ -443,6 +443,17 @@ public:
         g_ptrSystem->GetEffectManager().AddFrameEventListener(frameEventListener);
     }
 
+    ~EffectSimulatorPage() override
+    {
+        // Symmetry with the constructor: deregister so EffectManager can't
+        // hold a dangling reference if the page is ever destroyed (today
+        // the page is a static singleton so this is belt-and-suspenders, but
+        // the lifecycle contract is now correct should that change).
+
+        if (g_ptrSystem && g_ptrSystem->HasEffectManager())
+            g_ptrSystem->GetEffectManager().RemoveFrameEventListener(frameEventListener);
+    }
+
     std::string Name() const override { return "CurrentEffect"; }
 
     void Draw(Screen &display, bool bRedraw) override
@@ -701,15 +712,32 @@ void IRAM_ATTR Screen::Update(bool bRedraw)
     s_lastFrameMs = now;
 }
 
-// Screen::RunUpdateLoop
-// Displays statistics on the Heltec's built in OLED board.  If you are using a different board, you would simply get
-// rid of this or modify it to fit a screen you do have.  You could also try serial output, as it's on a low-pri thread
-// it shouldn't disturb the primary cores.
+// ITaskService hooks
+//
+// Start/Stop/IsRunning are inherited final from ITaskService; this class only
+// supplies the task config and the screen update loop body. The page-init
+// quirk (lazy button binding) is preserved verbatim — buttons can't attach
+// until pinModes are stable, which they are by the time Run() executes.
 
-void IRAM_ATTR Screen::RunUpdateLoop()
+ITaskService::TaskConfig Screen::GetTaskConfig() const
 {
-    // debugI(">> ScreenUpdateLoopEntry\n");
+    return TaskConfig {
+        "Screen Loop",
+        SCREEN_STACK_SIZE,
+        SCREEN_PRIORITY,
+        SCREEN_CORE,
+        500    // Stop timeout: loop yields every ~1ms.
+    };
+}
 
+// Screen::Run
+// Displays statistics on the Heltec's built in OLED board.  If you are using
+// a different board, you would simply get rid of this or modify it to fit a
+// screen you do have.  You could also try serial output, as it's on a low-pri
+// thread it shouldn't disturb the primary cores.
+
+void IRAM_ATTR Screen::Run()
+{
     bool bRedraw = true;
     // Lazy init of buttons when loop starts (after hardware/defines are known)
     static bool s_buttonsInited = false;
@@ -728,8 +756,7 @@ void IRAM_ATTR Screen::RunUpdateLoop()
         s_buttonsInited = true;
     }
 
-
-    for (;;)
+    while (!ShouldShutdown())
     {
         uint32_t frameStartTime = millis();
 
@@ -787,18 +814,6 @@ void IRAM_ATTR Screen::RunUpdateLoop()
         }
         bRedraw = false;
         delay(1);
-    }
-}
-
-// Thin wrapper to preserve the existing FreeRTOS task entry point name while
-// delegating to the new Screen::RunUpdateLoop() method.
-void IRAM_ATTR ScreenUpdateLoopEntry(void *)
-{
-    // Ensure the system and display are available
-    if (g_ptrSystem)
-    {
-        auto &display = g_ptrSystem->GetDisplay();
-        display.RunUpdateLoop();
     }
 }
 

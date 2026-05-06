@@ -45,15 +45,17 @@
 
 #include <ArduinoJson.h>
 #include <ESPAsyncWebServer.h>
+#include <atomic>
 #include <map>
 
 #include "deviceconfig.h"
+#include "iservice.h"
 #include "jsonserializer.h"
 #include "nd_network.h"
 
 class LEDStripEffect;
 
-class CWebServer
+class CWebServer : public IService
 {
   public:
     static constexpr int HttpOk = 200;
@@ -114,6 +116,16 @@ class CWebServer
 
     AsyncWebServer _server;
     StaticStatistics _staticStats;
+    std::atomic<bool> _running{false};
+
+    // Sticky flag: AsyncWebServer::begin() registers a TCP listener inside
+    // LWIP and AsyncTCP that we cannot fully reset from this fork. Once we
+    // have called begin() the first time we remember it here so a Stop()
+    // followed by Start() can warn loudly rather than silently leak/double-
+    // bind the listening socket. (We still do the begin again because the
+    // AsyncTCP server is normally reused; this just surfaces the limitation.)
+    
+    std::atomic<bool> _everStarted{false};
 
     // Helper functions/templates
 
@@ -170,6 +182,14 @@ class CWebServer
     static bool ValidateLegacyDeviceSettings(AsyncWebServerRequest * pRequest, String* errorMessage = nullptr);
     static bool ValidateUnifiedDeviceSettings(JsonObjectConst device, String* errorMessage = nullptr);
     static bool SetSettingsIfPresent(AsyncWebServerRequest * pRequest, String* errorMessage = nullptr);
+
+    // Apply a new audio input pin to DeviceConfig and, when the build supports
+    // a live reconfigure, push it through AudioService::Reconfigure() without
+    // requiring a reboot. Reverts the persisted pin on failure. Safe to call
+    // whether or not g_ptrSystem / AudioService are present. Returns true if
+    // either the pin was unchanged or the live reconfigure succeeded.
+    
+    static bool ApplyAudioInputPinChange(int oldPin);
     static long GetEffectIndexFromParam(AsyncWebServerRequest * pRequest, bool post = false);
     static bool CheckAndGetSettingsEffect(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect, bool post = false);
     static void SendEffectSettingsResponse(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect);
@@ -222,12 +242,29 @@ class CWebServer
         : _server(NetworkPort::Webserver), _staticStats()
     {}
 
-    // begin - register page load handlers and start serving pages
+    ~CWebServer() override { Stop(); }
+
+    // IService lifecycle. Start delegates to begin() (which registers the
+    // route handlers and calls AsyncWebServer::begin); Stop ends the server.
+    // Idempotent on both sides.
+    bool Start() override;
+    void Stop() override;
+    bool IsRunning() const override   { return _running.load(); }
+    const char* Name() const override { return "WebServer"; }
+
+    // begin - register page load handlers and start serving pages.
+    // Retained for callers that already use the AsyncWebServer-style name;
+    // Start() invokes this internally.
     void begin();
 
     void AddWebSocket(AsyncWebSocket& webSocket)
     {
         _server.addHandler(&webSocket);
+    }
+
+    void RemoveWebSocket(AsyncWebSocket& webSocket)
+    {
+        _server.removeHandler(&webSocket);
     }
 };
 

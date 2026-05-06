@@ -41,7 +41,9 @@
 #include "ledbuffer.h"
 #include "nd_network.h"
 #include "ntptimeclient.h"
+#include "renderservice.h"
 #include "systemcontainer.h"
+#include "taskmgr.h"   // DRAWING_STACK_SIZE / DRAWING_PRIORITY / DRAWING_CORE
 
 #include "effects/matrix/spectrumeffects.h"
 
@@ -261,13 +263,35 @@ void ShowOnboardPixel()
     #endif
 }
 
-// DrawLoopTaskEntry
+// RenderService ITaskService hooks
 //
-// Main draw loop entry point
+// Start/Stop/IsRunning are inherited final from ITaskService; this class
+// only supplies the task config and the per-frame render loop body. The
+// render task is pinned to DRAWING_CORE because SmartMatrix and FastLED
+// both impose core affinity expectations on whatever drives them.
 
-void IRAM_ATTR DrawLoopTaskEntry(void *)
+ITaskService::TaskConfig RenderService::GetTaskConfig() const
 {
-    debugW(">> DrawLoopTaskEntry\n");
+    return TaskConfig {
+        "Draw Loop",
+        DRAWING_STACK_SIZE,
+        DRAWING_PRIORITY,
+        DRAWING_CORE,
+        2000   // Stop timeout: loop yields up to 1s in CalcDelayUntilNextFrame.
+    };
+}
+
+// RenderService::Run
+//
+// Main draw loop. Calls WiFiDraw / LocalDraw, runs PostProcessFrame, and
+// updates the FPS window. Holds the global render mutex for the duration
+// of each frame so runtime topology/output changes can't reconfigure the
+// active buffers mid-frame. Polls ShouldShutdown() between frames so a
+// Stop() in OTA / shutdown can break the loop cleanly.
+
+void IRAM_ATTR RenderService::Run()
+{
+    debugW(">> RenderService::Run\n");
 
     // If this board has an onboard RGB pixel, set it up now
 
@@ -281,7 +305,7 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
 
     debugW("Entering main draw loop!");
 
-    for (;;)
+    while (!ShouldShutdown())
     {
         g_Values.AppTime.NewFrame();
 

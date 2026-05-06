@@ -265,6 +265,21 @@ void EffectManager::AddFrameEventListener(IFrameEventListener& listener)
     _frameEventListeners.emplace_back(listener);
 }
 
+void EffectManager::RemoveFrameEventListener(IFrameEventListener& listener)
+{
+    // Match by address — reference_wrapper has no operator== so we compare
+    // the underlying object pointers. erase/remove_if so we drop every entry
+    // even if the same listener was registered more than once.
+    // Robert may have a better or less obtuse way to do this, but it works 
+    // and it's not like we have thousands of listeners.  Change at will!
+    
+    _frameEventListeners.erase(
+        std::remove_if(_frameEventListeners.begin(), _frameEventListeners.end(),
+                       [&](const std::reference_wrapper<IFrameEventListener>& w)
+                       { return &w.get() == &listener; }),
+        _frameEventListeners.end());
+}
+
 void EffectManager::AddEffectEventListener(IEffectEventListener& listener)
 {
     _effectEventListeners.emplace_back(listener);
