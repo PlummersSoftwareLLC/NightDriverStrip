@@ -745,7 +745,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     els.effectSettingsForm.replaceChildren(fragment);
   }
 
-  function buildSettingField(spec, currentValue, draftStore, errorSet, isEffectDialog) {
+  function buildSettingField(spec, currentValue, draftStore, errorMap, isEffectDialog) {
     const wrapper = document.createElement("div");
     const needsStackedLayout = spec.type === settingType.Palette;
     wrapper.className = "setting-row" + (needsStackedLayout ? " stacked" : "");
@@ -784,11 +784,11 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     const setFieldError = (hasError, message) => {
       const help = wrapper.querySelector(".field-help");
       if (hasError) {
-        errorSet.set(key, message);
+        errorMap.set(key, message);
         help.textContent = message;
         help.classList.add("field-error");
       } else {
-        errorSet.delete(key);
+        errorMap.delete(key);
         help.innerHTML = spec.description || "";
         help.classList.remove("field-error");
       }
@@ -855,7 +855,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
       help.className = "field-help";
       help.innerHTML = (spec.description || "") + " Disable rotation to keep the current effect active indefinitely.";
       meta.appendChild(help);
-      applyStoredFieldError(wrapper, errorSet, key);
+      applyStoredFieldError(wrapper, errorMap, key);
 
       if (isEffectDialog) {
         wrapper.dataset.dialogField = "1";
@@ -1064,7 +1064,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     help.className = "field-help";
     help.innerHTML = spec.description || "";
     meta.appendChild(help);
-    applyStoredFieldError(wrapper, errorSet, key);
+    applyStoredFieldError(wrapper, errorMap, key);
 
     if (isEffectDialog) {
       wrapper.dataset.dialogField = "1";
