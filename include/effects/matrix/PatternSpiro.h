@@ -79,9 +79,9 @@ private:
 
   uint8_t spirocount = 1;
   uint8_t spirooffset = 256 / spirocount;
-  boolean spiroincrement = false;
+  bool spiroincrement = false;
 
-  boolean handledChange = false;
+  bool handledChange = false;
 
 public:
 
@@ -99,7 +99,7 @@ public:
 
     // effects.ShowFrame();
 
-    boolean change = false;
+    bool change = false;
 
     for (int i = 0; i < spirocount; i++)
     {
