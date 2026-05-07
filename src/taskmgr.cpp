@@ -19,6 +19,25 @@
 
 #include <esp_task_wdt.h>
 
+namespace
+{
+    void AppendTaskStackUsage(String& output, const char* label, TaskHandle_t handle, size_t stackSizeBytes)
+    {
+        if (handle == nullptr)
+            return;
+
+        const auto freeWords = uxTaskGetStackHighWaterMark(handle);
+        const size_t freeBytes = static_cast<size_t>(freeWords) * sizeof(StackType_t);
+        const size_t clampedFreeBytes = std::min(freeBytes, stackSizeBytes);
+        const size_t usedBytes = stackSizeBytes - clampedFreeBytes;
+
+        if (!output.isEmpty())
+            output += ' ';
+
+        output += str_sprintf("%s:%zu/%zu", label, usedBytes, stackSizeBytes);
+    }
+}
+
 void IdleTask::ProcessIdleTime()
 {
     _lastMeasurement = millis();
@@ -87,6 +106,16 @@ void TaskManager::CheckHeap()
     {
         throw std::runtime_error("Heap FAILED checks!");
     }
+}
+
+String TaskManager::GetStackUsageSummary() const
+{
+    String output;
+
+    AppendTaskStackUsage(output, "Idle0", _hIdle0, IDLE_STACK_SIZE);
+    AppendTaskStackUsage(output, "Idle1", _hIdle1, IDLE_STACK_SIZE);
+
+    return output;
 }
 
 // NightDriverTaskManager
@@ -232,6 +261,30 @@ void NightDriverTaskManager::NotifyNetworkThread()
     debugW(">> Notifying Network Thread");
     // Wake up the network task if it's sleeping, or request another read cycle if it isn't
     xTaskNotifyGive(_taskNetwork);
+}
+
+String NightDriverTaskManager::GetStackUsageSummary() const
+{
+    String output = TaskManager::GetStackUsageSummary();
+
+    AppendTaskStackUsage(output, "Draw", _taskDraw, DRAWING_STACK_SIZE);
+    AppendTaskStackUsage(output, "Audio", _taskAudio, AUDIO_STACK_SIZE);
+    AppendTaskStackUsage(output, "Net", _taskNetwork, NET_STACK_SIZE);
+    AppendTaskStackUsage(output, "Sock", _taskSocket, SOCKET_STACK_SIZE);
+    AppendTaskStackUsage(output, "Dbg", _taskDebug, DEBUG_STACK_SIZE);
+    AppendTaskStackUsage(output, "Json", _taskJSONWriter, JSON_STACK_SIZE);
+    AppendTaskStackUsage(output, "Remote", _taskRemote, REMOTE_STACK_SIZE);
+    AppendTaskStackUsage(output, "Screen", _taskScreen, SCREEN_STACK_SIZE);
+    AppendTaskStackUsage(output, "Serial", _taskSerial, DEFAULT_STACK_SIZE);
+    AppendTaskStackUsage(output, "Color", _taskColorData, DEFAULT_STACK_SIZE);
+
+    for (const auto& effectTask : _vEffectTasks)
+    {
+        const char* taskName = pcTaskGetName(effectTask);
+        AppendTaskStackUsage(output, taskName ? taskName : "Effect", effectTask, DEFAULT_STACK_SIZE);
+    }
+
+    return output;
 }
 
 // Effect threads run with NET priority and on the NET core by default. It seems a sensible choice
