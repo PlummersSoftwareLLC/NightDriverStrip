@@ -297,7 +297,7 @@ int SystemContainer::GetConfiguredAudioInputPin() const
 
 bool SystemContainer::ApplyRuntimeConfiguration(String* errorMessage)
 {
-    std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
 
     auto& config = GetDeviceConfig();
 

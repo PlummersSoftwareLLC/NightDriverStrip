@@ -271,22 +271,12 @@ void GFXBase::setPixel(int16_t x, int r, int g, int b)
 
 void GFXBase::fadePixelToBlackBy(int16_t x, int16_t y, uint8_t fadeValue) noexcept
 {
-    CRGB &px = leds[XY(x, y)];
-    const uint8_t scale = 255 - fadeValue;
-    const uint16_t scale_fixed = (uint16_t)scale + 1;
-    px.r = (uint8_t)((((uint16_t)px.r) * scale_fixed) >> 8);
-    px.g = (uint8_t)((((uint16_t)px.g) * scale_fixed) >> 8);
-    px.b = (uint8_t)((((uint16_t)px.b) * scale_fixed) >> 8);
+    FadePixelInPlace(leds[XY(x, y)], fadeValue);
 }
 
 void GFXBase::fadePixelToBlackBy(int16_t i, uint8_t fadeValue) noexcept
 {
-    CRGB &px = leds[i];
-    const uint8_t scale = 255 - fadeValue;
-    const uint16_t scale_fixed = (uint16_t)scale + 1;
-    px.r = (uint8_t)((((uint16_t)px.r) * scale_fixed) >> 8);
-    px.g = (uint8_t)((((uint16_t)px.g) * scale_fixed) >> 8);
-    px.b = (uint8_t)((((uint16_t)px.b) * scale_fixed) >> 8);
+    FadePixelInPlace(leds[i], fadeValue);
 }
 
 void GFXBase::DrawSafeCircle(int centerX, int centerY, int radius, CRGB color) noexcept

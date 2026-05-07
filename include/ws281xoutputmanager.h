@@ -49,7 +49,7 @@ class WS281xOutputManager
     ~WS281xOutputManager();
 
     bool ApplyConfig(const DeviceConfig& config, const std::vector<std::shared_ptr<GFXBase>>& devices, String* errorMessage = nullptr);
-    void Show(const std::vector<std::shared_ptr<GFXBase>>& devices, uint16_t pixelsDrawn, uint8_t brightness);
+    void Show(const std::vector<std::shared_ptr<GFXBase>>& devices, uint16_t pixelsDrawn, uint8_t brightness, uint8_t fader);
     void Reset();
 
     size_t GetActiveChannelCount() const { return _activeChannelCount; }

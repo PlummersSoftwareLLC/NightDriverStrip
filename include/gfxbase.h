@@ -162,6 +162,15 @@ public:
     static const uint16_t kMatrixWidth = MATRIX_WIDTH;                                  // known working for actual matrix effects: 32, 64, 96, 128
     static const uint16_t kMatrixHeight = MATRIX_HEIGHT;                                // known working for actual matrix effects: 16, 32, 48, 64
 
+    static inline void FadePixelInPlace(CRGB& pixel, uint8_t fadeValue) noexcept
+    {
+        const uint8_t scale = 255 - fadeValue;
+        const uint16_t scaleFixed = static_cast<uint16_t>(scale) + 1;
+        pixel.r = static_cast<uint8_t>((static_cast<uint16_t>(pixel.r) * scaleFixed) >> 8);
+        pixel.g = static_cast<uint8_t>((static_cast<uint16_t>(pixel.g) * scaleFixed) >> 8);
+        pixel.b = static_cast<uint8_t>((static_cast<uint16_t>(pixel.b) * scaleFixed) >> 8);
+    }
+
     // A 3-byte struct will have one byte of padding so each element
     // begins on a NA boundary. Making this
     // struct __attribute__((packed)) PolarMap

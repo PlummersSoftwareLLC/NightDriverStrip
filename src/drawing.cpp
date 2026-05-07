@@ -226,8 +226,8 @@ void ShowOnboardRGBLED()
             ledcWrite(2, 255 - c.g);
             ledcWrite(3, 255 - c.b);
         #else
-            int iLed = g_ptrSystem->GetEffectManager().g().GetLEDCount() / 2;
-            const auto& graphics = g_ptrSystem->GetEffectManager().g();
+            const auto& graphics = *g_ptrSystem->GetDevices()[0];
+            int iLed = graphics.GetLEDCount() / 2;
             ledcWrite(1, 255 - graphics.leds[iLed].r); // write red component to channel 1, etc.
             ledcWrite(2, 255 - graphics.leds[iLed].g);
             ledcWrite(3, 255 - graphics.leds[iLed].b);
@@ -287,8 +287,10 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
         double frameStartTime       = g_Values.AppTime.FrameStartTime();
 
         {
-            std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
-            auto& graphics = g_ptrSystem->GetEffectManager().g();
+            // Hold the render mutex for the frame pipeline so runtime topology/output
+            // changes cannot reconfigure the active buffers mid-frame.
+            std::lock_guard<std::recursive_mutex> renderGuard(g_render_mutex);
+            auto& graphics = *g_ptrSystem->GetDevices()[0];
 
             graphics.PrepareFrame();
 

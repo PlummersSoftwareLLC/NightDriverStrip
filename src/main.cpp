@@ -238,6 +238,7 @@ void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen);
 
 DRAM_ATTR std::unique_ptr<SystemContainer> g_ptrSystem;
 DRAM_ATTR std::mutex g_buffer_mutex;
+DRAM_ATTR std::recursive_mutex g_render_mutex;
 DRAM_ATTR std::recursive_mutex g_effect_manager_mutex;
 
 // The one and only instance of ImprovSerial.  We instantiate it as the type needed
