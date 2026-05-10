@@ -59,31 +59,33 @@ void LEDStripEffect::FillBaseSettingSpecs()
 
     // ...otherwise, create and add them
 
-    _baseSettingSpecs.emplace_back(
-        ACTUAL_NAME_OF(_friendlyName),
-        "Friendly name",
-        "The friendly name of the effect, as shown in the web UI and/or on the matrix.",
-        SettingSpec::SettingType::String
-    );
-    _baseSettingSpecs.emplace_back(
-        ACTUAL_NAME_OF(_maximumEffectTime),
-        "Maximum effect time",
-        "The maximum time in ms that the effect is shown per effect rotation. This duration is only applied if it's "
-        "shorter than the default effect interval. A value of 0 means no maximum effect time is set.",
-        SettingSpec::SettingType::PositiveBigInteger
-    );
-    _baseSettingSpecs.emplace_back(
-        "hasMaximumEffectTime",
-        "Has maximum effect time set",
-        "Indicates if the effect has a maximum effect time set.",
-        SettingSpec::SettingType::Boolean
-    ).Access = SettingSpec::SettingAccess::ReadOnly;
-    _baseSettingSpecs.emplace_back(
-        "clearMaximumEffectTime",
-        "Clear maximum effect time",
-        "Clear maximum effect time. Set to true to reset the maximum effect time to the default value.",
-        SettingSpec::SettingType::Boolean
-    ).Access = SettingSpec::SettingAccess::WriteOnly;
+    _baseSettingSpecs.push_back(SettingSpec::Validate(SettingSpec{
+        .Name         = ACTUAL_NAME_OF(_friendlyName),
+        .FriendlyName = "Friendly name",
+        .Description  = "The friendly name of the effect, as shown in the web UI and/or on the matrix.",
+        .Type         = SettingSpec::SettingType::String
+    }));
+    _baseSettingSpecs.push_back(SettingSpec::Validate(SettingSpec{
+        .Name         = ACTUAL_NAME_OF(_maximumEffectTime),
+        .FriendlyName = "Maximum effect time",
+        .Description  = "The maximum time in ms that the effect is shown per effect rotation. This duration is only applied if it's "
+                        "shorter than the default effect interval. A value of 0 means no maximum effect time is set.",
+        .Type         = SettingSpec::SettingType::PositiveBigInteger
+    }));
+    _baseSettingSpecs.push_back(SettingSpec::Validate(SettingSpec{
+        .Name         = "hasMaximumEffectTime",
+        .FriendlyName = "Has maximum effect time set",
+        .Description  = "Indicates if the effect has a maximum effect time set.",
+        .Type         = SettingSpec::SettingType::Boolean,
+        .Access       = SettingSpec::SettingAccess::ReadOnly
+    }));
+    _baseSettingSpecs.push_back(SettingSpec::Validate(SettingSpec{
+        .Name         = "clearMaximumEffectTime",
+        .FriendlyName = "Clear maximum effect time",
+        .Description  = "Clear maximum effect time. Set to true to reset the maximum effect time to the default value.",
+        .Type         = SettingSpec::SettingType::Boolean,
+        .Access       = SettingSpec::SettingAccess::WriteOnly
+    }));
 }
 
 // LEDStripEffect

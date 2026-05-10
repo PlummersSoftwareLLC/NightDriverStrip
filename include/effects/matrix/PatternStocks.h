@@ -338,12 +338,18 @@ private:
         // Lazily load this class' SettingSpec instances if they haven't been already
         if (mySettingSpecs.size() == 0)
         {
-            mySettingSpecs.emplace_back(NAME_OF(stockServer), "Stock server location",
-                                        "The host and port of the service that provides stock data.",
-                                        SettingSpec::SettingType::String);
-            mySettingSpecs.emplace_back(NAME_OF(tickerSymbols), "Ticker symbols",
-                                        "Comma-separated list of ticker symbols to show stock data for.",
-                                        SettingSpec::SettingType::String);
+            mySettingSpecs.push_back(SettingSpec::Validate(SettingSpec{
+                .Name         = NAME_OF(stockServer),
+                .FriendlyName = "Stock server location",
+                .Description  = "The host and port of the service that provides stock data.",
+                .Type         = SettingSpec::SettingType::String
+            }));
+            mySettingSpecs.push_back(SettingSpec::Validate(SettingSpec{
+                .Name         = NAME_OF(tickerSymbols),
+                .FriendlyName = "Ticker symbols",
+                .Description  = "Comma-separated list of ticker symbols for which to retrieve and display stock data.",
+                .Type         = SettingSpec::SettingType::String
+            }));
         }
 
         return &mySettingSpecs;

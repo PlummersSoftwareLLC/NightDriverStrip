@@ -81,6 +81,10 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     },
     autoRefresh: true,
     statsRefreshSeconds: Number(localStorage.getItem("nd.statsRefreshSeconds") || 3),
+    // True from the moment the user types into the hero's effect-interval
+    // input until the next successful save, so the periodic effects refresh
+    // doesn't snap their unsaved edit back to the device's current value.
+    effectIntervalDirty: false,
     timers: {
       stats: null,
       effects: null,
@@ -104,8 +108,6 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     activeTab: localStorage.getItem("nd.activeTab") || "effects"
   };
 
-  const COLOR_ORDER_OPTIONS = ["RGB", "RBG", "GRB", "GBR", "BRG", "BGR"];
-  const SYNTHETIC_WS281X_PIN_PREFIX = "ws281xPin";
   const COUNTRY_OPTIONS = buildCountryOptions();
 
   const els = {};
@@ -148,6 +150,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     els.nextEffectButton.addEventListener("click", () => postForm("/nextEffect").then(loadEffectsOnly));
     els.refreshEffectsButton.addEventListener("click", () => loadEffectsOnly());
     els.saveIntervalButton.addEventListener("click", applyEffectInterval);
+    els.effectIntervalInput.addEventListener("input", () => { state.effectIntervalDirty = true; });
     els.reloadSettingsButton.addEventListener("click", () => loadSettingsOnly());
     els.applySettingsButton.addEventListener("click", () => applyDeviceSettings(false));
     els.applySettingsRebootButton.addEventListener("click", () => applyDeviceSettings(true));
@@ -400,12 +403,16 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     const intervalMs = Number(effects.effectInterval || 0);
     const pinned = !!effects.eternalInterval || intervalMs === 0;
     const remainingMs = Number(effects.millisecondsRemaining || 0);
-    const remainingSec = pinned ? "Pinned" : `${Math.max(0, Math.ceil(remainingMs / 1000))} sec`;
+    const intervalScale = getIntervalDisplayScale("effectInterval");
 
     els.summaryCurrentEffect.textContent = currentEffect ? currentEffect.name : "--";
     els.summaryEffectStatus.textContent = currentEffect ? (currentEffect.enabled ? "Enabled" : "Disabled") : "No effect";
-    els.summaryInterval.textContent = pinned ? "Pinned" : `${Math.round(intervalMs / 1000)} sec`;
-    els.summaryIntervalRemaining.textContent = remainingSec;
+    els.summaryInterval.textContent = pinned
+      ? (intervalScale.offLabel || "Off")
+      : formatIntervalDisplay(intervalMs, intervalScale);
+    els.summaryIntervalRemaining.textContent = pinned
+      ? (intervalScale.offLabel || "Off")
+      : `${Math.max(0, Math.ceil(remainingMs / intervalScale.divisor))} ${intervalScale.unitLabel}`.trim();
     els.summaryTopology.textContent = `${staticStats.ACTIVE_MATRIX_WIDTH}x${staticStats.ACTIVE_MATRIX_HEIGHT} / ${staticStats.ACTIVE_NUM_LEDS} leds`;
     els.summaryDriver.textContent = `${staticStats.ACTIVE_OUTPUT_DRIVER} / ${staticStats.ACTIVE_NUM_CHANNELS} ch`;
     els.summaryLedFps.textContent = formatNumber(dynamicStats.LED_FPS);
@@ -415,7 +422,13 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     els.summaryHeap.textContent = formatBytes(dynamicStats.HEAP_FREE);
     els.summaryPsram.textContent = `PSRAM ${formatBytes(dynamicStats.PSRAM_FREE)}`;
 
-    els.effectIntervalInput.value = String(Math.round(intervalMs / 1000));
+    // Don't clobber the user's in-progress edit. The dirty flag is set on
+    // every keystroke and cleared only by a successful save, so a refresh
+    // tick that fires while the user is typing — or after they've blurred
+    // but before they hit Save — leaves their value alone.
+    if (!state.effectIntervalDirty && document.activeElement !== els.effectIntervalInput) {
+      els.effectIntervalInput.value = String(Math.round(intervalMs / intervalScale.divisor));
+    }
     els.effectsMeta.textContent = `${effectList.length} effects / active ${currentIndex}`;
   }
 
@@ -570,127 +583,56 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     els.deviceSettingsForm.replaceChildren(fragment);
   }
 
+  // Section catalog comes from /api/v1/settings/schema (root.sections). The UI
+  // groups settings by spec.section and uses the catalog entries for each
+  // section's heading and subtitle. If the schema doesn't carry one (older
+  // firmware), fall back to a single bucket so nothing renders blank.
   function getSettingsSections() {
-    const orderedSpecs = getOrderedDeviceSettingSpecs().filter((spec) => !(spec.writeOnly && !spec.hasValidation));
-    const sections = [
-      { key: "topology", title: "Topology", description: "Matrix geometry and logical mapping.", specs: [] },
-      { key: "output", title: "Output", description: "Driver selection and WS281x transport settings.", specs: [] },
-      { key: "location", title: "Location", description: "Region, timezone, and weather lookup settings.", specs: [] },
-      { key: "clock", title: "Clock & Weather", description: "Time formatting and synchronization behavior.", specs: [] },
-      { key: "audio", title: "Audio", description: "Audio sampling and microphone input settings.", specs: [] },
-      { key: "appearance", title: "Appearance", description: "Brightness, colors, and visual state persistence.", specs: [] },
-      { key: "system", title: "System", description: "Network identity and general device options.", specs: [] }
-    ];
+    const catalog = Array.isArray((state.unifiedSchema || {}).sections) && state.unifiedSchema.sections.length > 0
+      ? state.unifiedSchema.sections
+      : [{ id: "system", title: "Settings", description: "" }];
 
-    const byKey = new Map(sections.map((section) => [section.key, section]));
+    const orderedSpecs = state.settingsSpecs
+      .filter((spec) => !(spec.writeOnly && !spec.hasValidation))
+      .slice()
+      .sort(compareSettingSpecs);
+
+    const bySection = new Map();
     orderedSpecs.forEach((spec) => {
-      byKey.get(settingSectionKey(spec.name)).specs.push(spec);
+      const key = spec.section || "system";
+      if (!bySection.has(key)) bySection.set(key, []);
+      bySection.get(key).push(spec);
     });
 
-    return sections;
+    return catalog.map((section) => ({
+      key: section.id,
+      title: section.title,
+      description: section.description,
+      specs: bySection.get(section.id) || []
+    }));
   }
 
-  function getOrderedDeviceSettingSpecs() {
-    const specs = state.settingsSpecs.slice();
-    const compiledMaxChannels = Number((((state.unifiedSchema || {}).outputs || {}).ws281x || {}).compiledMaxChannels || 0);
-    const configuredPins = (((state.unifiedSettings || {}).outputs || {}).ws281x || {}).pins || [];
-
-    for (let index = 0; index < Math.max(compiledMaxChannels, configuredPins.length); index += 1) {
-      specs.push({
-        name: `${SYNTHETIC_WS281X_PIN_PREFIX}${index}`,
-        friendlyName: `WS281x pin ${index + 1}`,
-        description: `GPIO assigned to WS281x channel ${index + 1}.`,
-        type: settingType.Integer,
-        minimumValue: -1,
-        maximumValue: 48
-      });
-    }
-
-    return specs.sort(compareSettingSpecs);
-  }
-
+  // Compare two specs for display order: spec.priority wins (lower = higher),
+  // ties break by friendly name. Specs without an explicit priority sort to
+  // the end of their section.
   function compareSettingSpecs(left, right) {
-    const rankDiff = settingPriority(left.name) - settingPriority(right.name);
-    if (rankDiff !== 0) {
-      return rankDiff;
+    const leftRank = typeof left.priority === "number" ? left.priority : 100;
+    const rightRank = typeof right.priority === "number" ? right.priority : 100;
+    if (leftRank !== rightRank) {
+      return leftRank - rightRank;
     }
     return String(left.friendlyName || left.name).localeCompare(String(right.friendlyName || right.name));
   }
 
-  function settingPriority(name) {
-    const priorities = {
-      matrixWidth: 0,
-      matrixHeight: 1,
-      matrixSerpentine: 2,
-      outputDriver: 10,
-      ws281xChannelCount: 11,
-      ws281xColorOrder: 12
-    };
-
-    if (Object.prototype.hasOwnProperty.call(priorities, name)) {
-      return priorities[name];
-    }
-
-    const pinIndex = syntheticWs281xPinIndex(name);
-    if (pinIndex !== null) {
-      return 3 + pinIndex;
-    }
-
-    return 100;
-  }
-
-  function settingSectionKey(name) {
-    if (name === "matrixWidth" || name === "matrixHeight" || name === "matrixSerpentine") {
-      return "topology";
-    }
-
-    if (
-      name === "outputDriver"
-      || name === "ws281xChannelCount"
-      || name === "ws281xColorOrder"
-      || syntheticWs281xPinIndex(name) !== null
-    ) {
-      return "output";
-    }
-
-    if (name === "location" || name === "locationIsZip" || name === "countryCode" || name === "timeZone") {
-      return "location";
-    }
-
-    if (name === "use24HourClock" || name === "useCelsius" || name === "ntpServer" || name === "openWeatherApiKey") {
-      return "clock";
-    }
-
-    if (name === "audioInputPin") {
-      return "audio";
-    }
-
-    if (
-      name === "brightness"
-      || name === "globalColor"
-      || name === "secondColor"
-      || name === "applyGlobalColors"
-      || name === "clearGlobalColor"
-      || name === "showVUMeter"
-      || name === "rememberCurrentEffect"
-      || name === "effectInterval"
-    ) {
-      return "appearance";
-    }
-
-    return "system";
-  }
-
-  function syntheticWs281xPinIndex(name) {
-    const match = /^ws281xPin(\d+)$/.exec(String(name || ""));
-    return match ? Number(match[1]) : null;
-  }
-
+  // Resolve a setting's current value. Specs with an apiPath read from the
+  // unified settings document; specs without one fall back to the legacy flat
+  // /settings response. Either way the spec's name is the draft-store key.
   function getCurrentDeviceSettingValue(spec) {
-    const pinIndex = syntheticWs281xPinIndex(spec.name);
-    if (pinIndex !== null) {
-      const pins = (((state.unifiedSettings || {}).outputs || {}).ws281x || {}).pins || [];
-      return pinIndex < pins.length ? pins[pinIndex] : -1;
+    if (spec.apiPath) {
+      const fromUnified = readJsonPath(state.unifiedSettings, spec.apiPath);
+      if (fromUnified !== undefined) {
+        return fromUnified;
+      }
     }
 
     if (Object.prototype.hasOwnProperty.call(state.settings, spec.name)) {
@@ -698,6 +640,60 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     }
 
     return defaultValueForSpec(spec);
+  }
+
+  // Walk a dotted path with optional [N] segments against an object.
+  // E.g. readJsonPath({outputs:{ws281x:{pins:[5,7]}}}, "outputs.ws281x.pins[1]") -> 7
+  function readJsonPath(root, path) {
+    if (!root || typeof path !== "string" || path.length === 0) {
+      return undefined;
+    }
+    let current = root;
+    for (const segment of parseJsonPath(path)) {
+      if (current == null || typeof current !== "object") {
+        return undefined;
+      }
+      current = current[segment];
+    }
+    return current;
+  }
+
+  function parseJsonPath(path) {
+    const segments = [];
+    String(path).split(".").forEach((part) => {
+      const match = /^([^[]*)((?:\[\d+\])*)$/.exec(part);
+      if (!match) return;
+      if (match[1].length > 0) {
+        segments.push(match[1]);
+      }
+      const indexMatches = match[2].matchAll(/\[(\d+)\]/g);
+      for (const indexMatch of indexMatches) {
+        segments.push(Number(indexMatch[1]));
+      }
+    });
+    return segments;
+  }
+
+  // Set a value at the same dotted path (creating intermediate objects/arrays
+  // as needed). Used when routing draft entries into the unified-settings POST
+  // body keyed by spec.apiPath.
+  function writeJsonPath(root, path, value) {
+    const segments = parseJsonPath(path);
+    if (segments.length === 0) {
+      return root;
+    }
+
+    let cursor = root;
+    for (let i = 0; i < segments.length - 1; i += 1) {
+      const key = segments[i];
+      const nextIsIndex = typeof segments[i + 1] === "number";
+      if (cursor[key] == null) {
+        cursor[key] = nextIsIndex ? [] : {};
+      }
+      cursor = cursor[key];
+    }
+    cursor[segments[segments.length - 1]] = value;
+    return root;
   }
 
   function renderEffectDialogForm() {
@@ -717,6 +713,9 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
   }
 
   function buildSettingField(spec, currentValue, draftStore, errorSet, isEffectDialog) {
+    const widget = spec.widget || {};
+    const widgetKind = widget.kind || "default";
+
     const wrapper = document.createElement("div");
     const needsStackedLayout = spec.type === settingType.Palette;
     wrapper.className = "setting-row" + (needsStackedLayout ? " stacked" : "");
@@ -736,13 +735,6 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     const key = spec.name;
     const currentDraft = Object.prototype.hasOwnProperty.call(draftStore, key) ? draftStore[key] : currentValue;
     const readOnly = !!spec.readOnly;
-    const isBrightnessField = key === "brightness";
-    const isColorOrderField = key === "ws281xColorOrder";
-    const isTimeZoneField = key === "timeZone";
-    const isCountryCodeField = key === "countryCode";
-    const isOutputDriverField = key === "outputDriver";
-    const isChannelCountField = key === "ws281xChannelCount";
-    const isEffectIntervalField = key === "effectInterval";
 
     const setDraftValue = (value) => {
       if (valuesEqual(value, currentValue)) {
@@ -765,260 +757,22 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
       }
     };
 
-    let control;
+    const ctx = { spec, widget, valueWrap, currentDraft, currentValue, readOnly, setDraftValue, setFieldError };
 
-    if (isEffectIntervalField) {
-      const intervalMs = Number(currentDraft || 0);
-      const fallbackSeconds = Math.max(1, Math.round(Math.max(Number(currentValue || 0), 60000) / 1000));
-      const initialSeconds = Math.max(1, Math.round((intervalMs > 0 ? intervalMs : Math.max(Number(currentValue || 0), 60000)) / 1000));
-
-      const row = document.createElement("div");
-      row.className = "interval-row";
-
-      const switchLabel = document.createElement("label");
-      switchLabel.className = "mac-switch";
-      control = document.createElement("input");
-      control.type = "checkbox";
-      control.checked = intervalMs > 0;
-      control.disabled = readOnly;
-      const track = document.createElement("span");
-      track.className = "mac-switch-track";
-      const thumb = document.createElement("span");
-      thumb.className = "mac-switch-thumb";
-      track.appendChild(thumb);
-      switchLabel.appendChild(control);
-      switchLabel.appendChild(track);
-
-      const rotateLabel = document.createElement("span");
-      rotateLabel.className = "interval-switch-label";
-      rotateLabel.textContent = "Rotate effects";
-
-      const secondsField = document.createElement("label");
-      secondsField.className = "inline-field";
-      const secondsInput = document.createElement("input");
-      secondsInput.type = "number";
-      secondsInput.min = "1";
-      secondsInput.step = "1";
-      secondsInput.inputMode = "numeric";
-      secondsInput.value = String(initialSeconds || fallbackSeconds);
-      secondsInput.disabled = readOnly || !control.checked;
-      const secondsSuffix = document.createElement("span");
-      secondsSuffix.textContent = "sec";
-      secondsField.appendChild(secondsInput);
-      secondsField.appendChild(secondsSuffix);
-
-      const syncDraftValue = () => {
-        const seconds = clampInt(secondsInput.value, 1, 2147483, fallbackSeconds);
-        secondsInput.value = String(seconds);
-        secondsInput.disabled = readOnly || !control.checked;
-        setDraftValue(control.checked ? seconds * 1000 : 0);
-        setFieldError(false, "");
-      };
-
-      control.addEventListener("change", syncDraftValue);
-      secondsInput.addEventListener("change", syncDraftValue);
-
-      row.appendChild(switchLabel);
-      row.appendChild(rotateLabel);
-      row.appendChild(secondsField);
-      valueWrap.appendChild(row);
-      const help = document.createElement("div");
-      help.className = "field-help";
-      help.innerHTML = (spec.description || "") + " Disable rotation to keep the current effect active indefinitely.";
-      meta.appendChild(help);
-
-      if (isEffectDialog) {
-        wrapper.dataset.dialogField = "1";
-      }
-
-      return wrapper;
-    }
-
-    switch (spec.type) {
-      case settingType.Boolean: {
-        const switchLabel = document.createElement("label");
-        switchLabel.className = "mac-switch";
-        control = document.createElement("input");
-        control.type = "checkbox";
-        control.checked = !!currentDraft;
-        control.disabled = readOnly;
-        control.addEventListener("change", () => {
-          setDraftValue(!!control.checked);
-          setFieldError(false, "");
-        });
-        const track = document.createElement("span");
-        track.className = "mac-switch-track";
-        const thumb = document.createElement("span");
-        thumb.className = "mac-switch-thumb";
-        track.appendChild(thumb);
-        switchLabel.appendChild(control);
-        switchLabel.appendChild(track);
-        const toggle = document.createElement("div");
-        toggle.className = "toggle setting-toggle";
-        toggle.appendChild(switchLabel);
-        valueWrap.appendChild(toggle);
-        break;
-      }
-
-      case settingType.Color: {
-        const row = document.createElement("div");
-        row.className = "color-row";
-        control = document.createElement("input");
-        control.type = "color";
-        control.value = colorIntToHex(currentDraft);
-        control.disabled = readOnly;
-        const numeric = document.createElement("input");
-        numeric.type = "number";
-        numeric.className = "color-value";
-        numeric.value = String(currentDraft);
-        numeric.disabled = readOnly;
-        control.addEventListener("input", () => {
-          const intValue = hexToColorInt(control.value);
-          numeric.value = String(intValue);
-          setDraftValue(intValue);
-          setFieldError(false, "");
-        });
-        numeric.addEventListener("change", () => {
-          const intValue = clampInt(numeric.value, 0, 16777215, currentValue);
-          numeric.value = String(intValue);
-          control.value = colorIntToHex(intValue);
-          setDraftValue(intValue);
-          setFieldError(false, "");
-        });
-        row.appendChild(control);
-        row.appendChild(numeric);
-        valueWrap.appendChild(row);
-        break;
-      }
-
-      case settingType.Palette: {
-        const row = document.createElement("div");
-        row.className = "palette-row";
-        const palette = Array.isArray(currentDraft) ? currentDraft : [];
-        palette.forEach((entry, index) => {
-          const box = document.createElement("div");
-          box.className = "palette-entry";
-          const color = document.createElement("input");
-          color.type = "color";
-          color.value = colorIntToHex(entry);
-          color.disabled = readOnly;
-          const value = document.createElement("input");
-          value.type = "number";
-          value.className = "color-value";
-          value.value = String(entry);
-          value.disabled = readOnly;
-          const updatePalette = (intValue) => {
-            const next = palette.slice();
-            next[index] = intValue;
-            setDraftValue(next);
-            setFieldError(false, "");
-          };
-          color.addEventListener("input", () => {
-            const intValue = hexToColorInt(color.value);
-            value.value = String(intValue);
-            updatePalette(intValue);
-          });
-          value.addEventListener("change", () => {
-            const intValue = clampInt(value.value, 0, 16777215, entry);
-            value.value = String(intValue);
-            color.value = colorIntToHex(intValue);
-            updatePalette(intValue);
-          });
-          box.appendChild(color);
-          box.appendChild(value);
-          row.appendChild(box);
-        });
-        valueWrap.appendChild(row);
-        break;
-      }
-
-      case settingType.Slider: {
-        control = document.createElement("input");
-        control.type = "range";
-        control.min = isBrightnessField ? 5 : (spec.minimumValue ?? 0);
-        control.max = isBrightnessField ? 100 : (spec.maximumValue ?? 255);
-        control.value = isBrightnessField ? String(rawBrightnessToDisplay(currentDraft)) : currentDraft;
-        control.disabled = readOnly;
-        const output = document.createElement("input");
-        output.type = "number";
-        output.value = isBrightnessField ? String(rawBrightnessToDisplay(currentDraft)) : String(currentDraft);
-        output.disabled = readOnly;
-        output.addEventListener("change", () => {
-          const intValue = clampInt(output.value, Number(control.min), Number(control.max), isBrightnessField ? rawBrightnessToDisplay(currentValue) : currentValue);
-          output.value = String(intValue);
-          control.value = String(intValue);
-          setDraftValue(isBrightnessField ? displayBrightnessToRaw(intValue) : intValue);
-          setFieldError(false, "");
-        });
-        control.addEventListener("input", () => {
-          output.value = control.value;
-          const sliderValue = clampInt(control.value, Number(control.min), Number(control.max), isBrightnessField ? rawBrightnessToDisplay(currentValue) : currentValue);
-          setDraftValue(isBrightnessField ? displayBrightnessToRaw(sliderValue) : sliderValue);
-          setFieldError(false, "");
-        });
-        const row = document.createElement("div");
-        row.className = "slider-row";
-        row.appendChild(control);
-        row.appendChild(output);
-        valueWrap.appendChild(row);
-        break;
-      }
-
-      default: {
-        if (isColorOrderField || isTimeZoneField || isCountryCodeField || isOutputDriverField || isChannelCountField) {
-          control = document.createElement("select");
-          const options =
-            isColorOrderField ? getColorOrderOptions()
-            : isTimeZoneField ? getTimeZoneOptions()
-            : isCountryCodeField ? COUNTRY_OPTIONS
-            : isOutputDriverField ? getOutputDriverOptions()
-            : getChannelCountOptions();
-          options.forEach((optionValue) => {
-            const option = document.createElement("option");
-            if (typeof optionValue === "string") {
-              option.value = optionValue;
-              option.textContent = optionValue;
-              option.selected = String(optionValue) === String(currentDraft);
-            } else {
-              option.value = optionValue.value;
-              option.textContent = optionValue.label;
-              option.selected = String(optionValue.value) === String(currentDraft);
-            }
-            control.appendChild(option);
-          });
-          control.disabled = readOnly;
-          control.addEventListener("change", () => {
-            setDraftValue(isChannelCountField ? Number(control.value) : control.value);
-            setFieldError(false, "");
-          });
-          valueWrap.appendChild(control);
-          break;
-        }
-
-        control = document.createElement("input");
-        if (control.tagName === "INPUT") {
-          control.type = spec.type === settingType.Float || spec.type === settingType.Integer || spec.type === settingType.PositiveBigInteger
-            ? "number"
-            : "text";
-          if (spec.minimumValue !== undefined) control.min = spec.minimumValue;
-          if (spec.maximumValue !== undefined) control.max = spec.maximumValue;
-          if (spec.type === settingType.Integer || spec.type === settingType.PositiveBigInteger) control.step = "1";
-        }
-        control.value = currentDraft ?? "";
-        control.readOnly = readOnly;
-        control.addEventListener("change", () => {
-          const validation = validateFieldValue(spec, control.value);
-          if (!validation.valid) {
-            setFieldError(true, validation.message);
-            return;
-          }
-          const coerced = coerceFieldValue(spec, control.value);
-          setDraftValue(coerced);
-          setFieldError(false, "");
-        });
-        valueWrap.appendChild(control);
-        break;
-      }
+    if (widgetKind === "intervalToggle") {
+      renderIntervalToggleWidget(ctx);
+    } else if (widgetKind === "select") {
+      renderSelectWidget(ctx);
+    } else if (widgetKind === "slider" || (widgetKind === "default" && spec.type === settingType.Slider)) {
+      renderSliderWidget(ctx);
+    } else if (spec.type === settingType.Boolean) {
+      renderBooleanWidget(ctx);
+    } else if (spec.type === settingType.Color || widgetKind === "color") {
+      renderColorWidget(ctx);
+    } else if (spec.type === settingType.Palette) {
+      renderPaletteWidget(ctx);
+    } else {
+      renderDefaultInputWidget(ctx);
     }
 
     const help = document.createElement("div");
@@ -1031,6 +785,334 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     }
 
     return wrapper;
+  }
+
+  // Composite "verb-toggle + numeric value" widget. The unitDivisor and labels
+  // come from spec.widget.interval. Raw value 0 means "off" (the numeric input
+  // is disabled and the stored value stays at 0); when off, the on-label
+  // describes the action the toggle would perform if enabled, and the off-label
+  // is the noun used elsewhere to display the off state ("Pinned").
+  function renderIntervalToggleWidget(ctx) {
+    const { spec, widget, valueWrap, currentDraft, currentValue, readOnly, setDraftValue, setFieldError } = ctx;
+    const interval = widget.interval || {};
+    const divisor = Number(interval.unitDivisor) || 1;
+    const unitLabel = interval.unitLabel || "";
+    const onLabel = interval.onLabel || "Enable";
+
+    const rawDraft = Number(currentDraft || 0);
+    const rawCurrent = Number(currentValue || 0);
+    const fallbackDisplay = Math.max(1, Math.round(Math.max(rawCurrent, divisor * 60) / divisor));
+    const initialDisplay = Math.max(1, Math.round((rawDraft > 0 ? rawDraft : Math.max(rawCurrent, divisor * 60)) / divisor));
+
+    const row = document.createElement("div");
+    row.className = "interval-row";
+
+    const switchLabel = document.createElement("label");
+    switchLabel.className = "mac-switch";
+    const toggle = document.createElement("input");
+    toggle.type = "checkbox";
+    toggle.checked = rawDraft > 0;
+    toggle.disabled = readOnly;
+    const track = document.createElement("span");
+    track.className = "mac-switch-track";
+    track.appendChild(Object.assign(document.createElement("span"), { className: "mac-switch-thumb" }));
+    switchLabel.appendChild(toggle);
+    switchLabel.appendChild(track);
+
+    const verbLabel = document.createElement("span");
+    verbLabel.className = "interval-switch-label";
+    verbLabel.textContent = onLabel;
+
+    const valueField = document.createElement("label");
+    valueField.className = "inline-field";
+    const valueInput = document.createElement("input");
+    valueInput.type = "number";
+    valueInput.min = "1";
+    valueInput.step = "1";
+    valueInput.inputMode = "numeric";
+    valueInput.value = String(initialDisplay || fallbackDisplay);
+    valueInput.disabled = readOnly || !toggle.checked;
+    valueField.appendChild(valueInput);
+    if (unitLabel) {
+      const suffix = document.createElement("span");
+      suffix.textContent = unitLabel;
+      valueField.appendChild(suffix);
+    }
+
+    const sync = () => {
+      const display = clampInt(valueInput.value, 1, 2147483, fallbackDisplay);
+      valueInput.value = String(display);
+      valueInput.disabled = readOnly || !toggle.checked;
+      setDraftValue(toggle.checked ? display * divisor : 0);
+      setFieldError(false, "");
+    };
+
+    toggle.addEventListener("change", sync);
+    valueInput.addEventListener("change", sync);
+
+    row.appendChild(switchLabel);
+    row.appendChild(verbLabel);
+    row.appendChild(valueField);
+    valueWrap.appendChild(row);
+  }
+
+  // Generic select widget. Options are resolved via getWidgetSelectOptions(),
+  // which handles all four sources (inline, schemaPath, intl country codes,
+  // external timezones). PositiveBigInteger and Integer specs coerce their
+  // selected value back to Number so the device receives correct types.
+  function renderSelectWidget(ctx) {
+    const { spec, widget, valueWrap, currentDraft, readOnly, setDraftValue, setFieldError } = ctx;
+    const control = document.createElement("select");
+    const options = getWidgetSelectOptions(spec, widget);
+    options.forEach((option) => {
+      const optionEl = document.createElement("option");
+      optionEl.value = option.value;
+      optionEl.textContent = option.label;
+      optionEl.selected = String(option.value) === String(currentDraft);
+      control.appendChild(optionEl);
+    });
+    control.disabled = readOnly;
+    const numeric = spec.type === settingType.Integer || spec.type === settingType.PositiveBigInteger || spec.type === settingType.Float;
+    control.addEventListener("change", () => {
+      setDraftValue(numeric ? Number(control.value) : control.value);
+      setFieldError(false, "");
+    });
+    valueWrap.appendChild(control);
+  }
+
+  // Slider widget with optional displayScale (raw <-> display linear remap).
+  // Pure-numeric sliders without a displayScale operate on raw min/max.
+  function renderSliderWidget(ctx) {
+    const { spec, widget, valueWrap, currentDraft, currentValue, readOnly, setDraftValue, setFieldError } = ctx;
+    const scale = widget.displayScale || null;
+    const toDisplay = (raw) => scale ? clampDisplay(scale, mapRawToDisplay(scale, raw)) : raw;
+    const toRaw = (display) => scale ? Math.round(mapDisplayToRaw(scale, clampDisplay(scale, display))) : Math.round(Number(display));
+
+    const sliderMin = scale ? scale.displayMin : (spec.minimumValue ?? 0);
+    const sliderMax = scale ? scale.displayMax : (spec.maximumValue ?? 255);
+
+    const control = document.createElement("input");
+    control.type = "range";
+    control.min = sliderMin;
+    control.max = sliderMax;
+    control.value = String(toDisplay(currentDraft));
+    control.disabled = readOnly;
+
+    const output = document.createElement("input");
+    output.type = "number";
+    output.value = String(toDisplay(currentDraft));
+    output.disabled = readOnly;
+
+    const handleDisplay = (display) => {
+      const intValue = clampInt(display, Number(control.min), Number(control.max), toDisplay(currentValue));
+      output.value = String(intValue);
+      control.value = String(intValue);
+      setDraftValue(toRaw(intValue));
+      setFieldError(false, "");
+    };
+
+    output.addEventListener("change", () => handleDisplay(output.value));
+    control.addEventListener("input", () => handleDisplay(control.value));
+
+    const row = document.createElement("div");
+    row.className = "slider-row";
+    row.appendChild(control);
+    row.appendChild(output);
+    if (scale && scale.suffix) {
+      const suffix = document.createElement("span");
+      suffix.className = "slider-suffix";
+      suffix.textContent = scale.suffix;
+      row.appendChild(suffix);
+    }
+    valueWrap.appendChild(row);
+  }
+
+  function renderBooleanWidget(ctx) {
+    const { valueWrap, currentDraft, readOnly, setDraftValue, setFieldError } = ctx;
+    const switchLabel = document.createElement("label");
+    switchLabel.className = "mac-switch";
+    const control = document.createElement("input");
+    control.type = "checkbox";
+    control.checked = !!currentDraft;
+    control.disabled = readOnly;
+    control.addEventListener("change", () => {
+      setDraftValue(!!control.checked);
+      setFieldError(false, "");
+    });
+    const track = document.createElement("span");
+    track.className = "mac-switch-track";
+    track.appendChild(Object.assign(document.createElement("span"), { className: "mac-switch-thumb" }));
+    switchLabel.appendChild(control);
+    switchLabel.appendChild(track);
+    const toggle = document.createElement("div");
+    toggle.className = "toggle setting-toggle";
+    toggle.appendChild(switchLabel);
+    valueWrap.appendChild(toggle);
+  }
+
+  function renderColorWidget(ctx) {
+    const { valueWrap, currentDraft, currentValue, readOnly, setDraftValue, setFieldError } = ctx;
+    const row = document.createElement("div");
+    row.className = "color-row";
+    const control = document.createElement("input");
+    control.type = "color";
+    control.value = colorIntToHex(currentDraft);
+    control.disabled = readOnly;
+    const numeric = document.createElement("input");
+    numeric.type = "number";
+    numeric.className = "color-value";
+    numeric.value = String(currentDraft);
+    numeric.disabled = readOnly;
+    control.addEventListener("input", () => {
+      const intValue = hexToColorInt(control.value);
+      numeric.value = String(intValue);
+      setDraftValue(intValue);
+      setFieldError(false, "");
+    });
+    numeric.addEventListener("change", () => {
+      const intValue = clampInt(numeric.value, 0, 16777215, currentValue);
+      numeric.value = String(intValue);
+      control.value = colorIntToHex(intValue);
+      setDraftValue(intValue);
+      setFieldError(false, "");
+    });
+    row.appendChild(control);
+    row.appendChild(numeric);
+    valueWrap.appendChild(row);
+  }
+
+  function renderPaletteWidget(ctx) {
+    const { valueWrap, currentDraft, readOnly, setDraftValue, setFieldError } = ctx;
+    const row = document.createElement("div");
+    row.className = "palette-row";
+    const palette = Array.isArray(currentDraft) ? currentDraft : [];
+    palette.forEach((entry, index) => {
+      const box = document.createElement("div");
+      box.className = "palette-entry";
+      const color = document.createElement("input");
+      color.type = "color";
+      color.value = colorIntToHex(entry);
+      color.disabled = readOnly;
+      const value = document.createElement("input");
+      value.type = "number";
+      value.className = "color-value";
+      value.value = String(entry);
+      value.disabled = readOnly;
+      const updatePalette = (intValue) => {
+        const next = palette.slice();
+        next[index] = intValue;
+        setDraftValue(next);
+        setFieldError(false, "");
+      };
+      color.addEventListener("input", () => {
+        const intValue = hexToColorInt(color.value);
+        value.value = String(intValue);
+        updatePalette(intValue);
+      });
+      value.addEventListener("change", () => {
+        const intValue = clampInt(value.value, 0, 16777215, entry);
+        value.value = String(intValue);
+        color.value = colorIntToHex(intValue);
+        updatePalette(intValue);
+      });
+      box.appendChild(color);
+      box.appendChild(value);
+      row.appendChild(box);
+    });
+    valueWrap.appendChild(row);
+  }
+
+  function renderDefaultInputWidget(ctx) {
+    const { spec, valueWrap, currentDraft, readOnly, setDraftValue, setFieldError } = ctx;
+    const control = document.createElement("input");
+    control.type = spec.type === settingType.Float || spec.type === settingType.Integer || spec.type === settingType.PositiveBigInteger
+      ? "number"
+      : "text";
+    if (spec.minimumValue !== undefined) control.min = spec.minimumValue;
+    if (spec.maximumValue !== undefined) control.max = spec.maximumValue;
+    if (spec.type === settingType.Integer || spec.type === settingType.PositiveBigInteger) control.step = "1";
+    control.value = currentDraft ?? "";
+    control.readOnly = readOnly;
+    control.addEventListener("change", () => {
+      const validation = validateFieldValue(spec, control.value);
+      if (!validation.valid) {
+        setFieldError(true, validation.message);
+        return;
+      }
+      const coerced = coerceFieldValue(spec, control.value);
+      setDraftValue(coerced);
+      setFieldError(false, "");
+    });
+    valueWrap.appendChild(control);
+  }
+
+  // Resolve a select widget's option list. Sources:
+  //   "inline"             - widget.options.values (and optional .labels)
+  //   "schemaPath"         - resolve a path against state.unifiedSchema. If the
+  //                          target is an array, use it directly. If it's a
+  //                          number, generate 1..N (used for compiledMaxChannels).
+  //                          Optional widget.options.values/labels provide label
+  //                          overrides for specific raw values.
+  //   "intlCountryCodes"   - the prebuilt COUNTRY_OPTIONS list
+  //   "externalTimeZones"  - the lazily-fetched time zone list
+  function getWidgetSelectOptions(spec, widget) {
+    const source = (widget.options && widget.options.source) || "inline";
+    const options = widget.options || {};
+    const values = Array.isArray(options.values) ? options.values : [];
+    const labels = Array.isArray(options.labels) ? options.labels : [];
+
+    // Build a value->label map from the parallel values/labels arrays.
+    const labelMap = {};
+    values.forEach((v, i) => { if (i < labels.length) labelMap[String(v)] = labels[i]; });
+
+    // Apply the label map to a raw array, falling back to the raw value as label.
+    function applyLabelMap(rawValues) {
+      return rawValues.map((value) => ({
+        value: String(value),
+        label: Object.prototype.hasOwnProperty.call(labelMap, String(value)) ? labelMap[String(value)] : String(value)
+      }));
+    }
+
+    if (source === "intlCountryCodes") {
+      return COUNTRY_OPTIONS.map((option) => ({ value: option.value, label: option.label }));
+    }
+    if (source === "externalTimeZones") {
+      // The URL is carried on the spec's widget metadata so the UI doesn't
+      // bake the document path. ensureTimezonesLoaded() reads the same field.
+      return applyLabelMap(getTimeZoneOptions());
+    }
+    if (source === "schemaPath") {
+      const target = readJsonPath(state.unifiedSchema, options.schemaPath);
+      if (Array.isArray(target)) {
+        return applyLabelMap(target);
+      }
+      return [];
+    }
+    // Inline (default)
+    return applyLabelMap(values);
+  }
+
+  // Linearly remap a raw value into the displayed range, then clamp.
+  function mapRawToDisplay(scale, raw) {
+    const rawMin = Number(scale.rawMin);
+    const rawMax = Number(scale.rawMax);
+    const displayMin = Number(scale.displayMin);
+    const displayMax = Number(scale.displayMax);
+    if (rawMax === rawMin) return displayMin;
+    return ((Number(raw) - rawMin) / (rawMax - rawMin)) * (displayMax - displayMin) + displayMin;
+  }
+
+  function mapDisplayToRaw(scale, display) {
+    const rawMin = Number(scale.rawMin);
+    const rawMax = Number(scale.rawMax);
+    const displayMin = Number(scale.displayMin);
+    const displayMax = Number(scale.displayMax);
+    if (displayMax === displayMin) return rawMin;
+    return ((Number(display) - displayMin) / (displayMax - displayMin)) * (rawMax - rawMin) + rawMin;
+  }
+
+  function clampDisplay(scale, value) {
+    return Math.max(Number(scale.displayMin), Math.min(Number(scale.displayMax), Math.round(Number(value))));
   }
 
   function validateFieldValue(spec, rawValue) {
@@ -1073,11 +1155,51 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     }
   }
 
+  // Resolve display unit metadata for an interval-style spec. Falls back to a
+  // 1:1 / "ms" pair when the spec isn't loaded yet, so the hero can still
+  // render meaningfully on the very first call.
+  function getIntervalDisplayScale(specName) {
+    const spec = (state.settingsSpecs || []).find((entry) => entry && entry.name === specName);
+    const interval = spec && spec.widget && spec.widget.interval;
+    return {
+      divisor: Math.max(1, Number(interval && interval.unitDivisor) || 1),
+      unitLabel: (interval && interval.unitLabel) || "ms",
+      offLabel: interval && interval.offLabel
+    };
+  }
+
+  function formatIntervalDisplay(rawValue, scale) {
+    const display = Math.round(Number(rawValue || 0) / scale.divisor);
+    return scale.unitLabel ? `${display} ${scale.unitLabel}` : String(display);
+  }
+
   async function applyEffectInterval() {
-    const seconds = clampInt(els.effectIntervalInput.value, 0, 2147483, 0);
+    // The standalone "rotate every N seconds" control on the effects tab posts
+    // through the same path the full settings form does: it looks up the
+    // effectInterval spec, uses its widget metadata to convert displayed
+    // units to the raw stored value, and writes via the spec's apiPath.
+    const spec = (state.settingsSpecs || []).find((entry) => entry && entry.name === "effectInterval");
+    if (!spec) {
+      toast("Effect interval spec is not available yet.", "error");
+      return;
+    }
+    const interval = (spec.widget && spec.widget.interval) || {};
+    const divisor = Number(interval.unitDivisor) || 1;
+    const displayedValue = clampInt(els.effectIntervalInput.value, 0, 2147483, 0);
+    const rawValue = displayedValue * divisor;
+
     try {
-      await postForm("/settings", { effectInterval: seconds * 1000 });
-      toast(`Effect interval set to ${seconds} sec.`, "success");
+      if (spec.apiPath) {
+        const body = {};
+        writeJsonPath(body, spec.apiPath, rawValue);
+        await postJson("/api/v1/settings", body);
+      } else {
+        await postForm("/settings", { [spec.name]: rawValue });
+      }
+      // Edit successfully landed; release the input back to auto-refresh.
+      state.effectIntervalDirty = false;
+      const unit = interval.unitLabel || "";
+      toast(`Effect interval set to ${displayedValue} ${unit}.`.trim(), "success");
       await Promise.all([loadEffectsOnly(), loadSettingsOnly()]);
     } catch (error) {
       handleError("Failed to set effect interval", error);
@@ -1093,7 +1215,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     }
   }
 
-  
+
   async function moveEffect(effectIndex, newIndex) {
     try {
       await postForm("/moveEffect", { effectIndex, newIndex });
@@ -1127,13 +1249,18 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
       return;
     }
 
-    if (!rebootAfter && Object.prototype.hasOwnProperty.call(legacyPayload, "hostname")) {
-      const shouldContinue = window.confirm(
-        "Hostname changes do not take effect until the device reboots.\n\n" +
-        "Click OK to apply the change now and reboot later, or Cancel to use Apply + Reboot instead."
-      );
-      if (!shouldContinue) {
-        return;
+    if (!rebootAfter) {
+      const rebootNames = collectRequiresRebootSettings(state.deviceDraft);
+      if (rebootNames.length > 0) {
+        const friendly = rebootNames.join(", ");
+        const noun = rebootNames.length === 1 ? "this setting does" : "these settings do";
+        const shouldContinue = window.confirm(
+          `Changes to ${friendly} ${noun} not take effect until the device reboots.\n\n` +
+          "Click OK to apply the change now and reboot later, or Cancel to use Apply + Reboot instead."
+        );
+        if (!shouldContinue) {
+          return;
+        }
       }
     }
 
@@ -1683,10 +1810,6 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     return "";
   }
 
-  function getColorOrderOptions() {
-    return (((state.unifiedSchema || {}).outputs || {}).ws281x || {}).allowedColorOrders || COLOR_ORDER_OPTIONS;
-  }
-
   function getTimeZoneOptions() {
     const options = normalizeTimeZoneOptions(state.timezones);
     if (options.length > 0) {
@@ -1717,80 +1840,65 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
       .sort((left, right) => left.localeCompare(right));
   }
 
-  function getOutputDriverOptions() {
-    const allowed = (((state.unifiedSchema || {}).outputs || {}).allowedDrivers) || [];
-    return allowed.map((value) => ({
-      value,
-      label: value === "ws281x" ? "WS281x" : value === "hub75" ? "HUB75" : value
-    }));
+  // Return the friendly names of any drafted settings whose spec is flagged
+  // RequiresReboot, so the apply flow can warn the user before a non-reboot
+  // commit. Returns [] when nothing in the draft needs a reboot.
+  function collectRequiresRebootSettings(draft) {
+    const specsByName = new Map((state.settingsSpecs || []).map((spec) => [spec.name, spec]));
+    return Object.keys(draft)
+      .map((name) => specsByName.get(name))
+      .filter((spec) => spec && spec.requiresReboot)
+      .map((spec) => spec.friendlyName || spec.name);
   }
 
-  function getChannelCountOptions() {
-    const compiledMax = Number((((state.unifiedSchema || {}).outputs || {}).ws281x || {}).compiledMaxChannels || 8);
-    const maxChannels = Math.max(1, Math.min(8, compiledMax));
-    const options = [];
-    for (let channel = 1; channel <= maxChannels; channel += 1) {
-      options.push({ value: String(channel), label: String(channel) });
-    }
-    return options;
-  }
-
+  // Split a device-settings draft into the right wire shape per setting:
+  // any setting whose spec carries an apiPath becomes a write at that path
+  // inside the unified-settings JSON document; everything else stays in the
+  // flat legacy payload keyed by name. Pin paths like "outputs.ws281x.pins[0]"
+  // are merged with the chip's currently-configured pin array so partial
+  // updates don't blank out untouched channels.
   function splitDeviceDraftPayloads(draft) {
-    const legacyPayload = { ...draft };
+    const legacyPayload = {};
     const unifiedPayload = {};
-    const topology = {};
-    const outputs = {};
-    const ws281x = {};
+    const specsByName = new Map((state.settingsSpecs || []).map((spec) => [spec.name, spec]));
+    const seedPaths = new Map();           // path prefix -> seeded base array
 
-    moveDraftValue(legacyPayload, topology, "matrixWidth", "width");
-    moveDraftValue(legacyPayload, topology, "matrixHeight", "height");
-    moveDraftValue(legacyPayload, topology, "matrixSerpentine", "serpentine");
-    moveDraftValue(legacyPayload, outputs, "outputDriver", "driver");
-    moveDraftValue(legacyPayload, ws281x, "ws281xChannelCount", "channelCount");
-    moveDraftValue(legacyPayload, ws281x, "ws281xColorOrder", "colorOrder");
-
-    const pinValues = collectDraftWs281xPins(legacyPayload);
-    if (pinValues !== null) {
-      ws281x.pins = pinValues;
-    }
-
-    if (Object.keys(topology).length > 0) {
-      unifiedPayload.topology = topology;
-    }
-    if (Object.keys(ws281x).length > 0) {
-      outputs.ws281x = ws281x;
-    }
-    if (Object.keys(outputs).length > 0) {
-      unifiedPayload.outputs = outputs;
-    }
+    Object.keys(draft).forEach((key) => {
+      const spec = specsByName.get(key);
+      if (spec && spec.apiPath) {
+        seedDraftPathContext(spec.apiPath, unifiedPayload, seedPaths);
+        writeJsonPath(unifiedPayload, spec.apiPath, draft[key]);
+      } else {
+        legacyPayload[key] = draft[key];
+      }
+    });
 
     return { legacyPayload, unifiedPayload };
   }
 
-  function moveDraftValue(from, to, sourceKey, targetKey) {
-    if (!Object.prototype.hasOwnProperty.call(from, sourceKey)) {
-      return;
-    }
-    to[targetKey] = from[sourceKey];
-    delete from[sourceKey];
-  }
-
-  function collectDraftWs281xPins(payload) {
-    const pins = (((state.unifiedSettings || {}).outputs || {}).ws281x || {}).pins || [];
-    const nextPins = pins.slice();
-    let changed = false;
-
-    Object.keys(payload).forEach((key) => {
-      const pinIndex = syntheticWs281xPinIndex(key);
-      if (pinIndex === null) {
-        return;
+  // For paths that target an array element (e.g. outputs.ws281x.pins[2]) we
+  // need to seed the array with the chip's current full contents the first
+  // time we touch the array, otherwise serializing { pins: [, , 7] } would
+  // clear pins 0 and 1. Once seeded, subsequent index writes layer on top.
+  function seedDraftPathContext(apiPath, unifiedPayload, seedPaths) {
+    const segments = parseJsonPath(apiPath);
+    let pathSoFar = "";
+    let cursor = unifiedPayload;
+    for (let i = 0; i < segments.length - 1; i += 1) {
+      const segment = segments[i];
+      pathSoFar = pathSoFar.length === 0 ? String(segment) : `${pathSoFar}.${segment}`;
+      const nextIsIndex = typeof segments[i + 1] === "number";
+      if (nextIsIndex && !seedPaths.has(pathSoFar)) {
+        const seedValue = readJsonPath(state.unifiedSettings, pathSoFar);
+        if (Array.isArray(seedValue)) {
+          cursor[segment] = seedValue.slice();
+          seedPaths.set(pathSoFar, true);
+        }
+      } else if (cursor[segment] == null) {
+        cursor[segment] = nextIsIndex ? [] : {};
       }
-      nextPins[pinIndex] = payload[key];
-      delete payload[key];
-      changed = true;
-    });
-
-    return changed ? nextPins : null;
+      cursor = cursor[segment];
+    }
   }
 
   function colorIntToHex(value) {
@@ -1800,16 +1908,6 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
 
   function hexToColorInt(value) {
     return parseInt(String(value || "#000000").replace("#", ""), 16) || 0;
-  }
-
-  function rawBrightnessToDisplay(value) {
-    const raw = clampInt(value, 0, 255, 255);
-    return Math.max(5, Math.min(100, Math.round((raw / 255) * 100)));
-  }
-
-  function displayBrightnessToRaw(value) {
-    const display = clampInt(value, 5, 100, 100);
-    return Math.max(0, Math.min(255, Math.round((display / 100) * 255)));
   }
 
   function escapeHtml(value) {
@@ -1854,14 +1952,34 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     return options.sort((left, right) => left.label.localeCompare(right.label));
   }
 
+  // Resolve the URL of any spec advertising itself as the external timezone
+  // source. The location of the document is firmware-defined — the UI only
+  // knows the result is parseable by normalizeTimeZoneOptions().
+  function findExternalTimeZonesUrl() {
+    if (!Array.isArray(state.settingsSpecs)) {
+      return null;
+    }
+    const spec = state.settingsSpecs.find((entry) => {
+      const widget = entry && entry.widget;
+      const options = widget && widget.options;
+      return options && options.source === "externalTimeZones" && typeof options.url === "string" && options.url.length > 0;
+    });
+    return spec ? spec.widget.options.url : null;
+  }
+
   async function ensureTimezonesLoaded() {
     if (state.timezones || state.timezonesLoading) {
       return;
     }
 
+    const url = findExternalTimeZonesUrl();
+    if (!url) {
+      return;
+    }
+
     state.timezonesLoading = true;
     try {
-      state.timezones = await fetchJson("/timezones.json");
+      state.timezones = await fetchJson(url);
       if (state.settings && state.settingsSpecs) {
         renderSettingsForm();
       }

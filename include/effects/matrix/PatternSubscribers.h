@@ -147,22 +147,32 @@ class PatternSubscribers : public EffectWithId<PatternSubscribers>
         // Lazily load this class' SettingSpec instances if they haven't been already
         if (mySettingSpecs.size() == 0)
         {
-            mySettingSpecs.emplace_back(
-                NAME_OF(youtubeChannelGuid),
-                "YouTube channel GUID",
-                "The <a href=\"http://tools.tastethecode.com/youtube-sight\">YouTube Sight</a> GUID of the channel for which "
-                "the effect should show subscriber information.",
-                SettingSpec::SettingType::String
-            );
-            mySettingSpecs.emplace_back(NAME_OF(backgroundColor), "Background Color",
-                                        "Color for the background",
-                                        SettingSpec::SettingType::Color);
-            mySettingSpecs.emplace_back(NAME_OF(borderColor), "Border Color",
-                                        "Color for the border around the edge", SettingSpec::SettingType::Color);
-            mySettingSpecs.emplace_back(NAME_OF(youtubeChannelName), "YouTube channel name",
-                                         "The name of the channel for which the effect should show subscriber information.",
-                                         SettingSpec::SettingType::String)
-                                         .EmptyAllowed = true;
+            mySettingSpecs.push_back(SettingSpec::Validate(SettingSpec{
+                .Name         = NAME_OF(youtubeChannelGuid),
+                .FriendlyName = "YouTube channel GUID",
+                .Description  = "The <a href=\"http://tools.tastethecode.com/youtube-sight\">YouTube Sight</a> GUID of the channel for which "
+                                "the effect should show subscriber information.",
+                .Type         = SettingSpec::SettingType::String
+            }));
+            mySettingSpecs.push_back(SettingSpec::Validate(SettingSpec{
+                .Name         = NAME_OF(backgroundColor),
+                .FriendlyName = "Background Color",
+                .Description  = "Color for the background",
+                .Type         = SettingSpec::SettingType::Color
+            }));
+            mySettingSpecs.push_back(SettingSpec::Validate(SettingSpec{
+                .Name         = NAME_OF(borderColor),
+                .FriendlyName = "Border Color",
+                .Description  = "Color for the border around the edge",
+                .Type         = SettingSpec::SettingType::Color
+            }));
+            mySettingSpecs.push_back(SettingSpec::Validate(SettingSpec{
+                .Name         = NAME_OF(youtubeChannelName),
+                .FriendlyName = "YouTube channel name",
+                .Description  = "The name of the channel for which the effect should show subscriber information.",
+                .Type         = SettingSpec::SettingType::String,
+                .EmptyAllowed = true
+            }));
         }
 
         return &mySettingSpecs;

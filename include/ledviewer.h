@@ -71,8 +71,6 @@ private:
     int                         _server_fd;
     struct sockaddr_in          _address;
 
-    const int BUFFER_SIZE = 1024;
-
 public:
 
     explicit LEDViewer(int port);

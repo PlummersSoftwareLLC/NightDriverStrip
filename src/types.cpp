@@ -96,51 +96,51 @@ double CAppTime::LastFrameTime() const
     return _deltaTime;
 }
 
-// Finishes the initialization of the spec, and then validates the consistency of its overall contents.
-// Note that it does the latter quite rudely: it uses assert() on things it feels should be in order.
-// This function is called by this struct's constructors that initialize values, but this being a struct
-// allows itself to be called from the outside as well.
+// Validates the consistency of the spec's contents after all fields have been assigned.
+// Called by Construct(); can also be called directly if needed.
 void SettingSpec::FinishAndValidateInitialization()
 {
-    // Default to front-end rejection of empty Strings
-    if (Type == SettingType::String)
+    // Default to front-end rejection of empty Strings, but only if the caller hasn't already
+    // set EmptyAllowed explicitly.
+    if (Type == SettingType::String && !EmptyAllowed.has_value())
         EmptyAllowed = false;
-    else
-        // Check that both min and max value are set for Slider
-        assert(Type != SettingType::Slider || (MinimumValue.has_value() && MaximumValue.has_value()));
 
     // If min and max value are both set, min must be less or equal than max
     assert(!(MinimumValue.has_value() && MaximumValue.has_value()) || MinimumValue.value() <= MaximumValue.value());
+
+    // For Slider widgets, display scale members must all be set or all be unset
+    assert(Widget != WidgetKind::Slider || (DisplayRawMin.has_value() == DisplayRawMax.has_value() &&
+           DisplayRawMin.has_value() == DisplayMin.has_value() &&
+           DisplayRawMin.has_value() == DisplayMax.has_value()));
+
+    // For Select widgets, validate options source-specific requirements
+    if (Widget == WidgetKind::Select)
+    {
+        // For Inline select options, labels must be empty or match the number of values
+        assert(Options != OptionsSource::Inline ||
+               OptionLabels.empty() || OptionLabels.size() == OptionValues.size());
+
+        // For SchemaPath select options, OptionsSchemaPath must be set, and
+        // any label overrides must be provided as matched pairs (both non-empty, same length)
+        assert(Options != OptionsSource::SchemaPath || OptionsSchemaPath != nullptr);
+        assert(Options != OptionsSource::SchemaPath ||
+               (OptionValues.empty() == OptionLabels.empty() &&
+                (OptionValues.empty() || OptionValues.size() == OptionLabels.size())));
+
+        // For ExternalTimeZones select options, OptionsExternalUrl must be set, and
+        // any label overrides must be provided as matched pairs (both non-empty, same length)
+        assert(Options != OptionsSource::ExternalTimeZones || OptionsExternalUrl != nullptr);
+        assert(Options != OptionsSource::ExternalTimeZones ||
+               (OptionValues.empty() == OptionLabels.empty() &&
+                (OptionValues.empty() || OptionValues.size() == OptionLabels.size())));
+    }
 }
 
-SettingSpec::SettingSpec(const char* name, const char* friendlyName, const char* description, SettingType type)
-    : Name(name),
-    FriendlyName(friendlyName),
-    Description(description),
-    Type(type)
+SettingSpec SettingSpec::Validate(SettingSpec spec)
 {
-    FinishAndValidateInitialization();
+    spec.FinishAndValidateInitialization();
+    return spec;
 }
-
-SettingSpec::SettingSpec(const char* name, const char* friendlyName, SettingType type) : SettingSpec(name, friendlyName, nullptr, type)
-{}
-
-// Constructor that sets both minimum and maximum values
-SettingSpec::SettingSpec(const char* name, const char* friendlyName, const char* description, SettingType type, double min, double max)
-    : Name(name),
-    FriendlyName(friendlyName),
-    Description(description),
-    Type(type),
-    MinimumValue(min),
-    MaximumValue(max)
-{
-    FinishAndValidateInitialization();
-}
-
-// Constructor that sets both minimum and maximum values
-SettingSpec::SettingSpec(const char* name, const char* friendlyName, SettingType type, double min, double max)
-    : SettingSpec(name, friendlyName, nullptr, type, min, max)
-{}
 
 String SettingSpec::TypeName() const
 {
@@ -153,8 +153,30 @@ String SettingSpec::TypeName() const
         case SettingType::String:               return "String";
         case SettingType::Palette:              return "Palette";
         case SettingType::Color:                return "Color";
-        case SettingType::Slider:               return "Slider";
         default:                                return "Unknown";
+    }
+}
+
+const char* SettingSpec::WidgetName() const
+{
+    switch (Widget)
+    {
+        case WidgetKind::Slider:           return "slider";
+        case WidgetKind::Select:           return "select";
+        case WidgetKind::IntervalToggle:   return "intervalToggle";
+        default:                           return "default";
+    }
+}
+
+const char* SettingSpec::OptionsSourceName() const
+{
+    switch (Options)
+    {
+        case OptionsSource::Inline:             return "inline";
+        case OptionsSource::SchemaPath:         return "schemaPath";
+        case OptionsSource::IntlCountryCodes:   return "intlCountryCodes";
+        case OptionsSource::ExternalTimeZones:  return "externalTimeZones";
+        default:                                return "inline";
     }
 }
 

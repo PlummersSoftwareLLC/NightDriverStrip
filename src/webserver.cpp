@@ -150,9 +150,16 @@ namespace
         drivers.add(deviceConfig.GetCompiledDriverName());
 
         auto ws281x = outputs["ws281x"].to<JsonObject>();
-        ws281x["compiledMaxChannels"] = DeviceConfig::GetCompiledChannelCount();
+        const auto compiledChannels = DeviceConfig::GetCompiledChannelCount();
+        ws281x["compiledMaxChannels"] = compiledChannels;
         ws281x["compiledMaxLEDs"] = DeviceConfig::GetCompiledLEDCount();
         ws281x["compiledColorOrder"] = DeviceConfig::GetColorOrderName(DeviceConfig::GetCompiledWS281xColorOrder());
+        // Concrete list of valid channel counts. Specs that drive a select for
+        // channel count point here so the UI doesn't have to derive a range
+        // from a bare integer.
+        auto allowedChannelCounts = ws281x["allowedChannelCounts"].to<JsonArray>();
+        for (size_t channel = 1; channel <= compiledChannels; ++channel)
+            allowedChannelCounts.add(channel);
         auto allowedColorOrders = ws281x["allowedColorOrders"].to<JsonArray>();
         allowedColorOrders.add("RGB");
         allowedColorOrders.add("RBG");
@@ -185,13 +192,42 @@ namespace
         audio["requiresReboot"] = !deviceConfig.SupportsLiveAudioInputReconfigure();
         audio["supportsPinOverride"] = deviceConfig.SupportsConfigurableAudioInputPin();
         audio["rejectMessage"] = "recompile needed";
+
+        // Section catalog. The UI groups settings by spec.section and uses
+        // these entries (matched on id) for the section heading and subtitle.
+        // Sections without any settings are still listed so the UI can decide
+        // whether to render an empty placeholder or skip them.
+        struct SectionInfo
+        {
+            const char* id;
+            const char* title;
+            const char* description;
+        };
+        static constexpr SectionInfo kSections[] =
+        {
+            { "topology",   "Topology",          "Active matrix dimensions and layout." },
+            { "output",     "Output",            "LED driver, channel count, color order, and per-channel pin assignments." },
+            { "appearance", "Appearance",        "Brightness, colors, effect rotation, and visual preferences." },
+            { "audio",      "Audio",             "Microphone input pin and audio capture configuration." },
+            { "location",   "Location",          "Where the device is for weather and timezone defaults." },
+            { "clock",      "Clock & Weather",   "Time display, NTP, and weather API options." },
+            { "system",     "System",            "Identification, power limits, and other system-wide options." },
+        };
+        auto sections = root["sections"].to<JsonArray>();
+        for (const auto& info : kSections)
+        {
+            auto entry = sections.add<JsonObject>();
+            entry["id"] = info.id;
+            entry["title"] = info.title;
+            entry["description"] = info.description;
+        }
     }
 
     // Normalizes the unified settings audio pin request into one optional value.
     // The API currently accepts both the legacy flat device.audioInputPin field
     // and the nested device.audio.inputPin field, so validation/apply can consume
     // one resolved value instead of duplicating that lookup logic.
-    
+
     std::optional<int> GetRequestedUnifiedAudioInputPin(JsonObjectConst device)
     {
         std::optional<int> requestedAudioInputPin;
@@ -700,6 +736,75 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
                 break;
         }
 
+        // ---- UI metadata: section, priority, requiresReboot, apiPath, widget ----
+
+        if (spec.Section)
+            jsonDoc["section"] = spec.Section;
+        if (spec.Priority.has_value())
+            jsonDoc["priority"] = spec.Priority.value();
+        if (spec.RequiresReboot)
+            jsonDoc["requiresReboot"] = true;
+        if (spec.ApiPath)
+            jsonDoc["apiPath"] = spec.ApiPath;
+
+        if (spec.Widget != SettingSpec::WidgetKind::Default)
+        {
+            auto widget = jsonDoc["widget"].to<JsonObject>();
+            widget["kind"] = spec.WidgetName();
+
+            if (spec.Widget == SettingSpec::WidgetKind::Slider
+                && spec.DisplayRawMin.has_value()) // Presence of other Display members is validated at SettingSpec construction
+            {
+                auto scale = widget["displayScale"].to<JsonObject>();
+                scale["rawMin"]     = spec.DisplayRawMin.value();
+                scale["rawMax"]     = spec.DisplayRawMax.value();
+                scale["displayMin"] = spec.DisplayMin.value();
+                scale["displayMax"] = spec.DisplayMax.value();
+                if (spec.DisplaySuffix)
+                    scale["suffix"] = spec.DisplaySuffix;
+            }
+            else if (spec.Widget == SettingSpec::WidgetKind::IntervalToggle)
+            {
+                auto interval = widget["interval"].to<JsonObject>();
+                interval["unitDivisor"] = spec.IntervalUnitDivisor;
+                if (spec.IntervalUnitLabel)
+                    interval["unitLabel"] = spec.IntervalUnitLabel;
+                if (spec.IntervalOnLabel)
+                    interval["onLabel"] = spec.IntervalOnLabel;
+                if (spec.IntervalOffLabel)
+                    interval["offLabel"] = spec.IntervalOffLabel;
+            }
+            else if (spec.Widget == SettingSpec::WidgetKind::Select)
+            {
+                auto options = widget["options"].to<JsonObject>();
+                options["source"] = spec.OptionsSourceName();
+
+                auto addOptionArrays = [&]()
+                {
+                    auto valuesArr = options["values"].to<JsonArray>();
+                    for (auto entry : spec.OptionValues)
+                        valuesArr.add(entry ? entry : "");
+                    auto labelsArr = options["labels"].to<JsonArray>();
+                    for (auto entry : spec.OptionLabels)
+                        labelsArr.add(entry ? entry : "");
+                };
+
+                if (spec.Options == SettingSpec::OptionsSource::Inline)
+                {
+                    addOptionArrays();
+                }
+                else if (spec.OptionsSchemaPath)
+                {
+                    options["schemaPath"] = spec.OptionsSchemaPath;
+                    if (!spec.OptionValues.empty())
+                        addOptionArrays();
+                }
+
+                if (spec.OptionsExternalUrl)
+                    options["url"] = spec.OptionsExternalUrl;
+            }
+        }
+
         if (jsonDoc.overflowed() || !specObject.set(jsonDoc.as<JsonObjectConst>()))
         {
             debugV("JSON response buffer overflow!");
@@ -715,12 +820,25 @@ const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceS
 {
     if (deviceSettingSpecs.empty())
     {
-        mySettingSpecs.emplace_back(
-            "effectInterval",
-            "Effect interval",
-            "The duration in milliseconds that an individual effect runs, before the next effect is activated.",
-            SettingSpec::SettingType::PositiveBigInteger
-        );
+        // effectInterval lives on the EffectManager rather than DeviceConfig,
+        // so its spec is owned here. The Widget metadata mirrors the legacy
+        // composite "Rotate effects toggle + seconds input" UX in a way the
+        // front-end can render generically.
+        mySettingSpecs.push_back(SettingSpec::Validate(SettingSpec{
+            .Name                = "effectInterval",
+            .FriendlyName        = "Effect interval",
+            .Description         = "The duration in milliseconds that an individual effect runs, before the next effect is activated. "
+                                   "Disable rotation to keep the current effect active indefinitely.",
+            .Type                = SettingSpec::SettingType::PositiveBigInteger,
+            .Section             = "appearance",
+            .ApiPath             = "effects.effectInterval",
+            .Widget              = SettingSpec::WidgetKind::IntervalToggle,
+            .IntervalUnitDivisor = 1000,
+            .IntervalOnLabel     = "Rotate effects",
+            .IntervalOffLabel    = "Off",
+            .IntervalUnitLabel   = "seconds"
+        }));
+
         deviceSettingSpecs.insert(deviceSettingSpecs.end(), mySettingSpecs.begin(), mySettingSpecs.end());
 
         auto deviceConfigSpecs = g_ptrSystem->GetDeviceConfig().GetSettingSpecs();
@@ -775,7 +893,7 @@ bool CWebServer::ValidateLegacyDeviceSettings(AsyncWebServerRequest * pRequest, 
     // Validate the constrained settings first so the legacy POST path behaves like the unified JSON API:
     // either the nontrivial request is coherent as a whole, or we reject it before any setters persist a
     // partially applied config.
-    
+
     if (pRequest->hasParam(DeviceConfig::OpenWeatherApiKeyTag, true, false))
     {
         auto [isValid, validationMessage] =
@@ -1200,7 +1318,11 @@ bool CWebServer::ApplyEffectSettings(AsyncWebServerRequest * pRequest, std::shar
 
     for (auto& settingSpecWrapper : effect->GetSettingSpecs())
     {
-        const String& settingName = settingSpecWrapper.get().Name;
+        const auto& spec = settingSpecWrapper.get();
+        // Settings with an ApiPath are addressed via a structured path, not by name — skip them here.
+        if (spec.ApiPath)
+            continue;
+        const String& settingName = spec.Name;
         settingChanged = PushPostParamIfPresent<String>(pRequest, settingName, [&](auto value) { return effect->SetSetting(settingName, value); })
             || settingChanged;
     }
@@ -1232,6 +1354,10 @@ void CWebServer::ValidateAndSetSetting(AsyncWebServerRequest * pRequest)
     for (auto& settingSpecWrapper : LoadDeviceSettingSpecs())
     {
         auto& settingSpec = settingSpecWrapper.get();
+
+        // Settings with an ApiPath are addressed via a structured path, not by name — skip them here.
+        if (settingSpec.ApiPath)
+            continue;
 
         if (pRequest->hasParam(settingSpec.Name, true))
         {

@@ -113,25 +113,25 @@ int LEDViewer::CheckForConnection()
         debugE("Error accepting color data connection: %s", strerror(errno));
         return -1;
     }
-
-    // Preview transport is strictly best-effort; keep the client socket non-blocking so
-    // a stalled viewer never back-pressures drawing or the WiFi servicing tasks.
-    if (!nd_network::SetSocketBlockingEnabled(new_socket, false))
+    if (setsockopt(new_socket, SOL_SOCKET, SO_SNDTIMEO, &to, sizeof(to)) < 0)
     {
-        debugE("Unable to make color data client socket non-blocking!");
+        debugE("Unable to set send timeout on color data socket!");
         close(new_socket);
         return -1;
     }
-
+    if (setsockopt(new_socket, SOL_SOCKET, SO_RCVTIMEO, &to, sizeof(to)) < 0)
+    {
+        debugE("Unable to set receive timeout on color data socket!");
+        close(new_socket);
+        return -1;
+    }
     Serial.println("Accepted new ColorData Client!");
     return new_socket;
 }
 
 LEDViewer::SendResult LEDViewer::SendPacket(int socket, const void * pData, size_t cbSize)
 {
-    // Send data to the preview client without ever blocking the device. If the socket
-    // cannot accept a whole frame immediately, we either drop the frame (no bytes sent)
-    // or fail the connection (partial frame written, which corrupts the byte stream).
+    // Send data to the emulator's virtual serial port
 
     const byte * pb = (byte *)pData;
     debugV("Sending Packet:  %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X, %02X,...",

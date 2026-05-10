@@ -96,7 +96,7 @@
 #define DEVICE_CONFIG_FILE          "/device.cfg"
 #define NTP_SERVER_DEFAULT          "0.pool.ntp.org"
 #ifndef BRIGHTNESS_MIN
-    #define BRIGHTNESS_MIN          uint8_t(10)
+    #define BRIGHTNESS_MIN          uint8_t(13)
 #endif
 #ifndef BRIGHTNESS_MAX
     #define BRIGHTNESS_MAX          uint8_t(255)
@@ -192,6 +192,7 @@ class DeviceConfig : public IJSONSerializable
 
     std::vector<SettingSpec, psram_allocator<SettingSpec>> settingSpecs;
     std::vector<std::reference_wrapper<SettingSpec>> settingSpecReferences;
+    std::vector<String> pinSpecStrings;
     size_t writerIndex;
 
     void SaveToJSON() const;
@@ -249,7 +250,7 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * WS281xChannelCountTag = "ws281xChannelCount";
     static constexpr const char * WS281xPinsTag = "ws281xPins";
     static constexpr const char * WS281xColorOrderTag = "ws281xColorOrder";
-    static constexpr const char * AudioInputPinTag = "audioInputPin";
+    static constexpr const char * AudioInputPinTag = NAME_OF(audioInputPin);
 
     DeviceConfig();
 

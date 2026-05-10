@@ -33,6 +33,7 @@
 #include <memory>
 #include <optional>
 #include <type_traits>
+#include <vector>
 
 // PreferPSRAMAlloc
 //
@@ -199,8 +200,7 @@ struct SettingSpec
         Boolean,
         String,
         Palette,
-        Color,
-        Slider
+        Color
     };
 
     enum class SettingAccess : char
@@ -208,6 +208,33 @@ struct SettingSpec
         ReadOnly,
         WriteOnly,
         ReadWrite
+    };
+
+    // Hint to the UI layer about what kind of input control this setting wants.
+    // The renderer consults this and the widget-specific fields below to build
+    // the right widget; a spec with WidgetKind::Default falls back to a plain
+    // input picked from SettingType.
+    enum class WidgetKind : int
+    {
+        Default,           // type-driven default (Integer -> number input, Boolean -> checkbox, etc.)
+        Slider,            // numeric slider; honors DisplayScale and DisplaySuffix
+        Select,            // dropdown sourced from inline Options or via OptionsSource
+        IntervalToggle     // boolean-on + numeric value composite (effectInterval-style)
+    };
+
+    // Where the widget gets its option list from when WidgetKind::Select is used.
+    // The UI layer handles each source:
+    //   Inline: use Options/OptionLabels carried on the spec
+    //   SchemaPath: e.g. "outputs.ws281x.allowedColorOrders" relative to the
+    //               unified schema document; the schema is authoritative
+    //   IntlCountryCodes: ISO 3166-1 alpha-2 list materialized client-side
+    //   ExternalTimeZones: load from /timezones.json
+    enum class OptionsSource : int
+    {
+        Inline,
+        SchemaPath,
+        IntlCountryCodes,
+        ExternalTimeZones
     };
 
     // "Technical" name of the setting, as in the (JSON) property it is stored in.
@@ -237,24 +264,103 @@ struct SettingSpec
     // Maximum valid value for the setting. This only applies to numeric settings.
     std::optional<double> MaximumValue = {};
 
-    // Finishes the initialization of the spec, and then validates the consistency of its overall contents.
-    // Note that it does the latter quite rudely: it uses assert() on things it feels should be in order.
-    // This function is called by this struct's constructors that initialize values, but this being a struct
-    // allows itself to be called from the outside as well.
+    // ---- UI metadata (consumed by the front-end so it doesn't need hardcoded knowledge) ----
+
+    // Section identifier this setting belongs to ("topology", "output", "appearance", etc.).
+    // The section catalog (id -> friendly title, description) is published separately
+    // as part of /api/v1/settings/schema, so the UI can group and label without
+    // knowing the section names in advance.
+    const char* Section = nullptr;
+
+    // Display priority within the section. Lower values sort to the top.
+    // Specs without an explicit priority sort lexicographically by FriendlyName.
+    std::optional<int> Priority = {};
+
+    // True if a chip reboot is required for this setting's change to take effect.
+    bool RequiresReboot = false;
+
+    // Canonical dotted path in the unified settings document (/api/v1/settings),
+    // e.g. "topology.width" or "outputs.ws281x.colorOrder". Settings whose ApiPath
+    // is null are written through the legacy /settings endpoint by name.
+    const char* ApiPath = nullptr;
+
+    // Hint to the UI about which widget to render. See WidgetKind.
+    WidgetKind Widget = WidgetKind::Default;
+
+    // For WidgetKind::Slider with a display scale that differs from the raw
+    // value (e.g. raw 10..255 displayed as 5..100 percent). All four of these
+    // must be set together; the UI maps raw <-> display linearly.
+    std::optional<double> DisplayRawMin = {};
+    std::optional<double> DisplayRawMax = {};
+    std::optional<double> DisplayMin = {};
+    std::optional<double> DisplayMax = {};
+
+    // Suffix appended to the displayed value (e.g. "%", " ms", " sec").
+    const char* DisplaySuffix = nullptr;
+
+    // For WidgetKind::IntervalToggle: the unit divisor between the raw stored
+    // value and the displayed value (e.g. 1000 if stored in ms, displayed in s).
+    int IntervalUnitDivisor = 1;
+
+    // Verb-form label for the toggle that turns the interval on (rendered next
+    // to the switch in the form, e.g. "Rotate effects").
+    const char* IntervalOnLabel = nullptr;
+
+    // Noun-form label for the displayed value when raw is 0 (rendered in
+    // status panels and summaries, e.g. "Pinned").
+    const char* IntervalOffLabel = nullptr;
+
+    // Suffix shown next to the interval value when the toggle is on.
+    const char* IntervalUnitLabel = nullptr;
+
+    // For WidgetKind::Select: how to populate the options list.
+    OptionsSource Options = OptionsSource::Inline;
+
+    // Parallel arrays of raw values and friendly labels for Select options.
+    // For OptionsSource::Inline: the full option list. OptionLabels may be
+    //   empty, in which case values double as labels.
+    // For OptionsSource::SchemaPath: optional label overrides for schema-
+    //   derived values (e.g. "ws281x" -> "WS281x"). Either both arrays are
+    //   empty (no overrides) or both are non-empty and the same length.
+    // For OptionsSource::ExternalTimeZones: optional label overrides for
+    //   specific time zone identifiers. Same empty-or-matched-length rule.
+    std::vector<const char*> OptionValues = {};
+    std::vector<const char*> OptionLabels = {};
+
+    // For Options == OptionsSource::SchemaPath: the dotted path within
+    // /api/v1/settings/schema where the option array lives.
+    const char* OptionsSchemaPath = nullptr;
+
+    // For Options == OptionsSource::ExternalTimeZones (or any future external
+    // source): the URL to fetch the option document from. Carrying it on the
+    // spec keeps the UI from having to bake a path like "/timezones.json".
+    const char* OptionsExternalUrl = nullptr;
+
+    // Validates the consistency of the spec's contents. Called by Construct(); can also be
+    // called directly when constructing specs without using Construct().
     void FinishAndValidateInitialization();
 
-    SettingSpec(const char* name, const char* friendlyName, const char* description, SettingType type);
+    // Factory method: construct a SettingSpec via C++20 designated initializers, then call
+    // FinishAndValidateInitialization() and return the validated spec. Use this for specs
+    // that need no post-construction field assignments:
+    //
+    //   settingSpecs.push_back(SettingSpec::Validate(SettingSpec{
+    //       .Name         = "myName",
+    //       .FriendlyName = "My Name",
+    //       .Type         = SettingType::String,
+    //       .Section      = "section",
+    //       .ApiPath      = "path.to.setting"
+    //   }));
+    //
+    // Fields not listed receive their in-class defaults. Designated initializers must appear
+    // in the same order as the members are declared in this struct (C++20 requirement).
+    static SettingSpec Validate(SettingSpec spec);
 
-    SettingSpec(const char* name, const char* friendlyName, SettingType type);
+    String TypeName() const;
 
-    // Constructor that sets both minimum and maximum values
-    SettingSpec(const char* name, const char* friendlyName, const char* description, SettingType type, double min, double max);
+    // String form of WidgetKind, suitable for emission in the spec response.
+    const char* WidgetName() const;
 
-    // Constructor that sets both minimum and maximum values
-    SettingSpec(const char* name, const char* friendlyName, SettingType type, double min, double max);
-
-    SettingSpec() = default;
-    virtual ~SettingSpec() = default;
-
-    virtual String TypeName() const;
+    // String form of OptionsSource.
+    const char* OptionsSourceName() const;
 };

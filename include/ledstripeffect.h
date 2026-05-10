@@ -315,7 +315,7 @@ class LEDStripEffect : public IJSONSerializable
 //
 // debug_log_type_token_once<T> (enabled when EFFECT_ID_DEBUG is true):
 // - Prints the raw token string and the computed EffectId once per T per translation unit.
-// - Uses a function-local static boolean to ensure "log once" behavior for each instantiation.
+// - Uses a function-local static bool to ensure "log once" behavior for each instantiation.
 // - Note: because this is a header-only template with a function-local static, if the same T is instantiated
 //   in multiple translation units, each TU may log once.
 //
