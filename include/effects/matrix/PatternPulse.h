@@ -152,29 +152,24 @@ class PatternPulsar : public BeatEffectBase, public EffectWithId<PatternPulsar> 
     static constexpr int kMaxNewStarsPerFrame = 8;
     int diff;
 
-    static constexpr float Clamp01(float value)
-    {
-        return value < 0.0f ? 0.0f : (value > 1.0f ? 1.0f : value);
-    }
-
     static constexpr size_t ComputeBurstCount(const BeatInfo& beat)
     {
-        const float normalizedConfidence = Clamp01(beat.confidence / 1.5f);
-        const float normalizedStrength = Clamp01(beat.strength / 2.5f);
-        const float normalizedBass = Clamp01(beat.bass);
+        const float normalizedConfidence = std::clamp(beat.confidence / 1.5f, 0.0f, 1.0f);
+        const float normalizedStrength = std::clamp(beat.strength / 2.5f, 0.0f, 1.0f);
+        const float normalizedBass = std::clamp(beat.bass, 0.0f, 1.0f);
         const float majorBonus = beat.major ? 0.25f : 0.0f;
-        const float burstScore = Clamp01(
+        const float burstScore = std::clamp(
             normalizedConfidence * 0.40f +
             normalizedStrength * 0.35f +
             normalizedBass * 0.15f +
-            majorBonus);
+            majorBonus, 0.0f, 1.0f);
 
         return 1U + static_cast<size_t>(burstScore >= 0.60f);
     }
 
     static constexpr int ComputeMaxSteps(const BeatInfo& beat)
     {
-        const float normalizedStrength = Clamp01(beat.strength / 2.5f);
+        const float normalizedStrength = std::clamp(beat.strength / 2.5f, 0.0f, 1.0f);
         const int minSteps = beat.major ? 7 : 5;
         const int maxSteps = beat.major ? 13 : 10;
         return minSteps + static_cast<int>(normalizedStrength * static_cast<float>(maxSteps - minSteps));
