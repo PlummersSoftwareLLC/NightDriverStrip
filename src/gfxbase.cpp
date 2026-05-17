@@ -1545,50 +1545,44 @@ uint16_t XY(uint16_t x, uint16_t y)
 
 const GFXBase::PolarMapArray& GFXBase::getPolarMap()
 {
-    static std::unique_ptr<PolarMapArray> rMap_ptr;
-    static std::mutex rMap_mutex;
-
-    // Double-checked locking for thread-safe, on-demand initialization
-    if (!rMap_ptr)
+    // C++11 "magic static" is thread-safe and lazy. We use a pointer to ensure
+    // the large map is on the heap (and thus PSRAM) rather than the BSS.
+    static const PolarMapArray* pMap = []()
     {
-        std::lock_guard lock(rMap_mutex);
-        if (!rMap_ptr)
+        auto p = new PolarMapArray();
+        auto& rMap = *p;
+
+        const uint16_t C_X = kMatrixWidth / 2;
+        const uint16_t C_Y = kMatrixHeight / 2;
+        const float mapp = 255.0f / kMatrixWidth;
+
+        for (int16_t x = -C_X; x < C_X + (kMatrixWidth % 2); x++)
         {
-            // The PSRAM-default policy in main.cpp routes this large allocation
-            // through PSRAM automatically; std::make_unique is sufficient.
-            rMap_ptr = std::make_unique<PolarMapArray>();
-
-            auto& rMap = *rMap_ptr;
-            const uint16_t C_X = kMatrixWidth / 2;
-            const uint16_t C_Y = kMatrixHeight / 2;
-            const float mapp = 255.0f / kMatrixWidth;
-
-            for (int16_t x = -C_X; x < C_X + (kMatrixWidth % 2); x++)
+            for (int16_t y = -C_Y; y < C_Y + (kMatrixHeight% 2); y++)
             {
-                for (int16_t y = -C_Y; y < C_Y + (kMatrixHeight% 2); y++)
-                {
-                    float angle_rad = atan2f(static_cast<float>(y), static_cast<float>(x));
-                    float radius_float = hypotf(static_cast<float>(x), static_cast<float>(y));
+                float angle_rad = atan2f(static_cast<float>(y), static_cast<float>(x));
+                float radius_float = hypotf(static_cast<float>(x), static_cast<float>(y));
 
-                    rMap[x + C_X][y + C_Y].angle = 128.0f * (angle_rad / (float)M_PI);
-                    rMap[x + C_X][y + C_Y].scaled_radius = radius_float * mapp;
-                    rMap[x + C_X][y + C_Y].unscaled_radius = radius_float;
-                }
+                rMap[x + C_X][y + C_Y].angle = 128.0f * (angle_rad / (float)M_PI);
+                rMap[x + C_X][y + C_Y].scaled_radius = radius_float * mapp;
+                rMap[x + C_X][y + C_Y].unscaled_radius = radius_float;
             }
-
-            // A note on the radius calculations:
-            //
-            // `unscaled_radius` is the true geometric distance from the center of the
-            // matrix to the pixel. This is useful for effects that need the real
-            // physical distance.
-            //
-            // `scaled_radius` maps the geometric radius to a range that is more
-            // suitable for use with 8-bit FastLED functions (like inoise8).
-            // The scaling is normalized by the matrix width, which is a common
-            // technique to make radial effects work consistently across different
-            // matrix sizes.
         }
-    }
 
-    return *rMap_ptr;
+        // A note on the radius calculations:
+        //
+        // `unscaled_radius` is the true geometric distance from the center of the
+        // matrix to the pixel. This is useful for effects that need the real
+        // physical distance.
+        //
+        // `scaled_radius` maps the geometric radius to a range that is more
+        // suitable for use with 8-bit FastLED functions (like inoise8).
+        // The scaling is normalized by the matrix width, which is a common
+        // technique to make radial effects work consistently across different
+        // matrix sizes.
+
+        return p;
+    }();
+
+    return *pMap;
 }
