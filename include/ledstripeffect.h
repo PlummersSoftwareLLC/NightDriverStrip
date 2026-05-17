@@ -31,10 +31,10 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
+#include "crgbw.h"
 #include "effects.h"
 #include "hashing.h"
 #include "jsonserializer.h"
-#include "crgbw.h"
 
 #include <functional>
 #include <memory>

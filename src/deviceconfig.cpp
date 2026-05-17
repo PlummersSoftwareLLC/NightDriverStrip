@@ -30,18 +30,18 @@
 
 #include "globals.h"
 
-#include <HTTPClient.h>
 #include <algorithm>
 #include <array>
 #include <driver/gpio.h>
+#include <HTTPClient.h>
 #include <memory>
 #include <optional>
-#include <UrlEncode.h>
 
 #include "deviceconfig.h"
 #include "effectmanager.h"
 #include "jsonserializer.h"
 #include "systemcontainer.h"
+#include "UrlEncode.h"
 
 extern const char timezones_start[] asm("_binary_config_timezones_json_start");
 

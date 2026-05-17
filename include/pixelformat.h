@@ -39,13 +39,15 @@
 //
 //---------------------------------------------------------------------------
 
-#include <cstdint>
-#include <cstddef>
-#include <algorithm>
+#include "globals.h"
 
-#include "pixeltypes.h"     // FastLED CRGB
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+
 #include "crgbw.h"          // CRGBW + SplitByCct helper
 #include "deviceconfig.h"   // DeviceConfig::WS281xColorOrder
+#include "pixeltypes.h"     // FastLED CRGB
 
 // ---------------------------------------------------------------------
 // Abstract base
