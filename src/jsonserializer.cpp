@@ -38,40 +38,10 @@
 #include "systemcontainer.h"
 #include "taskmgr.h"
 
-#if USE_PSRAM
-
-    struct JsonPsramAllocator : ArduinoJson::Allocator
-    {
-        void* allocate(size_t size) override
-        {
-            return ps_malloc(size);
-        }
-
-        void deallocate(void* pointer) override
-        {
-            free(pointer);
-        }
-
-        void* reallocate(void* ptr, size_t new_size) override {
-            return ps_realloc(ptr, new_size);
-        }
-    };
-
-    JsonDocument CreateJsonDocument()
-    {
-        static auto jsonPsramAllocator = JsonPsramAllocator();
-
-        return JsonDocument(&jsonPsramAllocator);
-    }
-
-#else
-
-    JsonDocument CreateJsonDocument()
-    {
-        return JsonDocument();
-    }
-
-#endif
+JsonDocument CreateJsonDocument()
+{
+    return JsonDocument();
+}
 
 // SetIfNotOverflowed
 //

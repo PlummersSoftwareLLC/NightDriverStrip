@@ -352,7 +352,7 @@ void setup()
     // automatically, leaving small allocations (and DMA-capable buffers, which
     // explicitly request MALLOC_CAP_DMA elsewhere) in internal SRAM. This makes
     // std::make_unique / std::make_shared / std::vector "do the right thing"
-    // for the common case without explicit *_psram helpers at every call site.
+    // for the common case.
     //
     // On builds that don't define USE_PSRAM, the call below is a no-op (the
     // ESP-IDF heap stays in internal-SRAM-only mode for that build).

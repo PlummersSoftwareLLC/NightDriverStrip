@@ -527,7 +527,7 @@ class SmoothFireEffect : public EffectWithId<SmoothFireEffect>
         LEDStripEffect::Init(gfx);
         // Large effect-state buffer; the PSRAM-default policy in main.cpp
         // routes this through PSRAM automatically once it crosses the
-        // configured threshold, so no explicit *_psram helper is needed.
+        // configured threshold.
         _Temperatures = std::make_unique<float[]>(_cLEDs);
         if (!_Temperatures)
         {

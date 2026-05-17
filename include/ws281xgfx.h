@@ -33,8 +33,9 @@
 
 #include "globals.h"
 
-#include "gfxbase.h"
 #include <mutex>
+
+#include "gfxbase.h"
 
 class DeviceConfig;
 

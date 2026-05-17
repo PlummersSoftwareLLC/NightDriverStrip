@@ -32,8 +32,8 @@
 #include "ledstripeffect.h"
 
 #include <algorithm>
-#include <cstring>
 #include <cstdlib>
+#include <cstring>
 #include <iterator>
 #include <stdexcept>
 
