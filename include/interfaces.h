@@ -30,10 +30,8 @@
 //---------------------------------------------------------------------------
 
 #include <ArduinoJson.h>
-#include <esp_heap_caps.h>
-#include <memory>
-#include <new>
 #include <optional>
+#include <vector>
 
 // Memory placement policy
 //
@@ -42,111 +40,6 @@
 // keeps small allocations in internal SRAM. Plain std::make_unique /
 // std::make_shared / std::vector therefore do the right thing for the common
 // case and no project-side "use PSRAM" wrapper is needed at the call sites.
-//
-// For the rare cases that genuinely need internal SRAM (DMA targets, ISR-
-// accessed state, hot per-frame buffers that don't tolerate PSRAM latency),
-// reach for make_unique_internal / make_unique_dma below — those bypass the
-// default routing and explicitly request internal-only memory.
-
-// internal_allocator<T>
-//
-// Allocator that explicitly requests internal SRAM, bypassing the PSRAM-default
-// routing. Use for state that must not live in PSRAM: hot per-frame buffers,
-// data accessed from ISRs, small frequently-mutated structures.
-template <typename T>
-class internal_allocator
-{
-public:
-    using value_type      = T;
-    using size_type       = size_t;
-    using difference_type = ptrdiff_t;
-    using pointer         = T*;
-    using const_pointer   = const T*;
-    using reference       = T&;
-    using const_reference = const T&;
-
-    internal_allocator() = default;
-    template <class U> internal_allocator(const internal_allocator<U>&) noexcept {}
-
-    pointer allocate(size_type n)
-    {
-        void* p = heap_caps_malloc(n * sizeof(T), MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
-        if (!p) throw std::bad_alloc();
-        return static_cast<pointer>(p);
-    }
-    void deallocate(pointer p, size_type) noexcept { heap_caps_free(p); }
-};
-template <typename T, typename U>
-inline bool operator==(const internal_allocator<T>&, const internal_allocator<U>&) { return true; }
-template <typename T, typename U>
-inline bool operator!=(const internal_allocator<T>&, const internal_allocator<U>&) { return false; }
-
-// dma_allocator<T>
-//
-// Allocator for buffers that must be DMA-reachable. Internal SRAM is the only
-// memory region the ESP32 DMA engines can touch; PSRAM is not DMA-capable.
-template <typename T>
-class dma_allocator
-{
-public:
-    using value_type = T;
-    dma_allocator() = default;
-    template <class U> dma_allocator(const dma_allocator<U>&) noexcept {}
-
-    T* allocate(size_t n)
-    {
-        void* p = heap_caps_malloc(n * sizeof(T), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
-        if (!p) throw std::bad_alloc();
-        return static_cast<T*>(p);
-    }
-    void deallocate(T* p, size_t) noexcept { heap_caps_free(p); }
-};
-template <typename T, typename U>
-inline bool operator==(const dma_allocator<T>&, const dma_allocator<U>&) { return true; }
-template <typename T, typename U>
-inline bool operator!=(const dma_allocator<T>&, const dma_allocator<U>&) { return false; }
-
-// make_unique_internal / make_shared_internal
-//
-// Construct an object explicitly in internal SRAM. Use for hot-path or
-// DMA-adjacent state that should not tolerate PSRAM access latency.
-template <typename T, typename... Args>
-inline std::unique_ptr<T> make_unique_internal(Args&&... args)
-{
-    internal_allocator<T> alloc;
-    T* p = alloc.allocate(1);
-    try { new (p) T(std::forward<Args>(args)...); }
-    catch (...) { alloc.deallocate(p, 1); throw; }
-    return std::unique_ptr<T>(p);
-}
-
-template <typename T, typename... Args>
-inline std::shared_ptr<T> make_shared_internal(Args&&... args)
-{
-    return std::allocate_shared<T>(internal_allocator<T>{}, std::forward<Args>(args)...);
-}
-
-// make_unique_dma / make_shared_dma
-//
-// Construct an object in DMA-capable internal RAM. The peripherals that
-// require this (FastLED RMT, SmartMatrix HUB75, I2S audio, ADC continuous)
-// generally call heap_caps_malloc(MALLOC_CAP_DMA) directly, but these helpers
-// are available for any project-side buffer that needs to be DMA-reachable.
-template <typename T, typename... Args>
-inline std::unique_ptr<T> make_unique_dma(Args&&... args)
-{
-    dma_allocator<T> alloc;
-    T* p = alloc.allocate(1);
-    try { new (p) T(std::forward<Args>(args)...); }
-    catch (...) { alloc.deallocate(p, 1); throw; }
-    return std::unique_ptr<T>(p);
-}
-
-template <typename T, typename... Args>
-inline std::shared_ptr<T> make_shared_dma(Args&&... args)
-{
-    return std::allocate_shared<T>(dma_allocator<T>{}, std::forward<Args>(args)...);
-}
 
 struct IJSONSerializable
 {

@@ -1554,7 +1554,8 @@ const GFXBase::PolarMapArray& GFXBase::getPolarMap()
         std::lock_guard lock(rMap_mutex);
         if (!rMap_ptr)
         {
-            // Allocate from PSRAM using the project's helper
+            // The PSRAM-default policy in main.cpp routes this large allocation
+            // through PSRAM automatically; std::make_unique is sufficient.
             rMap_ptr = std::make_unique<PolarMapArray>();
 
             auto& rMap = *rMap_ptr;
