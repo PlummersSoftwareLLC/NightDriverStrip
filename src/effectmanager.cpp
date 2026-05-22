@@ -57,6 +57,7 @@ extern std::map<int, JSONEffectFactory> g_JsonStarryNightEffectFactories;
 DRAM_ATTR size_t g_EffectsManagerJSONBufferSize = 0;
 static DRAM_ATTR size_t l_EffectsManagerJSONWriterIndex = SIZE_MAX;
 static DRAM_ATTR size_t l_CurrentEffectWriterIndex = SIZE_MAX;
+static DRAM_ATTR bool l_EffectManagerInitializing = false;
 
 //
 // EffectManager initialization functions
@@ -85,6 +86,7 @@ void WriteCurrentEffectIndexFile();
 void InitEffectsManager()
 {
     debugW("InitEffectsManager...");
+    l_EffectManagerInitializing = true;
 
     LoadEffectFactories();
 
@@ -126,6 +128,8 @@ void InitEffectsManager()
     #if EFFECTS_WEB_SOCKET_ENABLED
         g_ptrSystem->GetEffectManager().AddEffectEventListener(g_ptrSystem->GetWebSocketServer());
     #endif
+
+    l_EffectManagerInitializing = false;
 }
 
 void EffectManager::StartEffect()
@@ -468,6 +472,9 @@ void EffectManager::LoadDefaultEffects()
 //   for execution in the background.
 void EffectManager::SaveCurrentEffectIndex()
 {
+    if (l_EffectManagerInitializing)
+        return;
+
     if (g_ptrSystem->GetDeviceConfig().RememberCurrentEffect())
         // Default value for writer index is max value for size_t, so nothing will happen if writer has not yet been registered
         g_ptrSystem->GetJSONWriter().FlagWriter(l_CurrentEffectWriterIndex);
@@ -570,6 +577,9 @@ std::shared_ptr<LEDStripEffect> EffectManager::CopyEffect(size_t index)
 
 void SaveEffectManagerConfig()
 {
+    if (l_EffectManagerInitializing)
+        return;
+
     debugV("Saving effect manager config...");
     // Default value for writer index is max value for size_t, so nothing will happen if writer has not yet been registered
     g_ptrSystem->GetJSONWriter().FlagWriter(l_EffectsManagerJSONWriterIndex);

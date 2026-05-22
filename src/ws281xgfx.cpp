@@ -36,6 +36,7 @@
 
 #include "deviceconfig.h"
 #include "effectmanager.h"
+#include "pixelformat.h"
 #include "systemcontainer.h"
 #include "values.h"
 #include "ws281xgfx.h"
@@ -89,12 +90,6 @@ namespace
              + (kPowerDarkMw * ledCount);
     }
 
-    uint8_t SaturatingAdd(uint8_t a, uint8_t b)
-    {
-        const uint16_t sum = static_cast<uint16_t>(a) + static_cast<uint16_t>(b);
-        return sum > 255 ? 255 : static_cast<uint8_t>(sum);
-    }
-
     uint32_t EstimateWS281xUnscaledPowerMw(const GFXBase& graphics, size_t ledCount)
     {
         #if defined(USE_SK6812) && USE_SK6812
@@ -103,14 +98,14 @@ namespace
             uint32_t blue = 0;
             uint32_t white = 0;
             const uint16_t ratio = static_cast<uint16_t>(kDefaultWhiteExtractRatio);
-            const uint8_t ambientWhite = SaturatingAdd(kDefaultAmbientCw, kDefaultAmbientWw);
+            const uint8_t ambientWhite = PixelFormatHelpers::SaturatingAdd(kDefaultAmbientCw, kDefaultAmbientWw);
 
             for (size_t i = 0; i < ledCount; ++i)
             {
                 CRGB color = graphics.leds[i];
                 uint8_t effectWhite = 0;
                 if (graphics.whites)
-                    effectWhite = SaturatingAdd(graphics.whites[i].cw, graphics.whites[i].ww);
+                    effectWhite = PixelFormatHelpers::SaturatingAdd(graphics.whites[i].cw, graphics.whites[i].ww);
 
                 uint8_t pull = 0;
                 if (effectWhite == 0)
@@ -125,7 +120,7 @@ namespace
                 red += color.r;
                 green += color.g;
                 blue += color.b;
-                white += std::max(SaturatingAdd(pull, effectWhite), ambientWhite);
+                white += std::max(PixelFormatHelpers::SaturatingAdd(pull, effectWhite), ambientWhite);
             }
 
             return ((red * kPowerRedMw) >> 8)

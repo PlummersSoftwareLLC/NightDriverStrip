@@ -112,6 +112,7 @@ class CWebServer : public IService
 
     static std::vector<SettingSpec> mySettingSpecs;
     static std::vector<std::reference_wrapper<SettingSpec>> deviceSettingSpecs;
+    static String deviceSettingSpecsJson;
     // Per-channel pin specs synthesized at first /settings/specs request from
     // the compiled channel maximum, with stable backing storage for the
     // const char* fields they hold.
@@ -182,6 +183,8 @@ class CWebServer : public IService
     static void SendBufferOverflowResponse(AsyncWebServerRequest * pRequest);
     static bool IsPostParamTrue(AsyncWebServerRequest * pRequest, const String & paramName);
     static const std::vector<std::reference_wrapper<SettingSpec>> & LoadDeviceSettingSpecs();
+    static bool EnsureDeviceSettingSpecsJson();
+    static bool BuildSettingSpecsJson(String& json, const std::vector<std::reference_wrapper<SettingSpec>> & settingSpecs);
     static void SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, const std::vector<std::reference_wrapper<SettingSpec>> & settingSpecs);
     static bool ValidateLegacyDeviceSettings(AsyncWebServerRequest * pRequest, String* errorMessage = nullptr);
     static bool ValidateUnifiedDeviceSettings(JsonObjectConst device, String* errorMessage = nullptr);
@@ -230,12 +233,13 @@ class CWebServer : public IService
     {
         _server.on(strUri, HTTP_GET, [strUri, file](AsyncWebServerRequest *request)
         {
-            Serial.printf("GET for: %s\n", strUri);
             AsyncWebServerResponse *response = request->beginResponse(200, file.type, file.contents, file.length);
             if (file.encoding)
             {
                 response->addHeader("Content-Encoding", file.encoding);
             }
+            response->addHeader("Cache-Control", "no-store, max-age=0");
+            response->addHeader("Pragma", "no-cache");
 
             AddCORSHeaderAndSendResponse(request, response);
         });

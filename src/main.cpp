@@ -206,6 +206,9 @@
 #include "soundanalyzer.h"
 #include "systemcontainer.h"
 #include "taskmgr.h"
+#if ENABLE_WEBSERVER
+#include "webserver.h"
+#endif
 
 #if INCOMING_WIFI_ENABLED
 extern "C"
@@ -415,7 +418,6 @@ void setup()
 
     #if ENABLE_ESPNOW
         nd_network::SetWiFiModeSTA();
-
         if (esp_now_init() != ESP_OK)
             throw std::runtime_error("Error initializing ESP-NOW");
         // Register receive callback function
@@ -654,6 +656,38 @@ void setup()
 
     InitEffectsManager();
 
+    #if ENABLE_WIFI
+        debugI("Making initial attempt to connect to WiFi.");
+        auto connectResult = nd_network::ConnectToWiFi(WiFi_ssid, WiFi_password);
+        #if WAIT_FOR_WIFI
+            constexpr unsigned long kInitialWiFiConnectTimeoutMs = 30000;
+            constexpr unsigned long kInitialWiFiConnectPollMs    = 250;
+
+            const unsigned long firstConnectStart = millis();
+            while (connectResult == nd_network::WiFiConnectResult::Disconnected &&
+                   millis() - firstConnectStart < kInitialWiFiConnectTimeoutMs)
+            {
+                delay(kInitialWiFiConnectPollMs);
+                connectResult = nd_network::ConnectToWiFi();
+            }
+        #else
+            (void)connectResult;
+        #endif
+    #endif
+
+    #if ENABLE_WIFI && ENABLE_WEBSERVER
+        // With WAIT_FOR_WIFI=0, the first WiFi attempt is intentionally
+        // non-blocking. Only bind AsyncTCP here if the station already has an
+        // IP; otherwise NetworkReader will start these services after connect.
+        if (nd_network::IsWiFiConnected() && g_ptrSystem->HasWebServer())
+            g_ptrSystem->GetWebServer().Start();
+        
+        #if WEB_SOCKETS_ANY_ENABLED
+            if (nd_network::IsWiFiConnected() && g_ptrSystem->HasWebSocketServer())
+                g_ptrSystem->GetWebSocketServer().Start();
+        #endif
+    #endif
+
     // Start things that do not depend on the network
 
     g_ptrSystem->SetupRenderService().Start();
@@ -676,11 +710,6 @@ void setup()
     #if ENABLE_REMOTE
         if (g_ptrSystem->HasRemoteControl())
             g_ptrSystem->GetRemoteControl().Start();
-    #endif
-
-    #if ENABLE_WIFI
-        debugI("Making initial attempt to connect to WiFi.");
-        nd_network::ConnectToWiFi(WiFi_ssid, WiFi_password);
     #endif
 
     // Start the network-dependent services.  These will be NOPs on a non-wifi build.
@@ -708,7 +737,6 @@ void setup()
     DebugCLI::InitDebugCLI();
     nd_network::InitNetworkCLI();
 
-    SaveEffectManagerConfig();
 #if ENABLE_OTA
     ConfirmUpdate();
 #endif
