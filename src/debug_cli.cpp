@@ -309,6 +309,7 @@ std::string_view TabComplete(std::string_view partial, std::string_view full_lin
     else if (full_line.substr(0, 6) == "effect")
     {
         auto& effectManager = g_ptrSystem->GetEffectManager();
+        auto effects = effectManager.EffectsList();
         std::string_view firstMatch = "";
         int matches = 0;
         size_t common_len = 0;
