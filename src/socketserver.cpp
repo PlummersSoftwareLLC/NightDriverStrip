@@ -43,6 +43,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
+#include <mutex>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -54,6 +56,27 @@ extern "C"
 }
 
 #if INCOMING_WIFI_ENABLED
+
+namespace
+{
+    bool CheckedAdd(size_t left, size_t right, size_t& result)
+    {
+        if (left > std::numeric_limits<size_t>::max() - right)
+            return false;
+
+        result = left + right;
+        return true;
+    }
+
+    bool CheckedStandardPacketSize(uint32_t itemCount, size_t itemSize, size_t& packetSize)
+    {
+        if (itemCount > (std::numeric_limits<size_t>::max() - STANDARD_DATA_HEADER_SIZE) / itemSize)
+            return false;
+
+        packetSize = STANDARD_DATA_HEADER_SIZE + itemCount * itemSize;
+        return true;
+    }
+}
 
 // SocketResponse
 //
@@ -255,6 +278,12 @@ bool SocketServer::ReadUntilNBytesReceived(size_t socket, size_t cbNeeded)
 
 bool SocketServer::DecompressBuffer(const uint8_t * pBuffer, size_t cBuffer, uint8_t * pOutput, size_t expectedOutputSize)
 {
+    if (pBuffer == nullptr || pOutput == nullptr || cBuffer < 4)
+    {
+        debugE("Compressed packet too short to decompress: %zu bytes", cBuffer);
+        return false;
+    }
+
     debugV("Compressed Data: %02X %02X %02X %02X...", pBuffer[0], pBuffer[1], pBuffer[2], pBuffer[3]);
 
     struct uzlib_uncomp d = { 0 };
@@ -395,18 +424,25 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
             uint32_t reserved       = _pBuffer[15] << 24 | _pBuffer[14] << 16 | _pBuffer[13] << 8 | _pBuffer[12];
             debugV("Compressed Header: compressedSize: %lu, expandedSize: %lu, reserved: %lu", (unsigned long)compressedSize, (unsigned long)expandedSize, (unsigned long)reserved);
 
-            if (expandedSize > MAXIMUM_PACKET_SIZE)
+            size_t compressedPacketSize = 0;
+            if (!CheckedAdd(COMPRESSED_HEADER_SIZE, compressedSize, compressedPacketSize) ||
+                compressedPacketSize > MAXIMUM_PACKET_SIZE ||
+                expandedSize > MAXIMUM_PACKET_SIZE)
             {
-                debugE("Expanded packet would be %lu but buffer is only %lu !!!!\n", (unsigned long)expandedSize, (unsigned long)MAXIMUM_PACKET_SIZE);
+                debugE("Compressed packet sizes are invalid: compressed=%lu expanded=%lu max=%lu",
+                       (unsigned long)compressedSize, (unsigned long)expandedSize, (unsigned long)MAXIMUM_PACKET_SIZE);
                 break;
             }
 
-            if (false == ReadUntilNBytesReceived(new_socket, COMPRESSED_HEADER_SIZE + compressedSize))
+            // Check addition before ReadUntilNBytesReceived; an overflowed
+            // header+payload size can wrap back below MAXIMUM_PACKET_SIZE and
+            // make the socket reader under-read a malformed packet.
+            if (false == ReadUntilNBytesReceived(new_socket, compressedPacketSize))
             {
                 debugE("Could not read compressed data from stream\n");
                 break;
             }
-            debugV("Successfully read %zu bytes", (size_t)(COMPRESSED_HEADER_SIZE + compressedSize));
+            debugV("Successfully read %zu bytes", compressedPacketSize);
 
             // If our buffer is in PSRAM it would be expensive to decompress in place, as the SPIRAM doesn't like
             // non-linear access from what I can tell.  I bet it must send addr+len to request each unique read, so
@@ -449,13 +485,16 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
                     uint64_t seconds   = ULONGFromMemory(&_pBuffer.get()[8]);
                     uint64_t micros    = ULONGFromMemory(&_pBuffer.get()[16]);
 
-                    size_t totalExpected = STANDARD_DATA_HEADER_SIZE + length32;
+                    size_t totalExpected = 0;
 
                     debugV("PeakData Header: numbands=%u, length=%lu, seconds=%llu, micro=%llu", numbands, (unsigned long)length32, seconds, micros);
 
-                    if (numbands != NUM_BANDS)
+                    if (!CheckedStandardPacketSize(length32, sizeof(uint8_t), totalExpected) ||
+                        totalExpected > MAXIMUM_PACKET_SIZE ||
+                        numbands != NUM_BANDS)
                     {
-                        debugE("Expecting %d bands but received %d", NUM_BANDS, numbands);
+                        debugE("Invalid peak data packet: bands=%u length=%lu total=%zu",
+                               (unsigned int)numbands, (unsigned long)length32, totalExpected);
                         break;
                     }
 
@@ -480,7 +519,13 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
                 #else
                     // Audio disabled: consume any declared payload to keep stream in sync, then ignore it
                     uint32_t length32  = DWORDFromMemory(&_pBuffer.get()[4]);
-                    size_t totalExpected = STANDARD_DATA_HEADER_SIZE + length32;
+                    size_t totalExpected = 0;
+                    if (!CheckedStandardPacketSize(length32, sizeof(uint8_t), totalExpected) ||
+                        totalExpected > MAXIMUM_PACKET_SIZE)
+                    {
+                        debugE("Audio disabled, invalid PEAKDATA payload length %lu", (unsigned long)length32);
+                        break;
+                    }
                     if (!ReadUntilNBytesReceived(new_socket, totalExpected))
                     {
                         debugE("Audio disabled, failed to skip PEAKDATA payload of %zu bytes", (size_t)totalExpected);
@@ -502,8 +547,9 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
 
                 debugV("Uncompressed Header: channel16=%u, length=%lu, seconds=%llu, micro=%llu", channel16, (unsigned long)length32, seconds, micros);
 
-                size_t totalExpected = STANDARD_DATA_HEADER_SIZE + length32 * LED_DATA_SIZE;
-                if (totalExpected > MAXIMUM_PACKET_SIZE)
+                size_t totalExpected = 0;
+                if (!CheckedStandardPacketSize(length32, LED_DATA_SIZE, totalExpected) ||
+                    totalExpected > MAXIMUM_PACKET_SIZE)
                 {
                     debugE("Too many bytes promised (%zu) - more than we can use for our LEDs at max packet (%lu)\n", (size_t)totalExpected, (unsigned long)MAXIMUM_PACKET_SIZE);
                     break;
@@ -548,6 +594,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
             debugV("Sending Response Packet from Socket Server");
             auto& bufferManager = g_ptrSystem->GetBufferManagers()[0];
 
+            std::lock_guard<std::mutex> guard(g_buffer_mutex);
             SocketResponse response = {
                                         .size = sizeof(SocketResponse),
                                         .sequence     = sequence++,

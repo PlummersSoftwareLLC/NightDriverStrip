@@ -314,9 +314,9 @@ std::string_view TabComplete(std::string_view partial, std::string_view full_lin
         int matches = 0;
         size_t common_len = 0;
 
-        for (size_t i = 0; i < effectManager.EffectCount(); ++i)
+        for (const auto& effect : effects)
         {
-            const String& name = effectManager.EffectsList()[i]->FriendlyName();
+            const String& name = effect->FriendlyName();
             if (StringStartsWithInsensitive(name.c_str(), partial))
             {
                 if (matches == 0)
@@ -350,6 +350,7 @@ std::string_view TabComplete(std::string_view partial, std::string_view full_lin
 static std::optional<size_t> ResolveEffect(std::string_view arg)
 {
     auto& effectManager = g_ptrSystem->GetEffectManager();
+    auto effects = effectManager.EffectsList();
 
     // Try as index first
     // Try as index first
@@ -357,13 +358,13 @@ static std::optional<size_t> ResolveEffect(std::string_view arg)
     auto [ptr, ec] = std::from_chars(arg.begin(), arg.end(), val);
     if (ec == std::errc() && ptr == arg.end())
     {
-        if (val < effectManager.EffectCount())
+        if (val < effects.size())
         {
             return val;
         }
         else
         {
-            cli_printf("Error: Effect index %zu out of range (0-%u)\n", val, effectManager.EffectCount() - 1);
+            cli_printf("Error: Effect index %zu out of range (0-%zu)\n", val, effects.empty() ? 0 : effects.size() - 1);
             return std::nullopt;
         }
     }
@@ -373,9 +374,9 @@ static std::optional<size_t> ResolveEffect(std::string_view arg)
     int matches = 0;
     std::vector<std::string> candidates;
 
-    for (size_t i = 0; i < effectManager.EffectCount(); ++i)
+    for (size_t i = 0; i < effects.size(); ++i)
     {
-        const String& name = effectManager.EffectsList()[i]->FriendlyName();
+        const String& name = effects[i]->FriendlyName();
         if (ContainsInsensitive(name.c_str(), arg))
         {
             match_index = i;

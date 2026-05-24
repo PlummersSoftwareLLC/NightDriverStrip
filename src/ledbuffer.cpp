@@ -3,6 +3,8 @@
 #include "ledbuffer.h"
 #include "values.h"
 
+#include <limits>
+
 // LEDBuffer
 //
 // Provides a timestamped buffer of colordata.  The LEDBufferManager keeps
@@ -24,7 +26,7 @@ uint32_t LEDBuffer::Length()       const  { return _pixelCount;            }
 
 double LEDBuffer::TimeTillDue() const
 {
-    return g_Values.AppTime.CurrentTime() - _timeStampSeconds - (_timeStampMicroseconds / (double) MICROS_PER_SECOND);
+    return _timeStampSeconds + (_timeStampMicroseconds / (double) MICROS_PER_SECOND) - g_Values.AppTime.CurrentTime();
 }
 
 bool LEDBuffer::IsBufferOlderThan(const timeval & tv) const
@@ -43,8 +45,20 @@ bool LEDBuffer::IsBufferOlderThan(const timeval & tv) const
 //
 // Parse and deposit a WiFi packet into a buffer
 
-bool LEDBuffer::UpdateFromWire(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength)
+bool LEDBuffer::ValidateWirePayload(const std::unique_ptr<uint8_t []>& payloadData,
+                                    size_t payloadLength,
+                                    size_t ledCount,
+                                    size_t* payloadByteCount)
 {
+    if (payloadByteCount)
+        *payloadByteCount = 0;
+
+    if (!payloadData)
+    {
+        debugW("No payload data received to process");
+        return false;
+    }
+
     if (payloadLength < 24)                 // Our header size
     {
         debugW("Not enough data received to process");
@@ -59,28 +73,66 @@ bool LEDBuffer::UpdateFromWire(std::unique_ptr<uint8_t []> & payloadData, size_t
 
     const size_t cbHeader = sizeof(command16) + sizeof(channel16) + sizeof(length32) + sizeof(seconds) + sizeof(micros);
 
-    _timeStampSeconds      = seconds;
-    _timeStampMicroseconds = micros;
-    _pixelCount            = length32;
+    if (length32 > (std::numeric_limits<size_t>::max() - cbHeader) / sizeof(CRGB))
+    {
+        debugW("LED payload size overflow");
+        return false;
+    }
 
-    if (payloadLength < length32 * sizeof(CRGB) + cbHeader)
+    const size_t requiredPayloadBytes = length32 * sizeof(CRGB);
+    if (payloadLength < requiredPayloadBytes + cbHeader)
     {
         debugW("command16: %hu   length32: %lu,  payloadLength: %zu\n", command16, (unsigned long)length32, payloadLength);
         debugW("Data size mismatch");
         return false;
     }
-    if (length32 > _pStrand->GetLEDCount())
+    if (length32 > ledCount)
     {
         debugW("More data than we have LEDs\n");
         return false;
     }
+
+    if (payloadByteCount)
+        *payloadByteCount = requiredPayloadBytes;
+
+    return true;
+}
+
+bool LEDBuffer::UpdateFromWire(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength)
+{
+    if (!_pStrand)
+    {
+        debugW("No strand attached to LED buffer");
+        return false;
+    }
+
+    size_t payloadBytes = 0;
+    if (!ValidateWirePayload(payloadData, payloadLength, _pStrand->GetLEDCount(), &payloadBytes))
+        return false;
+
+    uint16_t command16 = WORDFromMemory(&payloadData[0]);
+    uint16_t channel16 = WORDFromMemory(&payloadData[2]);
+    uint32_t length32  = DWORDFromMemory(&payloadData[4]);
+    uint64_t seconds   = ULONGFromMemory(&payloadData[8]);
+    uint64_t micros    = ULONGFromMemory(&payloadData[16]);
+
+    const size_t cbHeader = sizeof(command16) + sizeof(channel16) + sizeof(length32) + sizeof(seconds) + sizeof(micros);
+
     debugV("PayloadLength: %zu, command16: %hu, Length32: %lu", payloadLength, command16, (unsigned long)length32);
 
     CRGB * pRGB = reinterpret_cast<CRGB *>(&payloadData[cbHeader]);
 
-    memcpy(_leds.get(), pRGB, length32 * sizeof(CRGB));
+    // Keep this commit after the shared validation used by ProcessIncomingData.
+    // New queue slots are now reserved only after that validation passes, and
+    // existing-buffer updates still avoid committing invalid metadata.
+    _timeStampSeconds      = seconds;
+    _timeStampMicroseconds = micros;
+    _pixelCount            = length32;
+
+    memcpy(_leds.get(), pRGB, payloadBytes);
     debugV("seconds, micros: %llu.%llu", seconds, micros);
-    debugV("Color0: %08lx", (unsigned long)(uint32_t) _leds[0]);
+    if (length32 > 0)
+        debugV("Color0: %08lx", (unsigned long)(uint32_t) _leds[0]);
     return true;
 }
 
@@ -118,6 +170,7 @@ LEDBufferManager::LEDBufferManager(uint32_t cBuffers, const std::shared_ptr<GFXB
  : _ppBuffers(std::make_unique<std::vector<std::shared_ptr<LEDBuffer>>>()), // Create the circular array of ptrs
    _iNextBuffer(0),
    _iLastBuffer(0),
+   _cQueuedBuffers(0),
    _cBuffers(cBuffers)
 {
     // The initializer creates a uniquely owned table of shared pointers.
@@ -161,21 +214,29 @@ size_t LEDBufferManager::BufferCount() const
     return _cBuffers;
 }
 
+// LEDCount
+// The number of LEDs in each buffer, which is the same as the number of LEDs in the strand
+// that the buffers are configured for. If there are no buffers or the buffers aren't configured, returns 0.
+
+size_t LEDBufferManager::LEDCount() const
+{
+    return (_cBuffers > 0 && !_ppBuffers->empty() && (*_ppBuffers)[0] && (*_ppBuffers)[0]->_pStrand)
+        ? (*_ppBuffers)[0]->_pStrand->GetLEDCount()
+        : 0;
+}
+
 // Depth
 //
 // The variable, current count of buffers in use
 
 size_t LEDBufferManager::Depth() const
 {
-    if (_iNextBuffer < _iLastBuffer)
-        return (_iNextBuffer + _cBuffers - _iLastBuffer);
-    else
-        return _iNextBuffer - _iLastBuffer;
+    return _cQueuedBuffers;
 }
 
 bool LEDBufferManager::IsEmpty() const
 {
-    return _iNextBuffer == _iLastBuffer;
+    return _cQueuedBuffers == 0;
 }
 
 // PeekNewestBuffer
@@ -196,13 +257,19 @@ std::shared_ptr<LEDBuffer> LEDBufferManager::PeekNewestBuffer() const
 
 std::shared_ptr<LEDBuffer> LEDBufferManager::GetNewBuffer()
 {
-    auto pResult = (*_ppBuffers)[_iNextBuffer++];
+    if (_cBuffers == 0)
+        return nullptr;
 
-    if (IsEmpty())
-        _iLastBuffer++;
+    auto pResult = (*_ppBuffers)[_iNextBuffer];
 
-    _iLastBuffer %= _cBuffers;
-    _iNextBuffer %= _cBuffers;
+    // Full and empty used to be represented by the same head/tail indices, so
+    // an exact fill at the wrap point made the whole queue look empty. Track
+    // depth explicitly and advance the tail only when a real overwrite occurs.
+    _iNextBuffer = (_iNextBuffer + 1) % _cBuffers;
+    if (_cQueuedBuffers == _cBuffers)
+        _iLastBuffer = (_iLastBuffer + 1) % _cBuffers;
+    else
+        ++_cQueuedBuffers;
 
     _pLastBufferAdded = pResult;
 
@@ -219,8 +286,8 @@ std::shared_ptr<LEDBuffer> LEDBufferManager::GetOldestBuffer()
         return nullptr;
 
     auto pResult = (*_ppBuffers)[_iLastBuffer];
-    _iLastBuffer++;
-    _iLastBuffer %= _cBuffers;
+    _iLastBuffer = (_iLastBuffer + 1) % _cBuffers;
+    --_cQueuedBuffers;
 
     return pResult;
 }
@@ -246,6 +313,7 @@ void LEDBufferManager::Reconfigure(const std::shared_ptr<GFXBase>& pGFX)
 
     _iNextBuffer = 0;
     _iLastBuffer = 0;
+    _cQueuedBuffers = 0;
     _pLastBufferAdded.reset();
 }
 
@@ -254,7 +322,7 @@ void LEDBufferManager::Reconfigure(const std::shared_ptr<GFXBase>& pGFX)
 // Returns a pointer to the buffer at the specified logical index, or nullptr if empty
 std::shared_ptr<LEDBuffer> LEDBufferManager::operator[](size_t index) const
 {
-    if (IsEmpty())
+    if (IsEmpty() || index >= _cQueuedBuffers)
         return nullptr;
     size_t i = (_iLastBuffer + index) % _cBuffers;
     return (*_ppBuffers)[i];

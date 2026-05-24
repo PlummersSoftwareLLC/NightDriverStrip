@@ -32,6 +32,7 @@
 
 #include "globals.h"
 
+#include <algorithm>
 #include <cmath>
 #include <gfxfont.h>
 #include <memory>
@@ -1408,25 +1409,45 @@ CRGB GFXBase::HsvToRgb(uint8_t h, uint8_t s, uint8_t v)
 // This can't be in gfxbase.h because it uses the FillGetNoise() function template.
 void GFXBase::MoveInwardX(int startY, int endY)
 {
+    const int width = static_cast<int>(_width);
+    const int height = static_cast<int>(_height);
+    const int halfWidth = width / 2;
+    if (leds == nullptr || halfWidth <= 1 || height <= 0)
+        return;
+
+    startY = std::max(0, startY);
+    endY = std::min(height - 1, endY);
+
     for (int y = startY; y <= endY; y++)
     {
-        for (int x = _width / 2; x > 0; x--)
+        // Keep both halves inside the row. The previous loops read x+1 at
+        // width, which can corrupt unrelated pixels or memory at row edges.
+        for (int x = halfWidth - 1; x > 0; x--)
             leds[XY(x, y)] = leds[XY(x - 1, y)];
 
-        for (int x = _width / 2; x < (int)_width; x++)
+        for (int x = halfWidth; x < width - 1; x++)
             leds[XY(x, y)] = leds[XY(x + 1, y)];
     }
 }
 
 void GFXBase::MoveOutwardsX(int startY, int endY)
 {
+    const int width = static_cast<int>(_width);
+    const int height = static_cast<int>(_height);
+    const int halfWidth = width / 2;
+    if (leds == nullptr || halfWidth <= 1 || height <= 0)
+        return;
+
+    startY = std::max(0, startY);
+    endY = std::min(height - 1, endY);
+
     for (int y = startY; y <= endY; y++)
     {
-        for (int x = 0; x < (int)_width / 2 - 1; x++)
-        {
+        for (int x = 0; x < halfWidth - 1; x++)
             leds[XY(x, y)] = leds[XY(x + 1, y)];
-            leds[XY((int)_width - x - 1, y)] = leds[XY((int)_width - x - 2, y)];
-        }
+
+        for (int x = width - 1; x > halfWidth; x--)
+            leds[XY(x, y)] = leds[XY(x - 1, y)];
     }
 }
 

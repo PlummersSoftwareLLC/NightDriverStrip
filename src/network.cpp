@@ -38,6 +38,8 @@
     #include <ESPmDNS.h>
     #include <esp_wifi.h>
     #include <iterator>
+    #include <limits>
+    #include <mutex>
     #include <nvs.h>
     #include <WiFi.h>
 #elif ENABLE_ESPNOW
@@ -89,6 +91,15 @@ namespace nd_network
 
 #if ENABLE_WIFI
     static DRAM_ATTR WiFiUDP l_Udp;
+
+    static bool CheckedStandardPacketSize(uint32_t itemCount, size_t itemSize, size_t& packetSize)
+    {
+        if (itemCount > (std::numeric_limits<size_t>::max() - STANDARD_DATA_HEADER_SIZE) / itemSize)
+            return false;
+
+        packetSize = STANDARD_DATA_HEADER_SIZE + itemCount * itemSize;
+        return true;
+    }
 
     // Writer function and flag combo
     struct NetworkReader::ReaderEntry
@@ -655,11 +666,17 @@ namespace nd_network
             FLASH_VERSION_NAME, g_ptrSystem->GetDevices().size(),
             config.GetActiveLEDCount(), (size_t)(ESP.getFreeHeap()/1024), abs(WiFi.RSSI()),
             IsWiFiConnected() ? WiFi.localIP().toString().c_str() : "None");
-        DebugCLI::cli_printf("BUFR:%02zu/%02zu [%lufps]",
-            (size_t)bufferManager.Depth(), (size_t)bufferManager.BufferCount(),
-            (unsigned long)g_Values.FPS);
-        DebugCLI::cli_printf("DATA:%+04.2f-%+04.2f",
-            (float)bufferManager.AgeOfOldestBuffer(), (float)bufferManager.AgeOfNewestBuffer());
+        {
+            // Buffer indices are mutated by the socket task and consumed by
+            // the render task; status reads need the same mutex or they can
+            // sample a half-updated ring state on the other core.
+            std::lock_guard<std::mutex> guard(g_buffer_mutex);
+            DebugCLI::cli_printf("BUFR:%02zu/%02zu [%lufps]",
+                (size_t)bufferManager.Depth(), (size_t)bufferManager.BufferCount(),
+                (unsigned long)g_Values.FPS);
+            DebugCLI::cli_printf("DATA:%+04.2f-%+04.2f",
+                (float)bufferManager.AgeOfOldestBuffer(), (float)bufferManager.AgeOfNewestBuffer());
+        }
 
         #if ENABLE_AUDIO
         DebugCLI::cli_printf("g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f",
@@ -789,6 +806,7 @@ void SetupOTA(const String &strHostname)
             debugI("OTA Progress: %u%%\r", p);
 
             #if USE_HUB75
+                std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
                 auto pMatrix = std::static_pointer_cast<HUB75GFX>(g_ptrSystem->GetEffectManager().GetBaseGraphics()[0]);
                 pMatrix->SetCaption(str_sprintf("Update:%d%%", p), CAPTION_TIME);
             #endif
@@ -830,6 +848,12 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t[]> &payloadData, size_t payload
     #if !INCOMING_WIFI_ENABLED
         return false;
     #else
+        if (!payloadData || payloadLength < STANDARD_DATA_HEADER_SIZE)
+        {
+            debugW("Incoming packet too short: %zu", payloadLength);
+            return false;
+        }
+
         uint16_t command16 = payloadData[1] << 8 | payloadData[0];
 
         debugV("payloadLength: %zu, command16: %d", payloadLength, command16);
@@ -848,6 +872,17 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t[]> &payloadData, size_t payload
 
                     debugV("ProcessIncomingData -- Bands: %u, Length: %lu, Seconds: %llu, Micros: %llu ... ",
                            (unsigned int)numbands, (unsigned long)length32, seconds, micros);
+
+                    size_t expectedLength = 0;
+                    if (numbands != NUM_BANDS ||
+                        length32 != numbands * sizeof(float) ||
+                        !nd_network::CheckedStandardPacketSize(length32, sizeof(uint8_t), expectedLength) ||
+                        payloadLength < expectedLength)
+                    {
+                        debugW("Malformed peak data packet: bands=%u length=%lu payload=%zu",
+                               (unsigned int)numbands, (unsigned long)length32, payloadLength);
+                        return false;
+                    }
 
                     // Data is transmitted as NUM_BANDS floats following the standard header
                     const uint8_t* dataStart = payloadData.get() + STANDARD_DATA_HEADER_SIZE;
@@ -878,6 +913,14 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t[]> &payloadData, size_t payload
                 debugV("ProcessIncomingData -- Channel: %u, Length: %lu, Seconds: %llu, Micros: %llu ... ",
                        (unsigned int)channel16, (unsigned long)length32, seconds, micros);
 
+                size_t expectedLength = 0;
+                if (!nd_network::CheckedStandardPacketSize(length32, sizeof(CRGB), expectedLength) || payloadLength < expectedLength)
+                {
+                    debugW("Malformed pixel data packet: length=%lu payload=%zu",
+                           (unsigned long)length32, payloadLength);
+                    return false;
+                }
+
                 // The very old original implementation used channel numbers, not a mask, and only channel 0 was supported at that time, so if
                 // we see a Channel 0 asked for, it must be very old, and we massage it into the mask for Channel0 instead
                 // Another option here would be to draw on all channels (0xff) instead of just one (0x01) if 0 is specified
@@ -897,6 +940,16 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t[]> &payloadData, size_t payload
                         bool bDone = false;
                         auto &bufferManager = g_ptrSystem->GetBufferManagers()[iChannel];
 
+                        // Validate against the active channel before reserving a
+                        // circular-buffer slot. Reserving first meant a rejected
+                        // packet could leave an old frame queued in the new slot.
+                        if (!LEDBuffer::ValidateWirePayload(payloadData, payloadLength, bufferManager.LEDCount()))
+                        {
+                            debugW("Pixel packet rejected for channel %d: %lu LEDs, channel has %zu",
+                                   (unsigned long)length32, iChannel, bufferManager.LEDCount());
+                            return false;
+                        }
+
                         if (!bufferManager.IsEmpty())
                         {
                             auto pNewestBuffer = bufferManager.PeekNewestBuffer();
@@ -912,7 +965,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t[]> &payloadData, size_t payload
                         {
                             debugV("No match so adding new buffer");
                             auto pNewBuffer = bufferManager.GetNewBuffer();
-                            if (!pNewBuffer->UpdateFromWire(payloadData, payloadLength))
+                            if (!pNewBuffer || !pNewBuffer->UpdateFromWire(payloadData, payloadLength))
                                 return false;
                         }
                     }

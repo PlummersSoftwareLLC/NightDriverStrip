@@ -304,7 +304,11 @@ int SystemContainer::GetConfiguredAudioInputPin() const
 
 bool SystemContainer::ApplyRuntimeConfiguration(String* errorMessage)
 {
-    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
+    // Runtime topology changes retarget both the graphics objects and the
+    // WiFi frame buffers. Lock all three domains together so the render task
+    // cannot draw while the socket task is filling buffers sized for the old
+    // topology.
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex, g_buffer_mutex);
 
     auto& config = GetDeviceConfig();
 

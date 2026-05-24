@@ -38,6 +38,7 @@
 #include <FS.h>
 #include <algorithm>
 #include <cstdlib>
+#include <mutex>
 #include <limits>
 #include <utility>
 
@@ -593,26 +594,37 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
     auto response = new AsyncJsonResponse();
     auto& j = response->getRoot();
     auto& effectManager = g_ptrSystem->GetEffectManager();
+    bool overflow = false;
 
-    j["currentEffect"]         = effectManager.GetCurrentEffectIndex();
-    j["millisecondsRemaining"] = effectManager.GetTimeRemainingForCurrentEffect();
-    j["eternalInterval"]       = effectManager.IsIntervalEternal();
-    j["effectInterval"]        = effectManager.GetInterval();
-
-    for (const auto& effect : effectManager.EffectsList())
     {
-        auto effectDoc = CreateJsonDocument();
+        std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
 
-        effectDoc["name"]    = effect->FriendlyName();
-        effectDoc["enabled"] = effect->IsEnabled();
-        effectDoc["core"]    = effect->IsCoreEffect();
+        j["currentEffect"]         = effectManager.GetCurrentEffectIndex();
+        j["millisecondsRemaining"] = effectManager.GetTimeRemainingForCurrentEffect();
+        j["eternalInterval"]       = effectManager.IsIntervalEternal();
+        j["effectInterval"]        = effectManager.GetInterval();
 
-        if (!j["Effects"].add(effectDoc))
+        for (const auto& effect : effectManager.EffectsList())
         {
-            debugV("JSON response buffer overflow!");
-            SendBufferOverflowResponse(pRequest);
-            return;
+            auto effectDoc = CreateJsonDocument();
+
+            effectDoc["name"]    = effect->FriendlyName();
+            effectDoc["enabled"] = effect->IsEnabled();
+            effectDoc["core"]    = effect->IsCoreEffect();
+
+            if (!j["Effects"].add(effectDoc))
+            {
+                debugV("JSON response buffer overflow!");
+                overflow = true;
+                break;
+            }
         }
+    }
+
+    if (overflow)
+    {
+        SendBufferOverflowResponse(pRequest);
+        return;
     }
 
     AddCORSHeaderAndSendResponse(pRequest, response);
@@ -757,7 +769,7 @@ void CWebServer::DeleteEffect(AsyncWebServerRequest * pRequest)
         return;
     }
 
-    if (index < g_ptrSystem->GetEffectManager().EffectCount() && g_ptrSystem->GetEffectManager().EffectsList()[index]->IsCoreEffect())
+    if (g_ptrSystem->GetEffectManager().IsCoreEffect(index))
     {
         AddCORSHeaderAndSendBadRequest(pRequest, "Can't delete core effect");
         return;
@@ -1425,17 +1437,21 @@ void CWebServer::SetUnifiedSettings(AsyncWebServerRequest * pRequest, JsonVarian
 
 bool CWebServer::CheckAndGetSettingsEffect(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect, bool post)
 {
-    const auto& effectsList = g_ptrSystem->GetEffectManager().EffectsList();
     auto effectIndex = GetEffectIndexFromParam(pRequest, post);
 
-    if (effectIndex < 0 || effectIndex >= effectsList.size())
+    if (effectIndex < 0)
     {
         AddCORSHeaderAndSendOKResponse(pRequest);
 
         return false;
     }
 
-    effect = effectsList[effectIndex];
+    effect = g_ptrSystem->GetEffectManager().EffectAt(effectIndex);
+    if (!effect)
+    {
+        AddCORSHeaderAndSendOKResponse(pRequest);
+        return false;
+    }
 
     return true;
 }
@@ -1447,7 +1463,11 @@ void CWebServer::GetEffectSettingSpecs(AsyncWebServerRequest * pRequest)
     if (!CheckAndGetSettingsEffect(pRequest, effect))
         return;
 
-    auto settingSpecs = effect->GetSettingSpecs();
+    std::vector<std::reference_wrapper<SettingSpec>> settingSpecs;
+    {
+        std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
+        settingSpecs = effect->GetSettingSpecs();
+    }
 
     SendSettingSpecsResponse(pRequest, settingSpecs);
 }
@@ -1457,7 +1477,13 @@ void CWebServer::SendEffectSettingsResponse(AsyncWebServerRequest * pRequest, st
     auto response = std::make_unique<AsyncJsonResponse>();
     auto jsonObject = response->getRoot().to<JsonObject>();
 
-    if (effect->SerializeSettingsToJSON(jsonObject))
+    bool serialized = false;
+    {
+        std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
+        serialized = effect->SerializeSettingsToJSON(jsonObject);
+    }
+
+    if (serialized)
     {
         AddCORSHeaderAndSendResponse(pRequest, response.release());
         return;
@@ -1483,6 +1509,10 @@ bool CWebServer::ApplyEffectSettings(AsyncWebServerRequest * pRequest, std::shar
 {
     bool settingChanged = false;
 
+    // Effect settings are live data consumed by Draw(). Apply and enumerate
+    // them under the render/effect locks so web requests cannot mutate an
+    // effect while the render task is drawing it.
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
     for (auto& settingSpecWrapper : effect->GetSettingSpecs())
     {
         const auto& spec = settingSpecWrapper.get();

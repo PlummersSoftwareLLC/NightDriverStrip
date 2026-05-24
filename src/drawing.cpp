@@ -174,7 +174,11 @@ int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, ui
 
     if (localPixelsDrawn > 0)
     {
-        const double fpsRaw = static_cast<double>(g_ptrSystem->GetEffectManager().GetCurrentEffect().DesiredFramesPerSecond());
+        double fpsRaw = 0.0;
+        {
+            std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
+            fpsRaw = static_cast<double>(g_ptrSystem->GetEffectManager().GetCurrentEffect().DesiredFramesPerSecond());
+        }
         // If FPS is invalid (<= 0 or non-finite), treat as unlimited (0s minimum frame time).
         const double minimumFrameTime = (!std::isfinite(fpsRaw) || fpsRaw <= 0.0) ? 0.0 : (1.0 / fpsRaw);
         // Use a monotonic-like elapsed (never negative) in case wall clock adjustments go backward.
@@ -190,15 +194,23 @@ int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, ui
         double t = std::numeric_limits<double>::max();
         bool bFoundFrame = false;
 
-        for (auto& bufferManager : g_ptrSystem->GetBufferManagers())
         {
-            auto pOldest = bufferManager.PeekOldestBuffer();
-            if (pOldest)
+            // The socket task can add frames while the render task is
+            // calculating its next sleep. Protect this read-only peek with the
+            // same mutex used by enqueue/dequeue so the ring indices and
+            // timestamps are sampled consistently.
+            
+            std::lock_guard<std::mutex> guard(g_buffer_mutex);
+            for (auto& bufferManager : g_ptrSystem->GetBufferManagers())
             {
-                // TimeTillDue() should be non-negative for future-due frames; if negative (stale), treat as now.
-                // Note I'm not using clamp since clamp can return nan if TimeTillDue does, whereas this guards against that.
-                t = std::min(t, std::max(0.0, pOldest->TimeTillDue()));
-                bFoundFrame = true;
+                auto pOldest = bufferManager.PeekOldestBuffer();
+                if (pOldest)
+                {
+                    // TimeTillDue() should be non-negative for future-due frames; if negative (stale), treat as now.
+                    // Note I'm not using clamp since clamp can return nan if TimeTillDue does, whereas this guards against that.
+                    t = std::min(t, std::max(0.0, pOldest->TimeTillDue()));
+                    bFoundFrame = true;
+                }
             }
         }
         // Bound the delay to at most 1 second to avoid pathological multi-second sleeps.

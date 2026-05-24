@@ -43,6 +43,8 @@
 
 bool ITaskService::Start()
 {
+    std::lock_guard<std::mutex> lifecycleGuard(_lifecycleMutex);
+
     if (_running.load())
     {
         debugI("%s: Start() ignored, already running", Name());
@@ -65,34 +67,43 @@ bool ITaskService::Start()
         (size_t)ESP.getFreeHeap(), (size_t)ESP.getMaxAllocHeap(),
         (size_t)ESP.getFreePsram(), (size_t)ESP.getPsramSize()) );
 
+    TaskHandle_t taskHandle = nullptr;
     BaseType_t rc = xTaskCreatePinnedToCore(
         TaskEntryThunk,
         cfg.taskName,
         cfg.stackSize,
         this,                       // ITaskService*; thunk casts back
         cfg.priority,
-        &_taskHandle,
+        &taskHandle,
         cfg.core);
 
     if (rc != pdPASS)
     {
         debugE("%s: xTaskCreatePinnedToCore failed (rc=%d)", Name(), (int)rc);
-        _taskHandle = nullptr;
+        SetTaskHandle(nullptr);
         return false;
     }
 
+    SetTaskHandle(taskHandle);
     _running.store(true);
     return true;
 }
 
 void ITaskService::Stop()
 {
-    if (!_running.load() && _taskHandle == nullptr)
+    // Start/Stop still need serialization, but WakeTask only needs the short
+    // _taskHandleMutex below. Holding the old recursive lifecycle mutex across
+    // the whole stop wait was heavier than necessary and existed only because
+    // some stop hooks wake their task.
+    
+    std::lock_guard<std::mutex> lifecycleGuard(_lifecycleMutex);
+
+    if (!_running.load() && !HasTaskHandle())
         return;
 
     debugI("%s: stop requested", Name());
 
-    if (_taskHandle != nullptr)
+    if (HasTaskHandle())
     {
         _shutdownRequested.store(true);
 
@@ -114,8 +125,8 @@ void ITaskService::Stop()
         // TaskEntryThunk's vTaskDelay) or it never acknowledged. Either
         // way, we delete it from this thread so the FreeRTOS task control
         // block is reclaimed before this object is allowed to be destroyed.
-        vTaskDelete(_taskHandle);
-        _taskHandle = nullptr;
+        if (TaskHandle_t taskHandle = ClearTaskHandle())
+            vTaskDelete(taskHandle);
     }
 
     // Service-specific resource cleanup. Runs whether the task exited
@@ -127,6 +138,26 @@ void ITaskService::Stop()
     _shutdownRequested.store(false);
     _taskExited.store(false);
     debugI("%s: stop completed", Name());
+}
+
+void ITaskService::SetTaskHandle(TaskHandle_t taskHandle)
+{
+    std::lock_guard<std::mutex> guard(_taskHandleMutex);
+    _taskHandle = taskHandle;
+}
+
+TaskHandle_t ITaskService::ClearTaskHandle()
+{
+    std::lock_guard<std::mutex> guard(_taskHandleMutex);
+    TaskHandle_t taskHandle = _taskHandle;
+    _taskHandle = nullptr;
+    return taskHandle;
+}
+
+bool ITaskService::HasTaskHandle() const
+{
+    std::lock_guard<std::mutex> guard(_taskHandleMutex);
+    return _taskHandle != nullptr;
 }
 
 // TaskEntryThunk - static task entry point that casts the void* back to

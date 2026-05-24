@@ -283,11 +283,17 @@ std::vector<std::shared_ptr<GFXBase>> & EffectManager::GetBaseGraphics()
 
 void EffectManager::ReportNewFrameAvailable()
 {
+    // Listener vectors store references whose owners may deregister on other
+    // tasks. Hold this mutex while iterating so remove/destruction cannot race
+    // a callback dispatch.
+    
+    std::lock_guard<std::mutex> listenerGuard(_listenerMutex);
     INFORM_EVENT_LISTENERS(_frameEventListeners, IFrameEventListener::OnNewFrameAvailable);
 }
 
 void EffectManager::AddFrameEventListener(IFrameEventListener& listener)
 {
+    std::lock_guard<std::mutex> listenerGuard(_listenerMutex);
     _frameEventListeners.emplace_back(listener);
 }
 
@@ -299,6 +305,7 @@ void EffectManager::RemoveFrameEventListener(IFrameEventListener& listener)
     // Robert may have a better or less obtuse way to do this, but it works 
     // and it's not like we have thousands of listeners.  Change at will!
     
+    std::lock_guard<std::mutex> listenerGuard(_listenerMutex);
     _frameEventListeners.erase(
         std::remove_if(_frameEventListeners.begin(), _frameEventListeners.end(),
                        [&](const std::reference_wrapper<IFrameEventListener>& w)
@@ -308,6 +315,7 @@ void EffectManager::RemoveFrameEventListener(IFrameEventListener& listener)
 
 void EffectManager::AddEffectEventListener(IEffectEventListener& listener)
 {
+    std::lock_guard<std::mutex> listenerGuard(_listenerMutex);
     _effectEventListeners.emplace_back(listener);
 }
 
@@ -324,6 +332,7 @@ const GFXBase& EffectManager::g(int iChannel) const
 
 bool EffectManager::IsEffectEnabled(size_t i) const
 {
+    std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
     if (i >= _vEffects.size())
     {
         debugW("Invalid index for IsEffectEnabled");
@@ -334,11 +343,14 @@ bool EffectManager::IsEffectEnabled(size_t i) const
 
 void EffectManager::PlayAll(bool bPlayAll)
 {
+    std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
     _bPlayAll = bPlayAll;
 }
 
 void EffectManager::SetInterval(uint interval, bool skipSave)
 {
+    std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
+
     // Reject/ignore intervals smaller than a second, but allow 0 (infinity)
     if (interval > 0 && interval < 1000)
         return;
@@ -348,36 +360,63 @@ void EffectManager::SetInterval(uint interval, bool skipSave)
     if (!skipSave)
         SaveEffectManagerConfig();
 
-    INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnIntervalChanged, interval);
+    {
+        std::lock_guard<std::mutex> listenerGuard(_listenerMutex);
+        INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnIntervalChanged, interval);
+    }
 }
 
-const std::vector<std::shared_ptr<LEDStripEffect>> & EffectManager::EffectsList() const
+std::vector<std::shared_ptr<LEDStripEffect>> EffectManager::EffectsList() const
 {
+    // Return a stable snapshot instead of a reference to the live vector. Web,
+    // debug, and render tasks can otherwise hold an iterator/reference while
+    // another task reorders or deletes effects.
+    std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
     return _vEffects;
+}
+
+std::shared_ptr<LEDStripEffect> EffectManager::EffectAt(size_t index) const
+{
+    std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
+    return index < _vEffects.size() ? _vEffects[index] : nullptr;
+}
+
+bool EffectManager::IsCoreEffect(size_t index) const
+{
+    auto effect = EffectAt(index);
+    return effect && effect->IsCoreEffect();
 }
 
 size_t EffectManager::EffectCount() const
 {
+    std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
     return _vEffects.size();
 }
 
 bool EffectManager::AreEffectsEnabled() const
 {
+    std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
     return std::any_of(_vEffects.begin(), _vEffects.end(), [](const auto& pEffect){ return pEffect->IsEnabled(); } );
 }
 
 size_t EffectManager::GetCurrentEffectIndex() const
 {
+    std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
     return _iCurrentEffect;
 }
 
 LEDStripEffect& EffectManager::GetCurrentEffect() const
 {
+    std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
     return *(_tempEffect ? _tempEffect : _vEffects[_iCurrentEffect]);
 }
 
-const String & EffectManager::GetCurrentEffectName() const
+String EffectManager::GetCurrentEffectName() const
 {
+    // Return a copy while holding the effect lock. Returning a reference here
+    // was unsafe because another task can switch/delete/reinitialize effects
+    // immediately after the lock is released.
+    std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
     if (_tempEffect)
         return _tempEffect->FriendlyName();
 
@@ -400,16 +439,21 @@ void EffectManager::SetCurrentEffectIndex(size_t i)
     StartEffect();
     SaveCurrentEffectIndex();
 
-    INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnCurrentEffectChanged, i);
+    {
+        std::lock_guard<std::mutex> listenerGuard(_listenerMutex);
+        INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnCurrentEffectChanged, i);
+    }
 }
 
 uint EffectManager::GetTimeUsedByCurrentEffect() const
 {
+    std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
     return millis() - _effectStartTime;
 }
 
 uint EffectManager::GetTimeRemainingForCurrentEffect() const
 {
+    std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
     // If the Interval is set to zero, we treat that as an infinite interval and don't even look at the time used so far
     uint timeUsedByCurrentEffect = GetTimeUsedByCurrentEffect();
     uint interval = GetEffectiveInterval();
@@ -419,7 +463,8 @@ uint EffectManager::GetTimeRemainingForCurrentEffect() const
 
 uint EffectManager::GetEffectiveInterval() const
 {
-    auto& currentEffect = GetCurrentEffect();
+    std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
+    auto& currentEffect = *(_tempEffect ? _tempEffect : _vEffects[_iCurrentEffect]);
     // This allows you to return a MaximumEffectTime and your effect won't be shown longer than that
     return min((IsIntervalEternal() ? std::numeric_limits<uint>::max() : _effectInterval),
                (currentEffect.HasMaximumEffectTime() ? currentEffect.MaximumEffectTime() : std::numeric_limits<uint>::max()));
@@ -427,28 +472,34 @@ uint EffectManager::GetEffectiveInterval() const
 
 uint EffectManager::GetInterval() const
 {
+    std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
     return _effectInterval;
 }
 
 bool EffectManager::IsIntervalEternal() const
 {
+    std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
     return _effectInterval == 0;
 }
 
 void EffectManager::NextPalette()
 {
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
     debugV("EffectManager::NextPalette");
     g().CyclePalette(1);
 }
 
 void EffectManager::PreviousPalette()
 {
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
     debugV("EffectManager::PreviousPalette");
     g().CyclePalette(-1);
 }
 
 void EffectManager::LoadDefaultEffects()
 {
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
+
     _effectSetHashString = g_ptrEffectFactories->HashString();
 
     for (const auto &numberedFactory : g_ptrEffectFactories->GetDefaultFactories())
@@ -538,6 +589,8 @@ void EffectManager::LoadJSONEffects(const JsonArrayConst& effectsArray)
 //   use the AppendEffect() function for that.
 std::shared_ptr<LEDStripEffect> EffectManager::CopyEffect(size_t index)
 {
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
+
     if (index >= _vEffects.size())
     {
         debugW("Invalid index for CopyEffect");
@@ -665,6 +718,8 @@ bool EffectManager::Init()
 
 bool EffectManager::ReinitializeEffects()
 {
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
+
     if (!Init())
         return false;
 
@@ -684,6 +739,8 @@ bool EffectManager::ReinitializeEffects()
 
 bool EffectManager::ShowVU(bool bShow)
 {
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
+
     auto& deviceConfig = g_ptrSystem->GetDeviceConfig();
     bool bResult = deviceConfig.ShowVUMeter();
     debugI("Setting ShowVU to %d\n", bShow);
@@ -698,12 +755,15 @@ bool EffectManager::ShowVU(bool bShow)
 
 bool EffectManager::IsVUVisible() const
 {
+    std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
     return g_ptrSystem->GetDeviceConfig().ShowVUMeter() && GetCurrentEffect().CanDisplayVUMeter();
 }
 
 
 void EffectManager::ClearRemoteColor(bool retainRemoteEffect)
 {
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
+
     if (!retainRemoteEffect)
         _tempEffect = nullptr;
 
@@ -721,6 +781,8 @@ void EffectManager::ClearRemoteColor(bool retainRemoteEffect)
 
 void EffectManager::ApplyGlobalColor(CRGB color)
 {
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
+
     debugI("Setting Global Color: %08lX\n", (unsigned long)(uint32_t)color);
 
     auto& deviceConfig = g_ptrSystem->GetDeviceConfig();
@@ -731,6 +793,8 @@ void EffectManager::ApplyGlobalColor(CRGB color)
 
 void EffectManager::ApplyGlobalPaletteColors()
 {
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
+
     #if USE_HUB75
         auto& pMatrix = g();
         auto& deviceConfig = g_ptrSystem->GetDeviceConfig();
@@ -801,6 +865,8 @@ void EffectManager::construct(bool clearTempEffect)
 
 bool EffectManager::DeserializeFromJSON(const JsonObjectConst& jsonObject)
 {
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
+
     ClearEffects();
 
     // "efs" is the array of serialized effect objects
@@ -877,6 +943,8 @@ bool EffectManager::DeserializeFromJSON(const JsonObjectConst& jsonObject)
 
 bool EffectManager::SerializeToJSON(JsonObject& jsonObject)
 {
+    std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
+
     // Set JSON format version to be able to detect and manage future incompatible structural updates
     jsonObject[PTY_VERSION] = JSON_FORMAT_VERSION;
     jsonObject["ivl"] = _effectInterval;
@@ -898,6 +966,11 @@ bool EffectManager::SerializeToJSON(JsonObject& jsonObject)
 
 void EffectManager::EnableEffect(size_t i, bool skipSave)
 {
+    // Web, remote, and render tasks all touch the effect list/current effect.
+    // Mutations take both locks so a UI request cannot reorder/delete/settings-
+    // mutate an effect while the draw loop is inside that effect's Draw().
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
+
     if (i >= _vEffects.size())
     {
         debugW("Invalid index for EnableEffect");
@@ -916,12 +989,17 @@ void EffectManager::EnableEffect(size_t i, bool skipSave)
         if (!skipSave)
             SaveEffectManagerConfig();
 
-        INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnEffectEnabledStateChanged, i, true);
+        {
+            std::lock_guard<std::mutex> listenerGuard(_listenerMutex);
+            INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnEffectEnabledStateChanged, i, true);
+        }
     }
 }
 
 void EffectManager::DisableEffect(size_t i, bool skipSave)
 {
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
+
     if (i >= _vEffects.size())
     {
         debugW("Invalid index for DisableEffect");
@@ -940,12 +1018,17 @@ void EffectManager::DisableEffect(size_t i, bool skipSave)
         if (!skipSave)
             SaveEffectManagerConfig();
 
-        INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnEffectEnabledStateChanged, i, false);
+        {
+            std::lock_guard<std::mutex> listenerGuard(_listenerMutex);
+            INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnEffectEnabledStateChanged, i, false);
+        }
     }
 }
 
 void EffectManager::MoveEffect(size_t from, size_t to)
 {
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
+
     if (from >= _vEffects.size() || to >= _vEffects.size())
     {
         debugW("Invalid index for MoveEffect");
@@ -977,13 +1060,18 @@ void EffectManager::MoveEffect(size_t from, size_t to)
 
     SaveEffectManagerConfig();
 
-    INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnEffectListDirty);
+    {
+        std::lock_guard<std::mutex> listenerGuard(_listenerMutex);
+        INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnEffectListDirty);
+    }
 }
 
 // Adds an effect to the effect list and enables it. If an effect is added that is already in the effect list then the result
 //   is undefined but potentially messy.
 bool EffectManager::AppendEffect(std::shared_ptr<LEDStripEffect>& effect)
 {
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
+
     if (!effect->Init(_gfx))
         return false;
 
@@ -992,7 +1080,10 @@ bool EffectManager::AppendEffect(std::shared_ptr<LEDStripEffect>& effect)
 
     SaveEffectManagerConfig();
 
-    INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnEffectListDirty);
+    {
+        std::lock_guard<std::mutex> listenerGuard(_listenerMutex);
+        INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnEffectListDirty);
+    }
 
     return true;
 }
@@ -1000,6 +1091,8 @@ bool EffectManager::AppendEffect(std::shared_ptr<LEDStripEffect>& effect)
 // Deletes an effect from the effect list. Note that core effects cannot be deleted.
 bool EffectManager::DeleteEffect(size_t index)
 {
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
+
     if (index >= _vEffects.size())
     {
         debugW("Invalid index for DeleteEffect");
@@ -1024,7 +1117,10 @@ bool EffectManager::DeleteEffect(size_t index)
 
     SaveEffectManagerConfig();
 
-    INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnEffectListDirty);
+    {
+        std::lock_guard<std::mutex> listenerGuard(_listenerMutex);
+        INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnEffectListDirty);
+    }
 
     return true;
 }
@@ -1070,7 +1166,10 @@ void EffectManager::NextEffect(bool skipSave)
     StartEffect();
     SaveCurrentEffectIndex();
 
-    INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnCurrentEffectChanged, _iCurrentEffect);
+    {
+        std::lock_guard<std::mutex> listenerGuard(_listenerMutex);
+        INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnCurrentEffectChanged, _iCurrentEffect);
+    }
 }
 
 // Go back to the previous effect and abort the current one.
@@ -1094,7 +1193,10 @@ void EffectManager::PreviousEffect()
     StartEffect();
     SaveCurrentEffectIndex();
 
-    INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnCurrentEffectChanged, _iCurrentEffect);
+    {
+        std::lock_guard<std::mutex> listenerGuard(_listenerMutex);
+        INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnCurrentEffectChanged, _iCurrentEffect);
+    }
 }
 
 // EffectManager::Update
