@@ -42,6 +42,7 @@
 #include <atomic>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 class GFXBase;
@@ -126,6 +127,7 @@ class  EffectManager : public IJSONSerializable
     std::shared_ptr<LEDStripEffect> _tempEffect;
     std::vector<std::reference_wrapper<IFrameEventListener>> _frameEventListeners;
     std::vector<std::reference_wrapper<IEffectEventListener>> _effectEventListeners;
+    mutable std::mutex _listenerMutex;
 
     void construct(bool clearTempEffect);
     void DispatchBeatIfNeeded();
@@ -262,12 +264,14 @@ public:
 
     void PlayAll(bool bPlayAll);
     void SetInterval(uint interval, bool skipSave = false);
-    const std::vector<std::shared_ptr<LEDStripEffect>> & EffectsList() const;
+    std::vector<std::shared_ptr<LEDStripEffect>> EffectsList() const;
+    std::shared_ptr<LEDStripEffect> EffectAt(size_t index) const;
+    bool IsCoreEffect(size_t index) const;
     size_t EffectCount() const;
     bool AreEffectsEnabled() const;
     size_t GetCurrentEffectIndex() const;
     LEDStripEffect& GetCurrentEffect() const;
-    const String & GetCurrentEffectName() const;
+    String GetCurrentEffectName() const;
     void SetCurrentEffectIndex(size_t i);
     uint GetTimeUsedByCurrentEffect() const;
     uint GetTimeRemainingForCurrentEffect() const;

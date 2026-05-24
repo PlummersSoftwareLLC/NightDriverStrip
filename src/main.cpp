@@ -809,7 +809,10 @@ void loop()
 
             #if INCOMING_WIFI_ENABLED
                 auto& bufferManager = g_ptrSystem->GetBufferManagers()[0];
-                strOutput += str_sprintf("Buffer: %zu/%zu, ", (size_t)bufferManager.Depth(), (size_t)bufferManager.BufferCount());
+                {
+                    std::lock_guard<std::mutex> guard(g_buffer_mutex);
+                    strOutput += str_sprintf("Buffer: %zu/%zu, ", (size_t)bufferManager.Depth(), (size_t)bufferManager.BufferCount());
+                }
             #endif
 
             const auto& taskManager = g_ptrSystem->GetTaskManager();

@@ -75,6 +75,7 @@
 #include <atomic>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <mutex>
 
 #include "iservice.h"
 
@@ -148,6 +149,7 @@ class ITaskService : public IService
 
     void WakeTask() const
     {
+        std::lock_guard<std::mutex> guard(_taskHandleMutex);
         if (_taskHandle != nullptr)
             xTaskNotifyGive(_taskHandle);
     }
@@ -160,7 +162,13 @@ class ITaskService : public IService
 
     static void TaskEntryThunk(void* p);
 
+    void SetTaskHandle(TaskHandle_t taskHandle);
+    TaskHandle_t ClearTaskHandle();
+    bool HasTaskHandle() const;
+
     TaskHandle_t       _taskHandle = nullptr;
+    mutable std::mutex _lifecycleMutex;
+    mutable std::mutex _taskHandleMutex;
     std::atomic<bool>  _running{false};
     std::atomic<bool>  _shutdownRequested{false};
     std::atomic<bool>  _taskExited{false};
