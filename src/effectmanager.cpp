@@ -99,6 +99,7 @@ void InitEffectsManager()
 
     auto jsonDoc = CreateJsonDocument();
     auto jsonObject = LoadEffectsJSONFile(jsonDoc);
+    const bool loadedPersistedEffects = jsonObject.has_value();
 
     if (jsonObject)
     {
@@ -130,6 +131,15 @@ void InitEffectsManager()
     #endif
 
     l_EffectManagerInitializing = false;
+
+    if (!loadedPersistedEffects)
+    {
+        // Persist the default effect set after initialization suppression is
+        // lifted. Otherwise first boot, missing config, or an effect-set hash
+        // change would run from defaults but never write the new config until
+        // some later user mutation happened.
+        SaveEffectManagerConfig();
+    }
 }
 
 void EffectManager::StartEffect()

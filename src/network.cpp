@@ -621,7 +621,7 @@ namespace nd_network
             EnsureNetworkServicesStarted();
 
             unsigned long now = millis();
-            unsigned long nextEventMs = 1000;
+            unsigned long nextEventMs = kReaderDispatchGapMs;
 
             bool dispatchedReader = false;
             for (auto &entryPtr : readers)
@@ -944,14 +944,15 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t[]> &payloadData, size_t payload
 
                         bool bDone = false;
                         auto &bufferManager = g_ptrSystem->GetBufferManagers()[iChannel];
+                        const size_t channelLedCount = bufferManager.LEDCount();
 
                         // Validate against the active channel before reserving a
                         // circular-buffer slot. Reserving first meant a rejected
                         // packet could leave an old frame queued in the new slot.
-                        if (!LEDBuffer::ValidateWirePayload(payloadData, payloadLength, bufferManager.LEDCount()))
+                        if (!LEDBuffer::ValidateWirePayload(payloadData, payloadLength, channelLedCount))
                         {
                             debugW("Pixel packet rejected for channel %d: %lu LEDs, channel has %zu",
-                                   (unsigned long)length32, iChannel, bufferManager.LEDCount());
+                                   iChannel, (unsigned long)length32, channelLedCount);
                             return false;
                         }
 
