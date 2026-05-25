@@ -219,7 +219,10 @@ public:
     virtual ~GFXBase() override;
 
     #if USE_NOISE
-    void EnsureNoise() const;
+    // Ensures noise is initialized.
+    // Returns true only if this call performed the initialization; returns false for all
+    // other calls, including concurrent callers that observe initialization complete.
+    bool EnsureNoise() const;
 
     Noise &GetNoise()
     {
@@ -600,11 +603,16 @@ public:
         // the oscillators: linear ramps 0-255
         // osci[0-3] are used for noise animation
         // osci[4-5] are used for palette rotation
-        void NoiseVariablesSetup() const;
-
         void SetNoise(uint32_t nx, uint32_t ny, uint32_t nz, uint32_t sx, uint32_t sy);
 
         void FillGetNoise() const;
+
+    private:
+        // Called only from within EnsureNoise() (already inside call_once), and therefore
+        // must NOT call EnsureNoise() itself — doing so would result in undefined behavior.
+        void FillGetNoiseImpl() const;
+
+    public:
 
         // The next couple of two-liners define function templates for the different noise approaches
         // that are implemented in the project. The desired noise approach for a particular use case

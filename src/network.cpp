@@ -623,7 +623,6 @@ namespace nd_network
             unsigned long now = millis();
             unsigned long nextEventMs = kReaderDispatchGapMs;
 
-            bool dispatchedReader = false;
             for (auto &entryPtr : readers)
             {
                 auto &entry = *entryPtr;
@@ -645,12 +644,8 @@ namespace nd_network
                     if (entry.reader)
                         entry.reader();
                     entry.lastReadMs.store(millis());
-                    dispatchedReader = true;
-                    break;
                 }
             }
-            if (dispatchedReader)
-                nextEventMs = std::min<unsigned long>(nextEventMs, kReaderDispatchGapMs);
             notifyWait = pdMS_TO_TICKS(nextEventMs);
         }
 
@@ -953,6 +948,16 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t[]> &payloadData, size_t payload
                         {
                             debugW("Pixel packet rejected for channel %d: %lu LEDs, channel has %zu",
                                    iChannel, (unsigned long)length32, channelLedCount);
+                            return false;
+                        }
+
+                        // Validate against the active channel before reserving a
+                        // circular-buffer slot. Reserving first meant a rejected
+                        // packet could leave an old frame queued in the new slot.
+                        if (!LEDBuffer::ValidateWirePayload(payloadData, payloadLength, bufferManager.LEDCount()))
+                        {
+                            debugW("Pixel packet rejected for channel %d: %lu LEDs, channel has %zu",
+                                   (unsigned long)length32, iChannel, bufferManager.LEDCount());
                             return false;
                         }
 

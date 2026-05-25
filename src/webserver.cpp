@@ -654,7 +654,7 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
 
     if (overflow)
     {
-        delete response;
+        response.reset();
         SendBufferOverflowResponse(pRequest);
         return;
     }
@@ -1356,8 +1356,8 @@ void CWebServer::SetUnifiedSettings(AsyncWebServerRequest * pRequest, JsonVarian
     if (root["topology"].is<JsonObjectConst>())
     {
         auto topology = root["topology"].as<JsonObjectConst>();
-        TryReadUint16(topology["width"], runtimeConfig.topology.width);
-        TryReadUint16(topology["height"], runtimeConfig.topology.height);
+        if (topology["width"].is<uint16_t>()) runtimeConfig.topology.width = topology["width"].as<uint16_t>();
+        if (topology["height"].is<uint16_t>()) runtimeConfig.topology.height = topology["height"].as<uint16_t>();
         if (topology["serpentine"].is<bool>()) runtimeConfig.topology.serpentine = topology["serpentine"].as<bool>();
     }
 
