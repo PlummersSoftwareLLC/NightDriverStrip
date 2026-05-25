@@ -177,33 +177,40 @@ void HUB75GFX::SetCaption(const String & str, uint32_t duration)
 
 void HUB75GFX::MoveInwardX(int startY, int endY)
 {
-    // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
-    // out in order to do the scroll.  We should technically use memmove instead
-    // of memcpy since the regions are overlapping but this is faster and seems
-    // to work!
+    const int halfWidth = MATRIX_WIDTH / 2;
+    if (leds == nullptr || halfWidth <= 1)
+        return;
+
+    startY = std::max(0, startY);
+    endY = std::min(MATRIX_HEIGHT - 1, endY);
 
     for (int y = startY; y <= endY; y++)
     {
         auto pLinemem = leds + y * MATRIX_WIDTH;
         auto pLinemem2 = pLinemem + (MATRIX_WIDTH / 2);
-        memcpy(pLinemem + 1, pLinemem, sizeof(CRGB) * (MATRIX_WIDTH / 2));
-        memcpy(pLinemem2, pLinemem2 + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));
+        // These shifts overlap within a row. memcpy was undefined behavior and
+        // the old right-half count read one pixel past the row, which could
+        // corrupt adjacent display memory.
+        memmove(pLinemem + 1, pLinemem, sizeof(CRGB) * (halfWidth - 1));
+        memmove(pLinemem2, pLinemem2 + 1, sizeof(CRGB) * (halfWidth - 1));
     }
 }
 
 void HUB75GFX::MoveOutwardsX(int startY, int endY)
 {
-    // Optimized for Smartmatrix matrix - uses knowledge of how the pixels are laid
-    // out in order to do the scroll.  We should technically use memmove instead
-    // of memcpy since the regions are overlapping but this is faster and seems
-    // to work!
+    const int halfWidth = MATRIX_WIDTH / 2;
+    if (leds == nullptr || halfWidth <= 1)
+        return;
+
+    startY = std::max(0, startY);
+    endY = std::min(MATRIX_HEIGHT - 1, endY);
 
     for (int y = startY; y <= endY; y++)
     {
         auto pLinemem = leds + y * MATRIX_WIDTH;
         auto pLinemem2 = pLinemem + (MATRIX_WIDTH / 2);
-        memcpy(pLinemem, pLinemem + 1, sizeof(CRGB) * (MATRIX_WIDTH / 2));
-        memcpy(pLinemem2 + 1, pLinemem2, sizeof(CRGB) * (MATRIX_WIDTH / 2));
+        memmove(pLinemem, pLinemem + 1, sizeof(CRGB) * (halfWidth - 1));
+        memmove(pLinemem2 + 1, pLinemem2, sizeof(CRGB) * (halfWidth - 1));
     }
 }
 

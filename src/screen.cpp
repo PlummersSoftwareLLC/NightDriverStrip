@@ -156,13 +156,27 @@ public:
 
         // Buffer Status Line 3
         auto &bufferManager = g_ptrSystem->GetBufferManagers()[0];
+        size_t bufferDepth = 0;
+        size_t bufferCount = 0;
+        double oldestAge = 0.0;
+        double newestAge = 0.0;
+        {
+            // The display runs on its own task, so even status-only buffer
+            // reads need the producer/consumer mutex to avoid sampling torn
+            // circular-buffer indices.
+            std::lock_guard guard(g_buffer_mutex);
+            bufferDepth = bufferManager.Depth();
+            bufferCount = bufferManager.BufferCount();
+            oldestAge = bufferManager.AgeOfOldestBuffer();
+            newestAge = bufferManager.AgeOfNewestBuffer();
+        }
         display.setCursor(xMargin + 0, yMargin + lineHeight * 4);
-        display.println(str_sprintf("BUFR:%02lu/%02lu %lufps ", (unsigned long)bufferManager.Depth(), (unsigned long)bufferManager.BufferCount(), (unsigned long)g_Values.FPS));
+        display.println(str_sprintf("BUFR:%02lu/%02lu %lufps ", (unsigned long)bufferDepth, (unsigned long)bufferCount, (unsigned long)g_Values.FPS));
 
         // Data Status Line 4
         display.setCursor(xMargin + 0, yMargin + lineHeight * 2);
-        display.println(str_sprintf("DATA:%+06.2lf-%+06.2lf", std::min(99.99, bufferManager.AgeOfOldestBuffer()),
-                                    std::min(99.99, bufferManager.AgeOfNewestBuffer())));
+        display.println(str_sprintf("DATA:%+06.2lf-%+06.2lf", std::min(99.99, oldestAge),
+                                    std::min(99.99, newestAge)));
 
         // Clock info Line 5
         time_t t;
@@ -195,7 +209,7 @@ public:
             int top = display.height() - lineHeight;
             int height = lineHeight - 3;
             int width = display.width() - xMargin * 2;
-            float ratio = (float)bufferManager.Depth() / (float)bufferManager.BufferCount();
+            float ratio = bufferCount == 0 ? 0.0f : (float)bufferDepth / (float)bufferCount;
             ratio = std::min(1.0f, ratio);
             int filled = (width - 2) * ratio;
 
@@ -334,9 +348,10 @@ public:
                 yh += display.fontHeight();
 
                 display.setTextColor(display.GetTextColor(), backColor);
-                w = display.textWidth(g_ptrSystem->GetEffectManager().GetCurrentEffectName());
+                String effectName = g_ptrSystem->GetEffectManager().GetCurrentEffectName();
+                w = display.textWidth(effectName);
                 display.setCursor(display.width() / 2 - w / 2, yh);
-                display.print(g_ptrSystem->GetEffectManager().GetCurrentEffectName());
+                display.print(effectName);
                 yh += display.fontHeight();
 
                 String sIP = nd_network::IsWiFiConnected() ? currentIP.c_str() : "No Wifi";
@@ -594,7 +609,7 @@ int Screen::ActivePageCount()
 // FlipToNextPage
 void Screen::FlipToNextPage()
 {
-    std::lock_guard<std::mutex> guard(_screenMutex);
+    std::lock_guard guard(_screenMutex);
 
     // Advance to the next page
     const int activeCount = ActivePageCount();
@@ -664,7 +679,7 @@ int Screen::textWidth(const String & str)
 // Draws the OLED/LCD screen with the current stats on connection, buffer, drawing, etc.
 void IRAM_ATTR Screen::Update(bool bRedraw)
 {
-    std::lock_guard<std::mutex> guard(_screenMutex);
+    std::lock_guard guard(_screenMutex);
 
     // Initialize default page on first draw
     static bool s_initialized = false;

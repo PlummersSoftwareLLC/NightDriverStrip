@@ -69,6 +69,11 @@ class LEDBuffer
 
     bool IsBufferOlderThan(const timeval & tv) const;
 
+    static bool ValidateWirePayload(const std::unique_ptr<uint8_t []>& payloadData,
+                                    size_t payloadLength,
+                                    size_t ledCount,
+                                    size_t* payloadBytes = nullptr);
+
     // UpdateFromWire
     //
     // Parse and deposit a WiFi packet into a buffer
@@ -91,6 +96,7 @@ class LEDBufferManager
     std::shared_ptr<LEDBuffer> _pLastBufferAdded;   // Keeps track of the MRU buffer
     size_t                                               _iNextBuffer;        // Head pointer index
     size_t                                               _iLastBuffer;        // Tail pointer index
+    size_t                                               _cQueuedBuffers;     // Active frames in the circular queue
     uint32_t                                             _cBuffers;           // Number of buffers
 
   public:
@@ -106,6 +112,8 @@ class LEDBufferManager
     // The fixed, maximum size of the whole thing if it were full
 
     size_t BufferCount() const;
+
+    size_t LEDCount() const;
 
     // Depth
     //

@@ -72,7 +72,7 @@ bool NTPTimeClient::UpdateClockFromWeb(WiFiUDP * pUDP)
 
     debugV("Updating Clock From Web...");
 
-    std::lock_guard<std::mutex> guard(l_clockMutex);
+    std::lock_guard guard(l_clockMutex);
 
     char chNtpPacket[NTP_PACKET_LENGTH];
     memset(chNtpPacket, 0, NTP_PACKET_LENGTH);
