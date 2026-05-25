@@ -654,6 +654,7 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
 
     if (overflow)
     {
+        delete response;
         SendBufferOverflowResponse(pRequest);
         return;
     }
@@ -1032,12 +1033,12 @@ const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceS
 
 void CWebServer::GetSettingSpecs(AsyncWebServerRequest * pRequest)
 {
-    // This is a high-traffic endpoint since the front-end fetches it on every page load 
-    // to dynamically render the settings UI, so we cache the serialized JSON rather than 
-    // re-serializing on every request. If the cache is empty for any reason (e.g. JSON 
-    // document overflow during cache population), we attempt to rebuild it on demand and 
+    // This is a high-traffic endpoint since the front-end fetches it on every page load
+    // to dynamically render the settings UI, so we cache the serialized JSON rather than
+    // re-serializing on every request. If the cache is empty for any reason (e.g. JSON
+    // document overflow during cache population), we attempt to rebuild it on demand and
     // respond with an error if that fails.
-    
+
     if (!EnsureDeviceSettingSpecsJson())
     {
         SendBufferOverflowResponse(pRequest);

@@ -137,7 +137,7 @@ void GFXBase::Clear(CRGB color)
     // stale W content washes its colors out. Effects that want to preserve
     // whites can rewrite them after the Clear() call; that's how the leds
     // plane already behaves.
-    
+
     if (whites)
         memset(whites, 0, sizeof(CRGBW) * count);
 }
@@ -1566,7 +1566,7 @@ const GFXBase::PolarMapArray& GFXBase::getPolarMap()
     // Double-checked locking for thread-safe, on-demand initialization
     if (!rMap_ptr)
     {
-        std::lock_guard lock(rMap_mutex);
+        std::lock_guard guard(rMap_mutex);
         if (!rMap_ptr)
         {
             // Allocate from PSRAM using the project's helper

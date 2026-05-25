@@ -164,7 +164,7 @@ public:
             // The display runs on its own task, so even status-only buffer
             // reads need the producer/consumer mutex to avoid sampling torn
             // circular-buffer indices.
-            std::lock_guard<std::mutex> guard(g_buffer_mutex);
+            std::lock_guard guard(g_buffer_mutex);
             bufferDepth = bufferManager.Depth();
             bufferCount = bufferManager.BufferCount();
             oldestAge = bufferManager.AgeOfOldestBuffer();
@@ -609,7 +609,7 @@ int Screen::ActivePageCount()
 // FlipToNextPage
 void Screen::FlipToNextPage()
 {
-    std::lock_guard<std::mutex> guard(_screenMutex);
+    std::lock_guard guard(_screenMutex);
 
     // Advance to the next page
     const int activeCount = ActivePageCount();
@@ -679,7 +679,7 @@ int Screen::textWidth(const String & str)
 // Draws the OLED/LCD screen with the current stats on connection, buffer, drawing, etc.
 void IRAM_ATTR Screen::Update(bool bRedraw)
 {
-    std::lock_guard<std::mutex> guard(_screenMutex);
+    std::lock_guard guard(_screenMutex);
 
     // Initialize default page on first draw
     static bool s_initialized = false;

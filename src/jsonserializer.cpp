@@ -276,7 +276,7 @@ size_t JSONWriter::RegisterWriter(const std::function<void()>& writer)
     // Add a writer to the collection. Returns the index of the added writer, for use with FlagWriter()
 
     // Add the writer with its flag unset
-    std::lock_guard<std::mutex> lock(writersMutex);
+    std::lock_guard guard(writersMutex);
     writers.push_back(std::make_shared<WriterEntry>(writer));
     return writers.size() - 1;
 }
@@ -288,7 +288,7 @@ void JSONWriter::FlagWriter(size_t index)
     // Check if we received a valid writer index
     std::shared_ptr<WriterEntry> entry;
     {
-        std::lock_guard<std::mutex> lock(writersMutex);
+        std::lock_guard guard(writersMutex);
         if (index >= writers.size())
             return;
         entry = writers[index];
@@ -354,7 +354,7 @@ void JSONWriter::Run()
 
         std::vector<std::shared_ptr<JSONWriter::WriterEntry>> writersSnapshot;
         {
-            std::lock_guard<std::mutex> lock(writersMutex);
+            std::lock_guard guard(writersMutex);
             writersSnapshot = writers;
         }
 
