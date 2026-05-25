@@ -610,9 +610,8 @@ namespace nd_network
             EnsureNetworkServicesStarted();
 
             unsigned long now = millis();
-            unsigned long nextEventMs = 1000;
+            unsigned long nextEventMs = kReaderDispatchGapMs;
 
-            bool dispatchedReader = false;
             for (auto &entryPtr : readers)
             {
                 auto &entry = *entryPtr;
@@ -634,12 +633,8 @@ namespace nd_network
                     if (entry.reader)
                         entry.reader();
                     entry.lastReadMs.store(millis());
-                    dispatchedReader = true;
-                    break;
                 }
             }
-            if (dispatchedReader)
-                nextEventMs = std::min<unsigned long>(nextEventMs, kReaderDispatchGapMs);
             notifyWait = pdMS_TO_TICKS(nextEventMs);
         }
 

@@ -112,7 +112,7 @@ class JSONWriter : public ITaskService
     // Wakes the writer task from its long ulTaskNotifyTake. Used both by
     // FlagWriter/FlushWrites (the public API) and by Stop() (via
     // OnBeforeWaitForStop) to break the task out of its blocking wait.
-    
+
     void NotifyTask();
 
   public:

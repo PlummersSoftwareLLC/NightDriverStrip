@@ -61,37 +61,6 @@ namespace
             target.add(pin);
     }
 
-    // The "readers hold" is a short period after a reader is registered during which we delay 
-    // checking the reader flags and dispatching to them. This gives a chance for any burst of reader 
-    // registrations/flaggings to settle down before we start dispatching, which is helpful for things 
-    // like REST APIs where a single event can cause a flurry of updates.
-
-    bool TryReadUint16(JsonVariantConst value, uint16_t& target)
-    {
-        if (value.is<uint16_t>())
-        {
-            target = value.as<uint16_t>();
-            return true;
-        }
-
-        if (value.is<const char*>())
-        {
-            const String text = value.as<const char*>();
-            if (text.length() == 0)
-                return false;
-
-            char* end = nullptr;
-            const unsigned long parsed = strtoul(text.c_str(), &end, 10);
-            if (end && *end == '\0' && parsed <= std::numeric_limits<uint16_t>::max())
-            {
-                target = static_cast<uint16_t>(parsed);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     void FillUnifiedSettingsJson(JsonObject root)
     {
         auto& deviceConfig = g_ptrSystem->GetDeviceConfig();
@@ -1012,12 +981,12 @@ const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceS
 
 void CWebServer::GetSettingSpecs(AsyncWebServerRequest * pRequest)
 {
-    // This is a high-traffic endpoint since the front-end fetches it on every page load 
-    // to dynamically render the settings UI, so we cache the serialized JSON rather than 
-    // re-serializing on every request. If the cache is empty for any reason (e.g. JSON 
-    // document overflow during cache population), we attempt to rebuild it on demand and 
+    // This is a high-traffic endpoint since the front-end fetches it on every page load
+    // to dynamically render the settings UI, so we cache the serialized JSON rather than
+    // re-serializing on every request. If the cache is empty for any reason (e.g. JSON
+    // document overflow during cache population), we attempt to rebuild it on demand and
     // respond with an error if that fails.
-    
+
     if (!EnsureDeviceSettingSpecsJson())
     {
         SendBufferOverflowResponse(pRequest);
@@ -1335,8 +1304,8 @@ void CWebServer::SetUnifiedSettings(AsyncWebServerRequest * pRequest, JsonVarian
     if (root["topology"].is<JsonObjectConst>())
     {
         auto topology = root["topology"].as<JsonObjectConst>();
-        TryReadUint16(topology["width"], runtimeConfig.topology.width);
-        TryReadUint16(topology["height"], runtimeConfig.topology.height);
+        if (topology["width"].is<uint16_t>()) runtimeConfig.topology.width = topology["width"].as<uint16_t>();
+        if (topology["height"].is<uint16_t>()) runtimeConfig.topology.height = topology["height"].as<uint16_t>();
         if (topology["serpentine"].is<bool>()) runtimeConfig.topology.serpentine = topology["serpentine"].as<bool>();
     }
 
