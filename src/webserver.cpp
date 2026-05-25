@@ -37,6 +37,7 @@
 #include <AsyncJson.h>
 #include <FS.h>
 #include <algorithm>
+#include <cstdlib>
 #include <limits>
 #include <utility>
 
@@ -301,6 +302,7 @@ const std::map<String, CWebServer::ValueValidator> CWebServer::settingValidators
 
 std::vector<SettingSpec> CWebServer::mySettingSpecs = {};
 std::vector<std::reference_wrapper<SettingSpec>> CWebServer::deviceSettingSpecs{};
+String CWebServer::deviceSettingSpecsJson{};
 
 // Member function template specializations
 
@@ -466,6 +468,9 @@ void CWebServer::begin()
     _staticStats.FreeSketchSpace = ESP.getFreeSketchSpace();
     _staticStats.FlashChipSize = ESP.getFlashChipSize();
 
+    if (!EnsureDeviceSettingSpecsJson())
+        debugW("WebServer: failed to pre-cache device setting specs JSON.");
+
     debugI("Connecting Web Endpoints");
 
     // SPIFFS file requests
@@ -511,7 +516,7 @@ void CWebServer::begin()
     _server.on("/api/v1/settings/schema",HTTP_GET,  GetUnifiedSettingsSchema);
     _server.on("/api/v1/settings",       HTTP_GET,  GetUnifiedSettings);
 
-    auto settingsHandler = new AsyncCallbackJsonWebHandler("/api/v1/settings",
+    auto* settingsHandler = new AsyncCallbackJsonWebHandler("/api/v1/settings",
         [](AsyncWebServerRequest* pRequest, JsonVariant& json)
         {
             SetUnifiedSettings(pRequest, json.as<JsonVariantConst>());
@@ -523,6 +528,7 @@ void CWebServer::begin()
 
     // Embedded file requests
 
+    _server.on("/healthz", HTTP_GET, [](AsyncWebServerRequest* pRequest) { pRequest->send(CWebServer::HttpOk, "text/plain", "ok"); });
     ServeEmbeddedFile("/timezones.json", timezones_file);
 
     #if ENABLE_WEB_UI
@@ -542,7 +548,7 @@ void CWebServer::begin()
             request->send(CWebServer::HttpOk);                                // Apparently needed for CORS: https://github.com/me-no-dev/ESPAsyncWebServer
         } else {
                 debugW("Failed GET for %s\n", request->url().c_str() );
-            request->send(CWebServer::HttpNotFound);
+            request->send(CWebServer::HttpNotFound, "text/plain", "Not found");
         }
     });
 
@@ -777,38 +783,54 @@ void CWebServer::PreviousEffect(AsyncWebServerRequest * pRequest)
 
 void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, const std::vector<std::reference_wrapper<SettingSpec>> & settingSpecs)
 {
-    auto response = new AsyncJsonResponse();
-    auto jsonArray = response->getRoot().to<JsonArray>();
+    String json;
+    if (!BuildSettingSpecsJson(json, settingSpecs))
+    {
+        debugW("Unable to build setting specs JSON response.");
+        SendBufferOverflowResponse(pRequest);
+        return;
+    }
+
+    AddCORSHeaderAndSendResponse(pRequest, pRequest->beginResponse(HttpOk, "application/json", json));
+}
+
+bool CWebServer::BuildSettingSpecsJson(String& json, const std::vector<std::reference_wrapper<SettingSpec>> & settingSpecs)
+{
+    auto jsonDoc = CreateJsonDocument();
+    auto jsonArray = jsonDoc.to<JsonArray>();
 
     for (const auto& specWrapper : settingSpecs)
     {
         const auto& spec = specWrapper.get();
         auto specObject = jsonArray.add<JsonObject>();
+        if (specObject.isNull())
+        {
+            debugW("Setting specs JSON object allocation failed.");
+            return false;
+        }
 
-        auto jsonDoc = CreateJsonDocument();
-
-        jsonDoc["name"] = spec.Name;
-        jsonDoc["friendlyName"] = spec.FriendlyName;
+        specObject["name"] = spec.Name;
+        specObject["friendlyName"] = spec.FriendlyName;
         if (spec.Description)
-            jsonDoc["description"] = spec.Description;
-        jsonDoc["type"] = to_value(spec.Type);
-        jsonDoc["typeName"] = spec.TypeName();
+            specObject["description"] = spec.Description;
+        specObject["type"] = to_value(spec.Type);
+        specObject["typeName"] = spec.TypeName();
         if (spec.HasValidation)
-            jsonDoc["hasValidation"] = true;
+            specObject["hasValidation"] = true;
         if (spec.MinimumValue.has_value())
-            jsonDoc["minimumValue"] = spec.MinimumValue.value();
+            specObject["minimumValue"] = spec.MinimumValue.value();
         if (spec.MaximumValue.has_value())
-            jsonDoc["maximumValue"] = spec.MaximumValue.value();
+            specObject["maximumValue"] = spec.MaximumValue.value();
         if (spec.EmptyAllowed.has_value())
-            jsonDoc["emptyAllowed"] = spec.EmptyAllowed.value();
+            specObject["emptyAllowed"] = spec.EmptyAllowed.value();
         switch (spec.Access)
         {
             case SettingSpec::SettingAccess::ReadOnly:
-                jsonDoc["readOnly"] = true;
+                specObject["readOnly"] = true;
                 break;
 
             case SettingSpec::SettingAccess::WriteOnly:
-                jsonDoc["writeOnly"] = true;
+                specObject["writeOnly"] = true;
                 break;
 
             default:
@@ -819,17 +841,17 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
         // ---- UI metadata: section, priority, requiresReboot, apiPath, widget ----
 
         if (spec.Section)
-            jsonDoc["section"] = spec.Section;
+            specObject["section"] = spec.Section;
         if (spec.Priority.has_value())
-            jsonDoc["priority"] = spec.Priority.value();
+            specObject["priority"] = spec.Priority.value();
         if (spec.RequiresReboot)
-            jsonDoc["requiresReboot"] = true;
+            specObject["requiresReboot"] = true;
         if (spec.ApiPath)
-            jsonDoc["apiPath"] = spec.ApiPath;
+            specObject["apiPath"] = spec.ApiPath;
 
         if (spec.Widget != SettingSpec::WidgetKind::Default)
         {
-            auto widget = jsonDoc["widget"].to<JsonObject>();
+            auto widget = specObject["widget"].to<JsonObject>();
             widget["kind"] = spec.WidgetName();
 
             if (spec.Widget == SettingSpec::WidgetKind::Slider
@@ -884,16 +906,45 @@ void CWebServer::SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, cons
                     options["url"] = spec.OptionsExternalUrl;
             }
         }
-
-        if (jsonDoc.overflowed() || !specObject.set(jsonDoc.as<JsonObjectConst>()))
-        {
-            debugV("JSON response buffer overflow!");
-            SendBufferOverflowResponse(pRequest);
-            return;
-        }
     }
 
-    AddCORSHeaderAndSendResponse(pRequest, response);
+    if (jsonDoc.overflowed())
+    {
+        debugW("Setting specs JSON document overflowed.");
+        return false;
+    }
+
+    const size_t measuredLength = measureJson(jsonArray);
+    json = String();
+    if (!json.reserve(measuredLength))
+    {
+        debugW("Unable to reserve %zu bytes for setting specs JSON.", measuredLength);
+        return false;
+    }
+
+    const size_t serializedLength = serializeJson(jsonArray, json);
+    if (serializedLength != measuredLength)
+    {
+        debugW("Setting specs JSON length mismatch: measured=%zu serialized=%zu.", measuredLength, serializedLength);
+        return false;
+    }
+
+    return true;
+}
+
+bool CWebServer::EnsureDeviceSettingSpecsJson()
+{
+    if (deviceSettingSpecsJson.length() > 0)
+        return true;
+
+    if (!BuildSettingSpecsJson(deviceSettingSpecsJson, LoadDeviceSettingSpecs()))
+    {
+        deviceSettingSpecsJson = String();
+        return false;
+    }
+
+    debugI("WebServer: cached device setting specs JSON (%zu bytes).", (size_t)deviceSettingSpecsJson.length());
+    return true;
 }
 
 const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceSettingSpecs()
@@ -930,7 +981,22 @@ const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceS
 
 void CWebServer::GetSettingSpecs(AsyncWebServerRequest * pRequest)
 {
-    SendSettingSpecsResponse(pRequest, LoadDeviceSettingSpecs());
+    // This is a high-traffic endpoint since the front-end fetches it on every page load
+    // to dynamically render the settings UI, so we cache the serialized JSON rather than
+    // re-serializing on every request. If the cache is empty for any reason (e.g. JSON
+    // document overflow during cache population), we attempt to rebuild it on demand and
+    // respond with an error if that fails.
+
+    if (!EnsureDeviceSettingSpecsJson())
+    {
+        SendBufferOverflowResponse(pRequest);
+        return;
+    }
+
+    auto response = pRequest->beginResponse(HttpOk, "application/json",
+        reinterpret_cast<const uint8_t*>(deviceSettingSpecsJson.c_str()),
+        deviceSettingSpecsJson.length());
+    AddCORSHeaderAndSendResponse(pRequest, response);
 }
 
 // Responds with current config, excluding any sensitive values

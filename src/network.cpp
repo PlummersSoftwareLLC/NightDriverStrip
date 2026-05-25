@@ -36,6 +36,7 @@
     #include <algorithm>
     #include <ArduinoOTA.h>
     #include <ESPmDNS.h>
+    #include <esp_wifi.h>
     #include <iterator>
     #include <nvs.h>
     #include <WiFi.h>
@@ -78,6 +79,7 @@ namespace nd_network
 {
     // Private State
     static std::atomic<bool> l_bWifiDriverReady{false};
+    static std::atomic<bool> l_HasStaIp{false};
 
     // True while Improv owns WiFi during a provisioning attempt. Gates the
     // background reconnect loop so it doesn't race Improv on WiFi.begin /
@@ -155,12 +157,37 @@ namespace nd_network
 
     // WiFi-Specific Implementations
 
-    bool IsWiFiConnected() { return WiFi.isConnected(); }
+    static bool HasUsableStaIp()
+    {
+        const bool hasIp = WiFi.localIP() != IPAddress(0, 0, 0, 0);
+        return hasIp && (l_HasStaIp.load() || WiFi.status() == WL_CONNECTED);
+    }
+
+    bool IsWiFiConnected() { return WiFi.isConnected() && HasUsableStaIp(); }
     int  GetWiFiStatus()    { return (int)WiFi.status(); }
     int  GetWiFiRSSI()      { return WiFi.RSSI(); }
-    void SetWiFiModeSTA()   { WiFi.mode(WIFI_STA); }
 
-    String GetWiFiLocalIP() { return WiFi.localIP().toString(); }
+    static void DisableWiFiPowerSave(const char *reason)
+    {
+        WiFi.setSleep(false);
+        esp_err_t err = esp_wifi_set_ps(WIFI_PS_NONE);
+        if (err == ESP_OK)
+            debugI("WiFi power save disabled (%s)", reason);
+        else
+            debugW("esp_wifi_set_ps(WIFI_PS_NONE) failed (%s): %d", reason, (int)err);
+    }
+
+    // Apply the standard NightDriver WiFi station-mode configuration.
+    void SetWiFiModeSTA()
+    {
+        WiFi.persistent(false);
+        WiFi.setScanMethod(WIFI_ALL_CHANNEL_SCAN);
+        WiFi.setSortMethod(WIFI_CONNECT_AP_BY_SIGNAL);
+        WiFi.mode(WIFI_STA);
+        DisableWiFiPowerSave("STA mode");
+    }
+
+    String GetWiFiLocalIP() { return HasUsableStaIp() ? WiFi.localIP().toString() : String("0.0.0.0"); }
 
     bool GetWiFiHostByName(const char *hostname, IPAddress &ip)
     {
@@ -172,6 +199,22 @@ namespace nd_network
     #define WIFI_WAIT_MAX       60000   // Maximum gap between retries, in ms
 
     #define WIFI_WAIT_INIT      (WIFI_WAIT_BASE - WIFI_WAIT_INCREASE)
+
+    static void EnsureNetworkServicesStarted()
+    {
+        if (!g_ptrSystem)
+            return;
+
+        #if ENABLE_WEBSERVER
+            if (g_ptrSystem->HasWebServer() && !g_ptrSystem->GetWebServer().IsRunning())
+                g_ptrSystem->GetWebServer().Start();
+        #endif
+
+        #if WEB_SOCKETS_ANY_ENABLED
+            if (g_ptrSystem->HasWebSocketServer() && !g_ptrSystem->GetWebSocketServer().IsRunning())
+                g_ptrSystem->GetWebSocketServer().Start();
+        #endif
+    }
 
     // ConnectToWiFi
     //
@@ -193,14 +236,30 @@ namespace nd_network
             WiFi.onEvent([](arduino_event_id_t event, arduino_event_info_t info) {
                 if (event == ARDUINO_EVENT_WIFI_READY)
                     l_bWifiDriverReady = true;
+                else if (event == ARDUINO_EVENT_WIFI_STA_GOT_IP)
+                {
+                    l_HasStaIp.store(true);
+                    DisableWiFiPowerSave("GOT_IP");
+                    debugI("WiFi GOT_IP: ip=%s gateway=%s subnet=%s dns=%s",
+                           WiFi.localIP().toString().c_str(),
+                           WiFi.gatewayIP().toString().c_str(),
+                           WiFi.subnetMask().toString().c_str(),
+                           WiFi.dnsIP().toString().c_str());
+                }
+                else if (event == ARDUINO_EVENT_WIFI_STA_LOST_IP)
+                {
+                    l_HasStaIp.store(false);
+                    debugW("WiFi LOST_IP");
+                }
                 else if (event == ARDUINO_EVENT_WIFI_STA_DISCONNECTED)
                 {
+                    l_HasStaIp.store(false);
                     l_LastWiFiDisconnectReason.store(info.wifi_sta_disconnected.reason);
                     debugW("WiFi Disconnected. Reason: %d", info.wifi_sta_disconnected.reason);
                 }
             });
-            WiFi.mode(WIFI_STA);
-            WiFi.setSleep(false);
+            SetWiFiModeSTA();
+
             bInitialized = true;
         }
 
@@ -223,7 +282,7 @@ namespace nd_network
             retryDelay = WIFI_WAIT_INIT;
             debugI("WiFi credentials passed for SSID \"%s\"", WiFi_ssid.c_str());
         }
-        else if (bPreviousConnection && WiFi.isConnected())
+        else if (bPreviousConnection && IsWiFiConnected())
         {
             return WiFiConnectResult::Connected;
         }
@@ -251,14 +310,15 @@ namespace nd_network
                 // WiFi.begin cannot short-circuit as "already connected" when
                 // the SSID is unchanged.
                 WiFi.disconnect(false, explicitCredentials);
+                l_HasStaIp.store(false);
                 bPreviousConnection = false;
                 bReportedDisconnected = false;
 
                 const unsigned long disconnectStarted = millis();
-                while (WiFi.isConnected() && millis() - disconnectStarted < 2000)
+                while (IsWiFiConnected() && millis() - disconnectStarted < 2000)
                     delay(20);
 
-                if (WiFi.isConnected())
+                if (IsWiFiConnected())
                     debugW("WiFi remained connected after disconnect request; starting the new attempt anyway.");
             }
 
@@ -270,9 +330,15 @@ namespace nd_network
             debugV("Done Wifi.begin, waiting for connection...");
         }
 
-        if (WiFi.isConnected())
+        if (IsWiFiConnected())
         {
+            DisableWiFiPowerSave("connected");
             debugW("Connected to AP with BSSID: \"%s\", received IP: %s", WiFi.BSSIDstr().c_str(), WiFi.localIP().toString().c_str());
+            debugI("WiFi network: subnet=%s gateway=%s dns=%s rssi=%d",
+                   WiFi.subnetMask().toString().c_str(),
+                   WiFi.gatewayIP().toString().c_str(),
+                   WiFi.dnsIP().toString().c_str(),
+                   WiFi.RSSI());
         }
         else
         // Additional services onwards are reliant on network so return if WiFi is not up (yet)
@@ -304,14 +370,8 @@ namespace nd_network
             }
             NTPTimeClient::UpdateClockFromWeb(&l_Udp);
         #endif
-        #if ENABLE_WEBSERVER
-            g_ptrSystem->GetWebServer().Start();
-        #endif
 
-        #if WEB_SOCKETS_ANY_ENABLED
-            if (g_ptrSystem->HasWebSocketServer())
-                g_ptrSystem->GetWebSocketServer().Start();
-        #endif
+        EnsureNetworkServicesStarted();
 
         return WiFiConnectResult::Connected;
     }
@@ -320,7 +380,7 @@ namespace nd_network
         void UpdateNTPTime()
         {
             static unsigned long lastUpdate = 0;
-            if (WiFi.isConnected())
+            if (IsWiFiConnected())
             {
                 // If we've already retrieved the time successfully, we'll only actually update every NTP_DELAY_SECONDS seconds
                 if (!NTPTimeClient::HasClockBeenSet() || (millis() - lastUpdate) > ((NTP_DELAY_SECONDS) * 1000))
@@ -489,6 +549,8 @@ namespace nd_network
 
     void NetworkReader::Run()
     {
+        constexpr unsigned long kReaderDispatchGapMs = 1000;
+
         unsigned long lastConnected = millis();
         unsigned long lastWebSocketCleanup = 0;
         if (!MDNS.begin("esp32")) Serial.println("Error starting mDNS");
@@ -539,14 +601,16 @@ namespace nd_network
                 }
             }
 
-            if (!WiFi.isConnected())
+            if (!IsWiFiConnected())
             {
                 notifyWait = pdMS_TO_TICKS(1000);
                 continue;
             }
 
+            EnsureNetworkServicesStarted();
+
             unsigned long now = millis();
-            unsigned long nextEventMs = 1000;
+            unsigned long nextEventMs = kReaderDispatchGapMs;
 
             for (auto &entryPtr : readers)
             {
@@ -590,7 +654,7 @@ namespace nd_network
         DebugCLI::cli_printf("%s:%zux%zu %zuK %ddB:%s",
             FLASH_VERSION_NAME, g_ptrSystem->GetDevices().size(),
             config.GetActiveLEDCount(), (size_t)(ESP.getFreeHeap()/1024), abs(WiFi.RSSI()),
-            WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
+            IsWiFiConnected() ? WiFi.localIP().toString().c_str() : "None");
         DebugCLI::cli_printf("BUFR:%02zu/%02zu [%lufps]",
             (size_t)bufferManager.Depth(), (size_t)bufferManager.BufferCount(),
             (unsigned long)g_Values.FPS);
@@ -917,7 +981,7 @@ void IRAM_ATTR ColorStreamerService::Run()
 
     while (!ShouldShutdown())
     {
-        while (!WiFi.isConnected() && !ShouldShutdown())
+        while (!nd_network::IsWiFiConnected() && !ShouldShutdown())
             delay(250);
 
         if (ShouldShutdown())
