@@ -62,9 +62,9 @@ namespace
             target.add(pin);
     }
 
-    // The "readers hold" is a short period after a reader is registered during which we delay 
-    // checking the reader flags and dispatching to them. This gives a chance for any burst of reader 
-    // registrations/flaggings to settle down before we start dispatching, which is helpful for things 
+    // The "readers hold" is a short period after a reader is registered during which we delay
+    // checking the reader flags and dispatching to them. This gives a chance for any burst of reader
+    // registrations/flaggings to settle down before we start dispatching, which is helpful for things
     // like REST APIs where a single event can cause a flurry of updates.
 
     bool TryReadUint16(JsonVariantConst value, uint16_t& target)
@@ -654,6 +654,7 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
 
     if (overflow)
     {
+        delete response;
         SendBufferOverflowResponse(pRequest);
         return;
     }
@@ -1024,12 +1025,12 @@ const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceS
 
 void CWebServer::GetSettingSpecs(AsyncWebServerRequest * pRequest)
 {
-    // This is a high-traffic endpoint since the front-end fetches it on every page load 
-    // to dynamically render the settings UI, so we cache the serialized JSON rather than 
-    // re-serializing on every request. If the cache is empty for any reason (e.g. JSON 
-    // document overflow during cache population), we attempt to rebuild it on demand and 
+    // This is a high-traffic endpoint since the front-end fetches it on every page load
+    // to dynamically render the settings UI, so we cache the serialized JSON rather than
+    // re-serializing on every request. If the cache is empty for any reason (e.g. JSON
+    // document overflow during cache population), we attempt to rebuild it on demand and
     // respond with an error if that fails.
-    
+
     if (!EnsureDeviceSettingSpecsJson())
     {
         SendBufferOverflowResponse(pRequest);

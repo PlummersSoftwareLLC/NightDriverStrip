@@ -149,7 +149,7 @@ class ITaskService : public IService
 
     void WakeTask() const
     {
-        std::lock_guard<std::mutex> guard(_taskHandleMutex);
+        std::lock_guard guard(_taskHandleMutex);
         if (_taskHandle != nullptr)
             xTaskNotifyGive(_taskHandle);
     }
