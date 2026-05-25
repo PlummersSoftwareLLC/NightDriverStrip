@@ -670,7 +670,7 @@ namespace nd_network
             // Buffer indices are mutated by the socket task and consumed by
             // the render task; status reads need the same mutex or they can
             // sample a half-updated ring state on the other core.
-            std::lock_guard<std::mutex> guard(g_buffer_mutex);
+            std::lock_guard guard(g_buffer_mutex);
             DebugCLI::cli_printf("BUFR:%02zu/%02zu [%lufps]",
                 (size_t)bufferManager.Depth(), (size_t)bufferManager.BufferCount(),
                 (unsigned long)g_Values.FPS);
@@ -929,7 +929,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t[]> &payloadData, size_t payload
 
                 // Go through the channel mask to see which bits are set in the channel16 specifier, and send the data to each and every
                 // channel that matches the mask.  So if the send channel 7, that means the lowest 3 channels will be set.
-                std::lock_guard<std::mutex> guard(g_buffer_mutex);
+                std::lock_guard guard(g_buffer_mutex);
 
                 for (int iChannel = 0, channelMask = 1; iChannel < g_ptrSystem->GetBufferManagers().size(); iChannel++, channelMask <<= 1)
                 {

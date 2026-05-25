@@ -364,7 +364,11 @@ static std::optional<size_t> ResolveEffect(std::string_view arg)
         }
         else
         {
-            cli_printf("Error: Effect index %zu out of range (0-%zu)\n", val, effects.empty() ? 0 : effects.size() - 1);
+            if (effects.empty())
+                cli_printf("Error: No effects available to select.\n");
+            else
+                cli_printf("Error: Effect index %zu out of range (0-%zu)\n", val, effects.size() - 1);
+
             return std::nullopt;
         }
     }

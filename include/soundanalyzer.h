@@ -461,13 +461,13 @@ class SoundAnalyzerBase : public ISoundAnalyzer
 
     BeatInfo LastBeat() const override
     {
-        std::lock_guard<std::mutex> lock(_beatInfoMutex);
+        std::lock_guard guard(_beatInfoMutex);
         return _lastBeatInfo;
     }
 
     BeatInfo LastNearBeat() const override
     {
-        std::lock_guard<std::mutex> lock(_beatInfoMutex);
+        std::lock_guard guard(_beatInfoMutex);
         return _lastNearBeatInfo;
     }
 

@@ -594,7 +594,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
             debugV("Sending Response Packet from Socket Server");
             auto& bufferManager = g_ptrSystem->GetBufferManagers()[0];
 
-            std::lock_guard<std::mutex> guard(g_buffer_mutex);
+            std::lock_guard guard(g_buffer_mutex);
             SocketResponse response = {
                                         .size = sizeof(SocketResponse),
                                         .sequence     = sequence++,

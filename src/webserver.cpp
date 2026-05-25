@@ -623,6 +623,7 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
 
     if (overflow)
     {
+        delete response;
         SendBufferOverflowResponse(pRequest);
         return;
     }

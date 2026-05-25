@@ -482,7 +482,7 @@ void WS281xOutputManager::Reset()
 {
     // Reset can race with the draw loop during live reconfiguration or teardown,
     // so it shares the same transport mutex as Show()/ApplyConfig().
-    std::lock_guard<std::mutex> guard(WS281xGFX::TransportMutex());
+    std::lock_guard guard(WS281xGFX::TransportMutex());
 
     for (size_t i = 0; i < _channels.size(); ++i)
         ReleaseChannel(i);
@@ -572,7 +572,7 @@ bool WS281xOutputManager::ApplyConfig(const DeviceConfig& config, const std::vec
 {
     // ApplyConfig and Show share the transport mutex so GPIO/channel changes are
     // atomic with respect to the render thread's transmit path.
-    std::lock_guard<std::mutex> guard(WS281xGFX::TransportMutex());
+    std::lock_guard guard(WS281xGFX::TransportMutex());
 
     if (config.GetOutputDriver() != DeviceConfig::OutputDriver::WS281x)
     {
@@ -622,7 +622,7 @@ void WS281xOutputManager::Show(const std::vector<std::shared_ptr<GFXBase>>& devi
     // The same mutex used by ApplyConfig() keeps live transport mutations from
     // colliding with the draw loop while it is filling buffers or transmitting.
 
-    std::lock_guard<std::mutex> guard(WS281xGFX::TransportMutex());
+    std::lock_guard guard(WS281xGFX::TransportMutex());
 
     if (_activeChannelCount == 0 || _activeLEDCount == 0)
         return;
@@ -641,7 +641,7 @@ void WS281xOutputManager::Show(const std::vector<std::shared_ptr<GFXBase>>& devi
 
         const auto& device = devices[channelIndex];
         auto* output = state.outputBytes.get();
-        
+
         // Delegate to the chip-specific format. Passes the optional whites
         // plane (nullptr for plain WS2812 builds; populated by setPixelCCT /
         // setPixelWhite calls on SK6812+ builds). cctKelvin, ambient white,
@@ -658,14 +658,14 @@ void WS281xOutputManager::Show(const std::vector<std::shared_ptr<GFXBase>>& devi
         #ifndef NIGHTDRIVER_DEFAULT_AMBIENT_WW
             #define NIGHTDRIVER_DEFAULT_AMBIENT_WW 0
         #endif
-        
+
         // SK6812_WHITE_EXTRACT_RATIO: 0..255, fraction of shared-portion
         // white pulled into the dedicated W LED
-        
+
         #ifndef SK6812_WHITE_EXTRACT_RATIO
             #define SK6812_WHITE_EXTRACT_RATIO 128
         #endif
-        
+
         constexpr uint16_t kDefaultCctKelvin   = NIGHTDRIVER_DEFAULT_CCT_KELVIN;
         constexpr uint8_t  kDefaultAmbientCw   = NIGHTDRIVER_DEFAULT_AMBIENT_CW;
         constexpr uint8_t  kDefaultAmbientWw   = NIGHTDRIVER_DEFAULT_AMBIENT_WW;
