@@ -110,7 +110,7 @@ class CWebServer : public IService
         }
     };
 
-    static std::vector<SettingSpec> mySettingSpecs;
+    static std::vector<SettingSpec, psram_allocator<SettingSpec>> mySettingSpecs;
     static std::vector<std::reference_wrapper<SettingSpec>> deviceSettingSpecs;
     static String deviceSettingSpecsJson;
     // Per-channel pin specs synthesized at first /settings/specs request from

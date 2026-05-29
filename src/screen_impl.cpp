@@ -316,19 +316,19 @@
 std::unique_ptr<Screen> CreateHardwareScreen(int w, int h)
 {
     #if USE_M5DISPLAY
-        return std::make_unique<M5Screen>(w, h);
+        return make_unique_psram<M5Screen>(w, h);
     #elif USE_TFTSPI
-        return std::make_unique<TFTScreen>(w, h);
+        return make_unique_psram<TFTScreen>(w, h);
     #elif USE_LCD
-        return std::make_unique<LCDScreen>(w, h);
+        return make_unique_psram<LCDScreen>(w, h);
     #elif ELECROW
-        return std::make_unique<ElecrowScreen>(w, h);
+        return make_unique_psram<ElecrowScreen>(w, h);
     #elif USE_SSD1306
-        return std::make_unique<SSD1306Screen>(w, h);
+        return make_unique_psram<SSD1306Screen>(w, h);
     #elif USE_OLED
-        return std::make_unique<OLEDScreen>(w, h);
+        return make_unique_psram<OLEDScreen>(w, h);
     #elif AMOLED_S3
-        return std::make_unique<AMOLEDScreen>(w, h);
+        return make_unique_psram<AMOLEDScreen>(w, h);
     #else
         return nullptr;
     #endif

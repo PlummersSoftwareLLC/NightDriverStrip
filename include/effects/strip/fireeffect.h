@@ -44,7 +44,7 @@ class FireEffect : public EffectWithId<FireEffect>
 
     void construct()
     {
-        heat = std::make_unique<uint8_t[]>(CellCount());
+        heat = make_unique_psram<uint8_t[]>(CellCount());
     }
 
   protected:
@@ -361,7 +361,7 @@ class ClassicFireEffect : public EffectWithId<ClassicFireEffect>
 
     void Fire(int Cooling, int Sparking, int Sparks)
     {
-        static std::unique_ptr<uint8_t[]> heat = std::make_unique<uint8_t[]>(NUM_LEDS);
+        static std::unique_ptr<uint8_t[]> heat = make_unique_psram<uint8_t[]>(NUM_LEDS);
         setAllOnAllChannels(0,0,0);
 
         // Step 1.  Cool down every cell a little
@@ -525,10 +525,8 @@ class SmoothFireEffect : public EffectWithId<SmoothFireEffect>
     bool Init(std::vector<std::shared_ptr<GFXBase>>& gfx) override
     {
         LEDStripEffect::Init(gfx);
-        // Large effect-state buffer; the PSRAM-default policy in main.cpp
-        // routes this through PSRAM automatically once it crosses the
-        // configured threshold, so no explicit *_psram helper is needed.
-        _Temperatures = std::make_unique<float[]>(_cLEDs);
+        // Large effect-state buffer (one float per LED) - keep it in PSRAM.
+        _Temperatures = make_unique_psram<float[]>(_cLEDs);
         if (!_Temperatures)
         {
             Serial.println("ERROR: Could not allocate memory for FireEffect");

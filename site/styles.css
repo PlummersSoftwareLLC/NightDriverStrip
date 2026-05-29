@@ -354,10 +354,6 @@ input[type="checkbox"] {
   width: auto;
 }
 
-input[type="range"] {
-  padding: 0;
-}
-
 textarea {
   min-height: 96px;
   resize: vertical;
@@ -760,6 +756,21 @@ textarea {
 
 .color-value {
   min-width: 78px;
+}
+
+.color-swatch {
+  width: 38px;
+  height: 32px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.28), 0 3px 10px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+}
+
+.color-swatch:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .palette-row {

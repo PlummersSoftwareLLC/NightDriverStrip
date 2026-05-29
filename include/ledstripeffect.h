@@ -53,7 +53,7 @@ class HexagonGFX;
 // a SettingSpec container is easy to overlook.
 
 // The type for effect SettingSpec containers
-using EffectSettingSpecs = std::vector<SettingSpec>;
+using EffectSettingSpecs = std::vector<SettingSpec, psram_allocator<SettingSpec>>;
 
 // Declares a static class member variable that contains the SettingSpecs for an effect, if it has them.
 // If an effect uses this macro, it also needs a matching INIT_EFFECT_SETTING_SPECS invocation in

@@ -149,8 +149,8 @@ private:
         // Note: placing the world in PSRAM may slow this effect down, but it's currently running
         //       fast enough (30+ fps) that we can afford to use it
 
-        world = std::make_unique<Cell[][MATRIX_HEIGHT]>(MATRIX_WIDTH);
-        checksums = std::make_unique<uint32_t[]>(CRC_LENGTH);
+        world = make_unique_psram<Cell[][MATRIX_HEIGHT]>(MATRIX_WIDTH);
+        checksums = make_unique_psram<uint32_t[]>(CRC_LENGTH);
 
         return true;
     }

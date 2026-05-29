@@ -68,7 +68,7 @@ class SystemContainer
 {
   public:
     using DeviceContainer = std::vector<std::shared_ptr<GFXBase>>;
-    using BufferManagerContainer = std::vector<LEDBufferManager>;
+    using BufferManagerContainer = std::vector<LEDBufferManager, psram_allocator<LEDBufferManager>>;
 
   private:
     std::unique_ptr<DeviceContainer> _ptrDevices;

@@ -998,7 +998,7 @@ public:
   {
     if (bMirrored)
       LEDCount = LEDCount / 2;
-    abHeat = std::make_unique<uint8_t[]>(CellCount());
+    abHeat = make_unique_psram<uint8_t[]>(CellCount());
   }
 
   FireFanEffectBase(const JsonObjectConst& jsonObject)
@@ -1016,7 +1016,7 @@ public:
         bMulticolor(jsonObject[PTY_MULTICOLOR] == 1),
         MaxSparkTemp(jsonObject[PTY_SPARKTEMP])
   {
-    abHeat = std::make_unique<uint8_t[]>(CellCount());
+    abHeat = make_unique_psram<uint8_t[]>(CellCount());
   }
 
   bool SerializeToJSON(JsonObject& jsonObject) override

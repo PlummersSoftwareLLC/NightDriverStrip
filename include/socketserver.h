@@ -33,6 +33,7 @@
 #include "globals.h"
 
 #include <atomic>
+#include <limits>
 #include <memory>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -48,6 +49,21 @@
 
 #define MAXIMUM_PACKET_SIZE (STANDARD_DATA_HEADER_SIZE + LED_DATA_SIZE * NUM_LEDS) // Header plus 24 bits per actual LED
 #define COMPRESSED_HEADER (0x44415645)                                             // ASCII "DAVE" as header
+
+// Overflow-safe `STANDARD_DATA_HEADER_SIZE + itemCount * itemSize`. Returns
+// false (and leaves packetSize untouched) if the multiply or add would wrap.
+
+inline bool CheckedStandardPacketSize(uint32_t itemCount, size_t itemSize, size_t& packetSize)
+{
+    if (itemSize == 0 || itemCount > (std::numeric_limits<size_t>::max() - STANDARD_DATA_HEADER_SIZE) / itemSize)
+    {
+        packetSize = 0;
+        return false;
+    }
+
+    packetSize = STANDARD_DATA_HEADER_SIZE + itemCount * itemSize;
+    return true;
+}
 
 bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength);
 

@@ -351,8 +351,12 @@ static std::optional<size_t> ResolveEffect(std::string_view arg)
 {
     auto& effectManager = g_ptrSystem->GetEffectManager();
     auto effects = effectManager.EffectsList();
+    if (effects.empty())
+    {
+        cli_printf("Error: No effects loaded.\n");
+        return std::nullopt;
+    }
 
-    // Try as index first
     // Try as index first
     size_t val = 0;
     auto [ptr, ec] = std::from_chars(arg.begin(), arg.end(), val);
@@ -364,7 +368,7 @@ static std::optional<size_t> ResolveEffect(std::string_view arg)
         }
         else
         {
-            cli_printf("Error: Effect index %zu out of range (0-%zu)\n", val, effects.empty() ? 0 : effects.size() - 1);
+            cli_printf("Error: Effect index %zu out of range (0-%zu)\n", val, effects.size() - 1);
             return std::nullopt;
         }
     }

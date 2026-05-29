@@ -62,7 +62,7 @@ void HUB75GFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devices
 
     for (int i = 0; i < NUM_CHANNELS; i++)
     {
-        auto tmp_matrix = std::make_shared<HUB75GFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+        auto tmp_matrix = make_shared_psram<HUB75GFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
         devices.push_back(tmp_matrix);
         tmp_matrix->loadPalette(0);
     }

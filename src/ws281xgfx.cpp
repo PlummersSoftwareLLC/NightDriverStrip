@@ -257,7 +257,7 @@ void WS281xGFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& device
     for (int i = 0; i < NUM_CHANNELS; i++)
     {
         debugW("Allocating WS281xGFX for channel %d", i);
-        auto device = std::make_shared<WS281xGFX>(deviceConfig.GetMatrixWidth(), deviceConfig.GetMatrixHeight());
+        auto device = make_shared_psram<WS281xGFX>(deviceConfig.GetMatrixWidth(), deviceConfig.GetMatrixHeight());
         device->ConfigureTopology(deviceConfig.GetMatrixWidth(), deviceConfig.GetMatrixHeight(), deviceConfig.IsMatrixSerpentine());
         devices.push_back(device);
     }
@@ -352,7 +352,7 @@ void HexagonGFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devic
     for (int i = 0; i < NUM_CHANNELS; i++)
     {
         debugW("Allocating HexagonGFX for channel %d", i);
-        devices.push_back(std::make_shared<HexagonGFX>(NUM_LEDS));
+        devices.push_back(make_shared_psram<HexagonGFX>(NUM_LEDS));
     }
 
     #if USE_WS281X

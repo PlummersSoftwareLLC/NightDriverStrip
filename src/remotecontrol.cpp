@@ -985,7 +985,7 @@ void RemoteControl::handle()
             {
                 effectManager.ApplyGlobalColor(RemoteColorCode.color);
                 #if FULL_COLOR_REMOTE_FILL
-                    auto effect = std::make_shared<ColorFillEffect>("Remote Color", RemoteColorCode.color, 1, true);
+                    auto effect = make_shared_psram<ColorFillEffect>("Remote Color", RemoteColorCode.color, 1, true);
                     std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
                     if (effect->Init(g_ptrSystem->GetEffectManager().GetBaseGraphics()))
                         g_ptrSystem->GetEffectManager().SetTempEffect(effect);

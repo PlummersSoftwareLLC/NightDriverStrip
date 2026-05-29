@@ -92,15 +92,6 @@ namespace nd_network
 #if ENABLE_WIFI
     static DRAM_ATTR WiFiUDP l_Udp;
 
-    static bool CheckedStandardPacketSize(uint32_t itemCount, size_t itemSize, size_t& packetSize)
-    {
-        if (itemCount > (std::numeric_limits<size_t>::max() - STANDARD_DATA_HEADER_SIZE) / itemSize)
-            return false;
-
-        packetSize = STANDARD_DATA_HEADER_SIZE + itemCount * itemSize;
-        return true;
-    }
-
     // Writer function and flag combo
     struct NetworkReader::ReaderEntry
     {
@@ -881,7 +872,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t[]> &payloadData, size_t payload
                     size_t expectedLength = 0;
                     if (numbands != NUM_BANDS ||
                         length32 != numbands * sizeof(float) ||
-                        !nd_network::CheckedStandardPacketSize(length32, sizeof(uint8_t), expectedLength) ||
+                        !CheckedStandardPacketSize(length32, sizeof(uint8_t), expectedLength) ||
                         payloadLength < expectedLength)
                     {
                         debugW("Malformed peak data packet: bands=%u length=%lu payload=%zu",
@@ -919,7 +910,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t[]> &payloadData, size_t payload
                        (unsigned int)channel16, (unsigned long)length32, seconds, micros);
 
                 size_t expectedLength = 0;
-                if (!nd_network::CheckedStandardPacketSize(length32, sizeof(CRGB), expectedLength) || payloadLength < expectedLength)
+                if (!CheckedStandardPacketSize(length32, sizeof(CRGB), expectedLength) || payloadLength < expectedLength)
                 {
                     debugW("Malformed pixel data packet: length=%lu payload=%zu",
                            (unsigned long)length32, payloadLength);
@@ -944,14 +935,15 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t[]> &payloadData, size_t payload
 
                         bool bDone = false;
                         auto &bufferManager = g_ptrSystem->GetBufferManagers()[iChannel];
+                        const size_t channelLedCount = bufferManager.LEDCount();
 
                         // Validate against the active channel before reserving a
                         // circular-buffer slot. Reserving first meant a rejected
                         // packet could leave an old frame queued in the new slot.
-                        if (!LEDBuffer::ValidateWirePayload(payloadData, payloadLength, bufferManager.LEDCount()))
+                        if (!LEDBuffer::ValidateWirePayload(payloadData, payloadLength, channelLedCount))
                         {
                             debugW("Pixel packet rejected for channel %d: %lu LEDs, channel has %zu",
-                                   (unsigned long)length32, iChannel, bufferManager.LEDCount());
+                                   iChannel, (unsigned long)length32, channelLedCount);
                             return false;
                         }
 
@@ -997,9 +989,14 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t[]> &payloadData, size_t payload
 
 ITaskService::TaskConfig ColorStreamerService::GetTaskConfig() const
 {
+    // DEFAULT_STACK_SIZE (2560 bytes) is tight for what this task actually
+    // does: lwIP socket ops (accept/send), std::mutex via lock_guard, calls
+    // into EffectManager, per-frame memcpy of the LED buffer, and (when
+    // COLORDATA_WEB_SOCKET_ENABLED) calls into ESPAsyncWebServer. Match the
+    // sibling SocketServer task, which does the same shape of work.
     return TaskConfig {
         "ColorData Loop",
-        DEFAULT_STACK_SIZE,
+        SOCKET_STACK_SIZE,
         COLORDATA_PRIORITY,
         COLORDATA_CORE,
         1500
@@ -1008,15 +1005,18 @@ ITaskService::TaskConfig ColorStreamerService::GetTaskConfig() const
 
 void IRAM_ATTR ColorStreamerService::Run()
 {
-    constexpr uint32_t kPreviewMaxFps          = 30;
-    constexpr uint32_t kPreviewFrameIntervalMs = 1000 / kPreviewMaxFps;
+    // Preview cadence is naturally bounded by the render task's frame rate
+    // (CheckAndClearNewFrameAvailable gates each send on a fresh frame). The
+    // transports themselves handle backpressure: SendColorData skips when
+    // availableForWriteAll() is false, and the raw TCP path returns Failed
+    // when the socket buffer is full. So no artificial fps cap here; we send
+    // every frame the renderer produces as long as the client can keep up.
 
     LEDViewer _viewer(NetworkPort::ColorServer);
     int       socket = -1;
     bool      wsListenersPresent = false;
     BaseFrameEventListener frameEventListener;
-    uint32_t lastPreviewSendMs = 0;
-    std::unique_ptr<ColorDataPacket> previewPacket = std::make_unique<ColorDataPacket>();
+    auto previewPacket = make_unique_psram<ColorDataPacket>();
 
     auto &effectManager = g_ptrSystem->GetEffectManager();
 #if COLORDATA_WEB_SOCKET_ENABLED
@@ -1076,11 +1076,8 @@ void IRAM_ATTR ColorStreamerService::Run()
         if (frameEventListener.CheckAndClearNewFrameAvailable() && leds != nullptr)
         {
             const auto previewActive = (socket >= 0) || wsListenersPresent;
-            const auto now = millis();
-            if (previewActive && now - lastPreviewSendMs >= kPreviewFrameIntervalMs)
+            if (previewActive)
             {
-                lastPreviewSendMs = now;
-
                 previewPacket->header = COLOR_DATA_PACKET_HEADER;
                 previewPacket->width  = graphics.GetMatrixWidth();
                 previewPacket->height = graphics.GetMatrixHeight();
@@ -1092,7 +1089,7 @@ void IRAM_ATTR ColorStreamerService::Run()
 #if COLORDATA_WEB_SOCKET_ENABLED
                 if (wsListenersPresent)
                 {
-                    webSocketServer->SendColorData(leds, activeLEDCount);
+                    webSocketServer->SendColorData(previewPacket->colors, activeLEDCount);
                 }
                 else
 #endif

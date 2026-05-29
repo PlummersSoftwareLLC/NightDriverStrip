@@ -31,22 +31,80 @@
 
 #include <ArduinoJson.h>
 #include <esp_heap_caps.h>
+#include <limits>
 #include <memory>
 #include <new>
 #include <optional>
+#include <type_traits>
 
 // Memory placement policy
 //
-// The platform default allocator routes any allocation above a small threshold
-// (PSRAM_DEFAULT_THRESHOLD, set in main.cpp setup) into PSRAM automatically and
-// keeps small allocations in internal SRAM. Plain std::make_unique /
-// std::make_shared / std::vector therefore do the right thing for the common
-// case and no project-side "use PSRAM" wrapper is needed at the call sites.
+// The platform default allocator (plain malloc / new / std::make_unique /
+// std::make_shared / std::vector) may route allocations above
+// PSRAM_DEFAULT_THRESHOLD to PSRAM on PSRAM-enabled builds. That is a useful
+// heap-pressure release valve, but it is not a correctness contract.
 //
-// For the rare cases that genuinely need internal SRAM (DMA targets, ISR-
-// accessed state, hot per-frame buffers that don't tolerate PSRAM latency),
-// reach for make_unique_internal / make_unique_dma below — those bypass the
-// default routing and explicitly request internal-only memory.
+// Any allocation the project itself wants in PSRAM (large LED frame buffers,
+// effect state, GIF/QR scratch, JSON config docs, etc.) must say so
+// explicitly via psram_allocator<T> / make_unique_psram / make_shared_psram.
+//
+// Allocations that must be DMA-reachable (peripheral buffers we own) use
+// dma_allocator<T> / make_unique_dma / make_shared_dma. Most peripheral
+// drivers already call heap_caps_malloc(MALLOC_CAP_DMA) themselves, so this
+// is rarely needed at the call site.
+//
+// Allocations that should explicitly stay in internal SRAM for latency
+// reasons (hot per-frame state, ISR-touched data, code touched while flash
+// cache may be disabled) use internal_allocator<T> / make_unique_internal /
+// make_shared_internal.
+
+template <typename T>
+inline size_t CheckedAllocationSize(size_t n)
+{
+    if (n > std::numeric_limits<size_t>::max() / sizeof(T))
+        throw std::bad_array_new_length();
+
+    const auto bytes = n * sizeof(T);
+    return bytes == 0 ? 1 : bytes;
+}
+
+// psram_allocator<T>
+//
+// Allocator that places objects in PSRAM. PSRAM is large but slower than
+// internal SRAM, has no DMA capability, and cannot be accessed from ISRs
+// while flash cache is disabled. Use for big, cold, project-owned buffers.
+template <typename T>
+class psram_allocator
+{
+public:
+    using value_type      = T;
+    using size_type       = size_t;
+    using difference_type = ptrdiff_t;
+    using pointer         = T*;
+    using const_pointer   = const T*;
+    using reference       = T&;
+    using const_reference = const T&;
+
+    psram_allocator() = default;
+    template <class U> psram_allocator(const psram_allocator<U>&) noexcept {}
+
+    pointer allocate(size_type n)
+    {
+        const auto bytes = CheckedAllocationSize<T>(n);
+        void* p = heap_caps_malloc(bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+        // Fall back to internal SRAM on boards without PSRAM (or if PSRAM is
+        // exhausted) so the project still runs; PSRAM was an optimization,
+        // never a hard requirement.
+        if (!p) p = heap_caps_malloc(bytes, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+        if (!p) throw std::bad_alloc();
+        return static_cast<pointer>(p);
+    }
+    void deallocate(pointer p, size_type) noexcept { heap_caps_free(p); }
+};
+template <typename T, typename U>
+inline bool operator==(const psram_allocator<T>&, const psram_allocator<U>&) { return true; }
+template <typename T, typename U>
+inline bool operator!=(const psram_allocator<T>&, const psram_allocator<U>&) { return false; }
 
 // internal_allocator<T>
 //
@@ -70,7 +128,7 @@ public:
 
     pointer allocate(size_type n)
     {
-        void* p = heap_caps_malloc(n * sizeof(T), MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+        void* p = heap_caps_malloc(CheckedAllocationSize<T>(n), MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
         if (!p) throw std::bad_alloc();
         return static_cast<pointer>(p);
     }
@@ -95,7 +153,7 @@ public:
 
     T* allocate(size_t n)
     {
-        void* p = heap_caps_malloc(n * sizeof(T), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+        void* p = heap_caps_malloc(CheckedAllocationSize<T>(n), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
         if (!p) throw std::bad_alloc();
         return static_cast<T*>(p);
     }
@@ -106,12 +164,28 @@ inline bool operator==(const dma_allocator<T>&, const dma_allocator<U>&) { retur
 template <typename T, typename U>
 inline bool operator!=(const dma_allocator<T>&, const dma_allocator<U>&) { return false; }
 
+template <typename T, typename Allocator>
+inline std::enable_if_t<std::is_array<T>::value && std::extent<T>::value == 0, std::unique_ptr<T>>
+make_unique_array_with_allocator(size_t n, Allocator alloc)
+{
+    using U = std::remove_extent_t<T>;
+    using Element = std::remove_all_extents_t<T>;
+    static_assert(std::is_default_constructible<Element>::value && std::is_trivially_destructible<Element>::value,
+        "make_unique_*<T[]>(n) requires default-constructible, trivially-destructible element types.");
+
+    U* p = alloc.allocate(n);
+    try { std::uninitialized_value_construct_n(p, n); }
+    catch (...) { alloc.deallocate(p, n); throw; }
+    return std::unique_ptr<T>(p);
+}
+
 // make_unique_internal / make_shared_internal
 //
 // Construct an object explicitly in internal SRAM. Use for hot-path or
 // DMA-adjacent state that should not tolerate PSRAM access latency.
 template <typename T, typename... Args>
-inline std::unique_ptr<T> make_unique_internal(Args&&... args)
+inline std::enable_if_t<!std::is_array<T>::value, std::unique_ptr<T>>
+make_unique_internal(Args&&... args)
 {
     internal_allocator<T> alloc;
     T* p = alloc.allocate(1);
@@ -126,6 +200,14 @@ inline std::shared_ptr<T> make_shared_internal(Args&&... args)
     return std::allocate_shared<T>(internal_allocator<T>{}, std::forward<Args>(args)...);
 }
 
+template <typename T>
+inline std::enable_if_t<std::is_array<T>::value && std::extent<T>::value == 0, std::unique_ptr<T>>
+make_unique_internal(size_t n)
+{
+    using U = std::remove_extent_t<T>;
+    return make_unique_array_with_allocator<T>(n, internal_allocator<U>{});
+}
+
 // make_unique_dma / make_shared_dma
 //
 // Construct an object in DMA-capable internal RAM. The peripherals that
@@ -133,7 +215,8 @@ inline std::shared_ptr<T> make_shared_internal(Args&&... args)
 // generally call heap_caps_malloc(MALLOC_CAP_DMA) directly, but these helpers
 // are available for any project-side buffer that needs to be DMA-reachable.
 template <typename T, typename... Args>
-inline std::unique_ptr<T> make_unique_dma(Args&&... args)
+inline std::enable_if_t<!std::is_array<T>::value, std::unique_ptr<T>>
+make_unique_dma(Args&&... args)
 {
     dma_allocator<T> alloc;
     T* p = alloc.allocate(1);
@@ -146,6 +229,49 @@ template <typename T, typename... Args>
 inline std::shared_ptr<T> make_shared_dma(Args&&... args)
 {
     return std::allocate_shared<T>(dma_allocator<T>{}, std::forward<Args>(args)...);
+}
+
+template <typename T>
+inline std::enable_if_t<std::is_array<T>::value && std::extent<T>::value == 0, std::unique_ptr<T>>
+make_unique_dma(size_t n)
+{
+    using U = std::remove_extent_t<T>;
+    return make_unique_array_with_allocator<T>(n, dma_allocator<U>{});
+}
+
+// make_unique_psram / make_shared_psram
+//
+// Construct an object in PSRAM. Use for large, project-owned buffers that
+// don't need DMA, don't need ISR access while flash cache is disabled, and
+// don't sit in a tight per-frame hot loop. Falls back to internal SRAM if
+// PSRAM is absent or full so non-PSRAM boards still work.
+template <typename T, typename... Args>
+inline std::enable_if_t<!std::is_array<T>::value, std::unique_ptr<T>>
+make_unique_psram(Args&&... args)
+{
+    psram_allocator<T> alloc;
+    T* p = alloc.allocate(1);
+    try { new (p) T(std::forward<Args>(args)...); }
+    catch (...) { alloc.deallocate(p, 1); throw; }
+    return std::unique_ptr<T>(p);
+}
+
+template <typename T, typename... Args>
+inline std::shared_ptr<T> make_shared_psram(Args&&... args)
+{
+    return std::allocate_shared<T>(psram_allocator<T>{}, std::forward<Args>(args)...);
+}
+
+// make_unique_psram<U[]>(n) - unknown-bound array overload, used for raw
+// scratch buffers (decoders, pixel pools). This preserves
+// std::make_unique<U[]>(n) value-initialization semantics while placing the
+// backing storage in PSRAM.
+template <typename T>
+inline std::enable_if_t<std::is_array<T>::value && std::extent<T>::value == 0, std::unique_ptr<T>>
+make_unique_psram(size_t n)
+{
+    using U = std::remove_extent_t<T>;
+    return make_unique_array_with_allocator<T>(n, psram_allocator<U>{});
 }
 
 struct IJSONSerializable

@@ -1498,7 +1498,8 @@ GFXBase::GFXBase(int w, int h) : Adafruit_GFX(w, h),
     // Allocate boids for matrix effects (like PatternBounce) when we have matrix dimensions
     #if MATRIX_HEIGHT > 1
         debugV("Allocating boids for matrix effects");
-        // Boid state scales with width and can become large on matrix targets, so keep it in PSRAM.
+        // Boid array is small (a few KB at most) and touched in animation hot paths,
+        // so keep it on the default heap instead of explicitly pinning it to PSRAM.
         _boids = std::make_unique<Boid[]>(_width);
         assert(_boids);
     #endif
@@ -1516,7 +1517,7 @@ void GFXBase::ConfigureTopology(size_t width, size_t height, bool serpentine)
     if (width != _width)
     {
         debugV("Resizing boid state to match runtime topology width");
-        // Topology changes invalidate width-sized boid caches. Rebuild them in PSRAM before effects restart.
+        // See note in the constructor: keep this on the default heap.
         _boids = std::make_unique<Boid[]>(width);
         assert(_boids);
     }
@@ -1570,7 +1571,7 @@ const GFXBase::PolarMapArray& GFXBase::getPolarMap()
         if (!rMap_ptr)
         {
             // Allocate from PSRAM using the project's helper
-            rMap_ptr = std::make_unique<PolarMapArray>();
+            rMap_ptr = make_unique_psram<PolarMapArray>();
 
             auto& rMap = *rMap_ptr;
             const uint16_t C_X = kMatrixWidth / 2;

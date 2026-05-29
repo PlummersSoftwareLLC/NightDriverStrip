@@ -4,7 +4,7 @@
 #include <algorithm> // for std::swap
 #include <cmath>     // for fabsf
 #include <memory>    // for std::unique_ptr
-#include "types.h"   // for std::make_unique
+#include "types.h"
 
 // Inspired by https://editor.soulmatelights.com/gallery/1166-stars-beta-ver
 // The original has a bunch of Palette management stuff we just didn't
@@ -45,8 +45,8 @@ class PatternSMStarDeep : public EffectWithId<PatternSMStarDeep>
 
   public:
 
-    PatternSMStarDeep() : EffectWithId<PatternSMStarDeep>("Star Deep"), stars(std::make_unique<StarData[]>(kMaxStars)) {}
-    PatternSMStarDeep(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMStarDeep>(jsonObject), stars(std::make_unique<StarData[]>(kMaxStars)) {}
+    PatternSMStarDeep() : EffectWithId<PatternSMStarDeep>("Star Deep"), stars(make_unique_psram<StarData[]>(kMaxStars)) {}
+    PatternSMStarDeep(const JsonObjectConst &jsonObject) : EffectWithId<PatternSMStarDeep>(jsonObject), stars(make_unique_psram<StarData[]>(kMaxStars)) {}
 
     // Draws a multi-point star.
     // This code can draw outside of the matrix boundaries, but DrawStarLine() is expected to handle clipping.
