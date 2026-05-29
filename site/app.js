@@ -636,6 +636,14 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     }));
   }
 
+  function getOrderedDeviceSettingSpecs() {
+    if (!Array.isArray(state.settingsSpecs)) return [];
+    return state.settingsSpecs
+      .filter((spec) => !(spec.writeOnly && !spec.hasValidation))
+      .slice()
+      .sort(compareSettingSpecs);
+  }
+
   // Compare two specs for display order: spec.priority wins (lower = higher),
   // ties break by friendly name. Specs without an explicit priority sort to
   // the end of their section.
