@@ -57,7 +57,7 @@ class FireEffect : public EffectWithId<FireEffect>
     bool    bReversed;          // If reversed we draw from 0 outwards
     bool    bMirrored;          // If mirrored we split and duplicate the drawing
 
-    std::unique_ptr<uint8_t []> heat;
+    allocated_unique_ptr<uint8_t []> heat;
 
     // When diffusing the fire upwards, these control how much to blend in from the cells below (ie: downward neighbors)
     // You can tune these coefficients to control how quickly and smoothly the fire spreads
@@ -361,7 +361,7 @@ class ClassicFireEffect : public EffectWithId<ClassicFireEffect>
 
     void Fire(int Cooling, int Sparking, int Sparks)
     {
-        static std::unique_ptr<uint8_t[]> heat = make_unique_psram<uint8_t[]>(NUM_LEDS);
+        static allocated_unique_ptr<uint8_t[]> heat = make_unique_psram<uint8_t[]>(NUM_LEDS);
         setAllOnAllChannels(0,0,0);
 
         // Step 1.  Cool down every cell a little
@@ -460,7 +460,7 @@ class SmoothFireEffect : public EffectWithId<SmoothFireEffect>
     bool _Turbo;
     bool _Mirrored;
 
-    std::unique_ptr<float[]> _Temperatures;
+    allocated_unique_ptr<float[]> _Temperatures;
 
   public:
     // Parameter:   Cooling   Sparks    driftPasses  drift sparkHeight   Turbo

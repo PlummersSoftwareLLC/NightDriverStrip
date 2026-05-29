@@ -133,8 +133,8 @@ constexpr auto CRC_LENGTH = (std::max(MATRIX_HEIGHT, MATRIX_WIDTH) * 4 + 1);
 class PatternLife : public EffectWithId<PatternLife>
 {
 private:
-    std::unique_ptr<Cell [][MATRIX_HEIGHT]> world;
-    std::unique_ptr<uint32_t []> checksums;
+    allocated_unique_ptr<Cell [][MATRIX_HEIGHT]> world;
+    allocated_unique_ptr<uint32_t []> checksums;
     int iChecksum = 0;
     uint32_t bStuckInLoop = 0;
     unsigned int density = 50;

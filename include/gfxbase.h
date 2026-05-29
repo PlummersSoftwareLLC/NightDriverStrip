@@ -353,7 +353,7 @@ public:
     // Draws a solid circle using floating point coordinates.
     void drawSafeFilledCircleF(float cx, float cy, float radius, CRGB col);
 
-    virtual void fillLeds(std::unique_ptr<CRGB[]> &pLEDs);
+    virtual void fillLeds(const CRGB* pLEDs);
 
     virtual void setPixel(int16_t x, int16_t y, uint16_t color);
     virtual void setPixel(int16_t x, int16_t y, CRGB color);

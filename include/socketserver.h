@@ -51,7 +51,7 @@
 #define COMPRESSED_HEADER (0x44415645)                                             // ASCII "DAVE" as header
 
 // Overflow-safe `STANDARD_DATA_HEADER_SIZE + itemCount * itemSize`. Returns
-// false (and leaves packetSize untouched) if the multiply or add would wrap.
+// false and clears packetSize if the multiply or add would wrap.
 
 inline bool CheckedStandardPacketSize(uint32_t itemCount, size_t itemSize, size_t& packetSize)
 {
@@ -65,7 +65,7 @@ inline bool CheckedStandardPacketSize(uint32_t itemCount, size_t itemSize, size_
     return true;
 }
 
-bool ProcessIncomingData(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength);
+bool ProcessIncomingData(allocated_unique_ptr<uint8_t []> & payloadData, size_t payloadLength);
 
 #if INCOMING_WIFI_ENABLED
 
@@ -119,8 +119,8 @@ private:
     
     std::atomic<int>            _server_fd{-1};
     struct sockaddr_in          _address;
-    std::unique_ptr<uint8_t []> _pBuffer;
-    std::unique_ptr<uint8_t []> _abOutputBuffer;
+    allocated_unique_ptr<uint8_t []> _pBuffer;
+    allocated_unique_ptr<uint8_t []> _abOutputBuffer;
 
 public:
 

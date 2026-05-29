@@ -313,7 +313,7 @@
     };
 #endif
 
-std::unique_ptr<Screen> CreateHardwareScreen(int w, int h)
+allocated_unique_ptr<Screen> CreateHardwareScreen(int w, int h)
 {
     #if USE_M5DISPLAY
         return make_unique_psram<M5Screen>(w, h);

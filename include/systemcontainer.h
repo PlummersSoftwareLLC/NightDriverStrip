@@ -72,38 +72,38 @@ class SystemContainer
 
   private:
     std::unique_ptr<DeviceContainer> _ptrDevices;
-    std::unique_ptr<BufferManagerContainer> _ptrBufferManagers;
-    std::unique_ptr<EffectManager> _ptrEffectManager;
-    std::unique_ptr<TaskManager> _ptrTaskManager;
-    std::unique_ptr<JSONWriter> _ptrJSONWriter;
-    std::unique_ptr<DeviceConfig> _ptrDeviceConfig;
+    allocated_unique_ptr<BufferManagerContainer> _ptrBufferManagers;
+    allocated_unique_ptr<EffectManager> _ptrEffectManager;
+    allocated_unique_ptr<TaskManager> _ptrTaskManager;
+    allocated_unique_ptr<JSONWriter> _ptrJSONWriter;
+    allocated_unique_ptr<DeviceConfig> _ptrDeviceConfig;
 
     #if ENABLE_REMOTE
-        std::unique_ptr<RemoteControl> _ptrRemoteControl;
+        allocated_unique_ptr<RemoteControl> _ptrRemoteControl;
     #endif
 
     #if ENABLE_WIFI
-        std::unique_ptr<NetworkReader> _ptrNetworkReader;
+        allocated_unique_ptr<NetworkReader> _ptrNetworkReader;
     #endif
 
     #if ENABLE_WIFI && ENABLE_WEBSERVER
-        std::unique_ptr<CWebServer> _ptrWebServer;
+        allocated_unique_ptr<CWebServer> _ptrWebServer;
     #endif
 
     #if INCOMING_WIFI_ENABLED
-        std::unique_ptr<SocketServer> _ptrSocketServer;
+        allocated_unique_ptr<SocketServer> _ptrSocketServer;
     #endif
 
     #if USE_WS281X
-        std::unique_ptr<WS281xOutputManager> _ptrWS281xOutputManager;
+        allocated_unique_ptr<WS281xOutputManager> _ptrWS281xOutputManager;
     #endif
 
     #if WEB_SOCKETS_ANY_ENABLED
-        std::unique_ptr<WebSocketServer> _ptrWebSocketServer;
+        allocated_unique_ptr<WebSocketServer> _ptrWebSocketServer;
     #endif
 
     #if USE_SCREEN
-        std::unique_ptr<Screen> _ptrDisplay;
+        allocated_unique_ptr<Screen> _ptrDisplay;
     #endif
 
     // AudioService is constructed in audio-enabled and non-audio builds alike.
@@ -111,21 +111,21 @@ class SystemContainer
     // when ENABLE_AUDIO is 0, which keeps consumers (e.g. webserver, drawing
     // VU meter) free of #if guards.
 
-    std::unique_ptr<AudioService> _ptrAudioService;
+    allocated_unique_ptr<AudioService> _ptrAudioService;
 
     #if ENABLE_AUDIOSERIAL
-        std::unique_ptr<AudioSerialBridge> _ptrAudioSerialBridge;
+        allocated_unique_ptr<AudioSerialBridge> _ptrAudioSerialBridge;
     #endif
 
     #if ENABLE_WIFI
-        std::unique_ptr<DebugConsole> _ptrDebugConsole;
+        allocated_unique_ptr<DebugConsole> _ptrDebugConsole;
     #endif
 
     #if COLORDATA_SERVER_ENABLED
-        std::unique_ptr<ColorStreamerService> _ptrColorStreamerService;
+        allocated_unique_ptr<ColorStreamerService> _ptrColorStreamerService;
     #endif
 
-    std::unique_ptr<RenderService> _ptrRenderService;
+    allocated_unique_ptr<RenderService> _ptrRenderService;
 
     // Helper method that checks if a pointer is initialized.
     void CheckPointer(bool initialized, const char* name) const;

@@ -593,7 +593,7 @@ class SoundAnalyzerBase : public ISoundAnalyzer
     static constexpr int kBandOffset = 2; // number of lowest source bands to skip in layout (skip bins 0,1,2)
     std::array<float, MAX_SAMPLES> _vReal{};
     std::array<float, MAX_SAMPLES> _vImaginary{};
-    std::unique_ptr<int16_t[]> ptrSampleBuffer; // sample buffer storage
+    allocated_unique_ptr<int16_t[]> ptrSampleBuffer; // sample buffer storage
 
 #if IS_IDF5
     i2s_chan_handle_t _rx_handle = nullptr;

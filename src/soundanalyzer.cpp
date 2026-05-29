@@ -86,12 +86,12 @@ namespace
 
 // SoundAnalyzerBase
 //
-// Construct analyzer, allocate buffers (PSRAM-preferred), set initial state.
+// Construct analyzer, allocate buffers, set initial state.
 // Throws std::runtime_error on allocation failure. Computes band layout once.
 SoundAnalyzerBase::SoundAnalyzerBase()
     : _FFT(_vReal.data(), _vImaginary.data(), MAX_SAMPLES, SAMPLING_FREQUENCY, true)
 {
-    ptrSampleBuffer.reset((int16_t *)heap_caps_malloc(MAX_SAMPLES * sizeof(int16_t), MALLOC_CAP_8BIT));
+    ptrSampleBuffer = make_unique_internal<int16_t[]>(MAX_SAMPLES);
     if (!ptrSampleBuffer)
     {
         throw std::runtime_error("Failed to allocate sample buffer");

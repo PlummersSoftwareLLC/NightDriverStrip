@@ -104,7 +104,7 @@ public:
 
     void setLeds(CRGB *pLeds);
 
-    void fillLeds(std::unique_ptr<CRGB []> & pLEDs) override;
+    void fillLeds(const CRGB* pLEDs) override;
 
     void Clear(CRGB color = CRGB::Black) override;
 

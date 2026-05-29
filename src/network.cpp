@@ -834,7 +834,7 @@ void ConfirmUpdate()
 // Code that actually handles whatever comes in on the socket.  Must be known good data
 // as this code does not validate!  This is where the commands and pixel data are received
 // from the server.
-bool ProcessIncomingData(std::unique_ptr<uint8_t[]> &payloadData, size_t payloadLength)
+bool ProcessIncomingData(allocated_unique_ptr<uint8_t[]> &payloadData, size_t payloadLength)
 {
     #if !INCOMING_WIFI_ENABLED
         return false;
@@ -935,7 +935,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t[]> &payloadData, size_t payload
                         // Validate against the active channel before reserving a
                         // circular-buffer slot. Reserving first meant a rejected
                         // packet could leave an old frame queued in the new slot.
-                        if (!LEDBuffer::ValidateWirePayload(payloadData, payloadLength, channelLedCount))
+                        if (!LEDBuffer::ValidateWirePayload(payloadData.get(), payloadLength, channelLedCount))
                         {
                             debugW("Pixel packet rejected for channel %d: %lu LEDs, channel has %zu",
                                    iChannel, (unsigned long)length32, channelLedCount);
@@ -948,7 +948,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t[]> &payloadData, size_t payload
                             if (micros != 0 && pNewestBuffer->MicroSeconds() == micros && pNewestBuffer->Seconds() == seconds)
                             {
                                 debugV("Updating existing buffer");
-                                if (!pNewestBuffer->UpdateFromWire(payloadData, payloadLength))
+                                if (!pNewestBuffer->UpdateFromWire(payloadData.get(), payloadLength))
                                     return false;
                                 bDone = true;
                             }
@@ -957,7 +957,7 @@ bool ProcessIncomingData(std::unique_ptr<uint8_t[]> &payloadData, size_t payload
                         {
                             debugV("No match so adding new buffer");
                             auto pNewBuffer = bufferManager.GetNewBuffer();
-                            if (!pNewBuffer || !pNewBuffer->UpdateFromWire(payloadData, payloadLength))
+                            if (!pNewBuffer || !pNewBuffer->UpdateFromWire(payloadData.get(), payloadLength))
                                 return false;
                         }
                     }

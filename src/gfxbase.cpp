@@ -247,7 +247,7 @@ void GFXBase::drawSafeFilledCircleF(float cx, float cy, float radius, CRGB col)
     }
 }
 
-void GFXBase::fillLeds(std::unique_ptr<CRGB[]> &pLEDs)
+void GFXBase::fillLeds(const CRGB* pLEDs)
 {
     for (int x = 0; x < _width; x++)
         for (int y = 0; y < _height; y++)
@@ -1567,7 +1567,7 @@ uint16_t XY(uint16_t x, uint16_t y)
 
 const GFXBase::PolarMapArray& GFXBase::getPolarMap()
 {
-    static std::unique_ptr<PolarMapArray> rMap_ptr;
+    static allocated_unique_ptr<PolarMapArray> rMap_ptr;
     static std::mutex rMap_mutex;
 
     // Double-checked locking for thread-safe, on-demand initialization

@@ -185,7 +185,7 @@ private:
     };
 
     static const int snakeCount = 20;
-    std::unique_ptr<Path[]> snakes;
+    allocated_unique_ptr<Path[]> snakes;
 
     void construct()
     {

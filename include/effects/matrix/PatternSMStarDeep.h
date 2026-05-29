@@ -23,7 +23,7 @@ class PatternSMStarDeep : public EffectWithId<PatternSMStarDeep>
         int position;    // delay the start of the star relative to the counter
     };
 
-    std::unique_ptr<StarData[]> stars; // Dynamically allocated in PSRAM
+    allocated_unique_ptr<StarData[]> stars; // Dynamically allocated in PSRAM
     uint8_t nStars;            // number of active stars
 
     float driftx, drifty;

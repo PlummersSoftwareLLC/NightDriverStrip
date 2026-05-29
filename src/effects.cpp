@@ -155,7 +155,7 @@
 #endif
 
 // Default and JSON factory functions + decoration for effects
-DRAM_ATTR std::unique_ptr<EffectFactories> g_ptrEffectFactories = nullptr;
+DRAM_ATTR allocated_unique_ptr<EffectFactories> g_ptrEffectFactories = nullptr;
 
 // This function sets up the effect factories for the effects for whatever project is being built. The ADD_EFFECT macro variations
 //   are provided and used for convenience.

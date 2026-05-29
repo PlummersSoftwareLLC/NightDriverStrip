@@ -164,19 +164,87 @@ inline bool operator==(const dma_allocator<T>&, const dma_allocator<U>&) { retur
 template <typename T, typename U>
 inline bool operator!=(const dma_allocator<T>&, const dma_allocator<U>&) { return false; }
 
+class heap_caps_unique_deleter
+{
+public:
+    using DestroyFn = void (*)(void*, size_t);
+    using DeallocateFn = void (*)(void*, size_t);
+
+    constexpr heap_caps_unique_deleter() noexcept = default;
+    constexpr heap_caps_unique_deleter(size_t count, DestroyFn destroy, DeallocateFn deallocate) noexcept :
+        _count(count),
+        _destroy(destroy),
+        _deallocate(deallocate)
+    {
+    }
+
+    template <typename T>
+    void operator()(T* p) const noexcept
+    {
+        if (!p)
+            return;
+
+        _destroy(p, _count);
+        _deallocate(p, _count);
+    }
+
+private:
+    size_t       _count = 0;
+    DestroyFn   _destroy = nullptr;
+    DeallocateFn _deallocate = nullptr;
+};
+
+template <typename T>
+using allocated_unique_ptr = std::unique_ptr<T, heap_caps_unique_deleter>;
+
+template <typename U>
+inline void destroy_allocated_range(void* p, size_t n) noexcept
+{
+    std::destroy_n(static_cast<U*>(p), n);
+}
+
+template <typename U, typename Allocator>
+inline void deallocate_allocated_range(void* p, size_t n) noexcept
+{
+    Allocator alloc;
+    alloc.deallocate(static_cast<U*>(p), n);
+}
+
+template <typename U, typename Allocator>
+inline heap_caps_unique_deleter make_heap_caps_unique_deleter(size_t count) noexcept
+{
+    return heap_caps_unique_deleter(
+        count,
+        &destroy_allocated_range<U>,
+        &deallocate_allocated_range<U, Allocator>);
+}
+
 template <typename T, typename Allocator>
-inline std::enable_if_t<std::is_array<T>::value && std::extent<T>::value == 0, std::unique_ptr<T>>
+using allocated_unique_ptr_for = allocated_unique_ptr<T>;
+
+template <typename T, typename Allocator, typename... Args>
+inline std::enable_if_t<!std::is_array<T>::value, allocated_unique_ptr_for<T, Allocator>>
+make_unique_with_allocator(Allocator alloc, Args&&... args)
+{
+    T* p = alloc.allocate(1);
+    try { new (p) T(std::forward<Args>(args)...); }
+    catch (...) { alloc.deallocate(p, 1); throw; }
+    return allocated_unique_ptr_for<T, Allocator>(p, make_heap_caps_unique_deleter<T, Allocator>(1));
+}
+
+template <typename T, typename Allocator>
+inline std::enable_if_t<std::is_array<T>::value && std::extent<T>::value == 0, allocated_unique_ptr_for<T, Allocator>>
 make_unique_array_with_allocator(size_t n, Allocator alloc)
 {
     using U = std::remove_extent_t<T>;
     using Element = std::remove_all_extents_t<T>;
-    static_assert(std::is_default_constructible<Element>::value && std::is_trivially_destructible<Element>::value,
-        "make_unique_*<T[]>(n) requires default-constructible, trivially-destructible element types.");
+    static_assert(std::is_default_constructible<Element>::value,
+        "make_unique_*<T[]>(n) requires default-constructible element types.");
 
     U* p = alloc.allocate(n);
     try { std::uninitialized_value_construct_n(p, n); }
     catch (...) { alloc.deallocate(p, n); throw; }
-    return std::unique_ptr<T>(p);
+    return allocated_unique_ptr_for<T, Allocator>(p, make_heap_caps_unique_deleter<U, Allocator>(n));
 }
 
 // make_unique_internal / make_shared_internal
@@ -184,14 +252,10 @@ make_unique_array_with_allocator(size_t n, Allocator alloc)
 // Construct an object explicitly in internal SRAM. Use for hot-path or
 // DMA-adjacent state that should not tolerate PSRAM access latency.
 template <typename T, typename... Args>
-inline std::enable_if_t<!std::is_array<T>::value, std::unique_ptr<T>>
+inline std::enable_if_t<!std::is_array<T>::value, allocated_unique_ptr<T>>
 make_unique_internal(Args&&... args)
 {
-    internal_allocator<T> alloc;
-    T* p = alloc.allocate(1);
-    try { new (p) T(std::forward<Args>(args)...); }
-    catch (...) { alloc.deallocate(p, 1); throw; }
-    return std::unique_ptr<T>(p);
+    return make_unique_with_allocator<T>(internal_allocator<T>{}, std::forward<Args>(args)...);
 }
 
 template <typename T, typename... Args>
@@ -201,7 +265,7 @@ inline std::shared_ptr<T> make_shared_internal(Args&&... args)
 }
 
 template <typename T>
-inline std::enable_if_t<std::is_array<T>::value && std::extent<T>::value == 0, std::unique_ptr<T>>
+inline std::enable_if_t<std::is_array<T>::value && std::extent<T>::value == 0, allocated_unique_ptr<T>>
 make_unique_internal(size_t n)
 {
     using U = std::remove_extent_t<T>;
@@ -215,14 +279,10 @@ make_unique_internal(size_t n)
 // generally call heap_caps_malloc(MALLOC_CAP_DMA) directly, but these helpers
 // are available for any project-side buffer that needs to be DMA-reachable.
 template <typename T, typename... Args>
-inline std::enable_if_t<!std::is_array<T>::value, std::unique_ptr<T>>
+inline std::enable_if_t<!std::is_array<T>::value, allocated_unique_ptr<T>>
 make_unique_dma(Args&&... args)
 {
-    dma_allocator<T> alloc;
-    T* p = alloc.allocate(1);
-    try { new (p) T(std::forward<Args>(args)...); }
-    catch (...) { alloc.deallocate(p, 1); throw; }
-    return std::unique_ptr<T>(p);
+    return make_unique_with_allocator<T>(dma_allocator<T>{}, std::forward<Args>(args)...);
 }
 
 template <typename T, typename... Args>
@@ -232,7 +292,7 @@ inline std::shared_ptr<T> make_shared_dma(Args&&... args)
 }
 
 template <typename T>
-inline std::enable_if_t<std::is_array<T>::value && std::extent<T>::value == 0, std::unique_ptr<T>>
+inline std::enable_if_t<std::is_array<T>::value && std::extent<T>::value == 0, allocated_unique_ptr<T>>
 make_unique_dma(size_t n)
 {
     using U = std::remove_extent_t<T>;
@@ -246,14 +306,10 @@ make_unique_dma(size_t n)
 // don't sit in a tight per-frame hot loop. Falls back to internal SRAM if
 // PSRAM is absent or full so non-PSRAM boards still work.
 template <typename T, typename... Args>
-inline std::enable_if_t<!std::is_array<T>::value, std::unique_ptr<T>>
+inline std::enable_if_t<!std::is_array<T>::value, allocated_unique_ptr<T>>
 make_unique_psram(Args&&... args)
 {
-    psram_allocator<T> alloc;
-    T* p = alloc.allocate(1);
-    try { new (p) T(std::forward<Args>(args)...); }
-    catch (...) { alloc.deallocate(p, 1); throw; }
-    return std::unique_ptr<T>(p);
+    return make_unique_with_allocator<T>(psram_allocator<T>{}, std::forward<Args>(args)...);
 }
 
 template <typename T, typename... Args>
@@ -267,7 +323,7 @@ inline std::shared_ptr<T> make_shared_psram(Args&&... args)
 // std::make_unique<U[]>(n) value-initialization semantics while placing the
 // backing storage in PSRAM.
 template <typename T>
-inline std::enable_if_t<std::is_array<T>::value && std::extent<T>::value == 0, std::unique_ptr<T>>
+inline std::enable_if_t<std::is_array<T>::value && std::extent<T>::value == 0, allocated_unique_ptr<T>>
 make_unique_psram(size_t n)
 {
     using U = std::remove_extent_t<T>;
