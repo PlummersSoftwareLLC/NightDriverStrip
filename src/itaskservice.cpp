@@ -43,7 +43,7 @@
 
 bool ITaskService::Start()
 {
-    std::lock_guard<std::mutex> lifecycleGuard(_lifecycleMutex);
+    std::lock_guard lifecycleGuard(_lifecycleMutex);
 
     if (_running.load())
     {
@@ -95,8 +95,8 @@ void ITaskService::Stop()
     // _taskHandleMutex below. Holding the old recursive lifecycle mutex across
     // the whole stop wait was heavier than necessary and existed only because
     // some stop hooks wake their task.
-    
-    std::lock_guard<std::mutex> lifecycleGuard(_lifecycleMutex);
+
+    std::lock_guard lifecycleGuard(_lifecycleMutex);
 
     if (!_running.load() && !HasTaskHandle())
         return;
@@ -142,13 +142,13 @@ void ITaskService::Stop()
 
 void ITaskService::SetTaskHandle(TaskHandle_t taskHandle)
 {
-    std::lock_guard<std::mutex> guard(_taskHandleMutex);
+    std::lock_guard guard(_taskHandleMutex);
     _taskHandle = taskHandle;
 }
 
 TaskHandle_t ITaskService::ClearTaskHandle()
 {
-    std::lock_guard<std::mutex> guard(_taskHandleMutex);
+    std::lock_guard guard(_taskHandleMutex);
     TaskHandle_t taskHandle = _taskHandle;
     _taskHandle = nullptr;
     return taskHandle;
@@ -156,7 +156,7 @@ TaskHandle_t ITaskService::ClearTaskHandle()
 
 bool ITaskService::HasTaskHandle() const
 {
-    std::lock_guard<std::mutex> guard(_taskHandleMutex);
+    std::lock_guard guard(_taskHandleMutex);
     return _taskHandle != nullptr;
 }
 
@@ -195,7 +195,7 @@ void ITaskService::TaskEntryThunk(void* p)
     // Park until Stop() reaps us. The block delay is long but bounded so
     // the task wakes if FreeRTOS tick wraparound math ever surprises us;
     // either way, control returns to the scheduler immediately.
-    
+
     while (true)
         vTaskDelay(pdMS_TO_TICKS(60 * 1000));
 }

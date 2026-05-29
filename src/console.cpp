@@ -139,7 +139,7 @@ void ConsoleManager::FeedSerialByte(uint8_t byte)
 {
     std::shared_ptr<ConsoleSession> session;
     {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        std::lock_guard guard(_mutex);
         session = _serialSession;
     }
     if (_byteHandler && session)
@@ -150,7 +150,7 @@ void ConsoleManager::FeedTelnetByte(uint8_t byte)
 {
     std::shared_ptr<ConsoleSession> session;
     {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        std::lock_guard guard(_mutex);
         session = _telnetSession;
     }
     if (_byteHandler && session)
@@ -161,7 +161,7 @@ void ConsoleManager::Broadcast(std::string_view data)
 {
     std::shared_ptr<ConsoleSession> serial, telnet;
     {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        std::lock_guard guard(_mutex);
         serial = _serialSession;
         telnet = _telnetSession;
     }
@@ -179,7 +179,7 @@ void ConsoleManager::Broadcast(LogLevel level, const char* tag, const char* mess
 {
     std::shared_ptr<ConsoleSession> serial, telnet;
     {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        std::lock_guard guard(_mutex);
         serial = _serialSession;
         telnet = _telnetSession;
     }
@@ -195,7 +195,7 @@ void ConsoleManager::SetTelnetSink(IConsoleSink* sink)
 {
     std::shared_ptr<ConsoleSession> session;
     {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        std::lock_guard guard(_mutex);
         _telnetSession = std::make_shared<ConsoleSession>(sink);
         session = _telnetSession;
     }
@@ -208,7 +208,7 @@ void ConsoleManager::SetTelnetSink(IConsoleSink* sink)
 
 void ConsoleManager::ClearTelnetSink()
 {
-    std::lock_guard<std::recursive_mutex> lock(_mutex);
+    std::lock_guard guard(_mutex);
     if (_telnetSession)
     {
         _telnetSession.reset();

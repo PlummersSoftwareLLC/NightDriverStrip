@@ -63,7 +63,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color);    // Defined i
 
 uint16_t WiFiDraw()
 {
-    std::lock_guard<std::mutex> guard(g_buffer_mutex);
+    std::lock_guard guard(g_buffer_mutex);
 
     uint16_t pixelsDrawn = 0;
     for (auto& bufferManager : g_ptrSystem->GetBufferManagers())
@@ -176,7 +176,7 @@ int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, ui
     {
         double fpsRaw = 0.0;
         {
-            std::lock_guard<std::recursive_mutex> effectGuard(g_effect_manager_mutex);
+            std::lock_guard effectGuard(g_effect_manager_mutex);
             fpsRaw = static_cast<double>(g_ptrSystem->GetEffectManager().GetCurrentEffect().DesiredFramesPerSecond());
         }
         // If FPS is invalid (<= 0 or non-finite), treat as unlimited (0s minimum frame time).
@@ -199,8 +199,8 @@ int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, ui
             // calculating its next sleep. Protect this read-only peek with the
             // same mutex used by enqueue/dequeue so the ring indices and
             // timestamps are sampled consistently.
-            
-            std::lock_guard<std::mutex> guard(g_buffer_mutex);
+
+            std::lock_guard guard(g_buffer_mutex);
             for (auto& bufferManager : g_ptrSystem->GetBufferManagers())
             {
                 auto pOldest = bufferManager.PeekOldestBuffer();

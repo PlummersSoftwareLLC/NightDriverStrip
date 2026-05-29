@@ -137,7 +137,7 @@ void GFXBase::Clear(CRGB color)
     // stale W content washes its colors out. Effects that want to preserve
     // whites can rewrite them after the Clear() call; that's how the leds
     // plane already behaves.
-    
+
     if (whites)
         memset(whites, 0, sizeof(CRGBW) * count);
 }
@@ -1178,18 +1178,6 @@ CRGB GFXBase::HsvToRgb(uint8_t h, uint8_t s, uint8_t v)
     // The following functions are specializations of noise-related member function
     // templates declared in gfxbase.h.
 
-    void GFXBase::NoiseVariablesSetup() const
-    {
-        EnsureNoise();
-        _ptrNoise->noisesmoothing = 200;
-
-        _ptrNoise->noise_x = random16();
-        _ptrNoise->noise_y = random16();
-        _ptrNoise->noise_z = random16();
-        _ptrNoise->noise_scale_x = 6000;
-        _ptrNoise->noise_scale_y = 6000;
-    }
-
     void GFXBase::SetNoise(uint32_t nx, uint32_t ny, uint32_t nz, uint32_t sx, uint32_t sy)
     {
         EnsureNoise();
@@ -1200,9 +1188,11 @@ CRGB GFXBase::HsvToRgb(uint8_t h, uint8_t s, uint8_t v)
         _ptrNoise->noise_scale_y = sy;
     }
 
-    void GFXBase::FillGetNoise() const
+    // Internal implementation: assumes _ptrNoise is already initialized.
+    // Must NOT call EnsureNoise() — this is invoked from within EnsureNoise()'s
+    // call_once lambda, and a recursive call_once on the same flag is UB.
+    void GFXBase::FillGetNoiseImpl() const
     {
-        EnsureNoise();
         // Subtracting the center offset before scaling ensures the noise pattern radiates
         // outwards from the center of the display (exactly as #803 intended).
         //
@@ -1222,6 +1212,12 @@ CRGB GFXBase::HsvToRgb(uint8_t h, uint8_t s, uint8_t v)
                 _ptrNoise->noise[i][j] = newdata;
             }
         }
+    }
+
+    void GFXBase::FillGetNoise() const
+    {
+        if (!EnsureNoise())
+            FillGetNoiseImpl();
     }
 
     template<>
@@ -1536,17 +1532,27 @@ void GFXBase::ConfigureTopology(size_t width, size_t height, bool serpentine)
 }
 
 #if USE_NOISE
-void GFXBase::EnsureNoise() const
+bool GFXBase::EnsureNoise() const
 {
-    std::call_once(_noiseInitOnce, [this]()
+    bool justInitialized = false;
+    std::call_once(_noiseInitOnce, [&]()
     {
         // Noise is large and only used by a subset of effects. Lazy allocation keeps the boot path leaner
         // and still allows runtime topology to stay within the build-time maximum noise backing store.
         _ptrNoise = std::make_unique<Noise>();
         assert(_ptrNoise);
-        NoiseVariablesSetup();
-        FillGetNoise();
+        _ptrNoise->noisesmoothing = 200;
+
+        _ptrNoise->noise_x = random16();
+        _ptrNoise->noise_y = random16();
+        _ptrNoise->noise_z = random16();
+        _ptrNoise->noise_scale_x = 6000;
+        _ptrNoise->noise_scale_y = 6000;
+        FillGetNoiseImpl();
+        justInitialized = true;
     });
+
+    return justInitialized;
 }
 #endif
 
@@ -1567,7 +1573,7 @@ const GFXBase::PolarMapArray& GFXBase::getPolarMap()
     // Double-checked locking for thread-safe, on-demand initialization
     if (!rMap_ptr)
     {
-        std::lock_guard lock(rMap_mutex);
+        std::lock_guard guard(rMap_mutex);
         if (!rMap_ptr)
         {
             // Allocate from PSRAM using the project's helper

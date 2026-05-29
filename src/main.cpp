@@ -534,9 +534,9 @@ void setup()
 
     #if ENABLE_AUDIO
     {
-        // USE_M5 implies we are using M5Unified which manages the mic pins itself, so we 
+        // USE_M5 implies we are using M5Unified which manages the mic pins itself, so we
         // skip manual pin setup in that case.  For other boards, we set the audio input pin
-        // according to the current config, which allows the boot-applied pin to match what 
+        // according to the current config, which allows the boot-applied pin to match what
         // settings report and for settings changes to take effect immediately.
 
         #if !USE_M5
@@ -678,7 +678,7 @@ void setup()
         // IP; otherwise NetworkReader will start these services after connect.
         if (nd_network::IsWiFiConnected() && g_ptrSystem->HasWebServer())
             g_ptrSystem->GetWebServer().Start();
-        
+
         #if WEB_SOCKETS_ANY_ENABLED
             if (nd_network::IsWiFiConnected() && g_ptrSystem->HasWebSocketServer())
                 g_ptrSystem->GetWebSocketServer().Start();
@@ -807,7 +807,7 @@ void loop()
             #if INCOMING_WIFI_ENABLED
                 auto& bufferManager = g_ptrSystem->GetBufferManagers()[0];
                 {
-                    std::lock_guard<std::mutex> guard(g_buffer_mutex);
+                    std::lock_guard guard(g_buffer_mutex);
                     strOutput += str_sprintf("Buffer: %zu/%zu, ", (size_t)bufferManager.Depth(), (size_t)bufferManager.BufferCount());
                 }
             #endif
