@@ -17,7 +17,7 @@ LEDBuffer::LEDBuffer(std::shared_ptr<GFXBase> pStrand) :
              _timeStampMicroseconds(0),
              _timeStampSeconds(0)
 {
-    _leds = std::make_unique<CRGB[]>(_pStrand->GetLEDCount());
+    _leds = make_unique_psram<CRGB[]>(_pStrand->GetLEDCount());
 }
 
 uint64_t LEDBuffer::Seconds()      const  { return _timeStampSeconds;      }
@@ -45,7 +45,7 @@ bool LEDBuffer::IsBufferOlderThan(const timeval & tv) const
 //
 // Parse and deposit a WiFi packet into a buffer
 
-bool LEDBuffer::ValidateWirePayload(const std::unique_ptr<uint8_t []>& payloadData,
+bool LEDBuffer::ValidateWirePayload(const uint8_t* payloadData,
                                     size_t payloadLength,
                                     size_t ledCount,
                                     size_t* payloadByteCount)
@@ -98,7 +98,7 @@ bool LEDBuffer::ValidateWirePayload(const std::unique_ptr<uint8_t []>& payloadDa
     return true;
 }
 
-bool LEDBuffer::UpdateFromWire(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength)
+bool LEDBuffer::UpdateFromWire(const uint8_t* payloadData, size_t payloadLength)
 {
     if (!_pStrand)
     {
@@ -120,7 +120,7 @@ bool LEDBuffer::UpdateFromWire(std::unique_ptr<uint8_t []> & payloadData, size_t
 
     debugV("PayloadLength: %zu, command16: %hu, Length32: %lu", payloadLength, command16, (unsigned long)length32);
 
-    CRGB * pRGB = reinterpret_cast<CRGB *>(&payloadData[cbHeader]);
+    const CRGB * pRGB = reinterpret_cast<const CRGB *>(&payloadData[cbHeader]);
 
     // Keep this commit after the shared validation used by ProcessIncomingData.
     // New queue slots are now reserved only after that validation passes, and
@@ -140,7 +140,7 @@ void LEDBuffer::DrawBuffer()
 {
     _timeStampMicroseconds = 0;
     _timeStampSeconds      = 0;
-    _pStrand->fillLeds(_leds);
+    _pStrand->fillLeds(_leds.get());
 }
 
 void LEDBuffer::Reconfigure(std::shared_ptr<GFXBase> pStrand)
@@ -153,7 +153,9 @@ void LEDBuffer::Reconfigure(std::shared_ptr<GFXBase> pStrand)
     // Pin/color-order changes should not churn every buffered frame. Only reallocate when the
     // actual LED count changes; otherwise just retarget the buffer to the new strand config.
     if (nextLedCount != currentLedCount)
-        _leds = std::make_unique<CRGB[]>(nextLedCount);
+    {
+        _leds = make_unique_psram<CRGB[]>(nextLedCount);
+    }
 
     _pixelCount = 0;
     _timeStampMicroseconds = 0;
@@ -178,7 +180,7 @@ LEDBufferManager::LEDBufferManager(uint32_t cBuffers, const std::shared_ptr<GFXB
     // are returned back out to callers so they must be shared pointers.
 
     for (uint32_t i = 0; i < _cBuffers; i++)
-        _ppBuffers->push_back(std::make_shared<LEDBuffer>(pGFX));
+        _ppBuffers->push_back(make_shared_psram<LEDBuffer>(pGFX));
 }
 
 double LEDBufferManager::AgeOfOldestBuffer() const

@@ -76,16 +76,27 @@ class EffectFactories
         FactoryId FactoryID() const { return factoryId; }
     };
 
+    // The JSONEffectFactory map is separate from the default factory list because we want to be able to
+    // look up JSON factories by EffectId when deserializing, and doing that in a vector
+    //  would be O(n) instead of O(log n).
+
+    using NumberedFactoryList = std::vector<NumberedFactory, psram_allocator<NumberedFactory>>;
+    using JSONFactoryMap = std::map<
+        EffectId,
+        JSONEffectFactory,
+        std::less<EffectId>,
+        psram_allocator<std::pair<const EffectId, JSONEffectFactory>>>;
+
   private:
 
-    std::vector<NumberedFactory> defaultFactories;
-    std::map<EffectId, JSONEffectFactory> jsonFactories;
+    NumberedFactoryList defaultFactories;
+    JSONFactoryMap jsonFactories;
     String hashString;
 
   public:
 
-    const std::vector<NumberedFactory>& GetDefaultFactories() const { return defaultFactories; }
-    const std::map<EffectId, JSONEffectFactory>& GetJSONFactories() const { return jsonFactories; }
+    const NumberedFactoryList& GetDefaultFactories() const { return defaultFactories; }
+    const JSONFactoryMap& GetJSONFactories() const { return jsonFactories; }
 
     NumberedFactory& AddEffect(EffectId effectId, const DefaultEffectFactory& defaultFactory, const JSONEffectFactory& jsonFactory, FactoryId factoryId = 0);
 
@@ -128,8 +139,8 @@ inline EffectFactories::NumberedFactory& AddEffect(EffectFactories& factories, A
 {
     return factories.AddEffect(
         effect_id_of_type<TEffect>(),
-        [=]() -> std::shared_ptr<LEDStripEffect> { return std::make_shared<TEffect>(args...); },
-        [](const JsonObjectConst& jsonObject) -> std::shared_ptr<LEDStripEffect> { return std::make_shared<TEffect>(jsonObject); },
+        [=]() -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<TEffect>(args...); },
+        [](const JsonObjectConst& jsonObject) -> std::shared_ptr<LEDStripEffect> { return make_shared_psram<TEffect>(jsonObject); },
         factory_id_of_instance<TEffect>(args...)
     );
 }

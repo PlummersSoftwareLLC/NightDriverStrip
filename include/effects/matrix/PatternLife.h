@@ -133,8 +133,8 @@ constexpr auto CRC_LENGTH = (std::max(MATRIX_HEIGHT, MATRIX_WIDTH) * 4 + 1);
 class PatternLife : public EffectWithId<PatternLife>
 {
 private:
-    std::unique_ptr<Cell [][MATRIX_HEIGHT]> world;
-    std::unique_ptr<uint32_t []> checksums;
+    allocated_unique_ptr<Cell [][MATRIX_HEIGHT]> world;
+    allocated_unique_ptr<uint32_t []> checksums;
     int iChecksum = 0;
     uint32_t bStuckInLoop = 0;
     unsigned int density = 50;
@@ -149,8 +149,8 @@ private:
         // Note: placing the world in PSRAM may slow this effect down, but it's currently running
         //       fast enough (30+ fps) that we can afford to use it
 
-        world = std::make_unique<Cell[][MATRIX_HEIGHT]>(MATRIX_WIDTH);
-        checksums = std::make_unique<uint32_t[]>(CRC_LENGTH);
+        world = make_unique_psram<Cell[][MATRIX_HEIGHT]>(MATRIX_WIDTH);
+        checksums = make_unique_psram<uint32_t[]>(CRC_LENGTH);
 
         return true;
     }

@@ -247,7 +247,7 @@ void GFXBase::drawSafeFilledCircleF(float cx, float cy, float radius, CRGB col)
     }
 }
 
-void GFXBase::fillLeds(std::unique_ptr<CRGB[]> &pLEDs)
+void GFXBase::fillLeds(const CRGB* pLEDs)
 {
     for (int x = 0; x < _width; x++)
         for (int y = 0; y < _height; y++)
@@ -1494,7 +1494,8 @@ GFXBase::GFXBase(int w, int h) : Adafruit_GFX(w, h),
     // Allocate boids for matrix effects (like PatternBounce) when we have matrix dimensions
     #if MATRIX_HEIGHT > 1
         debugV("Allocating boids for matrix effects");
-        // Boid state scales with width and can become large on matrix targets, so keep it in PSRAM.
+        // Boid array is small (a few KB at most) and touched in animation hot paths,
+        // so keep it on the default heap instead of explicitly pinning it to PSRAM.
         _boids = std::make_unique<Boid[]>(_width);
         assert(_boids);
     #endif
@@ -1512,7 +1513,7 @@ void GFXBase::ConfigureTopology(size_t width, size_t height, bool serpentine)
     if (width != _width)
     {
         debugV("Resizing boid state to match runtime topology width");
-        // Topology changes invalidate width-sized boid caches. Rebuild them in PSRAM before effects restart.
+        // See note in the constructor: keep this on the default heap.
         _boids = std::make_unique<Boid[]>(width);
         assert(_boids);
     }
@@ -1566,7 +1567,7 @@ uint16_t XY(uint16_t x, uint16_t y)
 
 const GFXBase::PolarMapArray& GFXBase::getPolarMap()
 {
-    static std::unique_ptr<PolarMapArray> rMap_ptr;
+    static allocated_unique_ptr<PolarMapArray> rMap_ptr;
     static std::mutex rMap_mutex;
 
     // Double-checked locking for thread-safe, on-demand initialization
@@ -1576,7 +1577,7 @@ const GFXBase::PolarMapArray& GFXBase::getPolarMap()
         if (!rMap_ptr)
         {
             // Allocate from PSRAM using the project's helper
-            rMap_ptr = std::make_unique<PolarMapArray>();
+            rMap_ptr = make_unique_psram<PolarMapArray>();
 
             auto& rMap = *rMap_ptr;
             const uint16_t C_X = kMatrixWidth / 2;

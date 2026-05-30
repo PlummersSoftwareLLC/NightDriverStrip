@@ -52,7 +52,7 @@
 
 // Variables we need further down
 
-extern std::unique_ptr<EffectFactories> g_ptrEffectFactories;
+extern allocated_unique_ptr<EffectFactories> g_ptrEffectFactories;
 extern std::map<int, JSONEffectFactory> g_JsonStarryNightEffectFactories;
 DRAM_ATTR size_t g_EffectsManagerJSONBufferSize = 0;
 static DRAM_ATTR size_t l_EffectsManagerJSONWriterIndex = SIZE_MAX;
@@ -69,7 +69,7 @@ static DRAM_ATTR bool l_EffectManagerInitializing = false;
     {
         debugW("InitSplashEffectManager");
 
-        g_ptrSystem->SetupEffectManager(std::make_shared<SplashLogoEffect>(), g_ptrSystem->GetDevices());
+        g_ptrSystem->SetupEffectManager(make_shared_psram<SplashLogoEffect>(), g_ptrSystem->GetDevices());
     }
 
 #endif
@@ -99,6 +99,7 @@ void InitEffectsManager()
 
     auto jsonDoc = CreateJsonDocument();
     auto jsonObject = LoadEffectsJSONFile(jsonDoc);
+    const bool loadedPersistedEffects = jsonObject.has_value();
 
     if (jsonObject)
     {
@@ -130,12 +131,22 @@ void InitEffectsManager()
     #endif
 
     l_EffectManagerInitializing = false;
+
+    if (!loadedPersistedEffects)
+    {
+        // Persist the default effect set after initialization suppression is
+        // lifted. Otherwise first boot, missing config, or an effect-set hash
+        // change would run from defaults but never write the new config until
+        // some later user mutation happened.
+        SaveEffectManagerConfig();
+    }
 }
 
 void EffectManager::StartEffect()
 {
-    std::lock_guard renderGuard(g_render_mutex);
-    std::lock_guard effectGuard(g_effect_manager_mutex);
+    // Acquire both mutexes atomically. Separate sequential lock_guards form
+    // an AB-BA cycle with sites that use scoped_lock(render, effect_mgr).
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
 
     // If there's a temporary effect override from the remote control active, we start that, else
     // we start the current regular effect
@@ -271,8 +282,7 @@ EffectManager::~EffectManager()
 
 void EffectManager::SetTempEffect(std::shared_ptr<LEDStripEffect> effect)
 {
-    std::lock_guard renderGuard(g_render_mutex);
-    std::lock_guard effectGuard(g_effect_manager_mutex);
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
     _tempEffect = effect;
 }
 
@@ -425,8 +435,7 @@ String EffectManager::GetCurrentEffectName() const
 
 void EffectManager::SetCurrentEffectIndex(size_t i)
 {
-    std::lock_guard renderGuard(g_render_mutex);
-    std::lock_guard effectGuard(g_effect_manager_mutex);
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
 
     if (i >= _vEffects.size())
     {
@@ -599,7 +608,7 @@ std::shared_ptr<LEDStripEffect> EffectManager::CopyEffect(size_t index)
 
     auto& sourceEffect = _vEffects[index];
 
-    auto jsonEffectFactories = g_ptrEffectFactories->GetJSONFactories();
+    const auto& jsonEffectFactories = g_ptrEffectFactories->GetJSONFactories();
     auto factoryEntry = jsonEffectFactories.find(static_cast<int>(sourceEffect->effectId()));
 
     if (factoryEntry == jsonEffectFactories.end())
@@ -686,7 +695,7 @@ std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
 {
     CHSV hueColor = rgb2hsv_approximate(color);
     CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
-    auto object = std::make_shared<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color, color2), true);
+    auto object = make_shared_psram<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color, color2), true);
     if (object->Init(g_ptrSystem->GetDevices()))
         return object;
     throw std::runtime_error("Could not initialize new spectrum analyzer, one color version!");
@@ -1127,8 +1136,7 @@ bool EffectManager::DeleteEffect(size_t index)
 
 void EffectManager::CheckEffectTimerExpired()
 {
-    std::lock_guard renderGuard(g_render_mutex);
-    std::lock_guard effectGuard(g_effect_manager_mutex);
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
 
     if (IsIntervalEternal() && !GetCurrentEffect().HasMaximumEffectTime())
         return;
@@ -1151,8 +1159,7 @@ void EffectManager::CheckEffectTimerExpired()
 
 void EffectManager::NextEffect(bool skipSave)
 {
-    std::lock_guard renderGuard(g_render_mutex);
-    std::lock_guard effectGuard(g_effect_manager_mutex);
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
 
     auto enabled = AreEffectsEnabled();
 
@@ -1176,8 +1183,7 @@ void EffectManager::NextEffect(bool skipSave)
 
 void EffectManager::PreviousEffect()
 {
-    std::lock_guard renderGuard(g_render_mutex);
-    std::lock_guard effectGuard(g_effect_manager_mutex);
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
 
     auto enabled = AreEffectsEnabled();
 
@@ -1205,8 +1211,7 @@ void EffectManager::PreviousEffect()
 
 void EffectManager::Update()
 {
-    std::lock_guard renderGuard(g_render_mutex);
-    std::lock_guard effectGuard(g_effect_manager_mutex);
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
 
     if ((_gfx[0])->GetLEDCount() == 0)
         return;

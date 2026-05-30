@@ -62,7 +62,7 @@ void HUB75GFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devices
 
     for (int i = 0; i < NUM_CHANNELS; i++)
     {
-        auto tmp_matrix = std::make_shared<HUB75GFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
+        auto tmp_matrix = make_shared_psram<HUB75GFX>(MATRIX_WIDTH, MATRIX_HEIGHT);
         devices.push_back(tmp_matrix);
         tmp_matrix->loadPalette(0);
     }
@@ -113,11 +113,11 @@ void HUB75GFX::setLeds(CRGB *pLeds)
     leds = pLeds;
 }
 
-void HUB75GFX::fillLeds(std::unique_ptr<CRGB []> & pLEDs)
+void HUB75GFX::fillLeds(const CRGB* pLEDs)
 {
     // A mesmerizer panel has the same layout as in memory, so we can memcpy.
 
-    memcpy(leds, pLEDs.get(), sizeof(CRGB) * GetLEDCount());
+    memcpy(leds, pLEDs, sizeof(CRGB) * GetLEDCount());
 }
 
 void HUB75GFX::Clear(CRGB color)

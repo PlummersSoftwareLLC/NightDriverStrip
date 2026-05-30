@@ -351,14 +351,11 @@ void setup()
 
     // PSRAM-by-default policy
     //
-    // Route any allocation above PSRAM_DEFAULT_THRESHOLD bytes through PSRAM
-    // automatically, leaving small allocations (and DMA-capable buffers, which
-    // explicitly request MALLOC_CAP_DMA elsewhere) in internal SRAM. This makes
-    // std::make_unique / std::make_shared / std::vector "do the right thing"
-    // for the common case without explicit *_psram helpers at every call site.
-    //
-    // On builds that don't define USE_PSRAM, the call below is a no-op (the
-    // ESP-IDF heap stays in internal-SRAM-only mode for that build).
+    // heap_caps_malloc_extmem_enable(threshold) only affects allocations that
+    // request MALLOC_CAP_DEFAULT (plain malloc / new / String / std::vector).
+    // ESP-IDF already excludes PSRAM from MALLOC_CAP_DMA and MALLOC_CAP_INTERNAL,
+    // so WiFi/lwIP/I2S/SPI DMA paths are unaffected by this setting -- those
+    // subsystems request DMA-capable internal SRAM explicitly and get it.
     //
     // Originally limited to MESMERIZER because the S3 + WiFi-connect path was
     // observed to crash with default-PSRAM enabled. The dynamic-services

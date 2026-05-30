@@ -67,15 +67,6 @@ namespace
         result = left + right;
         return true;
     }
-
-    bool CheckedStandardPacketSize(uint32_t itemCount, size_t itemSize, size_t& packetSize)
-    {
-        if (itemCount > (std::numeric_limits<size_t>::max() - STANDARD_DATA_HEADER_SIZE) / itemSize)
-            return false;
-
-        packetSize = STANDARD_DATA_HEADER_SIZE + itemCount * itemSize;
-        return true;
-    }
 }
 
 // SocketResponse
@@ -87,7 +78,7 @@ SocketServer::SocketServer(int port, int numLeds) :
     _numLeds(numLeds),
     _cbReceived(0)
 {
-    _abOutputBuffer = std::make_unique<uint8_t[]>(MAXIMUM_PACKET_SIZE + 1);                    // +1 for uzlib one byte overreach bug
+    _abOutputBuffer = make_unique_psram<uint8_t[]>(MAXIMUM_PACKET_SIZE + 1);                    // +1 for uzlib one byte overreach bug
     memset(&_address, 0, sizeof(_address));
 }
 
@@ -162,7 +153,7 @@ void SocketServer::release()
 
 bool SocketServer::begin()
 {
-    _pBuffer = std::make_unique<uint8_t[]>(MAXIMUM_PACKET_SIZE);
+    _pBuffer = make_unique_psram<uint8_t[]>(MAXIMUM_PACKET_SIZE);
     _cbReceived = 0;
 
     // Build the socket on a local fd and only publish it into the atomic
@@ -449,7 +440,7 @@ bool SocketServer::ProcessIncomingConnectionsLoop()
             // one big read one time would work best, and we use that to copy it to a regular RAM buffer.
 
             #if USE_PSRAM
-                std::unique_ptr<uint8_t []> _abTempBuffer = std::make_unique<uint8_t []>(MAXIMUM_PACKET_SIZE+1);    // Plus one for uzlib buffer overreach bug
+                auto _abTempBuffer = make_unique_internal<uint8_t[]>(MAXIMUM_PACKET_SIZE + 1);    // Plus one for uzlib buffer overreach bug
                 memcpy(_abTempBuffer.get(), _pBuffer.get(), MAXIMUM_PACKET_SIZE);
                 auto pSourceBuffer = &_abTempBuffer[COMPRESSED_HEADER_SIZE];
             #else

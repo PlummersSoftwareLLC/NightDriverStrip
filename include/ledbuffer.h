@@ -49,7 +49,7 @@ class LEDBuffer
 
   private:
 
-    std::unique_ptr<CRGB []> _leds;
+    allocated_unique_ptr<CRGB []> _leds;
     uint32_t                 _pixelCount;
     uint64_t                 _timeStampMicroseconds;
     uint64_t                 _timeStampSeconds;
@@ -69,7 +69,7 @@ class LEDBuffer
 
     bool IsBufferOlderThan(const timeval & tv) const;
 
-    static bool ValidateWirePayload(const std::unique_ptr<uint8_t []>& payloadData,
+    static bool ValidateWirePayload(const uint8_t* payloadData,
                                     size_t payloadLength,
                                     size_t ledCount,
                                     size_t* payloadBytes = nullptr);
@@ -78,7 +78,7 @@ class LEDBuffer
     //
     // Parse and deposit a WiFi packet into a buffer
 
-    bool UpdateFromWire(std::unique_ptr<uint8_t []> & payloadData, size_t payloadLength);
+    bool UpdateFromWire(const uint8_t* payloadData, size_t payloadLength);
 
     void DrawBuffer();
     void Reconfigure(std::shared_ptr<GFXBase> pStrand);

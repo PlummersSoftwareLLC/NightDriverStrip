@@ -38,8 +38,8 @@
 #include <FS.h>
 #include <algorithm>
 #include <cstdlib>
+#include <memory>
 #include <mutex>
-#include <limits>
 #include <utility>
 
 #include "audioservice.h"
@@ -56,6 +56,8 @@
 
 namespace
 {
+    std::recursive_mutex g_settingSpecsCacheMutex;
+
     void AppendPins(JsonArray target, const std::array<int8_t, NUM_CHANNELS>& pins)
     {
         for (auto pin : pins)
@@ -301,7 +303,7 @@ const std::map<String, CWebServer::ValueValidator> CWebServer::settingValidators
     { DeviceConfig::AudioInputPinTag,     [](const String& value) { return g_ptrSystem->GetDeviceConfig().ValidateAudioInputPin(value.toInt()); } }
 };
 
-std::vector<SettingSpec> CWebServer::mySettingSpecs = {};
+std::vector<SettingSpec, psram_allocator<SettingSpec>> CWebServer::mySettingSpecs = {};
 std::vector<std::reference_wrapper<SettingSpec>> CWebServer::deviceSettingSpecs{};
 String CWebServer::deviceSettingSpecsJson{};
 
@@ -591,7 +593,7 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
 {
     debugV("GetEffectListText");
 
-    auto response = new AsyncJsonResponse();
+    auto response = std::make_unique<AsyncJsonResponse>();
     auto& j = response->getRoot();
     auto& effectManager = g_ptrSystem->GetEffectManager();
     bool overflow = false;
@@ -623,12 +625,12 @@ void CWebServer::GetEffectListText(AsyncWebServerRequest * pRequest)
 
     if (overflow)
     {
-        delete response;
+        response.reset();
         SendBufferOverflowResponse(pRequest);
         return;
     }
 
-    AddCORSHeaderAndSendResponse(pRequest, response);
+    AddCORSHeaderAndSendResponse(pRequest, response.release());
 }
 
 void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest, StatisticsType statsType) const
@@ -947,21 +949,29 @@ bool CWebServer::BuildSettingSpecsJson(String& json, const std::vector<std::refe
 
 bool CWebServer::EnsureDeviceSettingSpecsJson()
 {
+    std::lock_guard guard(g_settingSpecsCacheMutex);
+
     if (deviceSettingSpecsJson.length() > 0)
         return true;
 
-    if (!BuildSettingSpecsJson(deviceSettingSpecsJson, LoadDeviceSettingSpecs()))
+    // Build into a local String first. deviceSettingSpecsJson is used as a
+    // write-once response backing buffer, so after this successful assignment
+    // AsyncWebServer responses can safely reference its c_str() storage.
+    String json;
+    if (!BuildSettingSpecsJson(json, LoadDeviceSettingSpecs()))
     {
-        deviceSettingSpecsJson = String();
         return false;
     }
 
+    deviceSettingSpecsJson = json;
     debugI("WebServer: cached device setting specs JSON (%zu bytes).", (size_t)deviceSettingSpecsJson.length());
     return true;
 }
 
 const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceSettingSpecs()
 {
+    std::lock_guard guard(g_settingSpecsCacheMutex);
+
     if (deviceSettingSpecs.empty())
     {
         // effectInterval lives on the EffectManager rather than DeviceConfig,

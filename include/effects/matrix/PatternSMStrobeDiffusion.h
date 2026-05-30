@@ -26,7 +26,7 @@ class PatternSMStrobeDiffusion : public EffectWithId<PatternSMStrobeDiffusion>
     uint8_t step { 0 }; // some counter of frames or sequences of operations
     // Locations of snowflakes stored in a single flattened bitset (X-major).
     // Index calculation: idx = y * MATRIX_WIDTH + x
-    std::unique_ptr<std::bitset<MATRIX_WIDTH * MATRIX_HEIGHT>> snowBits = std::make_unique<std::bitset<MATRIX_WIDTH * MATRIX_HEIGHT>>();
+    allocated_unique_ptr<std::bitset<MATRIX_WIDTH * MATRIX_HEIGHT>> snowBits = make_unique_psram<std::bitset<MATRIX_WIDTH * MATRIX_HEIGHT>>();
     uint8_t Speed = 150;                                                             // 1-255 is speed
     uint8_t Scale = 90;                                                              // 1-100 is something parameter
     uint8_t FPSdelay;        // BUGBUG: This is set but never used. :-(

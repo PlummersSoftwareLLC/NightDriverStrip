@@ -190,7 +190,7 @@ class DeviceConfig : public IJSONSerializable
     RuntimeTopology runtimeTopology = {};
     RuntimeOutputs runtimeOutputs = {};
 
-    std::vector<SettingSpec> settingSpecs;
+    std::vector<SettingSpec, psram_allocator<SettingSpec>> settingSpecs;
     std::vector<std::reference_wrapper<SettingSpec>> settingSpecReferences;
     std::vector<String> pinSpecStrings;
     size_t writerIndex;

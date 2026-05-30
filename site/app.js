@@ -483,6 +483,8 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
       const onCell = document.createElement("td");
       const toggle = document.createElement("input");
       toggle.type = "checkbox";
+      toggle.id = `nd-effect-${index}-enabled`;
+      toggle.name = toggle.id;
       toggle.checked = !!effect.enabled;
       toggle.addEventListener("change", () => {
         postForm(effect.enabled ? "/disableEffect" : "/enableEffect", { effectIndex: index }).then(loadEffectsOnly).catch((error) => {
@@ -634,6 +636,14 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     }));
   }
 
+  function getOrderedDeviceSettingSpecs() {
+    if (!Array.isArray(state.settingsSpecs)) return [];
+    return state.settingsSpecs
+      .filter((spec) => !(spec.writeOnly && !spec.hasValidation))
+      .slice()
+      .sort(compareSettingSpecs);
+  }
+
   // Compare two specs for display order: spec.priority wins (lower = higher),
   // ties break by friendly name. Specs without an explicit priority sort to
   // the end of their section.
@@ -779,7 +789,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
       }
     };
 
-    const ctx = { spec, widget, valueWrap, currentDraft, currentValue, readOnly, setDraftValue, setFieldError };
+    const ctx = { spec, widget, valueWrap, currentDraft, currentValue, readOnly, isEffectDialog, setDraftValue, setFieldError };
 
     if (widgetKind === "intervalToggle") {
       renderIntervalToggleWidget(ctx);
@@ -809,6 +819,28 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     return wrapper;
   }
 
+  function assignControlIdentity(control, ctx, suffix) {
+    const id = getControlId(ctx, suffix);
+    control.id = id;
+    control.name = id;
+    return control;
+  }
+
+  function getControlId(ctx, suffix) {
+    const scope = ctx.isEffectDialog
+      ? `effect-${state.effectDialog.effectIndex ?? "dialog"}`
+      : "device";
+    const key = (ctx.spec && (ctx.spec.apiPath || ctx.spec.name)) || "setting";
+    return `nd-${slugForDomId(`${scope}-${key}-${suffix || "value"}`)}`;
+  }
+
+  function slugForDomId(value) {
+    return String(value)
+      .replace(/[^A-Za-z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .toLowerCase() || "field";
+  }
+
   // Composite "verb-toggle + numeric value" widget. The unitDivisor and labels
   // come from spec.widget.interval. Raw value 0 means "off" (the numeric input
   // is disabled and the stored value stays at 0); when off, the on-label
@@ -833,6 +865,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     switchLabel.className = "mac-switch";
     const toggle = document.createElement("input");
     toggle.type = "checkbox";
+    assignControlIdentity(toggle, ctx, "enabled");
     toggle.checked = rawDraft > 0;
     toggle.disabled = readOnly;
     const track = document.createElement("span");
@@ -849,6 +882,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     valueField.className = "inline-field";
     const valueInput = document.createElement("input");
     valueInput.type = "number";
+    assignControlIdentity(valueInput, ctx, "value");
     valueInput.min = "1";
     valueInput.step = "1";
     valueInput.inputMode = "numeric";
@@ -885,6 +919,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
   function renderSelectWidget(ctx) {
     const { spec, widget, valueWrap, currentDraft, readOnly, setDraftValue, setFieldError } = ctx;
     const control = document.createElement("select");
+    assignControlIdentity(control, ctx, "value");
     const options = getWidgetSelectOptions(spec, widget);
     options.forEach((option) => {
       const optionEl = document.createElement("option");
@@ -913,32 +948,26 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     const sliderMin = scale ? scale.displayMin : (spec.minimumValue ?? 0);
     const sliderMax = scale ? scale.displayMax : (spec.maximumValue ?? 255);
 
-    const control = document.createElement("input");
-    control.type = "range";
-    control.min = sliderMin;
-    control.max = sliderMax;
-    control.value = String(toDisplay(currentDraft));
-    control.disabled = readOnly;
-
     const output = document.createElement("input");
     output.type = "number";
+    assignControlIdentity(output, ctx, "value");
+    output.min = sliderMin;
+    output.max = sliderMax;
+    output.step = "1";
     output.value = String(toDisplay(currentDraft));
     output.disabled = readOnly;
 
     const handleDisplay = (display) => {
-      const intValue = clampInt(display, Number(control.min), Number(control.max), toDisplay(currentValue));
+      const intValue = clampInt(display, Number(output.min), Number(output.max), toDisplay(currentValue));
       output.value = String(intValue);
-      control.value = String(intValue);
       setDraftValue(toRaw(intValue));
       setFieldError(false, "");
     };
 
     output.addEventListener("change", () => handleDisplay(output.value));
-    control.addEventListener("input", () => handleDisplay(control.value));
 
     const row = document.createElement("div");
     row.className = "slider-row";
-    row.appendChild(control);
     row.appendChild(output);
     if (scale && scale.suffix) {
       const suffix = document.createElement("span");
@@ -955,6 +984,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     switchLabel.className = "mac-switch";
     const control = document.createElement("input");
     control.type = "checkbox";
+    assignControlIdentity(control, ctx, "value");
     control.checked = !!currentDraft;
     control.disabled = readOnly;
     control.addEventListener("change", () => {
@@ -976,29 +1006,31 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     const { valueWrap, currentDraft, currentValue, readOnly, setDraftValue, setFieldError } = ctx;
     const row = document.createElement("div");
     row.className = "color-row";
-    const control = document.createElement("input");
-    control.type = "color";
-    control.value = colorIntToHex(currentDraft);
-    control.disabled = readOnly;
+    const swatch = createColorSwatch(ctx, currentDraft, readOnly, "picker");
     const numeric = document.createElement("input");
     numeric.type = "number";
+    assignControlIdentity(numeric, ctx, "value");
     numeric.className = "color-value";
     numeric.value = String(currentDraft);
     numeric.disabled = readOnly;
-    control.addEventListener("input", () => {
-      const intValue = hexToColorInt(control.value);
+    swatch.addEventListener("click", () => {
+      const intValue = promptColorValue(Number(numeric.value || currentDraft));
+      if (intValue === null) {
+        return;
+      }
       numeric.value = String(intValue);
+      setColorSwatch(swatch, intValue);
       setDraftValue(intValue);
       setFieldError(false, "");
     });
     numeric.addEventListener("change", () => {
       const intValue = clampInt(numeric.value, 0, 16777215, currentValue);
       numeric.value = String(intValue);
-      control.value = colorIntToHex(intValue);
+      setColorSwatch(swatch, intValue);
       setDraftValue(intValue);
       setFieldError(false, "");
     });
-    row.appendChild(control);
+    row.appendChild(swatch);
     row.appendChild(numeric);
     valueWrap.appendChild(row);
   }
@@ -1011,12 +1043,10 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     palette.forEach((entry, index) => {
       const box = document.createElement("div");
       box.className = "palette-entry";
-      const color = document.createElement("input");
-      color.type = "color";
-      color.value = colorIntToHex(entry);
-      color.disabled = readOnly;
+      const swatch = createColorSwatch(ctx, entry, readOnly, `picker-${index}`);
       const value = document.createElement("input");
       value.type = "number";
+      assignControlIdentity(value, ctx, `value-${index}`);
       value.className = "color-value";
       value.value = String(entry);
       value.disabled = readOnly;
@@ -1026,22 +1056,57 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
         setDraftValue(next);
         setFieldError(false, "");
       };
-      color.addEventListener("input", () => {
-        const intValue = hexToColorInt(color.value);
+      swatch.addEventListener("click", () => {
+        const intValue = promptColorValue(Number(value.value || entry));
+        if (intValue === null) {
+          return;
+        }
         value.value = String(intValue);
+        setColorSwatch(swatch, intValue);
         updatePalette(intValue);
       });
       value.addEventListener("change", () => {
         const intValue = clampInt(value.value, 0, 16777215, entry);
         value.value = String(intValue);
-        color.value = colorIntToHex(intValue);
+        setColorSwatch(swatch, intValue);
         updatePalette(intValue);
       });
-      box.appendChild(color);
+      box.appendChild(swatch);
       box.appendChild(value);
       row.appendChild(box);
     });
     valueWrap.appendChild(row);
+  }
+
+  function createColorSwatch(ctx, value, readOnly, suffix) {
+    const swatch = document.createElement("button");
+    swatch.type = "button";
+    swatch.className = "color-swatch";
+    assignControlIdentity(swatch, ctx, suffix);
+    swatch.disabled = readOnly;
+    swatch.title = "Edit color";
+    setColorSwatch(swatch, value);
+    return swatch;
+  }
+
+  function setColorSwatch(swatch, value) {
+    const hex = colorIntToHex(value);
+    swatch.style.backgroundColor = hex;
+    swatch.setAttribute("aria-label", `Color ${hex}`);
+  }
+
+  function promptColorValue(currentValue) {
+    const currentHex = colorIntToHex(currentValue);
+    const response = window.prompt("Color hex value", currentHex);
+    if (response === null) {
+      return null;
+    }
+    const normalized = String(response).trim().replace(/^#/, "");
+    if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
+      toast("Enter a 6-digit hex color, for example #40C0FF.", "error");
+      return null;
+    }
+    return hexToColorInt(`#${normalized}`);
   }
 
   function renderDefaultInputWidget(ctx) {
@@ -1050,6 +1115,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     control.type = spec.type === settingType.Float || spec.type === settingType.Integer || spec.type === settingType.PositiveBigInteger
       ? "number"
       : "text";
+    assignControlIdentity(control, ctx, "value");
     if (spec.minimumValue !== undefined) control.min = spec.minimumValue;
     if (spec.maximumValue !== undefined) control.max = spec.maximumValue;
     if (spec.type === settingType.Integer || spec.type === settingType.PositiveBigInteger) control.step = "1";

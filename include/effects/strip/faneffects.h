@@ -954,7 +954,7 @@ protected:
 
   PixelOrder Order;
 
-  std::unique_ptr<uint8_t[]> abHeat; // Heat table to map temp to color
+  allocated_unique_ptr<uint8_t[]> abHeat; // Heat table to map temp to color
 
   // When diffusing the fire upwards, these control how much to blend in from the cells below (ie: downward neighbors)
   // You can tune these coefficients to control how quickly and smoothly the fire spreads
@@ -998,7 +998,7 @@ public:
   {
     if (bMirrored)
       LEDCount = LEDCount / 2;
-    abHeat = std::make_unique<uint8_t[]>(CellCount());
+    abHeat = make_unique_psram<uint8_t[]>(CellCount());
   }
 
   FireFanEffectBase(const JsonObjectConst& jsonObject)
@@ -1016,7 +1016,7 @@ public:
         bMulticolor(jsonObject[PTY_MULTICOLOR] == 1),
         MaxSparkTemp(jsonObject[PTY_SPARKTEMP])
   {
-    abHeat = std::make_unique<uint8_t[]>(CellCount());
+    abHeat = make_unique_psram<uint8_t[]>(CellCount());
   }
 
   bool SerializeToJSON(JsonObject& jsonObject) override

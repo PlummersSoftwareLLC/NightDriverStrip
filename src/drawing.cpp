@@ -326,9 +326,18 @@ void IRAM_ATTR RenderService::Run()
         double frameStartTime       = g_Values.AppTime.FrameStartTime();
 
         {
-            // Hold the render mutex for the frame pipeline so runtime topology/output
-            // changes cannot reconfigure the active buffers mid-frame.
-            std::lock_guard renderGuard(g_render_mutex);
+            // Hold the render and effect-manager mutexes together for the whole
+            // frame so that runtime topology/output changes cannot reconfigure the
+            // active buffers mid-frame. We MUST acquire them atomically with
+            // scoped_lock here because every other site that needs both (web
+            // handlers, remote control, runtime reconfig) acquires them via
+            // std::scoped_lock too. Taking them individually here (R first, then
+            // E later inside EffectManager getters) would form an AB-BA cycle
+            // with std::lock's adaptive ordering and wedge the AsyncTCP task on
+            // the first API call -- which manifests as total loss of network
+            // connectivity even though WiFi association is still up.
+
+            std::scoped_lock renderGuard(g_render_mutex, g_effect_manager_mutex);
             auto& graphics = *g_ptrSystem->GetDevices()[0];
 
             graphics.PrepareFrame();

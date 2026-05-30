@@ -46,7 +46,7 @@
 #include "itaskservice.h"
 
 class Screen;
-std::unique_ptr<Screen> CreateHardwareScreen(int w, int h);
+allocated_unique_ptr<Screen> CreateHardwareScreen(int w, int h);
 
 
 #if defined(TOGGLE_BUTTON_0) || defined(TOGGLE_BUTTON_1)
