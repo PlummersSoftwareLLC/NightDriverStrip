@@ -90,6 +90,27 @@ bool RemoveJSONFile(const String & fileName);
 
 namespace FieldAccess
 {
+    // Setting assignment helpers: used by SetSetting(name, value) style paths
+    // where a requested field name selects which destination member to update.
+    template <typename T>
+    bool AssignIfSelected(const String& selectedName, const String& fieldName, T& target, const T& value)
+    {
+        if (selectedName != fieldName)
+            return false;
+
+        target = value;
+        return true;
+    }
+
+    bool AssignIfSelected(const String& selectedName, const String& fieldName, int& target, const String& value);
+    bool AssignIfSelected(const String& selectedName, const String& fieldName, size_t& target, const String& value);
+    bool AssignIfSelected(const String& selectedName, const String& fieldName, float& target, const String& value);
+    bool AssignIfSelected(const String& selectedName, const String& fieldName, bool& target, const String& value);
+    bool AssignIfSelected(const String& selectedName, const String& fieldName, String& target, const String& value);
+    bool AssignIfSelected(const String& selectedName, const String& fieldName, CRGBPalette16& target, const String& value);
+    bool AssignIfSelected(const String& selectedName, const String& fieldName, CRGB& target, const String& value);
+
+    // JSON extraction helpers: used when consuming structured JsonObject payloads.
     template <typename T>
     bool AssignIfPresent(JsonObjectConst object, const char* key, T& target)
     {
@@ -111,6 +132,8 @@ namespace FieldAccess
         return true;
     }
 
+    // Optional apply helpers: used after parse/validate when applying optional
+    // request fields through setters or lambdas.
     template <typename T, typename Obj, typename Setter>
     bool ApplyIfPresent(const std::optional<T>& value, Obj& object, Setter setter)
     {

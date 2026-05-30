@@ -66,13 +66,6 @@ using EffectSettingSpecs = std::vector<SettingSpec, psram_allocator<SettingSpec>
 #define INIT_EFFECT_SETTING_SPECS(effectName, specsMember) \
     EffectSettingSpecs effectName::specsMember = {}
 
-// This macro returns from the invoking function (which would usually be SetSetting())
-// if the settingName and propertyName passed to it match, and the "value" was thus
-// assigned to the "property".
-#define RETURN_IF_SET(settingName, propertyName, property, value) \
-    if (SetIfSelected(settingName, propertyName, property, value)) \
-        return true
-
 // LEDStripEffect
 //
 // Base class for an LED strip effect.  At a minimum they must draw themselves and provide a unique name.
@@ -108,16 +101,6 @@ class LEDStripEffect : public IJSONSerializable
     size_t _maximumEffectTime = 0;
 
     std::vector<std::shared_ptr<GFXBase>> _GFX;
-
-    // Helper functions for known setting types, as defined in SettingSpec::SettingType
-
-    static bool SetIfSelected(const String& settingName, const String& propertyName, int& property, const String& value);
-    static bool SetIfSelected(const String& settingName, const String& propertyName, size_t& property, const String& value);
-    static bool SetIfSelected(const String& settingName, const String& propertyName, float& property, const String& value);
-    static bool SetIfSelected(const String& settingName, const String& propertyName, bool& property, const String& value);
-    static bool SetIfSelected(const String& settingName, const String& propertyName, String& property, const String& value);
-    static bool SetIfSelected(const String& settingName, const String& propertyName, CRGBPalette16& property, const String& value);
-    static bool SetIfSelected(const String& settingName, const String& propertyName, CRGB& property, const String& value);
 
     // Overrides of this method should fill the respective effect's SettingSpec vector and return a pointer to it.
     // Returning nullptr indicates the effect has no SettingSpec instances to add to the base set.
@@ -293,9 +276,7 @@ class LEDStripEffect : public IJSONSerializable
     virtual bool SerializeSettingsToJSON(JsonObject& jsonObject);
 
     // Changes the value for one "known" effect setting. All setting values are passed to this
-    // function are Strings; the conversion to the target type of a member variable that
-    // corresponds with a setting can be taken care of by using one of the SetIfSelected()
-    // overloads (either via RETURN_IF_SET or directly).
+    // function are Strings; conversions into concrete target types should use FieldAccess::AssignIfSelected().
     virtual bool SetSetting(const String& name, const String& value);
 };
 
