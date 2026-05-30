@@ -68,7 +68,7 @@ void DeviceConfig::AppendPins(JsonArray target, const std::array<int8_t, NUM_CHA
         target.add(pin);
 }
 
-std::optional<int> DeviceConfig::ResolveUnifiedAudioInputPin(JsonObjectConst device, String* errorMessage)
+ResultWithMessage<std::optional<int>> DeviceConfig::ResolveUnifiedAudioInputPin(JsonObjectConst device)
 {
     std::optional<int> requestedAudioInputPin;
 
@@ -82,17 +82,13 @@ std::optional<int> DeviceConfig::ResolveUnifiedAudioInputPin(JsonObjectConst dev
         {
             const int nestedAudioInputPin = audio["audioInputPin"].as<int>();
             if (requestedAudioInputPin.has_value() && requestedAudioInputPin.value() != nestedAudioInputPin)
-            {
-                if (errorMessage)
-                    *errorMessage = "Malformed request";
-                return std::nullopt;
-            }
+                return { std::nullopt, "Malformed request" };
 
             requestedAudioInputPin = nestedAudioInputPin;
         }
     }
 
-    return requestedAudioInputPin;
+    return { requestedAudioInputPin, "" };
 }
 
 void DeviceConfig::SerializeUnifiedSettings(JsonObject root) const
@@ -252,7 +248,7 @@ void DeviceConfig::SerializeUnifiedSettingsSchema(JsonObject root) const
     }
 }
 
-DeviceConfig::ValidateResponse DeviceConfig::ParseAndValidateUnifiedSettings(JsonObjectConst root, UnifiedSettingsRequest& out) const
+SuccessResultWithMessage DeviceConfig::ParseAndValidateUnifiedSettings(JsonObjectConst root, UnifiedSettingsRequest& out) const
 {
     out = UnifiedSettingsRequest{};
     out.requestedRuntimeConfig = GetRuntimeConfig();
@@ -283,7 +279,11 @@ DeviceConfig::ValidateResponse DeviceConfig::ParseAndValidateUnifiedSettings(Jso
         if (outputs["driver"].is<String>())
         {
             const auto driver = outputs["driver"].as<String>();
-            out.requestedRuntimeConfig.outputs.driver = driver == "hub75" ? OutputDriver::HUB75 : OutputDriver::WS281x;
+            auto parsedDriver = ParseOutputDriverName(driver);
+            if (!parsedDriver.has_value())
+                return { false, "invalid output driver" };
+
+            out.requestedRuntimeConfig.outputs.driver = parsedDriver.value();
             out.runtimeConfigTouched = true;
         }
 
@@ -297,11 +297,12 @@ DeviceConfig::ValidateResponse DeviceConfig::ParseAndValidateUnifiedSettings(Jso
             }
             if (ws281x["colorOrder"].is<String>())
             {
-                if (auto colorOrder = ParseWS281xColorOrderName(ws281x["colorOrder"].as<String>()); colorOrder.has_value())
-                {
-                    out.requestedRuntimeConfig.outputs.colorOrder = colorOrder.value();
-                    out.runtimeConfigTouched = true;
-                }
+                auto colorOrder = ParseWS281xColorOrderName(ws281x["colorOrder"].as<String>());
+                if (!colorOrder.has_value())
+                    return { false, "invalid WS281x color order" };
+
+                out.requestedRuntimeConfig.outputs.colorOrder = colorOrder.value();
+                out.runtimeConfigTouched = true;
             }
             if (ws281x["pins"].is<JsonArrayConst>())
             {
@@ -366,12 +367,17 @@ DeviceConfig::ValidateResponse DeviceConfig::ParseAndValidateUnifiedSettings(Jso
             out.brightness = requestedBrightness;
         }
 
-        String audioErrorMessage;
-        const auto requestedAudioInputPin = ResolveUnifiedAudioInputPin(device, &audioErrorMessage);
-        if (!audioErrorMessage.isEmpty())
-            return { false, audioErrorMessage };
-        if (requestedAudioInputPin.has_value())
+        const bool hasTopLevelAudioInputPin = device[DeviceConfig::AudioInputPinTag].is<int>();
+        const bool hasNestedAudioInputPin =
+            device["audio"].is<JsonObjectConst>()
+            && device["audio"].as<JsonObjectConst>()["audioInputPin"].is<int>();
+
+        if (hasTopLevelAudioInputPin || hasNestedAudioInputPin)
         {
+            auto [requestedAudioInputPin, audioPinResolveMessage] = ResolveUnifiedAudioInputPin(device);
+            if (!requestedAudioInputPin.has_value())
+                return { false, audioPinResolveMessage };
+
             auto [isValid, validationMessage] = ValidateAudioInputPin(requestedAudioInputPin.value());
             if (!isValid)
                 return { false, validationMessage };
@@ -388,7 +394,7 @@ DeviceConfig::ValidateResponse DeviceConfig::ParseAndValidateUnifiedSettings(Jso
     return { true, "" };
 }
 
-bool DeviceConfig::ApplyUnifiedDeviceSettings(const UnifiedSettingsRequest& request, String* errorMessage)
+SuccessResultWithMessage DeviceConfig::ApplyUnifiedDeviceSettings(const UnifiedSettingsRequest& request)
 {
     FieldAccess::ApplyIfPresent(request.hostname, *this, &DeviceConfig::SetHostname);
     FieldAccess::ApplyIfPresent(request.location, *this, &DeviceConfig::SetLocation);
@@ -415,9 +421,7 @@ bool DeviceConfig::ApplyUnifiedDeviceSettings(const UnifiedSettingsRequest& requ
             if (!audioService.Reconfigure(AudioConfig::FromCurrentSettings()))
             {
                 SetAudioInputPin(oldPin);
-                if (errorMessage)
-                    *errorMessage = "Audio input pin live apply failed";
-                return false;
+                return { false, "Audio input pin live apply failed" };
             }
         }
     }
@@ -427,8 +431,5 @@ bool DeviceConfig::ApplyUnifiedDeviceSettings(const UnifiedSettingsRequest& requ
                        request.clearGlobalColor,
                        request.applyGlobalColors);
 
-    if (errorMessage)
-        *errorMessage = "";
-
-    return true;
+    return { true, "" };
 }

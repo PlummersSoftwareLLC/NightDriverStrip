@@ -365,7 +365,7 @@ void DeviceConfig::SetRememberCurrentEffect(bool newRememberCurrentEffect)
     SetAndSave(rememberCurrentEffect, newRememberCurrentEffect);
 }
 
-DeviceConfig::ValidateResponse DeviceConfig::ValidateBrightness(int newBrightness)
+SuccessResultWithMessage DeviceConfig::ValidateBrightness(int newBrightness)
 {
     if (newBrightness < BRIGHTNESS_MIN)
         return { false, String("brightness is below minimum value of ") + BRIGHTNESS_MIN };
@@ -376,7 +376,7 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateBrightness(int newBrightnes
     return { true, "" };
 }
 
-DeviceConfig::ValidateResponse DeviceConfig::ValidateBrightness(const String& newBrightness)
+SuccessResultWithMessage DeviceConfig::ValidateBrightness(const String& newBrightness)
 {
     return ValidateBrightness(newBrightness.toInt());
 }
@@ -396,7 +396,7 @@ void DeviceConfig::SetShowVUMeter(bool newShowVUMeter)
     #endif
 }
 
-DeviceConfig::ValidateResponse DeviceConfig::ValidatePowerLimit(int newPowerLimit)
+SuccessResultWithMessage DeviceConfig::ValidatePowerLimit(int newPowerLimit)
 {
     if (newPowerLimit < POWER_LIMIT_MIN)
         return { false, String("powerLimit is below minimum value of ") + POWER_LIMIT_MIN };
@@ -404,7 +404,7 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidatePowerLimit(int newPowerLimi
     return { true, "" };
 }
 
-DeviceConfig::ValidateResponse DeviceConfig::ValidatePowerLimit(const String& newPowerLimit)
+SuccessResultWithMessage DeviceConfig::ValidatePowerLimit(const String& newPowerLimit)
 {
     return ValidatePowerLimit(newPowerLimit.toInt());
 }
@@ -435,7 +435,7 @@ void DeviceConfig::SetSecondColor(const CRGB& newSecondColor)
     SetAndSave(secondColor, newSecondColor);
 }
 
-DeviceConfig::ValidateResponse DeviceConfig::ValidateAudioInputPin(int pin) const
+SuccessResultWithMessage DeviceConfig::ValidateAudioInputPin(int pin) const
 {
     if (pin < -1)
         return { false, "audio input pin must be -1 or a valid GPIO" };
@@ -515,7 +515,7 @@ bool DeviceConfig::SetTimeZone(const String& newTimeZone, bool skipWrite)
 }
 
 #if ENABLE_WIFI
-DeviceConfig::ValidateResponse DeviceConfig::ValidateOpenWeatherAPIKey(const String &newOpenWeatherAPIKey)
+SuccessResultWithMessage DeviceConfig::ValidateOpenWeatherAPIKey(const String &newOpenWeatherAPIKey)
 {
     HTTPClient http;
 

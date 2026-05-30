@@ -20,6 +20,10 @@
 
 #if ENABLE_AUDIO
 
+#if USE_M5
+    #include <M5Unified.h>
+#endif
+
 size_t SoundAnalyzerBase::SampleM5()
 {
     size_t bytesRead = 0;

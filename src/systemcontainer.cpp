@@ -302,7 +302,7 @@ int SystemContainer::GetConfiguredAudioInputPin() const
     return DeviceConfig::GetCompiledAudioInputPin();
 }
 
-DeviceConfig::ValidateResponse SystemContainer::ApplyRuntimeConfiguration()
+SuccessResultWithMessage SystemContainer::ApplyRuntimeConfiguration()
 {
     // Runtime topology changes retarget both the graphics objects and the
     // WiFi frame buffers. Lock all three domains together so the render task
@@ -341,8 +341,8 @@ DeviceConfig::ValidateResponse SystemContainer::ApplyRuntimeConfiguration()
         // changes stay on one transport path instead of handing off between different ESP32 RMT backends.
         if (_ptrDevices)
         {
-            String applyConfigError;
-            if (!SetupWS281xOutputManager().ApplyConfig(config, *_ptrDevices, &applyConfigError))
+            auto [applyConfigSucceeded, applyConfigError] = SetupWS281xOutputManager().ApplyConfig(config, *_ptrDevices);
+            if (!applyConfigSucceeded)
                 return { false, applyConfigError };
         }
 
@@ -359,7 +359,7 @@ DeviceConfig::ValidateResponse SystemContainer::ApplyRuntimeConfiguration()
     return { true, "" };
 }
 
-DeviceConfig::ValidateResponse SystemContainer::ApplyRuntimeConfigurationTransaction(const DeviceConfig::RuntimeConfig& requestedConfig)
+SuccessResultWithMessage SystemContainer::ApplyRuntimeConfigurationTransaction(const DeviceConfig::RuntimeConfig& requestedConfig)
 {
     auto& deviceConfig = GetDeviceConfig();
     const auto previousConfig = deviceConfig.GetRuntimeConfig();

@@ -63,8 +63,8 @@ public:
     // Configure (or reconfigure) a single TX channel for the given GPIO. Caller
     // guarantees the channel is not currently installed when this is invoked.
     // `byteCount` is the size of the outputBytes buffer for that channel
-    // (always 3 * ledCount). Returns false on failure with errorMessage set.
-    virtual bool ConfigureChannel(size_t channelIndex, gpio_num_t pin, size_t byteCount, String* errorMessage) = 0;
+    // (always 3 * ledCount).
+    virtual SuccessResultWithMessage ConfigureChannel(size_t channelIndex, gpio_num_t pin, size_t byteCount) = 0;
 
     // Tear down a previously installed channel. Idempotent: safe to call on
     // an already-released channel.
@@ -194,7 +194,7 @@ namespace
     class LegacyTransport : public ::Transport
     {
     public:
-        bool ConfigureChannel(size_t channelIndex, gpio_num_t pin, size_t /*byteCount*/, String* errorMessage) override
+        SuccessResultWithMessage ConfigureChannel(size_t channelIndex, gpio_num_t pin, size_t /*byteCount*/) override
         {
             // The IDF4-compatible helper seeds a TX config for the requested
             // channel/GPIO. We then override the pieces that matter for WS2812
@@ -206,28 +206,18 @@ namespace
             config.tx_config.idle_level = RMT_IDLE_LEVEL_LOW;
 
             if (const auto error = rmt_config(&config); error != ESP_OK)
-            {
-                if (errorMessage)
-                    *errorMessage = FormatRmtError("rmt_config", error);
-                return false;
-            }
+                return { false, FormatRmtError("rmt_config", error) };
 
             if (const auto error = rmt_driver_install(static_cast<rmt_channel_t>(channelIndex), 0, ESP_INTR_FLAG_IRAM); error != ESP_OK)
-            {
-                if (errorMessage)
-                    *errorMessage = FormatRmtError("rmt_driver_install", error);
-                return false;
-            }
+                return { false, FormatRmtError("rmt_driver_install", error) };
 
             if (const auto error = rmt_translator_init(static_cast<rmt_channel_t>(channelIndex), WS2812ByteTranslator); error != ESP_OK)
             {
                 rmt_driver_uninstall(static_cast<rmt_channel_t>(channelIndex));
-                if (errorMessage)
-                    *errorMessage = FormatRmtError("rmt_translator_init", error);
-                return false;
+                return { false, FormatRmtError("rmt_translator_init", error) };
             }
 
-            return true;
+            return { true, "" };
         }
 
         void ReleaseChannel(size_t channelIndex) override
@@ -314,7 +304,7 @@ namespace
         rmt_encoder_handle_t _encoders[NUM_CHANNELS] = {};
 
     public:
-        bool ConfigureChannel(size_t channelIndex, gpio_num_t pin, size_t /*byteCount*/, String* errorMessage) override
+        SuccessResultWithMessage ConfigureChannel(size_t channelIndex, gpio_num_t pin, size_t /*byteCount*/) override
         {
             rmt_tx_channel_config_t channelConfig = {};
             channelConfig.gpio_num = pin;
@@ -327,9 +317,7 @@ namespace
             if (const auto error = rmt_new_tx_channel(&channelConfig, &_channels[channelIndex]); error != ESP_OK)
             {
                 _channels[channelIndex] = nullptr;
-                if (errorMessage)
-                    *errorMessage = FormatRmtError("rmt_new_tx_channel", error);
-                return false;
+                return { false, FormatRmtError("rmt_new_tx_channel", error) };
             }
 
             rmt_bytes_encoder_config_t encoderConfig = {};
@@ -342,9 +330,7 @@ namespace
                 rmt_del_channel(_channels[channelIndex]);
                 _channels[channelIndex] = nullptr;
                 _encoders[channelIndex] = nullptr;
-                if (errorMessage)
-                    *errorMessage = FormatRmtError("rmt_new_bytes_encoder", error);
-                return false;
+                return { false, FormatRmtError("rmt_new_bytes_encoder", error) };
             }
 
             if (const auto error = rmt_enable(_channels[channelIndex]); error != ESP_OK)
@@ -353,12 +339,10 @@ namespace
                 rmt_del_channel(_channels[channelIndex]);
                 _channels[channelIndex] = nullptr;
                 _encoders[channelIndex] = nullptr;
-                if (errorMessage)
-                    *errorMessage = FormatRmtError("rmt_enable", error);
-                return false;
+                return { false, FormatRmtError("rmt_enable", error) };
             }
 
-            return true;
+            return { true, "" };
         }
 
         void ReleaseChannel(size_t channelIndex) override
@@ -492,7 +476,7 @@ void WS281xOutputManager::Reset()
     _colorOrder = DeviceConfig::GetCompiledWS281xColorOrder();
 }
 
-bool WS281xOutputManager::RecreateChannel(size_t channelIndex, int8_t pin, size_t ledCount, String* errorMessage)
+SuccessResultWithMessage WS281xOutputManager::RecreateChannel(size_t channelIndex, int8_t pin, size_t ledCount)
 {
     auto& state = _channels[channelIndex];
     // BytesPerPixel comes from the chip-specific PixelFormat (3 for WS2812,
@@ -520,11 +504,7 @@ bool WS281xOutputManager::RecreateChannel(size_t channelIndex, int8_t pin, size_
         auto* mem = static_cast<uint8_t*>(heap_caps_malloc(byteCount,
                             MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT));
         if (!mem)
-        {
-            if (errorMessage)
-                *errorMessage = "failed to allocate DMA-capable WS281x byte buffer";
-            return false;
-        }
+            return { false, "failed to allocate DMA-capable WS281x byte buffer" };
 
         std::fill_n(mem, byteCount, 0);
         // unique_ptr<uint8_t[]> default deleter calls free(), which is the
@@ -533,14 +513,15 @@ bool WS281xOutputManager::RecreateChannel(size_t channelIndex, int8_t pin, size_
         state.byteCount = byteCount;
     }
 
-    if (!_transport->ConfigureChannel(channelIndex, static_cast<gpio_num_t>(pin), byteCount, errorMessage))
-        return false;
+    auto [channelConfigured, channelConfigureError] = _transport->ConfigureChannel(channelIndex, static_cast<gpio_num_t>(pin), byteCount);
+    if (!channelConfigured)
+        return { false, channelConfigureError };
 
     state.pin = pin;
     state.ledCount = ledCount;
     state.installed = true;
     state.active = true;
-    return true;
+    return { true, "" };
 }
 
 void WS281xOutputManager::ReleaseChannel(size_t channelIndex)
@@ -568,18 +549,14 @@ void WS281xOutputManager::ReleaseChannel(size_t channelIndex)
     state.active = false;
 }
 
-bool WS281xOutputManager::ApplyConfig(const DeviceConfig& config, const std::vector<std::shared_ptr<GFXBase>>& devices, String* errorMessage)
+SuccessResultWithMessage WS281xOutputManager::ApplyConfig(const DeviceConfig& config, const std::vector<std::shared_ptr<GFXBase>>& devices)
 {
     // ApplyConfig and Show share the transport mutex so GPIO/channel changes are
     // atomic with respect to the render thread's transmit path.
     std::lock_guard guard(WS281xGFX::TransportMutex());
 
     if (config.GetOutputDriver() != DeviceConfig::OutputDriver::WS281x)
-    {
-        if (errorMessage)
-            *errorMessage = "recompile needed";
-        return false;
-    }
+        return { false, "recompile needed" };
 
     const size_t channelCount = std::min(config.GetChannelCount(), devices.size());
     const size_t ledCount = config.GetActiveLEDCount();
@@ -601,8 +578,9 @@ bool WS281xOutputManager::ApplyConfig(const DeviceConfig& config, const std::vec
         auto& state = _channels[i];
         if (!state.active || !state.installed || state.pin != pins[i] || state.ledCount != ledCount)
         {
-            if (!RecreateChannel(i, pins[i], ledCount, errorMessage))
-                return false;
+            auto [channelRecreated, recreateError] = RecreateChannel(i, pins[i], ledCount);
+            if (!channelRecreated)
+                return { false, recreateError };
         }
     }
 
@@ -610,11 +588,8 @@ bool WS281xOutputManager::ApplyConfig(const DeviceConfig& config, const std::vec
     _activeLEDCount = ledCount;
     _colorOrder = config.GetWS281xColorOrder();
 
-    if (errorMessage)
-        *errorMessage = "";
-
     LogRuntimeWS281xConfiguration(config, devices, "apply");
-    return true;
+    return { true, "" };
 }
 
 void WS281xOutputManager::Show(const std::vector<std::shared_ptr<GFXBase>>& devices, uint16_t pixelsDrawn, uint8_t brightness, uint8_t fader)

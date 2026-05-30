@@ -69,8 +69,8 @@ void CWebServer::SetUnifiedSettings(AsyncWebServerRequest * pRequest, JsonVarian
         }
     }
 
-    String applyErrorMessage;
-    if (!deviceConfig.ApplyUnifiedDeviceSettings(unifiedRequest, &applyErrorMessage))
+    auto [settingsApplied, applyErrorMessage] = deviceConfig.ApplyUnifiedDeviceSettings(unifiedRequest);
+    if (!settingsApplied)
     {
         AddCORSHeaderAndSendBadRequest(pRequest, applyErrorMessage);
         return;

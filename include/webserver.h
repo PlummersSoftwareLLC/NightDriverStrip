@@ -81,7 +81,7 @@ class CWebServer : public IService
     using ValueSetter = std::function<bool(Tv)>;
 
     // Value validating function type, as used by DeviceConfig (and possible others)
-    using ValueValidator = std::function<DeviceConfig::ValidateResponse(const String&)>;
+    using ValueValidator = std::function<SuccessResultWithMessage(const String&)>;
 
     // Device stats that don't change after startup
     struct StaticStatistics
@@ -186,8 +186,8 @@ class CWebServer : public IService
     static bool EnsureDeviceSettingSpecsJson();
     static bool BuildSettingSpecsJson(String& json, const std::vector<std::reference_wrapper<SettingSpec>> & settingSpecs);
     static void SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, const std::vector<std::reference_wrapper<SettingSpec>> & settingSpecs);
-    static bool ValidateLegacyDeviceSettings(AsyncWebServerRequest * pRequest, String* errorMessage = nullptr);
-    static bool SetSettingsIfPresent(AsyncWebServerRequest * pRequest, String* errorMessage = nullptr);
+    static SuccessResultWithMessage ValidateLegacyDeviceSettings(AsyncWebServerRequest * pRequest);
+    static SuccessResultWithMessage SetSettingsIfPresent(AsyncWebServerRequest * pRequest);
 
     // Apply a new audio input pin to DeviceConfig and, when the build supports
     // a live reconfigure, push it through AudioService::Reconfigure() without

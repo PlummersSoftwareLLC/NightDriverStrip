@@ -285,7 +285,7 @@ void CWebServer::GetSettings(AsyncWebServerRequest * pRequest)
     AddCORSHeaderAndSendResponse(pRequest, response);
 }
 
-bool CWebServer::ValidateLegacyDeviceSettings(AsyncWebServerRequest * pRequest, String* errorMessage)
+SuccessResultWithMessage CWebServer::ValidateLegacyDeviceSettings(AsyncWebServerRequest * pRequest)
 {
     auto& deviceConfig = g_ptrSystem->GetDeviceConfig();
 
@@ -294,11 +294,7 @@ bool CWebServer::ValidateLegacyDeviceSettings(AsyncWebServerRequest * pRequest, 
         auto [isValid, validationMessage] =
             deviceConfig.ValidateOpenWeatherAPIKey(pRequest->getParam(DeviceConfig::OpenWeatherApiKeyTag, true, false)->value());
         if (!isValid)
-        {
-            if (errorMessage)
-                *errorMessage = validationMessage;
-            return false;
-        }
+            return { false, validationMessage };
     }
 
     if (pRequest->hasParam(DeviceConfig::PowerLimitTag, true, false))
@@ -306,11 +302,7 @@ bool CWebServer::ValidateLegacyDeviceSettings(AsyncWebServerRequest * pRequest, 
         auto [isValid, validationMessage] =
             deviceConfig.ValidatePowerLimit(pRequest->getParam(DeviceConfig::PowerLimitTag, true, false)->value().toInt());
         if (!isValid)
-        {
-            if (errorMessage)
-                *errorMessage = validationMessage;
-            return false;
-        }
+            return { false, validationMessage };
     }
 
     if (pRequest->hasParam(DeviceConfig::BrightnessTag, true, false))
@@ -318,11 +310,7 @@ bool CWebServer::ValidateLegacyDeviceSettings(AsyncWebServerRequest * pRequest, 
         auto [isValid, validationMessage] =
             deviceConfig.ValidateBrightness(pRequest->getParam(DeviceConfig::BrightnessTag, true, false)->value().toInt());
         if (!isValid)
-        {
-            if (errorMessage)
-                *errorMessage = validationMessage;
-            return false;
-        }
+            return { false, validationMessage };
     }
 
     if (pRequest->hasParam(DeviceConfig::AudioInputPinTag, true, false))
@@ -330,26 +318,20 @@ bool CWebServer::ValidateLegacyDeviceSettings(AsyncWebServerRequest * pRequest, 
         auto [isValid, validationMessage] =
             deviceConfig.ValidateAudioInputPin(pRequest->getParam(DeviceConfig::AudioInputPinTag, true, false)->value().toInt());
         if (!isValid)
-        {
-            if (errorMessage)
-                *errorMessage = validationMessage;
-            return false;
-        }
+            return { false, validationMessage };
     }
 
-    if (errorMessage)
-        *errorMessage = "";
-
-    return true;
+    return { true, "" };
 }
 
-bool CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest, String* errorMessage)
+SuccessResultWithMessage CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest)
 {
     auto& deviceConfig = g_ptrSystem->GetDeviceConfig();
     auto& effectManager = g_ptrSystem->GetEffectManager();
 
-    if (!ValidateLegacyDeviceSettings(pRequest, errorMessage))
-        return false;
+    auto [legacySettingsValid, legacySettingsMessage] = ValidateLegacyDeviceSettings(pRequest);
+    if (!legacySettingsValid)
+        return { false, legacySettingsMessage };
 
     auto runtimeConfig = deviceConfig.GetRuntimeConfig();
     bool runtimeConfigChanged = false;
@@ -358,36 +340,51 @@ bool CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest, String* 
     runtimeConfigChanged = PushPostParamIfPresent<size_t>(pRequest, DeviceConfig::MatrixHeightTag, SET_VALUE(runtimeConfig.topology.height = value)) || runtimeConfigChanged;
     runtimeConfigChanged = PushPostParamIfPresent<bool>(pRequest, DeviceConfig::MatrixSerpentineTag, SET_VALUE(runtimeConfig.topology.serpentine = value)) || runtimeConfigChanged;
     runtimeConfigChanged = PushPostParamIfPresent<size_t>(pRequest, DeviceConfig::WS281xChannelCountTag, SET_VALUE(runtimeConfig.outputs.channelCount = value)) || runtimeConfigChanged;
-    runtimeConfigChanged = PushPostParamIfPresent<String>(pRequest, DeviceConfig::OutputDriverTag, SET_VALUE(runtimeConfig.outputs.driver = value == "hub75" ? DeviceConfig::OutputDriver::HUB75 : DeviceConfig::OutputDriver::WS281x)) || runtimeConfigChanged;
-    runtimeConfigChanged = PushPostParamIfPresent<String>(pRequest, DeviceConfig::WS281xColorOrderTag, SET_VALUE(
-        if (value == "RGB") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::RGB;
-        else if (value == "RBG") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::RBG;
-        else if (value == "GRB") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::GRB;
-        else if (value == "GBR") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::GBR;
-        else if (value == "BRG") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::BRG;
-        else if (value == "BGR") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::BGR;
-    )) || runtimeConfigChanged;
+
+    if (pRequest->hasParam(DeviceConfig::OutputDriverTag, true, false))
+    {
+        const auto driver = pRequest->getParam(DeviceConfig::OutputDriverTag, true, false)->value();
+        if (driver == "hub75")
+            runtimeConfig.outputs.driver = DeviceConfig::OutputDriver::HUB75;
+        else if (driver == "ws281x")
+            runtimeConfig.outputs.driver = DeviceConfig::OutputDriver::WS281x;
+        else
+            return { false, "invalid output driver" };
+        runtimeConfigChanged = true;
+    }
+
+    if (pRequest->hasParam(DeviceConfig::WS281xColorOrderTag, true, false))
+    {
+        const auto colorOrder = pRequest->getParam(DeviceConfig::WS281xColorOrderTag, true, false)->value();
+        if (colorOrder == "RGB")
+            runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::RGB;
+        else if (colorOrder == "RBG")
+            runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::RBG;
+        else if (colorOrder == "GRB")
+            runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::GRB;
+        else if (colorOrder == "GBR")
+            runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::GBR;
+        else if (colorOrder == "BRG")
+            runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::BRG;
+        else if (colorOrder == "BGR")
+            runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::BGR;
+        else
+            return { false, "invalid WS281x color order" };
+        runtimeConfigChanged = true;
+    }
 
     if (runtimeConfigChanged)
     {
         auto [isValid, validationMessage] = deviceConfig.ValidateRuntimeConfig(runtimeConfig);
         if (!isValid)
-        {
-            if (errorMessage)
-                *errorMessage = validationMessage;
-            return false;
-        }
+            return { false, validationMessage };
     }
 
     if (runtimeConfigChanged)
     {
         auto [runtimeConfigApplied, runtimeErrorMessage] = g_ptrSystem->ApplyRuntimeConfigurationTransaction(runtimeConfig);
         if (!runtimeConfigApplied)
-        {
-            if (errorMessage)
-                *errorMessage = runtimeErrorMessage;
-            return false;
-        }
+            return { false, runtimeErrorMessage };
     }
 
     PushPostParamIfPresent<size_t>(pRequest,"effectInterval", SET_VALUE(effectManager.SetInterval(value)));
@@ -409,11 +406,7 @@ bool CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest, String* 
         const bool audioInputPinChanged =
             PushPostParamIfPresent<int>(pRequest, DeviceConfig::AudioInputPinTag, SET_VALUE(deviceConfig.SetAudioInputPin(value)));
         if (audioInputPinChanged && !ApplyAudioInputPinChange(oldPin))
-        {
-            if (errorMessage)
-                *errorMessage = "Audio input pin live apply failed";
-            return false;
-        }
+            return { false, "Audio input pin live apply failed" };
     }
 
     #if SHOW_VU_METER
@@ -430,20 +423,17 @@ bool CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest, String* 
                                     IsPostParamTrue(pRequest, DeviceConfig::ClearGlobalColorTag),
                                     IsPostParamTrue(pRequest, DeviceConfig::ApplyGlobalColorsTag));
 
-    if (errorMessage)
-        *errorMessage = "";
-
-    return true;
+    return { true, "" };
 }
 
 void CWebServer::SetSettings(AsyncWebServerRequest * pRequest)
 {
     debugV("SetSettings");
 
-    String errorMessage;
-    if (!SetSettingsIfPresent(pRequest, &errorMessage))
+    auto [settingsApplied, settingsMessage] = SetSettingsIfPresent(pRequest);
+    if (!settingsApplied)
     {
-        AddCORSHeaderAndSendBadRequest(pRequest, errorMessage);
+        AddCORSHeaderAndSendBadRequest(pRequest, settingsMessage);
         return;
     }
 
@@ -495,10 +485,10 @@ void CWebServer::ValidateAndSetSetting(AsyncWebServerRequest * pRequest)
         }
     }
 
-    String errorMessage;
-    if (!SetSettingsIfPresent(pRequest, &errorMessage))
+    auto [settingsApplied, settingsMessage] = SetSettingsIfPresent(pRequest);
+    if (!settingsApplied)
     {
-        AddCORSHeaderAndSendBadRequest(pRequest, errorMessage);
+        AddCORSHeaderAndSendBadRequest(pRequest, settingsMessage);
         return;
     }
     AddCORSHeaderAndSendOKResponse(pRequest);

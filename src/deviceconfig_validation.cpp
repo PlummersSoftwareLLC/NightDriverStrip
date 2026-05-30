@@ -15,7 +15,7 @@
 #include "deviceconfig.h"
 #include "deviceconfig_internal.h"
 
-DeviceConfig::ValidateResponse DeviceConfig::ValidateTopology(uint16_t width, uint16_t height, bool serpentine) const
+SuccessResultWithMessage DeviceConfig::ValidateTopology(uint16_t width, uint16_t height, bool serpentine) const
 {
     if (width == 0 || height == 0)
         return { false, "matrix dimensions must be greater than zero" };
@@ -35,7 +35,7 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateTopology(uint16_t width, ui
     return { true, "" };
 }
 
-DeviceConfig::ValidateResponse DeviceConfig::ValidateOutputDriver(OutputDriver driver) const
+SuccessResultWithMessage DeviceConfig::ValidateOutputDriver(OutputDriver driver) const
 {
     if (driver != GetCompiledOutputDriver())
         return { false, DeviceConfigInternal::RecompileNeededMessage() };
@@ -43,7 +43,7 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateOutputDriver(OutputDriver d
     return { true, "" };
 }
 
-DeviceConfig::ValidateResponse DeviceConfig::ValidateWS281xSettings(size_t channelCount, const std::array<int8_t, NUM_CHANNELS>& pins, WS281xColorOrder colorOrder) const
+SuccessResultWithMessage DeviceConfig::ValidateWS281xSettings(size_t channelCount, const std::array<int8_t, NUM_CHANNELS>& pins, WS281xColorOrder colorOrder) const
 {
     if (channelCount == 0)
         return { false, "channel count must be greater than zero" };
@@ -81,7 +81,7 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateWS281xSettings(size_t chann
     return { true, "" };
 }
 
-DeviceConfig::ValidateResponse DeviceConfig::ValidateRuntimeConfig(const RuntimeConfig& config) const
+SuccessResultWithMessage DeviceConfig::ValidateRuntimeConfig(const RuntimeConfig& config) const
 {
     auto [driverValid, driverMessage] = ValidateOutputDriver(config.outputs.driver);
     if (!driverValid)
@@ -98,7 +98,7 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateRuntimeConfig(const Runtime
     return { true, "" };
 }
 
-DeviceConfig::ValidateResponse DeviceConfig::SetRuntimeConfig(const RuntimeConfig& config, bool skipWrite)
+SuccessResultWithMessage DeviceConfig::SetRuntimeConfig(const RuntimeConfig& config, bool skipWrite)
 {
     auto [isValid, validationMessage] = ValidateRuntimeConfig(config);
     if (!isValid)

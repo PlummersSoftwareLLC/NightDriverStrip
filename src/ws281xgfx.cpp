@@ -267,8 +267,8 @@ void WS281xGFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& device
     // handoffs between different ESP32 RMT implementations.
     #if USE_WS281X
     auto& outputManager = g_ptrSystem->SetupWS281xOutputManager();
-    String errorMessage;
-    if (!outputManager.ApplyConfig(deviceConfig, devices, &errorMessage))
+    auto [configApplied, errorMessage] = outputManager.ApplyConfig(deviceConfig, devices);
+    if (!configApplied)
         throw std::runtime_error(errorMessage.c_str());
     #endif
 }
@@ -359,8 +359,8 @@ void HexagonGFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devic
     // Hexagon layouts are always driven through the runtime manager because their physical mapping is
     // board-specific and does not benefit from the compiled FastLED fallback assumptions used by strips.
     auto& outputManager = g_ptrSystem->SetupWS281xOutputManager();
-    String errorMessage;
-    if (!outputManager.ApplyConfig(g_ptrSystem->GetDeviceConfig(), devices, &errorMessage))
+    auto [configApplied, errorMessage] = outputManager.ApplyConfig(g_ptrSystem->GetDeviceConfig(), devices);
+    if (!configApplied)
         throw std::runtime_error(errorMessage.c_str());
     #endif
 }
