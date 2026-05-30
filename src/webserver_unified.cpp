@@ -6,7 +6,9 @@
 //
 // This file is part of webserver.cpp; see that file header for additional context.
 //
+// Split scope: unified settings API handlers for webserver routes.
 //---------------------------------------------------------------------------
+
 
 #include "globals.h"
 

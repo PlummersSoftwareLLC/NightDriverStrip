@@ -6,7 +6,9 @@
 //
 // This file is part of deviceconfig.cpp; see that file header for additional context.
 //
+// Split scope: color-related DeviceConfig accessors and serialization helpers.
 //---------------------------------------------------------------------------
+
 
 #include "globals.h"
 

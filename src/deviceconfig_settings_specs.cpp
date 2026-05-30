@@ -6,7 +6,9 @@
 //
 // This file is part of deviceconfig.cpp; see that file header for additional context.
 //
+// Split scope: DeviceConfig setting specification/schema definitions.
 //---------------------------------------------------------------------------
+
 
 #include "globals.h"
 

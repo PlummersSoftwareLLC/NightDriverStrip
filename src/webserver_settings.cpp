@@ -6,7 +6,9 @@
 //
 // This file is part of webserver.cpp; see that file header for additional context.
 //
+// Split scope: web endpoints and handlers for settings retrieval and updates.
 //---------------------------------------------------------------------------
+
 
 #include "globals.h"
 

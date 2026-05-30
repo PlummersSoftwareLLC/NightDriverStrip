@@ -6,7 +6,9 @@
 //
 // This file is part of deviceconfig.cpp; see that file header for additional context.
 //
+// Split scope: internal DeviceConfig helper routines and shared implementation details.
 //---------------------------------------------------------------------------
+
 
 #include "globals.h"
 
