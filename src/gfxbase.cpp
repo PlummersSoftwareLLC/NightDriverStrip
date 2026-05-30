@@ -36,6 +36,7 @@
 #include <cmath>
 #include <gfxfont.h>
 #include <memory>
+#include <mutex>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -43,6 +44,12 @@
 #include "effects/matrix/Boid.h"
 #include "gfxbase.h"
 #include "systemcontainer.h"
+
+namespace
+{
+    DRAM_ATTR allocated_unique_ptr<GFXBase::PolarMapArray> g_polarMap;
+    DRAM_ATTR std::mutex g_polarMapMutex;
+}
 
 // 32 Entries in the 5-bit gamma table
 const uint8_t GFXBase::gamma5[32] =
@@ -1567,49 +1574,42 @@ uint16_t XY(uint16_t x, uint16_t y)
 
 const GFXBase::PolarMapArray& GFXBase::getPolarMap()
 {
-    static allocated_unique_ptr<PolarMapArray> rMap_ptr;
-    static std::mutex rMap_mutex;
-
-    // Double-checked locking for thread-safe, on-demand initialization
-    if (!rMap_ptr)
+    std::lock_guard guard(g_polarMapMutex);
+    if (!g_polarMap)
     {
-        std::lock_guard guard(rMap_mutex);
-        if (!rMap_ptr)
+        // Allocate from PSRAM using the project's helper.
+        g_polarMap = make_unique_psram<PolarMapArray>();
+
+        auto& rMap = *g_polarMap;
+        const uint16_t C_X = kMatrixWidth / 2;
+        const uint16_t C_Y = kMatrixHeight / 2;
+        const float mapp = 255.0f / kMatrixWidth;
+
+        for (int16_t x = -C_X; x < C_X + (kMatrixWidth % 2); x++)
         {
-            // Allocate from PSRAM using the project's helper
-            rMap_ptr = make_unique_psram<PolarMapArray>();
-
-            auto& rMap = *rMap_ptr;
-            const uint16_t C_X = kMatrixWidth / 2;
-            const uint16_t C_Y = kMatrixHeight / 2;
-            const float mapp = 255.0f / kMatrixWidth;
-
-            for (int16_t x = -C_X; x < C_X + (kMatrixWidth % 2); x++)
+            for (int16_t y = -C_Y; y < C_Y + (kMatrixHeight% 2); y++)
             {
-                for (int16_t y = -C_Y; y < C_Y + (kMatrixHeight% 2); y++)
-                {
-                    float angle_rad = atan2f(static_cast<float>(y), static_cast<float>(x));
-                    float radius_float = hypotf(static_cast<float>(x), static_cast<float>(y));
+                float angle_rad = atan2f(static_cast<float>(y), static_cast<float>(x));
+                float radius_float = hypotf(static_cast<float>(x), static_cast<float>(y));
 
-                    rMap[x + C_X][y + C_Y].angle = 128.0f * (angle_rad / (float)M_PI);
-                    rMap[x + C_X][y + C_Y].scaled_radius = radius_float * mapp;
-                    rMap[x + C_X][y + C_Y].unscaled_radius = radius_float;
-                }
+                rMap[x + C_X][y + C_Y].angle = 128.0f * (angle_rad / (float)M_PI);
+                rMap[x + C_X][y + C_Y].scaled_radius = radius_float * mapp;
+                rMap[x + C_X][y + C_Y].unscaled_radius = radius_float;
             }
-
-            // A note on the radius calculations:
-            //
-            // `unscaled_radius` is the true geometric distance from the center of the
-            // matrix to the pixel. This is useful for effects that need the real
-            // physical distance.
-            //
-            // `scaled_radius` maps the geometric radius to a range that is more
-            // suitable for use with 8-bit FastLED functions (like inoise8).
-            // The scaling is normalized by the matrix width, which is a common
-            // technique to make radial effects work consistently across different
-            // matrix sizes.
         }
+
+        // A note on the radius calculations:
+        //
+        // `unscaled_radius` is the true geometric distance from the center of the
+        // matrix to the pixel. This is useful for effects that need the real
+        // physical distance.
+        //
+        // `scaled_radius` maps the geometric radius to a range that is more
+        // suitable for use with 8-bit FastLED functions (like inoise8).
+        // The scaling is normalized by the matrix width, which is a common
+        // technique to make radial effects work consistently across different
+        // matrix sizes.
     }
 
-    return *rMap_ptr;
+    return *g_polarMap;
 }
