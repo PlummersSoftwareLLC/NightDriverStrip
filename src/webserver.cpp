@@ -57,239 +57,6 @@
 namespace
 {
     std::recursive_mutex g_settingSpecsCacheMutex;
-
-    void AppendPins(JsonArray target, const std::array<int8_t, NUM_CHANNELS>& pins)
-    {
-        for (auto pin : pins)
-            target.add(pin);
-    }
-
-    void FillUnifiedSettingsJson(JsonObject root)
-    {
-        auto& deviceConfig = g_ptrSystem->GetDeviceConfig();
-        auto& effectManager = g_ptrSystem->GetEffectManager();
-
-        auto device = root["device"].to<JsonObject>();
-        device["hostname"] = deviceConfig.GetHostname();
-        device["location"] = deviceConfig.GetLocation();
-        device["locationIsZip"] = deviceConfig.IsLocationZip();
-        device["countryCode"] = deviceConfig.GetCountryCode();
-        device["timeZone"] = deviceConfig.GetTimeZone();
-        device["use24HourClock"] = deviceConfig.Use24HourClock();
-        device["useCelsius"] = deviceConfig.UseCelsius();
-        device["ntpServer"] = deviceConfig.GetNTPServer();
-        device["rememberCurrentEffect"] = deviceConfig.RememberCurrentEffect();
-        device["powerLimit"] = deviceConfig.GetPowerLimit();
-        device["brightness"] = deviceConfig.GetBrightness();
-        device["globalColor"] = deviceConfig.GlobalColor();
-        device["secondColor"] = deviceConfig.SecondColor();
-        device["applyGlobalColors"] = deviceConfig.ApplyGlobalColors();
-        #if ENABLE_REMOTE
-        auto remote = device["remote"].to<JsonObject>();
-        remote["enabled"] = true;
-        remote["pin"] = IR_REMOTE_PIN;
-        #else
-        auto remote = device["remote"].to<JsonObject>();
-        remote["enabled"] = false;
-        remote["pin"] = -1;
-        #endif
-        auto audio = device["audio"].to<JsonObject>();
-        audio["enabled"] =
-        #if ENABLE_AUDIO
-            true;
-        #else
-            false;
-        #endif
-        audio["audioInputPin"] = deviceConfig.GetAudioInputPin();
-        audio["compiledDefaultPin"] = DeviceConfig::GetCompiledAudioInputPin();
-        audio["mode"] = deviceConfig.GetAudioInputModeName();
-        audio["liveApply"] = deviceConfig.SupportsLiveAudioInputReconfigure();
-        audio["requiresReboot"] = !deviceConfig.SupportsLiveAudioInputReconfigure();
-        audio["supportsPinOverride"] = deviceConfig.SupportsConfigurableAudioInputPin();
-
-        auto topology = root["topology"].to<JsonObject>();
-        topology["width"] = deviceConfig.GetMatrixWidth();
-        topology["height"] = deviceConfig.GetMatrixHeight();
-        topology["serpentine"] = deviceConfig.IsMatrixSerpentine();
-        topology["ledCount"] = deviceConfig.GetActiveLEDCount();
-        topology["liveApply"] = deviceConfig.SupportsLiveTopology();
-
-        auto outputs = root["outputs"].to<JsonObject>();
-        outputs["driver"] = deviceConfig.GetRuntimeDriverName();
-        outputs["compiledDriver"] = deviceConfig.GetCompiledDriverName();
-        outputs["liveApply"] = deviceConfig.SupportsLiveOutputReconfigure();
-
-        auto ws281x = outputs["ws281x"].to<JsonObject>();
-        ws281x["channelCount"] = deviceConfig.GetChannelCount();
-        ws281x["compiledMaxChannels"] = DeviceConfig::GetCompiledChannelCount();
-        ws281x["colorOrder"] = DeviceConfig::GetColorOrderName(deviceConfig.GetWS281xColorOrder());
-        ws281x["compiledColorOrder"] = DeviceConfig::GetColorOrderName(DeviceConfig::GetCompiledWS281xColorOrder());
-        AppendPins(ws281x["pins"].to<JsonArray>(), deviceConfig.GetWS281xPins());
-
-        auto effects = root["effects"].to<JsonObject>();
-        effects["effectInterval"] = effectManager.GetInterval();
-    }
-
-    void FillUnifiedSettingsSchemaJson(JsonObject root)
-    {
-        auto& deviceConfig = g_ptrSystem->GetDeviceConfig();
-
-        auto topology = root["topology"].to<JsonObject>();
-        topology["compiledMaxWidth"] =
-            DeviceConfig::GetCompiledOutputDriver() == DeviceConfig::OutputDriver::HUB75
-                ? DeviceConfig::GetCompiledMatrixWidth()
-                : DeviceConfig::GetCompiledLEDCount();
-        topology["compiledMaxHeight"] =
-            DeviceConfig::GetCompiledOutputDriver() == DeviceConfig::OutputDriver::HUB75
-                ? DeviceConfig::GetCompiledMatrixHeight()
-                : DeviceConfig::GetCompiledLEDCount();
-        topology["compiledNominalWidth"] = DeviceConfig::GetCompiledMatrixWidth();
-        topology["compiledNominalHeight"] = DeviceConfig::GetCompiledMatrixHeight();
-        topology["compiledMaxLEDs"] = DeviceConfig::GetCompiledLEDCount();
-        topology["liveApply"] = deviceConfig.SupportsLiveTopology();
-        topology["rejectMessage"] = "recompile needed";
-
-        auto outputs = root["outputs"].to<JsonObject>();
-        outputs["compiledDriver"] = deviceConfig.GetCompiledDriverName();
-        outputs["liveApply"] = deviceConfig.SupportsLiveOutputReconfigure();
-        outputs["rejectMessage"] = "recompile needed";
-
-        auto drivers = outputs["allowedDrivers"].to<JsonArray>();
-        drivers.add(deviceConfig.GetCompiledDriverName());
-
-        auto ws281x = outputs["ws281x"].to<JsonObject>();
-        const auto compiledChannels = DeviceConfig::GetCompiledChannelCount();
-        ws281x["compiledMaxChannels"] = compiledChannels;
-        ws281x["compiledMaxLEDs"] = DeviceConfig::GetCompiledLEDCount();
-        ws281x["compiledColorOrder"] = DeviceConfig::GetColorOrderName(DeviceConfig::GetCompiledWS281xColorOrder());
-        // Concrete list of valid channel counts. Specs that drive a select for
-        // channel count point here so the UI doesn't have to derive a range
-        // from a bare integer.
-        auto allowedChannelCounts = ws281x["allowedChannelCounts"].to<JsonArray>();
-        for (size_t channel = 1; channel <= compiledChannels; ++channel)
-            allowedChannelCounts.add(channel);
-        auto allowedColorOrders = ws281x["allowedColorOrders"].to<JsonArray>();
-        allowedColorOrders.add("RGB");
-        allowedColorOrders.add("RBG");
-        allowedColorOrders.add("GRB");
-        allowedColorOrders.add("GBR");
-        allowedColorOrders.add("BRG");
-        allowedColorOrders.add("BGR");
-        AppendPins(ws281x["compiledPins"].to<JsonArray>(), DeviceConfig::GetCompiledWS281xPins());
-
-        auto device = root["device"].to<JsonObject>();
-        auto remote = device["remote"].to<JsonObject>();
-        remote["enabled"] =
-        #if ENABLE_REMOTE
-            true;
-        #else
-            false;
-        #endif
-        remote["pin"] = IR_REMOTE_PIN;
-
-        auto audio = device["audio"].to<JsonObject>();
-        audio["enabled"] =
-        #if ENABLE_AUDIO
-            true;
-        #else
-            false;
-        #endif
-        audio["compiledDefaultPin"] = DeviceConfig::GetCompiledAudioInputPin();
-        audio["mode"] = deviceConfig.GetAudioInputModeName();
-        audio["liveApply"] = deviceConfig.SupportsLiveAudioInputReconfigure();
-        audio["requiresReboot"] = !deviceConfig.SupportsLiveAudioInputReconfigure();
-        audio["supportsPinOverride"] = deviceConfig.SupportsConfigurableAudioInputPin();
-        audio["rejectMessage"] = "recompile needed";
-
-        // Section catalog. The UI groups settings by spec.section and uses
-        // these entries (matched on id) for the section heading and subtitle.
-        // Sections without any settings are still listed so the UI can decide
-        // whether to render an empty placeholder or skip them.
-        struct SectionInfo
-        {
-            const char* id;
-            const char* title;
-            const char* description;
-        };
-        static constexpr SectionInfo kSections[] =
-        {
-            { "topology",   "Topology",          "Active matrix dimensions and layout." },
-            { "output",     "Output",            "LED driver, channel count, color order, and per-channel pin assignments." },
-            { "appearance", "Appearance",        "Brightness, colors, effect rotation, and visual preferences." },
-            { "audio",      "Audio",             "Microphone input pin and audio capture configuration." },
-            { "location",   "Location",          "Where the device is for weather and timezone defaults." },
-            { "clock",      "Clock & Weather",   "Time display, NTP, and weather API options." },
-            { "system",     "System",            "Identification, power limits, and other system-wide options." },
-        };
-        auto sections = root["sections"].to<JsonArray>();
-        for (const auto& info : kSections)
-        {
-            auto entry = sections.add<JsonObject>();
-            entry["id"] = info.id;
-            entry["title"] = info.title;
-            entry["description"] = info.description;
-        }
-    }
-
-    // Normalizes the unified settings audio pin request into one optional value.
-    // The API currently accepts both the legacy flat device.audioInputPin field
-    // and the nested device.audio.audioInputPin field, so validation/apply can consume
-    // one resolved value instead of duplicating that lookup logic.
-
-    std::optional<int> GetRequestedUnifiedAudioInputPin(JsonObjectConst device)
-    {
-        std::optional<int> requestedAudioInputPin;
-
-        if (device[DeviceConfig::AudioInputPinTag].is<int>())
-            requestedAudioInputPin = device[DeviceConfig::AudioInputPinTag].as<int>();
-
-        if (device["audio"].is<JsonObjectConst>())
-        {
-            auto audio = device["audio"].as<JsonObjectConst>();
-            if (audio["audioInputPin"].is<int>())
-                requestedAudioInputPin = audio["audioInputPin"].as<int>();
-        }
-
-        return requestedAudioInputPin;
-    }
-
-    // Applies a validated runtime topology/output change as one staged transaction.
-    //
-    // The flow is:
-    // 1. Update DeviceConfig in-memory without persisting it.
-    // 2. Ask SystemContainer to reconfigure live devices/buffers/effects.
-    // 3. If live apply fails, restore the previous runtime config and best-effort
-    //    re-apply that old state so the device is not left half-switched.
-    // 4. Only persist the new runtime config after the live reconfigure succeeds.
-    //
-    // This keeps unified settings requests from partially committing topology/output
-    // changes when the runtime apply path fails after validation.
-
-    bool ApplyRuntimeConfigTransaction(const DeviceConfig::RuntimeConfig& requestedConfig, String* errorMessage)
-    {
-        auto& system = *g_ptrSystem;
-        auto& deviceConfig = system.GetDeviceConfig();
-        const auto previousConfig = deviceConfig.GetRuntimeConfig();
-
-        if (!deviceConfig.SetRuntimeConfig(requestedConfig, true, errorMessage))
-            return false;
-
-        if (!system.ApplyRuntimeConfiguration(errorMessage))
-        {
-            deviceConfig.SetRuntimeConfig(previousConfig, true, nullptr);
-
-            String rollbackError;
-            if (!system.ApplyRuntimeConfiguration(&rollbackError))
-                debugE("Failed to roll back runtime configuration after apply error: %s", rollbackError.c_str());
-
-            return false;
-        }
-
-        if (!deviceConfig.SetRuntimeConfig(requestedConfig, false, errorMessage))
-            return false;
-
-        return true;
-    }
 }
 
 // Static member initializers
@@ -1043,7 +810,9 @@ void CWebServer::GetUnifiedSettings(AsyncWebServerRequest * pRequest)
 {
     auto response = new AsyncJsonResponse();
     auto root = response->getRoot().to<JsonObject>();
-    FillUnifiedSettingsJson(root);
+    auto& deviceConfig = g_ptrSystem->GetDeviceConfig();
+    deviceConfig.SerializeUnifiedSettings(root);
+    root["effects"]["effectInterval"] = g_ptrSystem->GetEffectManager().GetInterval();
     AddCORSHeaderAndSendResponse(pRequest, response);
 }
 
@@ -1051,7 +820,7 @@ void CWebServer::GetUnifiedSettingsSchema(AsyncWebServerRequest * pRequest)
 {
     auto response = new AsyncJsonResponse();
     auto root = response->getRoot().to<JsonObject>();
-    FillUnifiedSettingsSchemaJson(root);
+    g_ptrSystem->GetDeviceConfig().SerializeUnifiedSettingsSchema(root);
     AddCORSHeaderAndSendResponse(pRequest, response);
 }
 
@@ -1117,85 +886,6 @@ bool CWebServer::ValidateLegacyDeviceSettings(AsyncWebServerRequest * pRequest, 
     return true;
 }
 
-bool CWebServer::ValidateUnifiedDeviceSettings(JsonObjectConst device, String* errorMessage)
-{
-    auto& deviceConfig = g_ptrSystem->GetDeviceConfig();
-
-    if (device[DeviceConfig::OpenWeatherApiKeyTag].is<String>())
-    {
-        auto [isValid, validationMessage] = deviceConfig.ValidateOpenWeatherAPIKey(device[DeviceConfig::OpenWeatherApiKeyTag].as<String>());
-        if (!isValid)
-        {
-            if (errorMessage)
-                *errorMessage = validationMessage;
-            return false;
-        }
-    }
-
-    if (device[DeviceConfig::PowerLimitTag].is<int>())
-    {
-        auto [isValid, validationMessage] = deviceConfig.ValidatePowerLimit(device[DeviceConfig::PowerLimitTag].as<int>());
-        if (!isValid)
-        {
-            if (errorMessage)
-                *errorMessage = validationMessage;
-            return false;
-        }
-    }
-
-    if (device[DeviceConfig::BrightnessTag].is<int>())
-    {
-        auto [isValid, validationMessage] = deviceConfig.ValidateBrightness(device[DeviceConfig::BrightnessTag].as<int>());
-        if (!isValid)
-        {
-            if (errorMessage)
-                *errorMessage = validationMessage;
-            return false;
-        }
-    }
-
-    std::optional<int> requestedAudioInputPin;
-
-    if (device[DeviceConfig::AudioInputPinTag].is<int>())
-        requestedAudioInputPin = device[DeviceConfig::AudioInputPinTag].as<int>();
-
-    if (device["audio"].is<JsonObjectConst>())
-    {
-        auto audio = device["audio"].as<JsonObjectConst>();
-        if (audio["audioInputPin"].is<int>())
-        {
-            const int nestedAudioInputPin = audio["audioInputPin"].as<int>();
-            // The API still accepts both the legacy flat key and the structured audio object. Reject
-            // conflicting requests explicitly so callers do not get a half-legacy, half-modern winner
-            // picked implicitly by field order.
-            if (requestedAudioInputPin.has_value() && requestedAudioInputPin.value() != nestedAudioInputPin)
-            {
-                if (errorMessage)
-                    *errorMessage = "Malformed request";
-                return false;
-            }
-
-            requestedAudioInputPin = nestedAudioInputPin;
-        }
-    }
-
-    if (requestedAudioInputPin.has_value())
-    {
-        auto [isValid, validationMessage] = deviceConfig.ValidateAudioInputPin(requestedAudioInputPin.value());
-        if (!isValid)
-        {
-            if (errorMessage)
-                *errorMessage = validationMessage;
-            return false;
-        }
-    }
-
-    if (errorMessage)
-        *errorMessage = "";
-
-    return true;
-}
-
 // Support function that applies whatever settings are included in the request passed after validating the
 // nontrivial ones up front. Returning false lets the caller report a single coherent bad-request error
 // instead of half-applying device config and then discovering a later constraint violation.
@@ -1238,7 +928,7 @@ bool CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest, String* 
     if (runtimeConfigChanged)
     {
         String runtimeErrorMessage;
-        if (!ApplyRuntimeConfigTransaction(runtimeConfig, &runtimeErrorMessage))
+        if (!g_ptrSystem->ApplyRuntimeConfigurationTransaction(runtimeConfig, &runtimeErrorMessage))
         {
             if (errorMessage)
                 *errorMessage = runtimeErrorMessage;
@@ -1320,121 +1010,33 @@ void CWebServer::SetUnifiedSettings(AsyncWebServerRequest * pRequest, JsonVarian
 
     auto root = json.as<JsonObjectConst>();
     auto& deviceConfig = g_ptrSystem->GetDeviceConfig();
-    auto& effectManager = g_ptrSystem->GetEffectManager();
-    const auto previousRuntimeConfig = deviceConfig.GetRuntimeConfig();
-    auto runtimeConfig = previousRuntimeConfig;
+    DeviceConfig::UnifiedSettingsRequest unifiedRequest;
 
-    if (root["topology"].is<JsonObjectConst>())
+    auto [isValid, validationMessage] = deviceConfig.ParseAndValidateUnifiedSettings(root, unifiedRequest);
+    if (!isValid)
     {
-        auto topology = root["topology"].as<JsonObjectConst>();
-        if (topology["width"].is<uint16_t>()) runtimeConfig.topology.width = topology["width"].as<uint16_t>();
-        if (topology["height"].is<uint16_t>()) runtimeConfig.topology.height = topology["height"].as<uint16_t>();
-        if (topology["serpentine"].is<bool>()) runtimeConfig.topology.serpentine = topology["serpentine"].as<bool>();
-    }
-
-    if (root["outputs"].is<JsonObjectConst>())
-    {
-        auto outputs = root["outputs"].as<JsonObjectConst>();
-        if (outputs["driver"].is<String>())
-        {
-            const auto driver = outputs["driver"].as<String>();
-            runtimeConfig.outputs.driver = driver == "hub75" ? DeviceConfig::OutputDriver::HUB75 : DeviceConfig::OutputDriver::WS281x;
-        }
-
-        if (outputs["ws281x"].is<JsonObjectConst>())
-        {
-            auto ws281x = outputs["ws281x"].as<JsonObjectConst>();
-            if (ws281x["channelCount"].is<size_t>()) runtimeConfig.outputs.channelCount = ws281x["channelCount"].as<size_t>();
-            if (ws281x["colorOrder"].is<String>())
-            {
-                const auto colorOrder = ws281x["colorOrder"].as<String>();
-                if (colorOrder == "RGB") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::RGB;
-                else if (colorOrder == "RBG") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::RBG;
-                else if (colorOrder == "GRB") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::GRB;
-                else if (colorOrder == "GBR") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::GBR;
-                else if (colorOrder == "BRG") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::BRG;
-                else if (colorOrder == "BGR") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::BGR;
-            }
-            if (ws281x["pins"].is<JsonArrayConst>())
-            {
-                auto pins = ws281x["pins"].as<JsonArrayConst>();
-                for (size_t i = 0; i < runtimeConfig.outputs.outputPins.size() && i < pins.size(); ++i)
-                {
-                    if (pins[i].is<int>())
-                        runtimeConfig.outputs.outputPins[i] = pins[i].as<int>();
-                }
-            }
-        }
-    }
-
-    auto [runtimeConfigValid, runtimeConfigMessage] = deviceConfig.ValidateRuntimeConfig(runtimeConfig);
-    if (!runtimeConfigValid)
-    {
-        AddCORSHeaderAndSendBadRequest(pRequest, runtimeConfigMessage);
+        AddCORSHeaderAndSendBadRequest(pRequest, validationMessage);
         return;
     }
 
-    if (root["device"].is<JsonObjectConst>())
+    if (unifiedRequest.runtimeConfigTouched)
     {
-        auto device = root["device"].as<JsonObjectConst>();
-        String validationMessage;
-        if (!ValidateUnifiedDeviceSettings(device, &validationMessage))
+        String runtimeErrorMessage;
+        if (!g_ptrSystem->ApplyRuntimeConfigurationTransaction(unifiedRequest.requestedRuntimeConfig, &runtimeErrorMessage))
         {
-            AddCORSHeaderAndSendBadRequest(pRequest, validationMessage);
+            AddCORSHeaderAndSendBadRequest(pRequest, runtimeErrorMessage);
             return;
         }
     }
 
-    const bool runtimeConfigChanged =
-        previousRuntimeConfig.topology.width != runtimeConfig.topology.width
-        || previousRuntimeConfig.topology.height != runtimeConfig.topology.height
-        || previousRuntimeConfig.topology.serpentine != runtimeConfig.topology.serpentine
-        || previousRuntimeConfig.outputs.driver != runtimeConfig.outputs.driver
-        || previousRuntimeConfig.outputs.channelCount != runtimeConfig.outputs.channelCount
-        || previousRuntimeConfig.outputs.outputPins != runtimeConfig.outputs.outputPins
-        || previousRuntimeConfig.outputs.colorOrder != runtimeConfig.outputs.colorOrder;
-
-    String errorMessage;
-    if (runtimeConfigChanged && !ApplyRuntimeConfigTransaction(runtimeConfig, &errorMessage))
+    String applyErrorMessage;
+    if (!deviceConfig.ApplyUnifiedDeviceSettings(unifiedRequest, &applyErrorMessage))
     {
-        AddCORSHeaderAndSendBadRequest(pRequest, errorMessage);
+        AddCORSHeaderAndSendBadRequest(pRequest, applyErrorMessage);
         return;
     }
 
-    if (root["device"].is<JsonObjectConst>())
-    {
-        auto device = root["device"].as<JsonObjectConst>();
-        if (device[DeviceConfig::HostnameTag].is<String>()) deviceConfig.SetHostname(device[DeviceConfig::HostnameTag].as<String>());
-        if (device[DeviceConfig::LocationTag].is<String>()) deviceConfig.SetLocation(device[DeviceConfig::LocationTag].as<String>());
-        if (device[DeviceConfig::LocationIsZipTag].is<bool>()) deviceConfig.SetLocationIsZip(device[DeviceConfig::LocationIsZipTag].as<bool>());
-        if (device[DeviceConfig::CountryCodeTag].is<String>()) deviceConfig.SetCountryCode(device[DeviceConfig::CountryCodeTag].as<String>());
-        if (device[DeviceConfig::OpenWeatherApiKeyTag].is<String>()) deviceConfig.SetOpenWeatherAPIKey(device[DeviceConfig::OpenWeatherApiKeyTag].as<String>());
-        if (device[DeviceConfig::TimeZoneTag].is<String>()) deviceConfig.SetTimeZone(device[DeviceConfig::TimeZoneTag].as<String>());
-        if (device[DeviceConfig::Use24HourClockTag].is<bool>()) deviceConfig.Set24HourClock(device[DeviceConfig::Use24HourClockTag].as<bool>());
-        if (device[DeviceConfig::UseCelsiusTag].is<bool>()) deviceConfig.SetUseCelsius(device[DeviceConfig::UseCelsiusTag].as<bool>());
-        if (device[DeviceConfig::NTPServerTag].is<String>()) deviceConfig.SetNTPServer(device[DeviceConfig::NTPServerTag].as<String>());
-        if (device[DeviceConfig::RememberCurrentEffectTag].is<bool>()) deviceConfig.SetRememberCurrentEffect(device[DeviceConfig::RememberCurrentEffectTag].as<bool>());
-        if (device[DeviceConfig::PowerLimitTag].is<int>()) deviceConfig.SetPowerLimit(device[DeviceConfig::PowerLimitTag].as<int>());
-        if (device[DeviceConfig::BrightnessTag].is<int>()) deviceConfig.SetBrightness(device[DeviceConfig::BrightnessTag].as<int>());
-        if (const auto requestedAudioInputPin = GetRequestedUnifiedAudioInputPin(device); requestedAudioInputPin.has_value())
-        {
-            const int oldPin = deviceConfig.GetAudioInputPin();
-            deviceConfig.SetAudioInputPin(requestedAudioInputPin.value());
-            if (!ApplyAudioInputPinChange(oldPin))
-            {
-                AddCORSHeaderAndSendBadRequest(pRequest, "Audio input pin live apply failed");
-                return;
-            }
-        }
-
-        std::optional<CRGB> globalColor = {};
-        std::optional<CRGB> secondColor = {};
-        if (device[DeviceConfig::GlobalColorTag].is<CRGB>()) globalColor = device[DeviceConfig::GlobalColorTag].as<CRGB>();
-        if (device[DeviceConfig::SecondColorTag].is<CRGB>()) secondColor = device[DeviceConfig::SecondColorTag].as<CRGB>();
-        deviceConfig.ApplyColorSettings(globalColor, secondColor,
-                                        device[DeviceConfig::ClearGlobalColorTag].is<bool>() && device[DeviceConfig::ClearGlobalColorTag].as<bool>(),
-                                        device[DeviceConfig::ApplyGlobalColorsTag].is<bool>() && device[DeviceConfig::ApplyGlobalColorsTag].as<bool>());
-    }
+    auto& effectManager = g_ptrSystem->GetEffectManager();
 
     if (root["effects"].is<JsonObjectConst>())
     {

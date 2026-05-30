@@ -168,6 +168,31 @@ class DeviceConfig : public IJSONSerializable
         RuntimeOutputs outputs;
     };
 
+    struct UnifiedSettingsRequest
+    {
+        RuntimeConfig requestedRuntimeConfig{};
+        bool runtimeConfigTouched = false;
+
+        std::optional<String> hostname{};
+        std::optional<String> location{};
+        std::optional<bool> locationIsZip{};
+        std::optional<String> countryCode{};
+        std::optional<String> openWeatherApiKey{};
+        std::optional<String> timeZone{};
+        std::optional<bool> use24HourClock{};
+        std::optional<bool> useCelsius{};
+        std::optional<String> ntpServer{};
+        std::optional<bool> rememberCurrentEffect{};
+        std::optional<int> powerLimit{};
+        std::optional<int> brightness{};
+        std::optional<int> audioInputPin{};
+
+        std::optional<CRGB> globalColor{};
+        std::optional<CRGB> secondColor{};
+        bool clearGlobalColor = false;
+        bool applyGlobalColors = false;
+    };
+
   private:
     // Add variables for additional settings to this list
     String  hostname = cszHostname;
@@ -399,6 +424,18 @@ class DeviceConfig : public IJSONSerializable
     ValidateResponse ValidateOutputDriver(OutputDriver driver) const;
     ValidateResponse ValidateWS281xSettings(size_t channelCount, const std::array<int8_t, NUM_CHANNELS>& pins, WS281xColorOrder colorOrder) const;
     ValidateResponse ValidateRuntimeConfig(const RuntimeConfig& config) const;
+    ValidateResponse ParseAndValidateUnifiedSettings(JsonObjectConst root, UnifiedSettingsRequest& out) const;
     bool SetRuntimeConfig(const RuntimeConfig& config, bool skipWrite = false, String* errorMessage = nullptr);
+    bool ApplyUnifiedDeviceSettings(const UnifiedSettingsRequest& request, String* errorMessage = nullptr);
+    void SerializeUnifiedSettings(JsonObject root) const;
+    void SerializeUnifiedSettingsSchema(JsonObject root) const;
     void SetAudioInputPin(int newAudioInputPin);
+
+  private:
+    static std::optional<int> ResolveUnifiedAudioInputPin(JsonObjectConst device, String* errorMessage = nullptr);
+    static std::optional<OutputDriver> ParseOutputDriverName(const String& name);
+    static std::optional<WS281xColorOrder> ParseWS281xColorOrderName(const String& name);
+    static const char* OutputDriverName(OutputDriver driver);
+    static const char* WS281xColorOrderName(WS281xColorOrder colorOrder);
+    static void AppendPins(JsonArray target, const std::array<int8_t, NUM_CHANNELS>& pins);
 };

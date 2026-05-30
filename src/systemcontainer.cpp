@@ -282,7 +282,7 @@ void SystemContainer::SetupConfig()
 
     // Create the JSON writer and start its background thread. JSONWriter is an
     // IService so it owns its own task; we just call Start() here.
-    
+
     if (!_ptrJSONWriter)
     {
         _ptrJSONWriter = make_unique_internal<JSONWriter>();
@@ -364,6 +364,31 @@ bool SystemContainer::ApplyRuntimeConfiguration(String* errorMessage)
 
     if (errorMessage)
         *errorMessage = "";
+
+    return true;
+}
+
+bool SystemContainer::ApplyRuntimeConfigurationTransaction(const DeviceConfig::RuntimeConfig& requestedConfig, String* errorMessage)
+{
+    auto& deviceConfig = GetDeviceConfig();
+    const auto previousConfig = deviceConfig.GetRuntimeConfig();
+
+    if (!deviceConfig.SetRuntimeConfig(requestedConfig, true, errorMessage))
+        return false;
+
+    if (!ApplyRuntimeConfiguration(errorMessage))
+    {
+        deviceConfig.SetRuntimeConfig(previousConfig, true, nullptr);
+
+        String rollbackError;
+        if (!ApplyRuntimeConfiguration(&rollbackError))
+            debugE("Failed to roll back runtime configuration after apply error: %s", rollbackError.c_str());
+
+        return false;
+    }
+
+    if (!deviceConfig.SetRuntimeConfig(requestedConfig, false, errorMessage))
+        return false;
 
     return true;
 }

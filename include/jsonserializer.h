@@ -37,6 +37,7 @@
 #include <atomic>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <vector>
 
 #include "itaskservice.h"
@@ -86,6 +87,50 @@ bool BoolFromText(const String& text);
 bool LoadJSONFile(const String & fileName, JsonDocument& jsonDoc);
 bool SaveToJSONFile(const String & fileName, IJSONSerializable& object);
 bool RemoveJSONFile(const String & fileName);
+
+namespace FieldAccess
+{
+    template <typename T>
+    bool AssignIfPresent(JsonObjectConst object, const char* key, T& target)
+    {
+        if (!object[key].is<T>())
+            return false;
+
+        target = object[key].template as<T>();
+        return true;
+    }
+
+    template <typename T>
+    bool AssignIfPresent(JsonObjectConst object, const char* key, std::optional<T>& target)
+    {
+        T value;
+        if (!AssignIfPresent(object, key, value))
+            return false;
+
+        target = value;
+        return true;
+    }
+
+    template <typename T, typename Obj, typename Setter>
+    bool ApplyIfPresent(const std::optional<T>& value, Obj& object, Setter setter)
+    {
+        if (!value.has_value())
+            return false;
+
+        (object.*setter)(value.value());
+        return true;
+    }
+
+    template <typename T, typename Fn>
+    bool ApplyIfPresent(const std::optional<T>& value, Fn&& apply)
+    {
+        if (!value.has_value())
+            return false;
+
+        apply(value.value());
+        return true;
+    }
+}
 
 #define JSON_WRITER_DELAY 3000
 

@@ -129,7 +129,7 @@ class CWebServer : public IService
     // followed by Start() can warn loudly rather than silently leak/double-
     // bind the listening socket. (We still do the begin again because the
     // AsyncTCP server is normally reused; this just surfaces the limitation.)
-    
+
     std::atomic<bool> _everStarted{false};
 
     // Helper functions/templates
@@ -187,7 +187,6 @@ class CWebServer : public IService
     static bool BuildSettingSpecsJson(String& json, const std::vector<std::reference_wrapper<SettingSpec>> & settingSpecs);
     static void SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, const std::vector<std::reference_wrapper<SettingSpec>> & settingSpecs);
     static bool ValidateLegacyDeviceSettings(AsyncWebServerRequest * pRequest, String* errorMessage = nullptr);
-    static bool ValidateUnifiedDeviceSettings(JsonObjectConst device, String* errorMessage = nullptr);
     static bool SetSettingsIfPresent(AsyncWebServerRequest * pRequest, String* errorMessage = nullptr);
 
     // Apply a new audio input pin to DeviceConfig and, when the build supports
@@ -195,7 +194,7 @@ class CWebServer : public IService
     // requiring a reboot. Reverts the persisted pin on failure. Safe to call
     // whether or not g_ptrSystem / AudioService are present. Returns true if
     // either the pin was unchanged or the live reconfigure succeeded.
-    
+
     static bool ApplyAudioInputPinChange(int oldPin);
     static long GetEffectIndexFromParam(AsyncWebServerRequest * pRequest, bool post = false);
     static bool CheckAndGetSettingsEffect(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect, bool post = false);
