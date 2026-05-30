@@ -425,7 +425,7 @@ class DeviceConfig : public IJSONSerializable
     ValidateResponse ValidateWS281xSettings(size_t channelCount, const std::array<int8_t, NUM_CHANNELS>& pins, WS281xColorOrder colorOrder) const;
     ValidateResponse ValidateRuntimeConfig(const RuntimeConfig& config) const;
     ValidateResponse ParseAndValidateUnifiedSettings(JsonObjectConst root, UnifiedSettingsRequest& out) const;
-    bool SetRuntimeConfig(const RuntimeConfig& config, bool skipWrite = false, String* errorMessage = nullptr);
+    ValidateResponse SetRuntimeConfig(const RuntimeConfig& config, bool skipWrite = false);
     bool ApplyUnifiedDeviceSettings(const UnifiedSettingsRequest& request, String* errorMessage = nullptr);
     void SerializeUnifiedSettings(JsonObject root) const;
     void SerializeUnifiedSettingsSchema(JsonObject root) const;

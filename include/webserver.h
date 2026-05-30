@@ -292,4 +292,19 @@ inline CWebServer::StatisticsType operator&(CWebServer::StatisticsType lhs, CWeb
 // Set value in lambda using a forwarding function. Reports success based on function's return value,
 //   which must be implicitly convertable to bool
 #define CONFIRM_VALUE(functionCall) [&](auto value)->bool { return functionCall; }
+
+template<>
+bool CWebServer::PushPostParamIfPresent<bool>(const AsyncWebServerRequest * pRequest, const String & paramName, ValueSetter<bool> setter);
+
+template<>
+bool CWebServer::PushPostParamIfPresent<size_t>(const AsyncWebServerRequest * pRequest, const String & paramName, ValueSetter<size_t> setter);
+
+template<>
+bool CWebServer::PushPostParamIfPresent<int>(const AsyncWebServerRequest * pRequest, const String & paramName, ValueSetter<int> setter);
+
+template<>
+bool CWebServer::PushPostParamIfPresent<CRGB>(const AsyncWebServerRequest * pRequest, const String & paramName, ValueSetter<CRGB> setter);
+
+template<>
+void CWebServer::AddCORSHeaderAndSendResponse<AsyncJsonResponse>(AsyncWebServerRequest * pRequest, AsyncJsonResponse * pResponse);
 #endif  // ENABLE_WEBSERVER

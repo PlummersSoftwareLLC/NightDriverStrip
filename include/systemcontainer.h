@@ -158,8 +158,8 @@ class SystemContainer
 
     // Config objects
     void SetupConfig();
-    bool ApplyRuntimeConfiguration(String* errorMessage = nullptr);
-    bool ApplyRuntimeConfigurationTransaction(const DeviceConfig::RuntimeConfig& requestedConfig, String* errorMessage = nullptr);
+    DeviceConfig::ValidateResponse ApplyRuntimeConfiguration();
+    DeviceConfig::ValidateResponse ApplyRuntimeConfigurationTransaction(const DeviceConfig::RuntimeConfig& requestedConfig);
     int GetConfiguredAudioInputPin() const;
     bool HasJSONWriter() const { return !!_ptrJSONWriter; }
     JSONWriter& GetJSONWriter() const;
