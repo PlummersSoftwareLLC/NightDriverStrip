@@ -40,7 +40,6 @@
 #include <cstdlib>
 #include <memory>
 #include <mutex>
-#include <limits>
 #include <utility>
 
 #include "audioservice.h"
@@ -63,34 +62,6 @@ namespace
     {
         for (auto pin : pins)
             target.add(pin);
-    }
-
-    // Accept either a numeric JSON value or a decimal string for legacy form
-    // fields that still post unsigned 16-bit settings as text.
-    bool TryReadUint16(JsonVariantConst value, uint16_t& target)
-    {
-        if (value.is<uint16_t>())
-        {
-            target = value.as<uint16_t>();
-            return true;
-        }
-
-        if (value.is<const char*>())
-        {
-            const String text = value.as<const char*>();
-            if (text.length() == 0)
-                return false;
-
-            char* end = nullptr;
-            const unsigned long parsed = strtoul(text.c_str(), &end, 10);
-            if (end && *end == '\0' && parsed <= std::numeric_limits<uint16_t>::max())
-            {
-                target = static_cast<uint16_t>(parsed);
-                return true;
-            }
-        }
-
-        return false;
     }
 
     void FillUnifiedSettingsJson(JsonObject root)
@@ -978,7 +949,7 @@ bool CWebServer::BuildSettingSpecsJson(String& json, const std::vector<std::refe
 
 bool CWebServer::EnsureDeviceSettingSpecsJson()
 {
-    std::lock_guard<std::recursive_mutex> guard(g_settingSpecsCacheMutex);
+    std::lock_guard guard(g_settingSpecsCacheMutex);
 
     if (deviceSettingSpecsJson.length() > 0)
         return true;
@@ -999,7 +970,7 @@ bool CWebServer::EnsureDeviceSettingSpecsJson()
 
 const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceSettingSpecs()
 {
-    std::lock_guard<std::recursive_mutex> guard(g_settingSpecsCacheMutex);
+    std::lock_guard guard(g_settingSpecsCacheMutex);
 
     if (deviceSettingSpecs.empty())
     {
