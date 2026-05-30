@@ -57,6 +57,12 @@
     #define ENABLE_IMPROV_LOGGING   0
 #endif
 
+// Maximum size of the optional Improv log file in SPIFFS. Set to 0 to disable
+// capping (not recommended on small storage partitions).
+#ifndef IMPROV_LOG_MAX_BYTES
+    #define IMPROV_LOG_MAX_BYTES    (128 * 1024)
+#endif
+
 enum ImprovSerialType : uint8_t
 {
     TYPE_CURRENT_STATE = 0x01,
@@ -190,14 +196,28 @@ protected:
 
     #if ENABLE_IMPROV_LOGGING
 
+        void RotateImprovLogIfNeeded(size_t incomingBytes)
+        {
+            #if IMPROV_LOG_MAX_BYTES > 0
+                size_t existingBytes = 0;
+                auto existing = SPIFFS.open(IMPROV_LOG_FILE, FILE_READ);
+                if (existing)
+                {
+                    existingBytes = existing.size();
+                    existing.close();
+                }
+
+                if (existingBytes + incomingBytes > static_cast<size_t>(IMPROV_LOG_MAX_BYTES))
+                    SPIFFS.remove(IMPROV_LOG_FILE);
+            #endif
+        }
+
         // Tell the compiler the arguments to this overload should be checked like printf's
         __attribute__((format(printf, 2, 3)))
         void log_write(const char* format, ...)
         {
             constexpr int bufferSize = 256;
             char lineBuffer[bufferSize];
-
-            auto file = SPIFFS.open(IMPROV_LOG_FILE, FILE_APPEND);
             va_list args;
 
             va_start(args, format);
@@ -205,6 +225,13 @@ protected:
             va_end(args);
 
             lineBuffer[bufferSize - 1] = 0;
+
+            RotateImprovLogIfNeeded(strlen(lineBuffer) + 2);
+
+            auto file = SPIFFS.open(IMPROV_LOG_FILE, FILE_APPEND);
+            if (!file)
+                return;
+
             file.println(lineBuffer);
 
             file.close();
@@ -212,7 +239,12 @@ protected:
 
         void log_write(std::vector<uint8_t>& data)
         {
+            // Hex dump output is significantly larger than input bytes.
+            RotateImprovLogIfNeeded((data.size() * 4) + 64);
+
             auto file = SPIFFS.open(IMPROV_LOG_FILE, FILE_APPEND);
+            if (!file)
+                return;
 
             HexDump(file, data.data(), data.size());
 
