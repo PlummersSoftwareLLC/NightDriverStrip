@@ -663,8 +663,16 @@ void WriteCurrentEffectIndexFile()
     std::lock_guard renderPause(g_render_mutex);
 
     #if USE_HUB75
-        HUB75GFX::WaitForMatrixSwap();
-    #endif
+    // Capture the current effect index without holding g_render_mutex to avoid nested lock order issues
+    size_t currentIndex = g_ptrSystem->GetEffectManager().GetCurrentEffectIndex();
+
+    {
+        std::lock_guard renderPause(g_render_mutex);
+
+        #if USE_HUB75
+            HUB75GFX::WaitForMatrixSwap();
+        #endif
+    }
 
     SPIFFS.remove(CURRENT_EFFECT_CONFIG_FILE);
 
@@ -676,7 +684,7 @@ void WriteCurrentEffectIndexFile()
         return;
     }
 
-    auto bytesWritten = file.print(g_ptrSystem->GetEffectManager().GetCurrentEffectIndex());
+    auto bytesWritten = file.print(currentIndex);
 
     file.flush();
     file.close();
