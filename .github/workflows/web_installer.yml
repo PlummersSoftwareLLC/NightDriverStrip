@@ -7,6 +7,10 @@ on:
         description: 'Name of the Web Installer release'
         required: true
         type: string
+      pages-tag:
+        description: 'Source text used to generate the Pages branch deployment tag'
+        required: true
+        type: string
 
 jobs:
   determine-projects:
@@ -70,6 +74,8 @@ jobs:
 
   compose-and-publish-installer:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     needs: [build-project]
 
@@ -95,8 +101,22 @@ jobs:
         python tools/installer_compose.py '${{ inputs.release-name }}'
         touch WebInstaller/.nojekyll
 
+    - name: Compute Pages tag
+      id: pages_tag
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        tag_slug="$(echo "${{ inputs.pages-tag }}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9._-]+/-/g; s/^-+//; s/-+$//')"
+        if [ -z "${tag_slug}" ]; then
+          tag_slug="unnamed-release-${{ github.run_id }}-${{ github.run_attempt }}"
+        fi
+
+        echo "tag=pages/${tag_slug}" >> "$GITHUB_OUTPUT"
+
     - name: Push to GitHub Pages
       uses: JamesIves/github-pages-deploy-action@v4
       with:
         branch: pages
         folder: WebInstaller
+        tag: ${{ steps.pages_tag.outputs.tag }}

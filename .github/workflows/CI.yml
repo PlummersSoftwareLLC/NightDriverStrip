@@ -64,5 +64,6 @@ jobs:
     uses: ./.github/workflows/web_installer.yml
     with:
       release-name: ${{ github.ref_name }} commit ${{ github.sha }}
+      pages-tag: staging-${{ github.ref_name }}-${{ github.sha }}
     secrets: inherit
     
