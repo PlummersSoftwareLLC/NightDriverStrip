@@ -269,6 +269,7 @@ public:
     bool IsCoreEffect(size_t index) const;
     size_t EffectCount() const;
     bool AreEffectsEnabled() const;
+    bool HasCurrentEffect() const;
     size_t GetCurrentEffectIndex() const;
     LEDStripEffect& GetCurrentEffect() const;
     String GetCurrentEffectName() const;

@@ -341,7 +341,8 @@ public:
                 // Title lines
                 int yh = 2;
                 display.setTextColor(display.GetBorderColor(), backColor);
-                String sEffect = String("Effect: ") + String(currentEffect + 1) + String("/") + String(g_ptrSystem->GetEffectManager().EffectCount());
+                const auto effectCount = g_ptrSystem->GetEffectManager().EffectCount();
+                String sEffect = String("Effect: ") + String(effectCount == 0 ? 0 : currentEffect + 1) + String("/") + String(effectCount);
                 auto w = display.textWidth(sEffect);
                 display.setCursor(display.width() / 2 - w / 2, yh);
                 display.print(sEffect.c_str());
