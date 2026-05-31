@@ -285,8 +285,6 @@ class PatternWeather : public EffectWithId<PatternWeather>
      * Tommorow's expected high and low temperatures,
      * and an icon for tomorrow's weather forcast
      *
-     * @param highTemp address to store the high temperature
-     * @param lowTemp address to store the low temperature
      * @return bool - true if valid weather data retrieved
      */
     bool getTomorrowTemps()
