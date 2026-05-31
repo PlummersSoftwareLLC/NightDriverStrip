@@ -558,30 +558,25 @@ public:
             g_ptrSystem->GetNetworkReader().FlagReader(readerIndex);
         }
 
-        String displayLocationName;
-        String displayLocation;
-        String displayIconToday;
-        String displayIconTomorrow;
-        float displayTemperature;
-        float displayHighToday;
-        float displayLoToday;
-        float displayHighTomorrow;
-        float displayLoTomorrow;
-        bool displayDataReady;
+        // Hold the weather data lock for the rest of the frame. The writer
+        // (network reader task) only takes this lock for the few microseconds
+        // it takes to assign these fields after the HTTP fetch completes, so
+        // blocking here is effectively never observable and never approaches
+        // anything the WDT would care about. We do NOT take any other lock
+        // (render / effect manager) while holding this one, which keeps the
+        // ordering one-way and inversion-proof.
+        std::lock_guard guard(weatherDataMutex);
 
-        {
-            std::lock_guard guard(weatherDataMutex);
-            displayLocationName = strLocationName;
-            displayLocation = strLocation;
-            displayIconToday = iconToday;
-            displayIconTomorrow = iconTomorrow;
-            displayTemperature = temperature;
-            displayHighToday = highToday;
-            displayLoToday = loToday;
-            displayHighTomorrow = highTomorrow;
-            displayLoTomorrow = loTomorrow;
-            displayDataReady = dataReady;
-        }
+        const String& displayLocationName = strLocationName;
+        const String& displayLocation     = strLocation;
+        const String& displayIconToday    = iconToday;
+        const String& displayIconTomorrow = iconTomorrow;
+        const float   displayTemperature  = temperature;
+        const float   displayHighToday    = highToday;
+        const float   displayLoToday      = loToday;
+        const float   displayHighTomorrow = highTomorrow;
+        const float   displayLoTomorrow   = loTomorrow;
+        const bool    displayDataReady    = dataReady;
 
         // Draw the graphics
         auto iconEntry = weatherIcons.find(displayIconToday);
