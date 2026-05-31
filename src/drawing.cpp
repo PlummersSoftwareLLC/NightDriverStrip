@@ -49,8 +49,61 @@
 
 static DRAM_ATTR CRGB l_SinglePixel = CRGB::Blue;
 static DRAM_ATTR uint64_t l_usLastWifiDraw = 0;
+static DRAM_ATTR bool l_WiFiActivityActive = false;
 static uint32_t l_FrameCountThisSecond = 0;
 static uint32_t l_LastSecondBoundaryMs = 0;
+
+static uint32_t MicrosSinceLastWifiDraw()
+{
+    return micros() - static_cast<uint32_t>(l_usLastWifiDraw);
+}
+
+#if WIFI_ACTIVITY_PIN >= 0
+static bool IsWiFiDrawWindowActive()
+{
+    return l_usLastWifiDraw != 0 && MicrosSinceLastWifiDraw() <= (TIME_BEFORE_LOCAL * MICROS_PER_SECOND);
+}
+
+static void SetWiFiActivityPin(bool active)
+{
+    if (l_WiFiActivityActive == active)
+        return;
+
+    digitalWrite(WIFI_ACTIVITY_PIN, active ? HIGH : LOW);
+    l_WiFiActivityActive = active;
+}
+
+static void PrepareWiFiActivityPin()
+{
+    pinMode(WIFI_ACTIVITY_PIN, OUTPUT);
+    digitalWrite(WIFI_ACTIVITY_PIN, LOW);
+    l_WiFiActivityActive = false;
+}
+
+static void UpdateWiFiActivityPin(uint16_t wifiPixelsDrawn, uint16_t localPixelsDrawn)
+{
+    if (wifiPixelsDrawn > 0)
+    {
+        SetWiFiActivityPin(true);
+        return;
+    }
+
+    if (localPixelsDrawn > 0 || !IsWiFiDrawWindowActive())
+        SetWiFiActivityPin(false);
+}
+#else
+static void PrepareWiFiActivityPin()
+{
+}
+
+static void UpdateWiFiActivityPin(uint16_t, uint16_t)
+{
+}
+
+static void SetWiFiActivityPin(bool)
+{
+}
+#endif
 
 // The g_buffer_mutex is a global mutex used to protect access while adding or removing frames
 // from the led buffer.
@@ -126,10 +179,10 @@ uint16_t LocalDraw()
     {
         auto& effectManager = g_ptrSystem->GetEffectManager();
 
-        if (effectManager.EffectCount() > 0)
+        if (effectManager.HasCurrentEffect())
         {
             // If we've never drawn from wifi before, now would also be a good time to local draw
-            if (l_usLastWifiDraw == 0 || (micros() - l_usLastWifiDraw > (TIME_BEFORE_LOCAL * MICROS_PER_SECOND)))
+            if (l_usLastWifiDraw == 0 || (MicrosSinceLastWifiDraw() > (TIME_BEFORE_LOCAL * MICROS_PER_SECOND)))
             {
                 effectManager.Update(); // Draw the current built in effect
 
@@ -147,7 +200,7 @@ uint16_t LocalDraw()
             }
             else
             {
-                debugV("Not drawing local effect because last wifi draw was %lf seconds ago.", (micros() - l_usLastWifiDraw) / (float)MICROS_PER_SECOND);
+                debugV("Not drawing local effect because last wifi draw was %lf seconds ago.", MicrosSinceLastWifiDraw() / (float)MICROS_PER_SECOND);
                 // It's important to return 0 when you do not draw so that the caller knows we did not
                 // render any pixels, and we can/should wait until the next frame.  Otherwise, the caller might
                 // draw the strip needlessly, which can take significant time.
@@ -177,7 +230,9 @@ int CalcDelayUntilNextFrame(double frameStartTime, uint16_t localPixelsDrawn, ui
         double fpsRaw = 0.0;
         {
             std::lock_guard effectGuard(g_effect_manager_mutex);
-            fpsRaw = static_cast<double>(g_ptrSystem->GetEffectManager().GetCurrentEffect().DesiredFramesPerSecond());
+            auto& effectManager = g_ptrSystem->GetEffectManager();
+            if (effectManager.HasCurrentEffect())
+                fpsRaw = static_cast<double>(effectManager.GetCurrentEffect().DesiredFramesPerSecond());
         }
         // If FPS is invalid (<= 0 or non-finite), treat as unlimited (0s minimum frame time).
         const double minimumFrameTime = (!std::isfinite(fpsRaw) || fpsRaw <= 0.0) ? 0.0 : (1.0 / fpsRaw);
@@ -308,6 +363,7 @@ void IRAM_ATTR RenderService::Run()
     // If this board has an onboard RGB pixel, set it up now
 
     PrepareOnboardPixel();
+    PrepareWiFiActivityPin();
 
     // Start the effect
 
@@ -379,6 +435,7 @@ void IRAM_ATTR RenderService::Run()
             }
 
             graphics.PostProcessFrame(localPixelsDrawn, wifiPixelsDrawn);
+            UpdateWiFiActivityPin(wifiPixelsDrawn, localPixelsDrawn);
         }
 
         // Delay at least 2ms and not more than 1s until next frame is due
@@ -392,4 +449,6 @@ void IRAM_ATTR RenderService::Run()
         if (g_Values.UpdateStarted)
             delay(500);
     }
+
+    SetWiFiActivityPin(false);
 }
