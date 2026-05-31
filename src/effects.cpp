@@ -198,6 +198,10 @@ void LoadEffectFactories()
         );
     #endif
 
+    #if defined(EFFECTS_TRIMLIGHT)
+        // Trimlight intentionally has no local effects. It renders only incoming WiFi frames.
+    #endif
+
     #if defined(EFFECTS_PDPWOPR)
         // PDPWOPR project effects
         RegisterAll(*g_ptrEffectFactories,
@@ -586,20 +590,6 @@ void LoadEffectFactories()
         );
 
     #endif
-
-    // Default fallback if no set contributed any effect
-    if (g_ptrEffectFactories->IsEmpty())
-    {
-        RegisterAll(*g_ptrEffectFactories,
-            Effect<RainbowFillEffect>(6, 2)
-        );
-    }
-
-    // If this assert fires, you have not defined any effects in the table above.  If adding a new config, you need to
-    // add the list of effects in this table as shown for the various other existing configs.  You MUST have at least
-    // one effect even if it's the Status effect.
-
-    assert(!g_ptrEffectFactories->IsEmpty());
 
     auto factoriesHashString = fnv1a::hash_to_string(fnv1a::hash<uint64_t>(g_ptrEffectFactories->FactoryIDs()));
     g_ptrEffectFactories->HashString(factoriesHashString);

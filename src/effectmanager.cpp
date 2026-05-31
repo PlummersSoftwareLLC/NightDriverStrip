@@ -151,7 +151,18 @@ void EffectManager::StartEffect()
     // If there's a temporary effect override from the remote control active, we start that, else
     // we start the current regular effect
 
-    std::shared_ptr<LEDStripEffect> & effect = _tempEffect ? _tempEffect : _vEffects[_iCurrentEffect];
+    if (!_tempEffect && _vEffects.empty())
+    {
+        _iCurrentEffect = 0;
+        _effectStartTime = millis();
+        debugV("No effect to start");
+        return;
+    }
+
+    if (!_vEffects.empty() && _iCurrentEffect >= _vEffects.size())
+        _iCurrentEffect = 0;
+
+    auto effect = _tempEffect ? _tempEffect : _vEffects[_iCurrentEffect];
 
     #if USE_HUB75
         auto& matrix = static_cast<HUB75GFX&>(*_gfx[0]);
@@ -193,6 +204,9 @@ void EffectManager::DispatchBeatIfNeeded()
 
     // Beat callbacks are sequenced here so every active effect sees the same
     // detector output, including BeatEffectBase-derived effects via OnBeat().
+    if (!_tempEffect && _vEffects.empty())
+        return;
+
     auto& currentEffect = GetCurrentEffect();
 
     const auto nearBeat = g_Analyzer.LastNearBeat();
@@ -409,6 +423,12 @@ bool EffectManager::AreEffectsEnabled() const
     return std::any_of(_vEffects.begin(), _vEffects.end(), [](const auto& pEffect){ return pEffect->IsEnabled(); } );
 }
 
+bool EffectManager::HasCurrentEffect() const
+{
+    std::lock_guard effectGuard(g_effect_manager_mutex);
+    return _tempEffect || !_vEffects.empty();
+}
+
 size_t EffectManager::GetCurrentEffectIndex() const
 {
     std::lock_guard effectGuard(g_effect_manager_mutex);
@@ -418,7 +438,11 @@ size_t EffectManager::GetCurrentEffectIndex() const
 LEDStripEffect& EffectManager::GetCurrentEffect() const
 {
     std::lock_guard effectGuard(g_effect_manager_mutex);
-    return *(_tempEffect ? _tempEffect : _vEffects[_iCurrentEffect]);
+    if (!_tempEffect && _vEffects.empty())
+        throw std::runtime_error("No current effect");
+
+    const size_t index = _vEffects.empty() ? 0 : std::min(_iCurrentEffect, _vEffects.size() - 1);
+    return *(_tempEffect ? _tempEffect : _vEffects[index]);
 }
 
 String EffectManager::GetCurrentEffectName() const
@@ -430,7 +454,10 @@ String EffectManager::GetCurrentEffectName() const
     if (_tempEffect)
         return _tempEffect->FriendlyName();
 
-    return _vEffects[_iCurrentEffect]->FriendlyName();
+    if (_vEffects.empty())
+        return "No Effect";
+
+    return _vEffects[std::min(_iCurrentEffect, _vEffects.size() - 1)]->FriendlyName();
 }
 
 void EffectManager::SetCurrentEffectIndex(size_t i)
@@ -463,6 +490,9 @@ uint EffectManager::GetTimeUsedByCurrentEffect() const
 uint EffectManager::GetTimeRemainingForCurrentEffect() const
 {
     std::lock_guard effectGuard(g_effect_manager_mutex);
+    if (!_tempEffect && _vEffects.empty())
+        return 0;
+
     // If the Interval is set to zero, we treat that as an infinite interval and don't even look at the time used so far
     uint timeUsedByCurrentEffect = GetTimeUsedByCurrentEffect();
     uint interval = GetEffectiveInterval();
@@ -473,7 +503,11 @@ uint EffectManager::GetTimeRemainingForCurrentEffect() const
 uint EffectManager::GetEffectiveInterval() const
 {
     std::lock_guard effectGuard(g_effect_manager_mutex);
-    auto& currentEffect = *(_tempEffect ? _tempEffect : _vEffects[_iCurrentEffect]);
+    if (!_tempEffect && _vEffects.empty())
+        return IsIntervalEternal() ? std::numeric_limits<uint>::max() : _effectInterval;
+
+    const size_t index = _vEffects.empty() ? 0 : std::min(_iCurrentEffect, _vEffects.size() - 1);
+    auto& currentEffect = *(_tempEffect ? _tempEffect : _vEffects[index]);
     // This allows you to return a MaximumEffectTime and your effect won't be shown longer than that
     return min((IsIntervalEternal() ? std::numeric_limits<uint>::max() : _effectInterval),
                (currentEffect.HasMaximumEffectTime() ? currentEffect.MaximumEffectTime() : std::numeric_limits<uint>::max()));
@@ -728,7 +762,10 @@ bool EffectManager::Init()
         }
         debugV("Loaded Effect: %s", _vEffect->FriendlyName().c_str());
     }
-    debugV("First Effect: %s", GetCurrentEffectName().c_str());
+    if (_vEffects.empty())
+        debugV("No local effects loaded");
+    else
+        debugV("First Effect: %s", GetCurrentEffectName().c_str());
 
     if (g_ptrSystem->GetDeviceConfig().ApplyGlobalColors())
         ApplyGlobalPaletteColors();
@@ -776,7 +813,9 @@ bool EffectManager::ShowVU(bool bShow)
 bool EffectManager::IsVUVisible() const
 {
     std::lock_guard effectGuard(g_effect_manager_mutex);
-    return g_ptrSystem->GetDeviceConfig().ShowVUMeter() && GetCurrentEffect().CanDisplayVUMeter();
+    return g_ptrSystem->GetDeviceConfig().ShowVUMeter() &&
+           (_tempEffect || !_vEffects.empty()) &&
+           GetCurrentEffect().CanDisplayVUMeter();
 }
 
 
@@ -843,9 +882,19 @@ void EffectManager::construct(bool clearTempEffect)
     _bPlayAll = false;
 
     if (clearTempEffect && _tempEffect)
-    {
         _clearTempEffectWhenExpired = true;
 
+    if (_vEffects.empty())
+    {
+        _iCurrentEffect = 0;
+        return;
+    }
+
+    if (_iCurrentEffect >= _vEffects.size())
+        _iCurrentEffect = _vEffects.size() - 1;
+
+    if (clearTempEffect && _tempEffect)
+    {
         // This ensures that we start the correct effect after the temporary one.
         //   The switching to the next effect is taken care of by NextEffect(), which starts with
         //   increasing _iCurrentEffect. We therefore need to set it to the previous effect, to
@@ -907,10 +956,7 @@ bool EffectManager::DeserializeFromJSON(const JsonObjectConst& jsonObject)
 
     // If no effects were successfully loaded from JSON, it loads the default effects.
     if (_vEffects.empty())
-    {
         LoadDefaultEffects();
-        return true;
-    }
 
     // "eef" was the array of effect enabled flags. They have now been integrated in the effects themselves;
     //   this code is there to "migrate" users who already had a serialized effect config on their device
@@ -937,7 +983,9 @@ bool EffectManager::DeserializeFromJSON(const JsonObjectConst& jsonObject)
         _iCurrentEffect = jsonObject["cei"];
 
     // Make sure that if we read an index, it's sane
-    if (_iCurrentEffect >= EffectCount())
+    if (_vEffects.empty())
+        _iCurrentEffect = 0;
+    else if (_iCurrentEffect >= EffectCount())
         _iCurrentEffect = EffectCount() - 1;
 
     construct(true);
@@ -1124,17 +1172,24 @@ bool EffectManager::DeleteEffect(size_t index)
 
     DisableEffect(index, true);
 
-    if (index == _iCurrentEffect)
-        NextEffect();
+    if (index == _iCurrentEffect && _vEffects.size() > 1)
+        NextEffect(true);
 
     _vEffects.erase(_vEffects.begin() + index);
 
-    if (index <= _iCurrentEffect)
+    if (_vEffects.empty())
     {
-        _iCurrentEffect--;
-        SaveCurrentEffectIndex();
+        _iCurrentEffect = 0;
+    }
+    else if (index <= _iCurrentEffect)
+    {
+        if (_iCurrentEffect > 0)
+            _iCurrentEffect--;
+        else if (_iCurrentEffect >= _vEffects.size())
+            _iCurrentEffect = _vEffects.size() - 1;
     }
 
+    SaveCurrentEffectIndex();
     SaveEffectManagerConfig();
 
     {
@@ -1148,6 +1203,9 @@ bool EffectManager::DeleteEffect(size_t index)
 void EffectManager::CheckEffectTimerExpired()
 {
     std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
+
+    if (!_tempEffect && _vEffects.empty())
+        return;
 
     if (IsIntervalEternal() && !GetCurrentEffect().HasMaximumEffectTime())
         return;
@@ -1172,6 +1230,13 @@ void EffectManager::NextEffect(bool skipSave)
 {
     std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
 
+    if (_vEffects.empty())
+    {
+        _iCurrentEffect = 0;
+        _effectStartTime = millis();
+        return;
+    }
+
     auto enabled = AreEffectsEnabled();
 
     do
@@ -1182,7 +1247,8 @@ void EffectManager::NextEffect(bool skipSave)
     } while (enabled && false == _bPlayAll && false == IsEffectEnabled(_iCurrentEffect));
 
     StartEffect();
-    SaveCurrentEffectIndex();
+    if (!skipSave)
+        SaveCurrentEffectIndex();
 
     {
         std::lock_guard listenerGuard(_listenerMutex);
@@ -1195,6 +1261,13 @@ void EffectManager::NextEffect(bool skipSave)
 void EffectManager::PreviousEffect()
 {
     std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
+
+    if (_vEffects.empty())
+    {
+        _iCurrentEffect = 0;
+        _effectStartTime = millis();
+        return;
+    }
 
     auto enabled = AreEffectsEnabled();
 
@@ -1226,6 +1299,12 @@ void EffectManager::Update()
 
     if ((_gfx[0])->GetLEDCount() == 0)
         return;
+
+    if (!_tempEffect && _vEffects.empty())
+    {
+        ApplyFadeLogic();
+        return;
+    }
 
     CheckEffectTimerExpired();
     DispatchBeatIfNeeded();
