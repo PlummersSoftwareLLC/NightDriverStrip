@@ -496,7 +496,7 @@ namespace nd_network
 
     size_t NetworkReader::RegisterReader(const std::function<void()> &reader, unsigned long interval, bool flag)
     {
-        auto entry = std::make_shared<ReaderEntry>(reader, interval);
+        auto entry = make_shared_internal<ReaderEntry>(reader, interval);
         readers.push_back(entry);
         if (interval) entry->lastReadMs.store(millis());
         if (flag) FlagReader(readers.size() - 1);

@@ -651,11 +651,21 @@ void RemoveEffectManagerConfig()
 {
     RemoveJSONFile(EFFECTS_CONFIG_FILE);
     // We take the liberty of also removing the file with the current effect config index
+    std::lock_guard renderPause(g_render_mutex);
+    #if USE_HUB75
+        HUB75GFX::WaitForMatrixSwap();
+    #endif
     SPIFFS.remove(CURRENT_EFFECT_CONFIG_FILE);
 }
 
 void WriteCurrentEffectIndexFile()
 {
+    std::lock_guard renderPause(g_render_mutex);
+
+    #if USE_HUB75
+        HUB75GFX::WaitForMatrixSwap();
+    #endif
+
     SPIFFS.remove(CURRENT_EFFECT_CONFIG_FILE);
 
     File file = SPIFFS.open(CURRENT_EFFECT_CONFIG_FILE, FILE_WRITE);
@@ -667,10 +677,11 @@ void WriteCurrentEffectIndexFile()
     }
 
     auto bytesWritten = file.print(g_ptrSystem->GetEffectManager().GetCurrentEffectIndex());
-    debugI("Number of bytes written to file %s: %zu", CURRENT_EFFECT_CONFIG_FILE, (size_t)bytesWritten);
 
     file.flush();
     file.close();
+
+    debugI("Number of bytes written to file %s: %zu", CURRENT_EFFECT_CONFIG_FILE, (size_t)bytesWritten);
 
     if (bytesWritten == 0)
     {

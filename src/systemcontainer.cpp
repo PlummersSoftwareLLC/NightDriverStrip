@@ -240,21 +240,21 @@ SystemContainer::BufferManagerContainer& SystemContainer::SetupBufferManagers()
 EffectManager& SystemContainer::SetupEffectManager(const std::shared_ptr<LEDStripEffect>& effect, DeviceContainer& devices)
 {
     if (!_ptrEffectManager)
-        _ptrEffectManager = make_unique_psram<EffectManager>(effect, devices);
+        _ptrEffectManager = make_unique_internal<EffectManager>(effect, devices);
     return *_ptrEffectManager;
 }
 
 EffectManager& SystemContainer::SetupEffectManager(DeviceContainer& devices)
 {
     if (!_ptrEffectManager)
-        _ptrEffectManager = make_unique_psram<EffectManager>(devices);
+        _ptrEffectManager = make_unique_internal<EffectManager>(devices);
     return *_ptrEffectManager;
 }
 
 EffectManager& SystemContainer::SetupEffectManager(const ArduinoJson::JsonObjectConst& jsonObject, DeviceContainer& devices)
 {
     if (!_ptrEffectManager)
-        _ptrEffectManager = make_unique_psram<EffectManager>(jsonObject, devices);
+        _ptrEffectManager = make_unique_internal<EffectManager>(jsonObject, devices);
     return *_ptrEffectManager;
 }
 
@@ -263,7 +263,7 @@ TaskManager& SystemContainer::SetupTaskManager()
 {
     if (!_ptrTaskManager)
     {
-        _ptrTaskManager = make_unique_psram<TaskManager>();
+        _ptrTaskManager = make_unique_internal<TaskManager>();
         _ptrTaskManager->begin();
     }
 
@@ -285,13 +285,13 @@ void SystemContainer::SetupConfig()
     
     if (!_ptrJSONWriter)
     {
-        _ptrJSONWriter = make_unique_psram<JSONWriter>();
+        _ptrJSONWriter = make_unique_internal<JSONWriter>();
         _ptrJSONWriter->Start();
     }
 
     // Create and load device config from SPIFFS if possible
     if (!_ptrDeviceConfig)
-        _ptrDeviceConfig = make_unique_psram<DeviceConfig>();
+        _ptrDeviceConfig = make_unique_internal<DeviceConfig>();
 }
 
 int SystemContainer::GetConfiguredAudioInputPin() const
@@ -372,7 +372,7 @@ bool SystemContainer::ApplyRuntimeConfiguration(String* errorMessage)
 NetworkReader& SystemContainer::SetupNetworkReader()
 {
     if (!_ptrNetworkReader)
-        _ptrNetworkReader = make_unique_psram<NetworkReader>();
+        _ptrNetworkReader = make_unique_internal<NetworkReader>();
     return *_ptrNetworkReader;
 }
 #endif
@@ -381,7 +381,7 @@ NetworkReader& SystemContainer::SetupNetworkReader()
 CWebServer& SystemContainer::SetupWebServer()
 {
     if (!_ptrWebServer)
-        _ptrWebServer = make_unique_psram<CWebServer>();
+        _ptrWebServer = make_unique_internal<CWebServer>();
     return *_ptrWebServer;
 }
 #endif
@@ -392,7 +392,7 @@ RemoteControl& SystemContainer::SetupRemoteControl()
     if (!_ptrRemoteControl)
     {
         debugI("Remote configured: enabled=1 pin=%d", IR_REMOTE_PIN);
-        _ptrRemoteControl = make_unique_psram<RemoteControl>();
+        _ptrRemoteControl = make_unique_internal<RemoteControl>();
     }
     return *_ptrRemoteControl;
 }
@@ -402,7 +402,7 @@ RemoteControl& SystemContainer::SetupRemoteControl()
 SocketServer& SystemContainer::SetupSocketServer(NetworkPort port, int ledCount)
 {
     if (!_ptrSocketServer)
-        _ptrSocketServer = make_unique_psram<SocketServer>(port, ledCount);
+        _ptrSocketServer = make_unique_internal<SocketServer>(port, ledCount);
     else
         _ptrSocketServer->SetLEDCount(ledCount);
     return *_ptrSocketServer;
@@ -413,7 +413,7 @@ SocketServer& SystemContainer::SetupSocketServer(NetworkPort port, int ledCount)
 WS281xOutputManager& SystemContainer::SetupWS281xOutputManager()
 {
     if (!_ptrWS281xOutputManager)
-        _ptrWS281xOutputManager = make_unique_psram<WS281xOutputManager>();
+        _ptrWS281xOutputManager = make_unique_internal<WS281xOutputManager>();
     return *_ptrWS281xOutputManager;
 }
 #endif
@@ -422,7 +422,7 @@ WS281xOutputManager& SystemContainer::SetupWS281xOutputManager()
 WebSocketServer& SystemContainer::SetupWebSocketServer(CWebServer& webServer)
 {
     if (!_ptrWebSocketServer)
-        _ptrWebSocketServer = make_unique_psram<WebSocketServer>(webServer);
+        _ptrWebSocketServer = make_unique_internal<WebSocketServer>(webServer);
     return *_ptrWebSocketServer;
 }
 #endif
@@ -438,7 +438,7 @@ Screen& SystemContainer::SetupHardwareDisplay(int w, int h)
 AudioService& SystemContainer::SetupAudioService()
 {
     if (!_ptrAudioService)
-        _ptrAudioService = make_unique_psram<AudioService>();
+        _ptrAudioService = make_unique_internal<AudioService>();
     return *_ptrAudioService;
 }
 
@@ -452,7 +452,7 @@ AudioService& SystemContainer::GetAudioService() const
 AudioSerialBridge& SystemContainer::SetupAudioSerialBridge()
 {
     if (!_ptrAudioSerialBridge)
-        _ptrAudioSerialBridge = make_unique_psram<AudioSerialBridge>();
+        _ptrAudioSerialBridge = make_unique_internal<AudioSerialBridge>();
     return *_ptrAudioSerialBridge;
 }
 
@@ -467,7 +467,7 @@ AudioSerialBridge& SystemContainer::GetAudioSerialBridge() const
 DebugConsole& SystemContainer::SetupDebugConsole()
 {
     if (!_ptrDebugConsole)
-        _ptrDebugConsole = make_unique_psram<DebugConsole>();
+        _ptrDebugConsole = make_unique_internal<DebugConsole>();
     return *_ptrDebugConsole;
 }
 
@@ -482,7 +482,7 @@ DebugConsole& SystemContainer::GetDebugConsole() const
 ColorStreamerService& SystemContainer::SetupColorStreamerService()
 {
     if (!_ptrColorStreamerService)
-        _ptrColorStreamerService = make_unique_psram<ColorStreamerService>();
+        _ptrColorStreamerService = make_unique_internal<ColorStreamerService>();
     return *_ptrColorStreamerService;
 }
 
@@ -496,7 +496,7 @@ ColorStreamerService& SystemContainer::GetColorStreamerService() const
 RenderService& SystemContainer::SetupRenderService()
 {
     if (!_ptrRenderService)
-        _ptrRenderService = make_unique_psram<RenderService>();
+        _ptrRenderService = make_unique_internal<RenderService>();
     return *_ptrRenderService;
 }
 

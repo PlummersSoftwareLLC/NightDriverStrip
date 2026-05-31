@@ -134,6 +134,7 @@ public:
 
     static void StartMatrix();
     static CRGB *GetMatrixBackBuffer();
+    static bool WaitForMatrixSwap(uint32_t timeoutMs = 100);
     static void MatrixSwapBuffers(bool bSwapBackground);
 };
 #endif

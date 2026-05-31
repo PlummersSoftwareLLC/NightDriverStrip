@@ -29,6 +29,7 @@
 
 #include "globals.h"
 
+#include <esp_heap_caps.h>
 #include <FS.h>
 #include <functional>
 #include <memory>
@@ -37,6 +38,10 @@
 #include "jsonserializer.h"
 #include "systemcontainer.h"
 #include "taskmgr.h"
+
+#if USE_HUB75
+#include "hub75gfx.h"
+#endif
 
 #if USE_PSRAM
 
@@ -72,6 +77,41 @@
     }
 
 #endif
+
+namespace
+{
+#if USE_PSRAM
+    struct JsonInternalAllocator : ArduinoJson::Allocator
+    {
+        void* allocate(size_t size) override
+        {
+            return heap_caps_malloc(size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+        }
+
+        void deallocate(void* pointer) override
+        {
+            heap_caps_free(pointer);
+        }
+
+        void* reallocate(void* ptr, size_t new_size) override
+        {
+            return heap_caps_realloc(ptr, new_size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+        }
+    };
+
+    JsonDocument CreateInternalJsonDocument()
+    {
+        static auto jsonInternalAllocator = JsonInternalAllocator();
+
+        return JsonDocument(&jsonInternalAllocator);
+    }
+#else
+    JsonDocument CreateInternalJsonDocument()
+    {
+        return JsonDocument();
+    }
+#endif
+}
 
 // SetIfNotOverflowed
 //
@@ -231,7 +271,7 @@ bool LoadJSONFile(const String & fileName, JsonDocument& jsonDoc)
 
 bool SaveToJSONFile(const String & fileName, IJSONSerializable& object)
 {
-    auto jsonDoc = CreateJsonDocument();
+    auto jsonDoc = CreateInternalJsonDocument();
     auto jsonObject = jsonDoc.to<JsonObject>();
 
     if (!object.SerializeToJSON(jsonObject))
@@ -239,6 +279,18 @@ bool SaveToJSONFile(const String & fileName, IJSONSerializable& object)
         debugE("Could not serialize object to JSON, skipping write to %s!", fileName.c_str());
         return false;
     }
+
+    if (jsonDoc.overflowed())
+    {
+        debugE("JSON document overflowed while preparing %s, skipping write!", fileName.c_str());
+        return false;
+    }
+
+    std::lock_guard renderPause(g_render_mutex);
+
+    #if USE_HUB75
+        HUB75GFX::WaitForMatrixSwap();
+    #endif
 
     SPIFFS.remove(fileName);
 
@@ -251,10 +303,11 @@ bool SaveToJSONFile(const String & fileName, IJSONSerializable& object)
     }
 
     size_t bytesWritten = serializeJson(jsonDoc, file);
-    debugI("Number of bytes written to JSON file %s: %zu", fileName.c_str(), (size_t)bytesWritten);
 
     file.flush();
     file.close();
+
+    debugI("Number of bytes written to JSON file %s: %zu", fileName.c_str(), (size_t)bytesWritten);
 
     if (bytesWritten == 0)
     {
@@ -268,6 +321,10 @@ bool SaveToJSONFile(const String & fileName, IJSONSerializable& object)
 
 bool RemoveJSONFile(const String & fileName)
 {
+    std::lock_guard renderPause(g_render_mutex);
+    #if USE_HUB75
+        HUB75GFX::WaitForMatrixSwap();
+    #endif
     return SPIFFS.remove(fileName);
 }
 
@@ -277,7 +334,7 @@ size_t JSONWriter::RegisterWriter(const std::function<void()>& writer)
 
     // Add the writer with its flag unset
     std::lock_guard guard(writersMutex);
-    writers.push_back(std::make_shared<WriterEntry>(writer));
+    writers.push_back(make_shared_internal<WriterEntry>(writer));
     return writers.size() - 1;
 }
 
