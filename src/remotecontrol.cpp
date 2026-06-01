@@ -531,9 +531,21 @@ public:
         config.rx_config.idle_threshold      = 20000; // 20ms idle = end of frame
 
         if (rmt_config(&config) != ESP_OK) return false;
-        if (rmt_driver_install(_channel, 1024, ESP_INTR_FLAG_IRAM) != ESP_OK) return false;
-        if (rmt_get_ringbuf_handle(_channel, &_ringbuf) != ESP_OK) return false;
-        if (rmt_rx_start(_channel, true) != ESP_OK) return false;
+
+        // The legacy RMT RX driver creates its ringbuffer with xRingbufferCreate(),
+        // which uses default malloc. With PSRAM-default routing enabled that buffer
+        // can live in external RAM, so an IRAM ISR can crash if it fires while the
+        // flash/PSRAM cache is disabled. Remote input can tolerate dropped frames
+        // during flash writes, so keep this interrupt out of the cache-disabled path.
+
+        if (rmt_driver_install(_channel, 1024, 0) != ESP_OK) 
+            return false;
+        
+        if (rmt_get_ringbuf_handle(_channel, &_ringbuf) != ESP_OK) 
+            return false;
+        
+        if (rmt_rx_start(_channel, true) != ESP_OK) 
+            return false;
 
         _begun = true;
         return true;

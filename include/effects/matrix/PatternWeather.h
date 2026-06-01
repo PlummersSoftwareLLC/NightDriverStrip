@@ -42,6 +42,7 @@
 #include <chrono>
 #include <HTTPClient.h>
 #include <map>
+#include <mutex>
 #include <string.h>
 #include <thread>
 #include <UrlEncode.h>
@@ -150,6 +151,7 @@ class PatternWeather : public EffectWithId<PatternWeather>
     bool   dataReady          = false;
     size_t readerIndex        = SIZE_MAX;
     system_clock::time_point latestUpdate = system_clock::from_time_t(0);
+    mutable std::mutex weatherDataMutex;
 
     /**
      * @brief Should this effect show its title.
@@ -230,12 +232,15 @@ class PatternWeather : public EffectWithId<PatternWeather>
         HTTPClient http;
         String url;
 
-        if (!HasLocationChanged())
-            return false;
-
-        const String& configLocation = g_ptrSystem->GetDeviceConfig().GetLocation();
-        const String& configCountryCode = g_ptrSystem->GetDeviceConfig().GetCountryCode();
+        const String configLocation = g_ptrSystem->GetDeviceConfig().GetLocation();
+        const String configCountryCode = g_ptrSystem->GetDeviceConfig().GetCountryCode();
         const bool configLocationIsZip = g_ptrSystem->GetDeviceConfig().IsLocationZip();
+
+        {
+            std::lock_guard guard(weatherDataMutex);
+            if (configLocation == strLocation && configCountryCode == strCountryCode)
+                return false;
+        }
 
         if (configLocationIsZip)
             url = "http://api.openweathermap.org/geo/1.0/zip"
@@ -258,13 +263,18 @@ class PatternWeather : public EffectWithId<PatternWeather>
         deserializeJson(doc, http.getString());
         JsonObject coordinates = configLocationIsZip ? doc.as<JsonObject>() : doc[0].as<JsonObject>();
 
-        strLatitude = coordinates["lat"].as<String>();
-        strLongitude = coordinates["lon"].as<String>();
+        String newLatitude = coordinates["lat"].as<String>();
+        String newLongitude = coordinates["lon"].as<String>();
 
         http.end();
 
-        strLocation = configLocation;
-        strCountryCode = configCountryCode;
+        {
+            std::lock_guard guard(weatherDataMutex);
+            strLatitude = newLatitude;
+            strLongitude = newLongitude;
+            strLocation = configLocation;
+            strCountryCode = configCountryCode;
+        }
 
         return true;
     }
@@ -275,15 +285,22 @@ class PatternWeather : public EffectWithId<PatternWeather>
      * Tommorow's expected high and low temperatures,
      * and an icon for tomorrow's weather forcast
      *
-     * @param highTemp address to store the high temperature
-     * @param lowTemp address to store the low temperature
      * @return bool - true if valid weather data retrieved
      */
-    bool getTomorrowTemps(float& highTemp, float& lowTemp)
+    bool getTomorrowTemps()
     {
         HTTPClient http;
+        String latitude;
+        String longitude;
+
+        {
+            std::lock_guard guard(weatherDataMutex);
+            latitude = strLatitude;
+            longitude = strLongitude;
+        }
+
         String url = "http://api.openweathermap.org/data/2.5/forecast"
-            "?lat=" + strLatitude + "&lon=" + strLongitude + "&cnt=16&appid=" + urlEncode(g_ptrSystem->GetDeviceConfig().GetOpenWeatherAPIKey());
+            "?lat=" + latitude + "&lon=" + longitude + "&cnt=16&appid=" + urlEncode(g_ptrSystem->GetDeviceConfig().GetOpenWeatherAPIKey());
         http.begin(url);
         int httpResponseCode = http.GET();
 
@@ -305,7 +322,7 @@ class PatternWeather : public EffectWithId<PatternWeather>
             float dailyMaximum = 0.0;
             int slot = 0;
 
-            iconTomorrow = "";
+            String newIconTomorrow = "";
 
             // Look for the temperature data for tomorrow
             for (size_t i = 0; i < list.size(); ++i)
@@ -335,14 +352,21 @@ class PatternWeather : public EffectWithId<PatternWeather>
 
                     // Use the noon slot for the icon
                     if (slot == 4)
-                        iconTomorrow = entry["weather"][0]["icon"].as<String>();
+                        newIconTomorrow = entry["weather"][0]["icon"].as<String>();
                 }
             }
 
-            highTemp        = KelvinToLocal(dailyMaximum);
-            lowTemp         = KelvinToLocal(dailyMinimum);
+            float newHighTomorrow = KelvinToLocal(dailyMaximum);
+            float newLoTomorrow = KelvinToLocal(dailyMinimum);
 
-            debugI("Got tomorrow's temps: Lo %d, Hi %d, Icon %s", (int)lowTemp, (int)highTemp, iconTomorrow.c_str());
+            {
+                std::lock_guard guard(weatherDataMutex);
+                highTomorrow = newHighTomorrow;
+                loTomorrow = newLoTomorrow;
+                iconTomorrow = newIconTomorrow;
+            }
+
+            debugI("Got tomorrow's temps: Lo %d, Hi %d, Icon %s", (int)newLoTomorrow, (int)newHighTomorrow, newIconTomorrow.c_str());
 
             http.end();
             return true;
@@ -366,31 +390,50 @@ class PatternWeather : public EffectWithId<PatternWeather>
     bool getWeatherData()
     {
         HTTPClient http;
+        String latitude;
+        String longitude;
+
+        {
+            std::lock_guard guard(weatherDataMutex);
+            latitude = strLatitude;
+            longitude = strLongitude;
+        }
 
         String url = "http://api.openweathermap.org/data/2.5/weather"
-            "?lat=" + strLatitude + "&lon=" + strLongitude + "&appid=" + urlEncode(g_ptrSystem->GetDeviceConfig().GetOpenWeatherAPIKey());
+            "?lat=" + latitude + "&lon=" + longitude + "&appid=" + urlEncode(g_ptrSystem->GetDeviceConfig().GetOpenWeatherAPIKey());
         http.begin(url);
         int httpResponseCode = http.GET();
         if (httpResponseCode > 0)
         {
-            iconToday = "";
             auto jsonDoc = CreateJsonDocument();
             deserializeJson(jsonDoc, http.getString());
 
             // Once we have a non-zero temp we can start displaying things
-            if (0 < jsonDoc["main"]["temp"])
-                dataReady = true;
+            bool newDataReady = 0 < jsonDoc["main"]["temp"];
 
-            temperature = KelvinToLocal(jsonDoc["main"]["temp"]);
-            highToday   = KelvinToLocal(jsonDoc["main"]["temp_max"]);
-            loToday     = KelvinToLocal(jsonDoc["main"]["temp_min"]);
+            float newTemperature = KelvinToLocal(jsonDoc["main"]["temp"]);
+            float newHighToday = KelvinToLocal(jsonDoc["main"]["temp_max"]);
+            float newLoToday = KelvinToLocal(jsonDoc["main"]["temp_min"]);
 
-            iconToday = jsonDoc["weather"][0]["icon"].as<String>();
-            debugI("Got today's temps: Now %d Lo %d, Hi %d, Icon %s", (int)temperature, (int)loToday, (int)highToday, iconToday.c_str());
+            String newIconToday = jsonDoc["weather"][0]["icon"].as<String>();
+            String newLocationName;
 
             const char * pszName = jsonDoc["name"];
             if (pszName)
-                strLocationName = pszName;
+                newLocationName = pszName;
+
+            {
+                std::lock_guard guard(weatherDataMutex);
+                dataReady = newDataReady;
+                temperature = newTemperature;
+                highToday = newHighToday;
+                loToday = newLoToday;
+                iconToday = newIconToday;
+                if (!newLocationName.isEmpty())
+                    strLocationName = newLocationName;
+            }
+
+            debugI("Got today's temps: Now %d Lo %d, Hi %d, Icon %s", (int)newTemperature, (int)newLoToday, (int)newHighToday, newIconToday.c_str());
 
             http.end();
             return true;
@@ -422,7 +465,7 @@ class PatternWeather : public EffectWithId<PatternWeather>
             updateCoordinates();
 
             if (getWeatherData())
-                getTomorrowTemps(highTomorrow, loTomorrow);
+                getTomorrowTemps();
         }
     }
 
@@ -434,10 +477,11 @@ class PatternWeather : public EffectWithId<PatternWeather>
      */
     bool HasLocationChanged()
     {
-        bool locationChanged = g_ptrSystem->GetDeviceConfig().GetLocation() != strLocation;
-        bool countryChanged = g_ptrSystem->GetDeviceConfig().GetCountryCode() != strCountryCode;
+        const String configLocation = g_ptrSystem->GetDeviceConfig().GetLocation();
+        const String configCountryCode = g_ptrSystem->GetDeviceConfig().GetCountryCode();
 
-        return locationChanged || countryChanged;
+        std::lock_guard guard(weatherDataMutex);
+        return configLocation != strLocation || configCountryCode != strCountryCode;
     }
 
 public:
@@ -512,21 +556,46 @@ public:
             g_ptrSystem->GetNetworkReader().FlagReader(readerIndex);
         }
 
+        String displayLocationName;
+        String displayLocation;
+        String displayIconToday;
+        String displayIconTomorrow;
+        float displayTemperature;
+        float displayHighToday;
+        float displayLoToday;
+        float displayHighTomorrow;
+        float displayLoTomorrow;
+        bool displayDataReady;
+
+        {
+            std::lock_guard guard(weatherDataMutex);
+            displayLocationName = strLocationName;
+            displayLocation = strLocation;
+            displayIconToday = iconToday;
+            displayIconTomorrow = iconTomorrow;
+            displayTemperature = temperature;
+            displayHighToday = highToday;
+            displayLoToday = loToday;
+            displayHighTomorrow = highTomorrow;
+            displayLoTomorrow = loTomorrow;
+            displayDataReady = dataReady;
+        }
+
         // Draw the graphics
-        auto iconEntry = weatherIcons.find(iconToday);
+        auto iconEntry = weatherIcons.find(displayIconToday);
         if (iconEntry != weatherIcons.end())
         {
             auto icon = iconEntry->second;
             if (JDR_OK != TJpgDec.drawJpg(0, 10, icon.contents, icon.length))        // Draw the image
-                debugW("Could not display icon %s", iconToday.c_str());
+                debugW("Could not display icon %s", displayIconToday.c_str());
         }
 
-        iconEntry = weatherIcons.find(iconTomorrow);
+        iconEntry = weatherIcons.find(displayIconTomorrow);
         if (iconEntry != weatherIcons.end())
         {
             auto icon = iconEntry->second;
             if (JDR_OK != TJpgDec.drawJpg(xHalf+1, 10, icon.contents, icon.length))        // Draw the image
-                debugW("Could not display icon %s", iconTomorrow.c_str());
+                debugW("Could not display icon %s", displayIconTomorrow.c_str());
         }
 
         // Print the town/city name
@@ -534,18 +603,18 @@ public:
         int y = fontHeight + 1;
         g().setCursor(x, y);
         g().setTextColor(WHITE16);
-        String showLocation = strLocation;
+        String showLocation = displayLocation;
         showLocation.toUpperCase();
         if (g_ptrSystem->GetDeviceConfig().GetOpenWeatherAPIKey().isEmpty())
             g().print("No API Key");
         else
-            g().print((strLocationName.isEmpty() ? showLocation : strLocationName).substring(0, (MATRIX_WIDTH - 2 * fontWidth)/fontWidth));
+            g().print((displayLocationName.isEmpty() ? showLocation : displayLocationName).substring(0, (MATRIX_WIDTH - 2 * fontWidth)/fontWidth));
 
         // Display the temperature, right-justified
 
-        if (dataReady)
+        if (displayDataReady)
         {
-            String strTemp((int)temperature);
+            String strTemp((int)displayTemperature);
             x = MATRIX_WIDTH - fontWidth * strTemp.length();
             g().setCursor(x, y);
             g().setTextColor(g().to16bit(CRGB(192,192,192)));
@@ -576,11 +645,11 @@ public:
 
         // Draw the temperature in lighter white
 
-        if (dataReady)
+        if (displayDataReady)
         {
             g().setTextColor(g().to16bit(CRGB(192,192,192)));
-            String strHi((int) highToday);
-            String strLo((int) loToday);
+            String strHi((int) displayHighToday);
+            String strLo((int) displayLoToday);
 
             // Draw today's HI and LO temperatures
 
@@ -595,8 +664,8 @@ public:
 
             // Draw tomorrow's HI and LO temperatures
 
-            strHi = String((int)highTomorrow);
-            strLo = String((int)loTomorrow);
+            strHi = String((int)displayHighTomorrow);
+            strLo = String((int)displayLoTomorrow);
             x = MATRIX_WIDTH - fontWidth * strHi.length();
             y = MATRIX_HEIGHT - fontHeight;
             g().setCursor(x,y);

@@ -48,6 +48,28 @@ SMLayerBackground<HUB75GFX::SM_RGB, HUB75GFX::kBackgroundLayerOptions> HUB75GFX:
 SMLayerBackground<HUB75GFX::SM_RGB, HUB75GFX::kBackgroundLayerOptions> HUB75GFX::titleLayer(kMatrixWidth, kMatrixHeight);
 SmartMatrixHub75Calc<COLOR_DEPTH, HUB75GFX::kMatrixWidth, HUB75GFX::kMatrixHeight, HUB75GFX::kPanelType, HUB75GFX::kMatrixOptions> HUB75GFX::matrix;
 
+namespace
+{
+    template <typename Layer>
+    bool WaitForLayerSwap(Layer& layer, const char* layerName, uint32_t timeoutMs)
+    {
+        const uint32_t startMs = millis();
+
+        while (layer.isSwapPending())
+        {
+            if (millis() - startMs >= timeoutMs)
+            {
+                debugW("Timed out waiting for SmartMatrix %s layer swap", layerName);
+                return false;
+            }
+
+            delay(1);
+        }
+
+        return true;
+    }
+}
+
 HUB75GFX::HUB75GFX(size_t w, size_t h) : GFXBase(w, h)
 {
 }
@@ -311,7 +333,8 @@ void HUB75GFX::PrepareFrame()
             // We enable the chromakey overlay just for the strip of screen where it appears.  This support is only
             // present in the private fork of SmartMatrix that is linked to the mesmerizer project.
 
-            titleLayer.swapBuffers(false);
+            if (WaitForLayerSwap(titleLayer, "title", 100))
+                titleLayer.swapBuffers(false);
             titleLayer.enableChromaKey(true, y, y + kCharHeight);
             titleLayer.setBrightness(brite); // 255 would obscure it entirely
         }
@@ -396,7 +419,18 @@ void HUB75GFX::MatrixSwapBuffers(bool bSwapBackground)
     matrix.setRefreshRate(MATRIX_REFRESH_RATE);
     matrix.setMaxCalculationCpuPercentage(95);
 
-    backgroundLayer.swapBuffers(bSwapBackground);
+    if (!WaitForMatrixSwap())
+        return;
+
+    backgroundLayer.swapBuffers(false);
+
+    if (bSwapBackground && WaitForMatrixSwap())
+        backgroundLayer.copyRefreshToDrawing();
+}
+
+bool HUB75GFX::WaitForMatrixSwap(uint32_t timeoutMs)
+{
+    return WaitForLayerSwap(backgroundLayer, "background", timeoutMs);
 }
 
 #endif
