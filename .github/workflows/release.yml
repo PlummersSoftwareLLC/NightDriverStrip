@@ -9,4 +9,5 @@ jobs:
     uses: ./.github/workflows/web_installer.yml
     with:
       release-name: ${{ github.event.release.name }}
+      pages-tag: ${{ github.event.release.tag_name }}
     secrets: inherit
