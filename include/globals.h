@@ -322,6 +322,10 @@ extern std::recursive_mutex g_effect_manager_mutex;
     #define LED_PIN0         5
 #endif
 
+#ifndef WIFI_ACTIVITY_PIN
+    #define WIFI_ACTIVITY_PIN -1
+#endif
+
 #ifndef PROJECT_NAME
 #define PROJECT_NAME        "Mesmerizer"
 #endif

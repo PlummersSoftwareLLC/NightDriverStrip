@@ -282,7 +282,8 @@ void HUB75GFX::PrepareFrame()
         // so that we can fade between effects without having to change the brightness
         // setting.
 
-        if (g_ptrSystem->GetEffectManager().GetCurrentEffect().ShouldShowTitle() && pMatrix.GetCaptionTransparency() > 0.00)
+        auto& effectManager = g_ptrSystem->GetEffectManager();
+        if (effectManager.HasCurrentEffect() && effectManager.GetCurrentEffect().ShouldShowTitle() && pMatrix.GetCaptionTransparency() > 0.00)
         {
             titleLayer.setFont(font3x5);
             uint8_t brite = (uint8_t)(pMatrix.GetCaptionTransparency() * 255.0);
@@ -398,7 +399,9 @@ void HUB75GFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDr
         backgroundLayer.drawString(2, MATRIX_HEIGHT  - 6, rgb24(255, 255, 255), rgb24(0, 0, 0), output.c_str());
     #endif
 
-    MatrixSwapBuffers((wifiPixelsDrawn > 0) || g_ptrSystem->GetEffectManager().GetCurrentEffect().RequiresDoubleBuffering() || pMatrix.GetCaptionTransparency() > 0.0);
+    auto& effectManager = g_ptrSystem->GetEffectManager();
+    const bool effectRequiresDoubleBuffering = effectManager.HasCurrentEffect() && effectManager.GetCurrentEffect().RequiresDoubleBuffering();
+    MatrixSwapBuffers((wifiPixelsDrawn > 0) || effectRequiresDoubleBuffering || pMatrix.GetCaptionTransparency() > 0.0);
 
     FastLED.countFPS();
 }
