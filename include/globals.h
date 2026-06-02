@@ -122,10 +122,30 @@ extern std::recursive_mutex g_effect_manager_mutex;
 
 #define FLASH_VERSION          40   // Update ONLY this to increment the version number
 
-#ifndef USE_HUB75                   // We support strips by default unless specifically defined out
-    #ifndef USE_WS281X
+// Output transport selection: exactly one of USE_HUB75 / USE_WS281X / USE_APA102.
+// USE_STRIP is derived from the two strip transports.
+#ifndef USE_HUB75
+    #define USE_HUB75 0
+#endif
+
+#ifndef USE_APA102
+    #define USE_APA102 0
+#endif
+
+#ifndef USE_WS281X
+    // Strip projects historically defaulted to WS281x whenever the build
+    // wasn't HUB75 or APA102. Preserve that default.
+    #if !USE_HUB75 && !USE_APA102
         #define USE_WS281X 1
+    #else
+        #define USE_WS281X 0
     #endif
+#endif
+
+#define USE_STRIP (USE_WS281X || USE_APA102)
+
+#if (USE_HUB75 + USE_WS281X + USE_APA102) != 1
+    #error "Define exactly one output transport: USE_HUB75, USE_WS281X, or USE_APA102"
 #endif
 
 #define XSTR(x) ND_STR(x)           // The defs will generate the stringized version of it
@@ -322,6 +342,53 @@ extern std::recursive_mutex g_effect_manager_mutex;
     #define LED_PIN0         5
 #endif
 
+#if USE_STRIP && NUM_CHANNELS >= 2 && !defined(LED_PIN1)
+    #error "NUM_CHANNELS >= 2 requires LED_PIN1 for strip output"
+#endif
+#if USE_STRIP && NUM_CHANNELS >= 3 && !defined(LED_PIN2)
+    #error "NUM_CHANNELS >= 3 requires LED_PIN2 for strip output"
+#endif
+#if USE_STRIP && NUM_CHANNELS >= 4 && !defined(LED_PIN3)
+    #error "NUM_CHANNELS >= 4 requires LED_PIN3 for strip output"
+#endif
+#if USE_STRIP && NUM_CHANNELS >= 5 && !defined(LED_PIN4)
+    #error "NUM_CHANNELS >= 5 requires LED_PIN4 for strip output"
+#endif
+#if USE_STRIP && NUM_CHANNELS >= 6 && !defined(LED_PIN5)
+    #error "NUM_CHANNELS >= 6 requires LED_PIN5 for strip output"
+#endif
+#if USE_STRIP && NUM_CHANNELS >= 7 && !defined(LED_PIN6)
+    #error "NUM_CHANNELS >= 7 requires LED_PIN6 for strip output"
+#endif
+#if USE_STRIP && NUM_CHANNELS >= 8 && !defined(LED_PIN7)
+    #error "NUM_CHANNELS >= 8 requires LED_PIN7 for strip output"
+#endif
+
+#if USE_APA102 && NUM_CHANNELS >= 1 && !defined(LED_CLOCK_PIN0)
+    #error "APA102 channel 0 requires LED_CLOCK_PIN0"
+#endif
+#if USE_APA102 && NUM_CHANNELS >= 2 && !defined(LED_CLOCK_PIN1)
+    #error "APA102 channel 1 requires LED_CLOCK_PIN1"
+#endif
+#if USE_APA102 && NUM_CHANNELS >= 3 && !defined(LED_CLOCK_PIN2)
+    #error "APA102 channel 2 requires LED_CLOCK_PIN2"
+#endif
+#if USE_APA102 && NUM_CHANNELS >= 4 && !defined(LED_CLOCK_PIN3)
+    #error "APA102 channel 3 requires LED_CLOCK_PIN3"
+#endif
+#if USE_APA102 && NUM_CHANNELS >= 5 && !defined(LED_CLOCK_PIN4)
+    #error "APA102 channel 4 requires LED_CLOCK_PIN4"
+#endif
+#if USE_APA102 && NUM_CHANNELS >= 6 && !defined(LED_CLOCK_PIN5)
+    #error "APA102 channel 5 requires LED_CLOCK_PIN5"
+#endif
+#if USE_APA102 && NUM_CHANNELS >= 7 && !defined(LED_CLOCK_PIN6)
+    #error "APA102 channel 6 requires LED_CLOCK_PIN6"
+#endif
+#if USE_APA102 && NUM_CHANNELS >= 8 && !defined(LED_CLOCK_PIN7)
+    #error "APA102 channel 7 requires LED_CLOCK_PIN7"
+#endif
+
 #ifndef WIFI_ACTIVITY_PIN
     #define WIFI_ACTIVITY_PIN -1
 #endif
@@ -416,7 +483,11 @@ extern std::recursive_mutex g_effect_manager_mutex;
 #endif
 
 #ifndef COLOR_ORDER
-#define COLOR_ORDER EOrder::GRB
+    #if USE_APA102
+        #define COLOR_ORDER EOrder::BGR
+    #else
+        #define COLOR_ORDER EOrder::GRB
+    #endif
 #endif
 
 // Define fan ordering for drawing into the fan directionally

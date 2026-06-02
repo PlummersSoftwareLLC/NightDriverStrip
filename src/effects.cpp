@@ -79,7 +79,7 @@
     #include "hub75gfx.h"
 #endif
 
-#ifdef USE_WS281X
+#if USE_STRIP
     #include "ws281xgfx.h"
 #endif
 

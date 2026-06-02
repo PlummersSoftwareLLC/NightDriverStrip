@@ -51,6 +51,8 @@ class SocketServer;
 class WebSocketServer;
 class CWebServer;
 class WS281xOutputManager;
+class APA102OutputManager;
+class IStripOutputManager;
 class AudioService;
 class AudioSerialBridge;
 class DebugConsole;
@@ -94,8 +96,8 @@ class SystemContainer
         allocated_unique_ptr<SocketServer> _ptrSocketServer;
     #endif
 
-    #if USE_WS281X
-        allocated_unique_ptr<WS281xOutputManager> _ptrWS281xOutputManager;
+    #if USE_STRIP
+        allocated_unique_ptr<IStripOutputManager> _ptrStripOutputManager;
     #endif
 
     #if WEB_SOCKETS_ANY_ENABLED
@@ -183,10 +185,10 @@ class SystemContainer
         SocketServer& GetSocketServer() const;
     #endif
 
-    #if USE_WS281X
-        WS281xOutputManager& SetupWS281xOutputManager();
-        bool HasWS281xOutputManager() const { return !!_ptrWS281xOutputManager; }
-        WS281xOutputManager& GetWS281xOutputManager() const;
+    #if USE_STRIP
+        IStripOutputManager& SetupStripOutputManager();
+        bool HasStripOutputManager() const { return !!_ptrStripOutputManager; }
+        IStripOutputManager& GetStripOutputManager() const;
     #endif
 
     #if WEB_SOCKETS_ANY_ENABLED
