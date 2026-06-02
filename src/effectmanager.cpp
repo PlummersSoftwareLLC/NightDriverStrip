@@ -55,9 +55,9 @@
 extern allocated_unique_ptr<EffectFactories> g_ptrEffectFactories;
 extern std::map<int, JSONEffectFactory> g_JsonStarryNightEffectFactories;
 DRAM_ATTR size_t g_EffectsManagerJSONBufferSize = 0;
-static DRAM_ATTR size_t l_EffectsManagerJSONWriterIndex = SIZE_MAX;
-static DRAM_ATTR size_t l_CurrentEffectWriterIndex = SIZE_MAX;
-static DRAM_ATTR bool l_EffectManagerInitializing = false;
+extern DRAM_ATTR size_t l_EffectsManagerJSONWriterIndex;
+extern DRAM_ATTR size_t l_CurrentEffectWriterIndex;
+extern DRAM_ATTR bool l_EffectManagerInitializing;
 
 //
 // EffectManager initialization functions
@@ -142,38 +142,6 @@ void InitEffectsManager()
     }
 }
 
-#ifndef NO_EFFECT_PERSISTENCE
-    #define NO_EFFECT_PERSISTENCE 0
-#endif
-
-// Load the effects JSON file and check if it's appropriate to use
-std::optional<JsonObjectConst> LoadEffectsJSONFile(JsonDocument& jsonDoc)
-{
-    // If ordered to do so, we ignore whatever is persisted
-    if (NO_EFFECT_PERSISTENCE || !LoadJSONFile(EFFECTS_CONFIG_FILE, jsonDoc))
-        return {};
-
-    auto jsonObject = jsonDoc.as<JsonObjectConst>();
-
-    // Ignore JSON if it was persisted for a different project
-    if (jsonObject[PTY_PROJECT].is<String>()
-        && jsonObject[PTY_PROJECT].as<String>() != PROJECT_NAME)
-    {
-        return {};
-    }
-
-    auto jsonVersion = jsonObject[PTY_EFFECTSETVER];
-
-    // Only return the JSON object if the persistent version matches the current one
-    if (jsonVersion.is<String>()
-        && g_ptrEffectFactories->HashString() == jsonVersion.as<String>())
-    {
-        return jsonObject;
-    }
-
-    return {};
-}
-
 //
 // EffectManager member function definitions
 //
@@ -209,111 +177,4 @@ EffectManager::~EffectManager()
 {
     ClearRemoteColor();
     ClearEffects();
-}
-
-// Saves the current effect index to its own file. Note that this function only flags the writer
-//   for execution in the background.
-void EffectManager::SaveCurrentEffectIndex()
-{
-    if (l_EffectManagerInitializing)
-        return;
-
-    if (g_ptrSystem->GetDeviceConfig().RememberCurrentEffect())
-        // Default value for writer index is max value for size_t, so nothing will happen if writer has not yet been registered
-        g_ptrSystem->GetJSONWriter().FlagWriter(l_CurrentEffectWriterIndex);
-}
-
-//
-// Helper functions related to JSON persistence
-//
-
-void SaveEffectManagerConfig()
-{
-    if (l_EffectManagerInitializing)
-        return;
-
-    debugV("Saving effect manager config...");
-    // Default value for writer index is max value for size_t, so nothing will happen if writer has not yet been registered
-    g_ptrSystem->GetJSONWriter().FlagWriter(l_EffectsManagerJSONWriterIndex);
-}
-
-void RemoveEffectManagerConfig()
-{
-    RemoveJSONFile(EFFECTS_CONFIG_FILE);
-    // We take the liberty of also removing the file with the current effect config index
-    std::lock_guard renderPause(g_render_mutex);
-    #if USE_HUB75
-        HUB75GFX::WaitForMatrixSwap();
-    #endif
-    SPIFFS.remove(CURRENT_EFFECT_CONFIG_FILE);
-}
-
-void WriteCurrentEffectIndexFile()
-{
-    SaveCurrentEffectIndex();
-
-    {
-        std::lock_guard listenerGuard(_listenerMutex);
-        INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnCurrentEffectChanged, _iCurrentEffect);
-    }
-}
-
-// EffectManager::Update
-//
-// Draws the current effect.  If gUIDirty has been set by an interrupt handler, it is reset here
-
-void EffectManager::Update()
-{
-    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
-
-    if ((_gfx[0])->GetLEDCount() == 0)
-        return;
-
-    if (!_tempEffect && _vEffects.empty())
-    {
-        ApplyFadeLogic();
-        return;
-    }
-
-    CheckEffectTimerExpired();
-    DispatchBeatIfNeeded();
-
-    if (_tempEffect)
-        _tempEffect->Draw();
-    else
-        _vEffects[_iCurrentEffect]->Draw();
-
-    ApplyFadeLogic();
-}
-
-void EffectManager::ApplyFadeLogic()
-{
-    if (EffectCount() < 2)
-    {
-        g_Values.Fader = 255;
-        return;
-    }
-
-    if (IsIntervalEternal())
-    {
-        g_Values.Fader = 255;
-        return;
-    }
-
-    const int msFadeTime = 2000;
-    int r = GetTimeRemainingForCurrentEffect();
-    int e = GetTimeUsedByCurrentEffect();
-
-    if (e < msFadeTime)
-    {
-        g_Values.Fader = 255.0f * ((float)e / msFadeTime); // Fade in
-    }
-    else if (r < msFadeTime)
-    {
-        g_Values.Fader = 255.0f * ((float)r / msFadeTime); // Fade out
-    }
-    else
-    {
-        g_Values.Fader = 255; // No fade, not at start or end
-    }
 }

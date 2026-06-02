@@ -62,6 +62,33 @@ std::optional<DeviceConfig::WS281xColorOrder> DeviceConfig::ParseWS281xColorOrde
     return std::nullopt;
 }
 
+SuccessResultWithMessage DeviceConfig::SetRuntimeConfig(const RuntimeConfig& config, bool skipWrite)
+{
+    auto [isValid, validationMessage] = ValidateRuntimeConfig(config);
+    if (!isValid)
+        return { false, validationMessage };
+
+    const bool changed =
+        runtimeTopology.width != config.topology.width
+        || runtimeTopology.height != config.topology.height
+        || runtimeTopology.serpentine != config.topology.serpentine
+        || runtimeOutputs.driver != config.outputs.driver
+        || runtimeOutputs.channelCount != config.outputs.channelCount
+        || runtimeOutputs.outputPins != config.outputs.outputPins
+        || runtimeOutputs.colorOrder != config.outputs.colorOrder;
+
+    runtimeTopology = config.topology;
+    runtimeOutputs = config.outputs;
+
+    if (!skipWrite)
+        SaveToJSON();
+
+    if (changed && !skipWrite)
+        LogRuntimeConfig("runtime config changed");
+
+    return { true, "" };
+}
+
 void DeviceConfig::AppendPins(JsonArray target, const std::array<int8_t, NUM_CHANNELS>& pins)
 {
     for (auto pin : pins)

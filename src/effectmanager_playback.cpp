@@ -55,6 +55,31 @@ void EffectManager::SetCurrentEffectIndex(size_t i)
     }
 }
 
+void EffectManager::PlayAll(bool bPlayAll)
+{
+    std::lock_guard effectGuard(g_effect_manager_mutex);
+    _bPlayAll = bPlayAll;
+}
+
+void EffectManager::SetInterval(uint interval, bool skipSave)
+{
+    std::lock_guard effectGuard(g_effect_manager_mutex);
+
+    // Reject/ignore intervals smaller than a second, but allow 0 (infinity)
+    if (interval > 0 && interval < 1000)
+        return;
+
+    _effectInterval = interval;
+
+    if (!skipSave)
+        SaveEffectManagerConfig();
+
+    {
+        std::lock_guard listenerGuard(_listenerMutex);
+        INFORM_EVENT_LISTENERS(_effectEventListeners, IEffectEventListener::OnIntervalChanged, interval);
+    }
+}
+
 uint EffectManager::GetTimeUsedByCurrentEffect() const
 {
     std::lock_guard effectGuard(g_effect_manager_mutex);

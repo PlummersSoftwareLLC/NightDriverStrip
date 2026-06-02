@@ -32,7 +32,40 @@
 #endif
 
 extern allocated_unique_ptr<EffectFactories> g_ptrEffectFactories;
-void SaveEffectManagerConfig();
+DRAM_ATTR size_t l_EffectsManagerJSONWriterIndex = SIZE_MAX;
+DRAM_ATTR size_t l_CurrentEffectWriterIndex = SIZE_MAX;
+DRAM_ATTR bool l_EffectManagerInitializing = false;
+
+#ifndef NO_EFFECT_PERSISTENCE
+    #define NO_EFFECT_PERSISTENCE 0
+#endif
+
+std::optional<JsonObjectConst> LoadEffectsJSONFile(JsonDocument& jsonDoc)
+{
+    // If ordered to do so, we ignore whatever is persisted
+    if (NO_EFFECT_PERSISTENCE || !LoadJSONFile(EFFECTS_CONFIG_FILE, jsonDoc))
+        return {};
+
+    auto jsonObject = jsonDoc.as<JsonObjectConst>();
+
+    // Ignore JSON if it was persisted for a different project
+    if (jsonObject[PTY_PROJECT].is<String>()
+        && jsonObject[PTY_PROJECT].as<String>() != PROJECT_NAME)
+    {
+        return {};
+    }
+
+    auto jsonVersion = jsonObject[PTY_EFFECTSETVER];
+
+    // Only return the JSON object if the persistent version matches the current one
+    if (jsonVersion.is<String>()
+        && g_ptrEffectFactories->HashString() == jsonVersion.as<String>())
+    {
+        return jsonObject;
+    }
+
+    return {};
+}
 
 bool EffectManager::ReadCurrentEffectIndex(size_t& index)
 {
@@ -58,6 +91,70 @@ bool EffectManager::ReadCurrentEffectIndex(size_t& index)
     }
 
     return readIndex;
+}
+
+void EffectManager::SaveCurrentEffectIndex()
+{
+    if (l_EffectManagerInitializing)
+        return;
+
+    if (g_ptrSystem->GetDeviceConfig().RememberCurrentEffect())
+        g_ptrSystem->GetJSONWriter().FlagWriter(l_CurrentEffectWriterIndex);
+}
+
+void SaveEffectManagerConfig()
+{
+    if (l_EffectManagerInitializing)
+        return;
+
+    debugV("Saving effect manager config...");
+    g_ptrSystem->GetJSONWriter().FlagWriter(l_EffectsManagerJSONWriterIndex);
+}
+
+void RemoveEffectManagerConfig()
+{
+    RemoveJSONFile(EFFECTS_CONFIG_FILE);
+
+    std::lock_guard renderPause(g_render_mutex);
+    #if USE_HUB75
+        HUB75GFX::WaitForMatrixSwap();
+    #endif
+    SPIFFS.remove(CURRENT_EFFECT_CONFIG_FILE);
+}
+
+void WriteCurrentEffectIndexFile()
+{
+    // Capture the current effect index without holding g_render_mutex to avoid nested lock order issues.
+    size_t currentIndex = g_ptrSystem->GetEffectManager().GetCurrentEffectIndex();
+
+    std::lock_guard renderPause(g_render_mutex);
+
+    #if USE_HUB75
+        HUB75GFX::WaitForMatrixSwap();
+    #endif
+
+    SPIFFS.remove(CURRENT_EFFECT_CONFIG_FILE);
+
+    File file = SPIFFS.open(CURRENT_EFFECT_CONFIG_FILE, FILE_WRITE);
+
+    if (!file)
+    {
+        debugE("Unable to open file %s for writing!", CURRENT_EFFECT_CONFIG_FILE);
+        return;
+    }
+
+    auto bytesWritten = file.print(currentIndex);
+
+    file.flush();
+    file.close();
+
+    debugI("Number of bytes written to file %s: %zu", CURRENT_EFFECT_CONFIG_FILE, (size_t)bytesWritten);
+
+    if (bytesWritten == 0)
+    {
+        debugE("Unable to write to file %s!", CURRENT_EFFECT_CONFIG_FILE);
+        SPIFFS.remove(CURRENT_EFFECT_CONFIG_FILE);
+    }
 }
 
 void EffectManager::LoadJSONEffects(const JsonArrayConst& effectsArray)
@@ -86,48 +183,6 @@ void EffectManager::LoadJSONEffects(const JsonArrayConst& effectsArray)
         }
     }
 }
-
-// Creates a copy of an existing effect in the list. Note that the effect is created but not yet added to the effect list;
-//   use the AppendEffect() function for that.
-std::shared_ptr<LEDStripEffect> EffectManager::CopyEffect(size_t index)
-{
-    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
-
-    if (index >= _vEffects.size())
-    {
-        debugW("Invalid index for CopyEffect");
-        return nullptr;
-    }
-
-    auto& sourceEffect = _vEffects[index];
-
-    const auto& jsonEffectFactories = g_ptrEffectFactories->GetJSONFactories();
-    auto factoryEntry = jsonEffectFactories.find(static_cast<int>(sourceEffect->effectId()));
-
-    if (factoryEntry == jsonEffectFactories.end())
-        return nullptr;
-
-    auto jsonDoc = CreateJsonDocument();
-    auto jsonObject = jsonDoc.to<JsonObject>();
-
-    if (!sourceEffect->SerializeToJSON(jsonObject))
-    {
-        debugE("Could not serialize effect %s to JSON", sourceEffect->FriendlyName().c_str());
-        return nullptr;
-    }
-
-    auto copiedEffect = factoryEntry->second(jsonDoc.as<JsonObjectConst>());
-
-    if (!copiedEffect)
-        return nullptr;
-
-    copiedEffect->SetEnabled(false);
-
-    return copiedEffect;
-}
-
-//
-//
 
 bool EffectManager::DeserializeFromJSON(const JsonObjectConst& jsonObject)
 {

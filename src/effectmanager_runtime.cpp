@@ -31,7 +31,26 @@
 #include "hub75gfx.h"
 #endif
 
+#if ENABLE_AUDIO
+#include "effects/matrix/spectrumeffects.h"
+#endif
+
+extern allocated_unique_ptr<EffectFactories> g_ptrEffectFactories;
 void SaveEffectManagerConfig();
+
+#if ENABLE_AUDIO
+
+std::shared_ptr<LEDStripEffect> GetSpectrumAnalyzer(CRGB color)
+{
+    CHSV hueColor = rgb2hsv_approximate(color);
+    CRGB color2 = CRGB(CHSV(hueColor.hue + 64, 255, 255));
+    auto object = make_shared_psram<SpectrumAnalyzerEffect>("Spectrum Clr", 24, CRGBPalette16(color, color2), true);
+    if (object->Init(g_ptrSystem->GetDevices()))
+        return object;
+    throw std::runtime_error("Could not initialize new spectrum analyzer, one color version!");
+}
+
+#endif
 
 void EffectManager::StartEffect()
 {
@@ -120,11 +139,6 @@ void EffectManager::SetTempEffect(std::shared_ptr<LEDStripEffect> effect)
 {
     std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
     _tempEffect = effect;
-}
-
-std::vector<std::shared_ptr<GFXBase>> & EffectManager::GetBaseGraphics()
-{
-    return _gfx;
 }
 
 bool EffectManager::Init()
@@ -396,6 +410,45 @@ bool EffectManager::AppendEffect(std::shared_ptr<LEDStripEffect>& effect)
     }
 
     return true;
+}
+
+// Creates a copy of an existing effect in the list. Note that the effect is created but not yet added to the effect list;
+//   use the AppendEffect() function for that.
+std::shared_ptr<LEDStripEffect> EffectManager::CopyEffect(size_t index)
+{
+    std::scoped_lock guard(g_render_mutex, g_effect_manager_mutex);
+
+    if (index >= _vEffects.size())
+    {
+        debugW("Invalid index for CopyEffect");
+        return nullptr;
+    }
+
+    auto& sourceEffect = _vEffects[index];
+
+    const auto& jsonEffectFactories = g_ptrEffectFactories->GetJSONFactories();
+    auto factoryEntry = jsonEffectFactories.find(static_cast<int>(sourceEffect->effectId()));
+
+    if (factoryEntry == jsonEffectFactories.end())
+        return nullptr;
+
+    auto jsonDoc = CreateJsonDocument();
+    auto jsonObject = jsonDoc.to<JsonObject>();
+
+    if (!sourceEffect->SerializeToJSON(jsonObject))
+    {
+        debugE("Could not serialize effect %s to JSON", sourceEffect->FriendlyName().c_str());
+        return nullptr;
+    }
+
+    auto copiedEffect = factoryEntry->second(jsonDoc.as<JsonObjectConst>());
+
+    if (!copiedEffect)
+        return nullptr;
+
+    copiedEffect->SetEnabled(false);
+
+    return copiedEffect;
 }
 
 // Deletes an effect from the effect list. Note that core effects cannot be deleted.
