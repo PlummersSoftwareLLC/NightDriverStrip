@@ -570,11 +570,12 @@ public:
     // Extension override to accept our settings on top of those known by LEDStripEffect
     bool SetSetting(const String& name, const String& value) override
     {
-        RETURN_IF_SET(name, NAME_OF(stockServer), stockServer, value);
+        if (FieldAccess::AssignIfSelected(name, NAME_OF(stockServer), stockServer, value))
+            return true;
 
         // If we receive a new list of stock ticker symbols then forget what stock data we
         // have and trigger a reload.
-        if (SetIfSelected(name, NAME_OF(tickerSymbols), tickerSymbols, value))
+        if (FieldAccess::AssignIfSelected(name, NAME_OF(tickerSymbols), tickerSymbols, value))
         {
             iCurrentStock = 0;
             stockData.clear();

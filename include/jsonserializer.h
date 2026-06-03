@@ -37,6 +37,7 @@
 #include <atomic>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <vector>
 
 #include "itaskservice.h"
@@ -86,6 +87,73 @@ bool BoolFromText(const String& text);
 bool LoadJSONFile(const String & fileName, JsonDocument& jsonDoc);
 bool SaveToJSONFile(const String & fileName, IJSONSerializable& object);
 bool RemoveJSONFile(const String & fileName);
+
+namespace FieldAccess
+{
+    // Setting assignment helpers: used by SetSetting(name, value) style paths
+    // where a requested field name selects which destination member to update.
+    template <typename T>
+    bool AssignIfSelected(const String& selectedName, const String& fieldName, T& target, const T& value)
+    {
+        if (selectedName != fieldName)
+            return false;
+
+        target = value;
+        return true;
+    }
+
+    bool AssignIfSelected(const String& selectedName, const String& fieldName, int& target, const String& value);
+    bool AssignIfSelected(const String& selectedName, const String& fieldName, size_t& target, const String& value);
+    bool AssignIfSelected(const String& selectedName, const String& fieldName, float& target, const String& value);
+    bool AssignIfSelected(const String& selectedName, const String& fieldName, bool& target, const String& value);
+    bool AssignIfSelected(const String& selectedName, const String& fieldName, String& target, const String& value);
+    bool AssignIfSelected(const String& selectedName, const String& fieldName, CRGBPalette16& target, const String& value);
+    bool AssignIfSelected(const String& selectedName, const String& fieldName, CRGB& target, const String& value);
+
+    // JSON extraction helpers: used when consuming structured JsonObject payloads.
+    template <typename T>
+    bool AssignIfPresent(JsonObjectConst object, const char* key, T& target)
+    {
+        if (!object[key].is<T>())
+            return false;
+
+        target = object[key].template as<T>();
+        return true;
+    }
+
+    template <typename T>
+    bool AssignIfPresent(JsonObjectConst object, const char* key, std::optional<T>& target)
+    {
+        T value;
+        if (!AssignIfPresent(object, key, value))
+            return false;
+
+        target = value;
+        return true;
+    }
+
+    // Optional apply helpers: used after parse/validate when applying optional
+    // request fields through setters or lambdas.
+    template <typename T, typename Obj, typename Setter>
+    bool ApplyIfPresent(const std::optional<T>& value, Obj& object, Setter setter)
+    {
+        if (!value.has_value())
+            return false;
+
+        (object.*setter)(value.value());
+        return true;
+    }
+
+    template <typename T, typename Fn>
+    bool ApplyIfPresent(const std::optional<T>& value, Fn&& apply)
+    {
+        if (!value.has_value())
+            return false;
+
+        apply(value.value());
+        return true;
+    }
+}
 
 #define JSON_WRITER_DELAY 3000
 

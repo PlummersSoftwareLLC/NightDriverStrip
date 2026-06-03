@@ -65,6 +65,7 @@
 
 #if FAN_SIZE
     #include "effects/strip/faneffects.h"       // Fan-based effects
+    #include "effects/strip/lanterneffect.h" // Lantern-style ring effects
 #endif
 
 #if EFFECTS_FULLMATRIX

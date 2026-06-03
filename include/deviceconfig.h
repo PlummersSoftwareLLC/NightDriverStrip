@@ -37,6 +37,7 @@
 #include <vector>
 
 #include "interfaces.h"
+#include "types.h"
 
 #if ENABLE_WIFI
 // Make sure we have a secrets.h and that it contains everything we need.
@@ -168,6 +169,31 @@ class DeviceConfig : public IJSONSerializable
         RuntimeOutputs outputs;
     };
 
+    struct UnifiedSettingsRequest
+    {
+        RuntimeConfig requestedRuntimeConfig{};
+        bool runtimeConfigTouched = false;
+
+        std::optional<String> hostname{};
+        std::optional<String> location{};
+        std::optional<bool> locationIsZip{};
+        std::optional<String> countryCode{};
+        std::optional<String> openWeatherApiKey{};
+        std::optional<String> timeZone{};
+        std::optional<bool> use24HourClock{};
+        std::optional<bool> useCelsius{};
+        std::optional<String> ntpServer{};
+        std::optional<bool> rememberCurrentEffect{};
+        std::optional<int> powerLimit{};
+        std::optional<int> brightness{};
+        std::optional<int> audioInputPin{};
+
+        std::optional<CRGB> globalColor{};
+        std::optional<CRGB> secondColor{};
+        bool clearGlobalColor = false;
+        bool applyGlobalColors = false;
+    };
+
   private:
     // Add variables for additional settings to this list
     String  hostname = cszHostname;
@@ -219,8 +245,6 @@ class DeviceConfig : public IJSONSerializable
     }
 
   public:
-
-    using ValidateResponse = std::pair<bool, String>;
 
     // Add additional setting Tags to this list
     static constexpr const char * HostnameTag = NAME_OF(hostname);
@@ -283,7 +307,7 @@ class DeviceConfig : public IJSONSerializable
     void SetLocationIsZip(bool newLocationIsZip);
 
     const String &GetOpenWeatherAPIKey() const { return openWeatherApiKey; }
-    static ValidateResponse ValidateOpenWeatherAPIKey(const String &newOpenWeatherAPIKey);
+    static SuccessResultWithMessage ValidateOpenWeatherAPIKey(const String &newOpenWeatherAPIKey);
     void SetOpenWeatherAPIKey(const String &newOpenWeatherAPIKey);
 
     bool UseCelsius() const { return useCelsius; }
@@ -296,16 +320,16 @@ class DeviceConfig : public IJSONSerializable
     void SetRememberCurrentEffect(bool newRememberCurrentEffect);
 
     uint8_t GetBrightness() const { return brightness; }
-    static ValidateResponse ValidateBrightness(int newBrightness);
-    static ValidateResponse ValidateBrightness(const String& newBrightness);
+    static SuccessResultWithMessage ValidateBrightness(int newBrightness);
+    static SuccessResultWithMessage ValidateBrightness(const String& newBrightness);
     void SetBrightness(int newBrightness);
 
     bool ShowVUMeter() const { return showVUMeter; }
     void SetShowVUMeter(bool newShowVUMeter);
 
     int GetPowerLimit() const { return powerLimit; }
-    static ValidateResponse ValidatePowerLimit(int newPowerLimit);
-    static ValidateResponse ValidatePowerLimit(const String& newPowerLimit);
+    static SuccessResultWithMessage ValidatePowerLimit(int newPowerLimit);
+    static SuccessResultWithMessage ValidatePowerLimit(const String& newPowerLimit);
     void SetPowerLimit(int newPowerLimit);
 
     const CRGB& GlobalColor() const { return globalColor; }
@@ -394,11 +418,23 @@ class DeviceConfig : public IJSONSerializable
     String GetCompiledDriverName() const { return DriverName(GetCompiledOutputDriver()); }
     String GetRuntimeDriverName() const { return DriverName(runtimeOutputs.driver); }
 
-    ValidateResponse ValidateAudioInputPin(int pin) const;
-    ValidateResponse ValidateTopology(uint16_t width, uint16_t height, bool serpentine) const;
-    ValidateResponse ValidateOutputDriver(OutputDriver driver) const;
-    ValidateResponse ValidateWS281xSettings(size_t channelCount, const std::array<int8_t, NUM_CHANNELS>& pins, WS281xColorOrder colorOrder) const;
-    ValidateResponse ValidateRuntimeConfig(const RuntimeConfig& config) const;
-    bool SetRuntimeConfig(const RuntimeConfig& config, bool skipWrite = false, String* errorMessage = nullptr);
+    SuccessResultWithMessage ValidateAudioInputPin(int pin) const;
+    SuccessResultWithMessage ValidateTopology(uint16_t width, uint16_t height, bool serpentine) const;
+    SuccessResultWithMessage ValidateOutputDriver(OutputDriver driver) const;
+    SuccessResultWithMessage ValidateWS281xSettings(size_t channelCount, const std::array<int8_t, NUM_CHANNELS>& pins, WS281xColorOrder colorOrder) const;
+    SuccessResultWithMessage ValidateRuntimeConfig(const RuntimeConfig& config) const;
+    SuccessResultWithMessage ParseAndValidateUnifiedSettings(JsonObjectConst root, UnifiedSettingsRequest& out) const;
+    SuccessResultWithMessage SetRuntimeConfig(const RuntimeConfig& config, bool skipWrite = false);
+    SuccessResultWithMessage ApplyUnifiedDeviceSettings(const UnifiedSettingsRequest& request);
+    void SerializeUnifiedSettings(JsonObject root) const;
+    void SerializeUnifiedSettingsSchema(JsonObject root) const;
     void SetAudioInputPin(int newAudioInputPin);
+
+  private:
+    static ResultWithMessage<std::optional<int>> ResolveUnifiedAudioInputPin(JsonObjectConst device);
+    static std::optional<OutputDriver> ParseOutputDriverName(const String& name);
+    static std::optional<WS281xColorOrder> ParseWS281xColorOrderName(const String& name);
+    static const char* OutputDriverName(OutputDriver driver);
+    static const char* WS281xColorOrderName(WS281xColorOrder colorOrder);
+    static void AppendPins(JsonArray target, const std::array<int8_t, NUM_CHANNELS>& pins);
 };

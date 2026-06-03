@@ -39,10 +39,16 @@
 #include <optional>
 #include <sys/time.h>
 #include <type_traits>
+#include <utility>
 
 #ifndef MICROS_PER_SECOND
     #define MICROS_PER_SECOND 1000000
 #endif
+
+template<typename TResult>
+using ResultWithMessage = std::pair<TResult, String>;
+
+using SuccessResultWithMessage = ResultWithMessage<bool>;
 
 // str_snprintf
 //

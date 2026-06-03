@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "deviceconfig.h"
+#include "types.h"
 
 class GFXBase;
 class Transport;
@@ -45,14 +46,14 @@ class WS281xOutputManager
     std::unique_ptr<Transport>    _transport;
     std::unique_ptr<PixelFormat>  _format;          // picked at construction by chip-type flag
 
-    bool RecreateChannel(size_t channelIndex, int8_t pin, size_t ledCount, String* errorMessage);
+    SuccessResultWithMessage RecreateChannel(size_t channelIndex, int8_t pin, size_t ledCount);
     void ReleaseChannel(size_t channelIndex);
 
   public:
     WS281xOutputManager();
     ~WS281xOutputManager();
 
-    bool ApplyConfig(const DeviceConfig& config, const std::vector<std::shared_ptr<GFXBase>>& devices, String* errorMessage = nullptr);
+    SuccessResultWithMessage ApplyConfig(const DeviceConfig& config, const std::vector<std::shared_ptr<GFXBase>>& devices);
     void Show(const std::vector<std::shared_ptr<GFXBase>>& devices, uint16_t pixelsDrawn, uint8_t brightness, uint8_t fader);
     void Reset();
 

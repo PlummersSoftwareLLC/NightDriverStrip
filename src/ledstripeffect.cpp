@@ -472,15 +472,17 @@ bool LEDStripEffect::SerializeSettingsToJSON(JsonObject& jsonObject)
 
 // Changes the value for one "known" effect setting. All setting values are passed to this
 // function are Strings; the conversion to the target type of a member variable that
-// corresponds with a setting can be taken care of by using one of the SetIfSelected()
-// overloads (either via RETURN_IF_SET or directly).
+// corresponds with a setting is handled by FieldAccess::AssignIfSelected().
 bool LEDStripEffect::SetSetting(const String& name, const String& value)
 {
-    RETURN_IF_SET(name, ACTUAL_NAME_OF(_friendlyName), _friendlyName, value);
-    RETURN_IF_SET(name, ACTUAL_NAME_OF(_maximumEffectTime), _maximumEffectTime, value);
+    if (FieldAccess::AssignIfSelected(name, ACTUAL_NAME_OF(_friendlyName), _friendlyName, value))
+        return true;
+
+    if (FieldAccess::AssignIfSelected(name, ACTUAL_NAME_OF(_maximumEffectTime), _maximumEffectTime, value))
+        return true;
 
     bool clearMaximumEffectTime = false;
-    if (SetIfSelected(name, "clearMaximumEffectTime", clearMaximumEffectTime, value))
+    if (FieldAccess::AssignIfSelected(name, "clearMaximumEffectTime", clearMaximumEffectTime, value))
     {
         if (clearMaximumEffectTime)
             _maximumEffectTime = 0;
@@ -494,72 +496,6 @@ bool LEDStripEffect::SetSetting(const String& name, const String& value)
 float LEDStripEffect::fmap(const float x, const float in_min, const float in_max, const float out_min, const float out_max)
 {
     return (out_max - out_min) * (x - in_min) / (in_max - in_min) + out_min;
-}
-
-namespace {
-    template <typename TProperty, typename TValue>
-    bool SetIfNameMatches(const String& firstName, const String& secondName, TProperty& property, const TValue& value)
-    {
-        if (firstName == secondName)
-        {
-            property = value;
-            return true;
-        }
-        return false;
-    }
-}
-
-// Helper functions for known setting types, as defined in SettingSpec::SettingType
-
-bool LEDStripEffect::SetIfSelected(const String& settingName, const String& propertyName, int& property, const String& value)
-{
-    return SetIfNameMatches(settingName, propertyName, property, value.toInt());
-}
-
-bool LEDStripEffect::SetIfSelected(const String& settingName, const String& propertyName, size_t& property, const String& value)
-{
-    return SetIfNameMatches(settingName, propertyName, property, (size_t)strtoul(value.c_str(), nullptr, 10));
-}
-
-bool LEDStripEffect::SetIfSelected(const String& settingName, const String& propertyName, float& property, const String& value)
-{
-    return SetIfNameMatches(settingName, propertyName, property, value.toFloat());
-}
-
-bool LEDStripEffect::SetIfSelected(const String& settingName, const String& propertyName, bool& property, const String& value)
-{
-    return SetIfNameMatches(settingName, propertyName, property, BoolFromText(value));
-}
-
-bool LEDStripEffect::SetIfSelected(const String& settingName, const String& propertyName, String& property, const String& value)
-{
-    return SetIfNameMatches(settingName, propertyName, property, value);
-}
-
-bool LEDStripEffect::SetIfSelected(const String& settingName, const String& propertyName, CRGBPalette16& property, const String& value)
-{
-    if (settingName != propertyName)
-        return false;
-
-    auto src = CreateJsonDocument();
-    deserializeJson(src, value);
-    CRGB colors[16];
-    int colorIndex = 0;
-
-    const auto & componentsArray = src.as<JsonArrayConst>();
-    for (const auto &v: componentsArray)
-    {
-        colors[colorIndex++] = v.as<CRGB>();
-    }
-
-    property = CRGBPalette16(colors);
-
-    return true;
-}
-
-bool LEDStripEffect::SetIfSelected(const String& settingName, const String& propertyName, CRGB& property, const String& value)
-{
-    return SetIfNameMatches(settingName, propertyName, property, CRGB(strtoul(value.c_str(), NULL, 10)));
 }
 
 namespace _effect_id_detail {

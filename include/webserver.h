@@ -81,7 +81,7 @@ class CWebServer : public IService
     using ValueSetter = std::function<bool(Tv)>;
 
     // Value validating function type, as used by DeviceConfig (and possible others)
-    using ValueValidator = std::function<DeviceConfig::ValidateResponse(const String&)>;
+    using ValueValidator = std::function<SuccessResultWithMessage(const String&)>;
 
     // Device stats that don't change after startup
     struct StaticStatistics
@@ -129,7 +129,7 @@ class CWebServer : public IService
     // followed by Start() can warn loudly rather than silently leak/double-
     // bind the listening socket. (We still do the begin again because the
     // AsyncTCP server is normally reused; this just surfaces the limitation.)
-    
+
     std::atomic<bool> _everStarted{false};
 
     // Helper functions/templates
@@ -186,16 +186,15 @@ class CWebServer : public IService
     static bool EnsureDeviceSettingSpecsJson();
     static bool BuildSettingSpecsJson(String& json, const std::vector<std::reference_wrapper<SettingSpec>> & settingSpecs);
     static void SendSettingSpecsResponse(AsyncWebServerRequest * pRequest, const std::vector<std::reference_wrapper<SettingSpec>> & settingSpecs);
-    static bool ValidateLegacyDeviceSettings(AsyncWebServerRequest * pRequest, String* errorMessage = nullptr);
-    static bool ValidateUnifiedDeviceSettings(JsonObjectConst device, String* errorMessage = nullptr);
-    static bool SetSettingsIfPresent(AsyncWebServerRequest * pRequest, String* errorMessage = nullptr);
+    static SuccessResultWithMessage ValidateLegacyDeviceSettings(AsyncWebServerRequest * pRequest);
+    static SuccessResultWithMessage SetSettingsIfPresent(AsyncWebServerRequest * pRequest);
 
     // Apply a new audio input pin to DeviceConfig and, when the build supports
     // a live reconfigure, push it through AudioService::Reconfigure() without
     // requiring a reboot. Reverts the persisted pin on failure. Safe to call
     // whether or not g_ptrSystem / AudioService are present. Returns true if
     // either the pin was unchanged or the live reconfigure succeeded.
-    
+
     static bool ApplyAudioInputPinChange(int oldPin);
     static long GetEffectIndexFromParam(AsyncWebServerRequest * pRequest, bool post = false);
     static bool CheckAndGetSettingsEffect(AsyncWebServerRequest * pRequest, std::shared_ptr<LEDStripEffect> & effect, bool post = false);
@@ -293,4 +292,19 @@ inline CWebServer::StatisticsType operator&(CWebServer::StatisticsType lhs, CWeb
 // Set value in lambda using a forwarding function. Reports success based on function's return value,
 //   which must be implicitly convertable to bool
 #define CONFIRM_VALUE(functionCall) [&](auto value)->bool { return functionCall; }
+
+template<>
+bool CWebServer::PushPostParamIfPresent<bool>(const AsyncWebServerRequest * pRequest, const String & paramName, ValueSetter<bool> setter);
+
+template<>
+bool CWebServer::PushPostParamIfPresent<size_t>(const AsyncWebServerRequest * pRequest, const String & paramName, ValueSetter<size_t> setter);
+
+template<>
+bool CWebServer::PushPostParamIfPresent<int>(const AsyncWebServerRequest * pRequest, const String & paramName, ValueSetter<int> setter);
+
+template<>
+bool CWebServer::PushPostParamIfPresent<CRGB>(const AsyncWebServerRequest * pRequest, const String & paramName, ValueSetter<CRGB> setter);
+
+template<>
+void CWebServer::AddCORSHeaderAndSendResponse<AsyncJsonResponse>(AsyncWebServerRequest * pRequest, AsyncJsonResponse * pResponse);
 #endif  // ENABLE_WEBSERVER

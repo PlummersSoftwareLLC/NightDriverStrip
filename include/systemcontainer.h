@@ -31,6 +31,7 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
+#include "deviceconfig.h"
 #include "interfaces.h"
 
 #include <ArduinoJson.h>
@@ -41,7 +42,6 @@ class GFXBase;
 class EffectManager;
 class LEDStripEffect;
 class JSONWriter;
-class DeviceConfig;
 class LEDBuffer;
 class LEDBufferManager;
 class TaskManager;
@@ -158,7 +158,8 @@ class SystemContainer
 
     // Config objects
     void SetupConfig();
-    bool ApplyRuntimeConfiguration(String* errorMessage = nullptr);
+    SuccessResultWithMessage ApplyRuntimeConfiguration();
+    SuccessResultWithMessage ApplyRuntimeConfigurationTransaction(const DeviceConfig::RuntimeConfig& requestedConfig);
     int GetConfiguredAudioInputPin() const;
     bool HasJSONWriter() const { return !!_ptrJSONWriter; }
     JSONWriter& GetJSONWriter() const;

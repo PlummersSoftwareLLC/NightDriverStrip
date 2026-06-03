@@ -1,0 +1,7 @@
+# Standard 4M partition layout with OTA, tuned for Feather S3 firmware size
+# Name,   Type, SubType,     Offset,      Size, Flags
+nvs,        data,   nvs,     0x00B000,    0x002000,
+otadata,    data,   ota,     0x00D000,    0x002000,
+app0,       app,    ota_0,   0x010000,    0x1B0000,
+app1,       app,    ota_1,   0x1C0000,    0x1B0000,
+storage,    data,   spiffs,  0x370000,    0x090000

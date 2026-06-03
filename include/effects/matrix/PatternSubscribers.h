@@ -293,10 +293,14 @@ class PatternSubscribers : public EffectWithId<PatternSubscribers>
     // Extension override to accept our settings on top of those known by LEDStripEffect
     bool SetSetting(const String& name, const String& value) override
     {
-        RETURN_IF_SET(name, NAME_OF(youtubeChannelGuid), youtubeChannelGuid, value);
-        RETURN_IF_SET(name, NAME_OF(youtubeChannelName), youtubeChannelName, value);
-        RETURN_IF_SET(name, NAME_OF(backgroundColor), backgroundColor, value);
-        RETURN_IF_SET(name, NAME_OF(borderColor), borderColor, value);
+        if (FieldAccess::AssignIfSelected(name, NAME_OF(youtubeChannelGuid), youtubeChannelGuid, value))
+            return true;
+        if (FieldAccess::AssignIfSelected(name, NAME_OF(youtubeChannelName), youtubeChannelName, value))
+            return true;
+        if (FieldAccess::AssignIfSelected(name, NAME_OF(backgroundColor), backgroundColor, value))
+            return true;
+        if (FieldAccess::AssignIfSelected(name, NAME_OF(borderColor), borderColor, value))
+            return true;
 
         return LEDStripEffect::SetSetting(name, value);
     }

@@ -282,7 +282,7 @@ void SystemContainer::SetupConfig()
 
     // Create the JSON writer and start its background thread. JSONWriter is an
     // IService so it owns its own task; we just call Start() here.
-    
+
     if (!_ptrJSONWriter)
     {
         _ptrJSONWriter = make_unique_internal<JSONWriter>();
@@ -302,7 +302,7 @@ int SystemContainer::GetConfiguredAudioInputPin() const
     return DeviceConfig::GetCompiledAudioInputPin();
 }
 
-bool SystemContainer::ApplyRuntimeConfiguration(String* errorMessage)
+SuccessResultWithMessage SystemContainer::ApplyRuntimeConfiguration()
 {
     // Runtime topology changes retarget both the graphics objects and the
     // WiFi frame buffers. Lock all three domains together so the render task
@@ -313,11 +313,7 @@ bool SystemContainer::ApplyRuntimeConfiguration(String* errorMessage)
     auto& config = GetDeviceConfig();
 
     if (config.RequiresRecompileForCurrentRuntimeConfig())
-    {
-        if (errorMessage)
-            *errorMessage = "recompile needed";
-        return false;
-    }
+        return { false, "recompile needed" };
 
     #if USE_WS281X
     try
@@ -343,29 +339,52 @@ bool SystemContainer::ApplyRuntimeConfiguration(String* errorMessage)
 
         // The mutable WS281x output layer is now always owned by NightDriver so live pin/count/color-order
         // changes stay on one transport path instead of handing off between different ESP32 RMT backends.
-        if (_ptrDevices && !SetupWS281xOutputManager().ApplyConfig(config, *_ptrDevices, errorMessage))
-            return false;
+        if (_ptrDevices)
+        {
+            auto [applyConfigSucceeded, applyConfigError] = SetupWS281xOutputManager().ApplyConfig(config, *_ptrDevices);
+            if (!applyConfigSucceeded)
+                return { false, applyConfigError };
+        }
 
         if (_ptrEffectManager && !_ptrEffectManager->ReinitializeEffects())
-        {
-            if (errorMessage)
-                *errorMessage = "failed to reinitialize effects for new topology";
-            return false;
-        }
+            return { false, "failed to reinitialize effects for new topology" };
     }
     catch (const std::bad_alloc&)
     {
         debugE("Runtime configuration failed due to insufficient memory");
-        if (errorMessage)
-            *errorMessage = "insufficient memory for runtime reconfiguration";
-        return false;
+        return { false, "insufficient memory for runtime reconfiguration" };
     }
     #endif
 
-    if (errorMessage)
-        *errorMessage = "";
+    return { true, "" };
+}
 
-    return true;
+SuccessResultWithMessage SystemContainer::ApplyRuntimeConfigurationTransaction(const DeviceConfig::RuntimeConfig& requestedConfig)
+{
+    auto& deviceConfig = GetDeviceConfig();
+    const auto previousConfig = deviceConfig.GetRuntimeConfig();
+
+    auto [stagedConfigValid, stagedConfigMessage] = deviceConfig.SetRuntimeConfig(requestedConfig, true);
+    if (!stagedConfigValid)
+        return { false, stagedConfigMessage };
+
+    auto [runtimeConfigApplied, runtimeErrorMessage] = ApplyRuntimeConfiguration();
+    if (!runtimeConfigApplied)
+    {
+        (void)deviceConfig.SetRuntimeConfig(previousConfig, true);
+
+        auto [rollbackApplied, rollbackError] = ApplyRuntimeConfiguration();
+        if (!rollbackApplied)
+            debugE("Failed to roll back runtime configuration after apply error: %s", rollbackError.c_str());
+
+        return { false, runtimeErrorMessage };
+    }
+
+    auto [persistedConfigValid, persistedConfigMessage] = deviceConfig.SetRuntimeConfig(requestedConfig, false);
+    if (!persistedConfigValid)
+        return { false, persistedConfigMessage };
+
+    return { true, "" };
 }
 
 #if ENABLE_WIFI

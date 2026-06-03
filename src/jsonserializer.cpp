@@ -230,6 +230,67 @@ void JSONWriter::NotifyTask()
     WakeTask();
 }
 
+namespace
+{
+    template <typename T>
+    bool AssignIfNameMatches(const String& selectedName, const String& fieldName, T& target, const T& value)
+    {
+        if (selectedName != fieldName)
+            return false;
+
+        target = value;
+        return true;
+    }
+}
+
+bool FieldAccess::AssignIfSelected(const String& selectedName, const String& fieldName, int& target, const String& value)
+{
+    return AssignIfNameMatches(selectedName, fieldName, target, static_cast<int>(value.toInt()));
+}
+
+bool FieldAccess::AssignIfSelected(const String& selectedName, const String& fieldName, size_t& target, const String& value)
+{
+    return AssignIfNameMatches(selectedName, fieldName, target, static_cast<size_t>(strtoul(value.c_str(), nullptr, 10)));
+}
+
+bool FieldAccess::AssignIfSelected(const String& selectedName, const String& fieldName, float& target, const String& value)
+{
+    return AssignIfNameMatches(selectedName, fieldName, target, value.toFloat());
+}
+
+bool FieldAccess::AssignIfSelected(const String& selectedName, const String& fieldName, bool& target, const String& value)
+{
+    return AssignIfNameMatches(selectedName, fieldName, target, BoolFromText(value));
+}
+
+bool FieldAccess::AssignIfSelected(const String& selectedName, const String& fieldName, String& target, const String& value)
+{
+    return AssignIfNameMatches(selectedName, fieldName, target, value);
+}
+
+bool FieldAccess::AssignIfSelected(const String& selectedName, const String& fieldName, CRGBPalette16& target, const String& value)
+{
+    if (selectedName != fieldName)
+        return false;
+
+    auto src = CreateJsonDocument();
+    deserializeJson(src, value);
+    CRGB colors[16];
+    int colorIndex = 0;
+
+    const auto& componentsArray = src.as<JsonArrayConst>();
+    for (const auto& v : componentsArray)
+        colors[colorIndex++] = v.as<CRGB>();
+
+    target = CRGBPalette16(colors);
+    return true;
+}
+
+bool FieldAccess::AssignIfSelected(const String& selectedName, const String& fieldName, CRGB& target, const String& value)
+{
+    return AssignIfNameMatches(selectedName, fieldName, target, CRGB(strtoul(value.c_str(), nullptr, 10)));
+}
+
 bool BoolFromText(const String& text)
 {
     return text == "true" || strtol(text.c_str(), nullptr, 10);
