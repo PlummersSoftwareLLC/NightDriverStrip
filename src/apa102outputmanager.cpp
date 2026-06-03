@@ -4,10 +4,10 @@
 //
 // NightDriverStrip - (c) 2026 Plummer's Software LLC.  All Rights Reserved.
 //
-// APA102/SK9822 runtime output manager. APA102 is clocked, so unlike WS281x it
-// does not need RMT bit timing. We bit-bang data/clock GPIO pairs directly so
-// multi-channel builds are not constrained by the number of ESP32 hardware SPI
-// buses.
+// APA102/SK9822 runtime output manager. Uses the ESP32 hardware SPI master
+// with DMA so the render task hands the prepared frame off in one shot
+// instead of toggling GPIOs per bit. One SPI host per channel (SPI2_HOST,
+// then SPI3_HOST), so at most two simultaneous APA102 channels.
 //
 //---------------------------------------------------------------------------
 
@@ -18,9 +18,9 @@
 #include "apa102outputmanager.h"
 
 #include <algorithm>
-#include <driver/gpio.h>
-#include <soc/gpio_reg.h>
-#include <soc/soc.h>
+#include <cstring>
+#include <esp_heap_caps.h>
+#include <driver/spi_common.h>
 
 #include "gfxbase.h"
 #include "pixelformat.h"
@@ -30,6 +30,12 @@ namespace
 {
     #ifndef APA102_GLOBAL_BRIGHTNESS
         #define APA102_GLOBAL_BRIGHTNESS 31
+    #endif
+
+    #ifndef APA102_SPI_HZ
+        // 10 MHz is comfortable for both APA102 and SK9822 across typical wiring.
+        // Bump per-env if your harness is short and clean.
+        #define APA102_SPI_HZ (10 * 1000 * 1000)
     #endif
 
     constexpr uint8_t ClampGlobalBrightness(uint8_t brightness)
@@ -45,76 +51,32 @@ namespace
 
     constexpr uint8_t kGlobalBrightness = ClampGlobalBrightness(APA102_GLOBAL_BRIGHTNESS);
 
-    void SetGpioLevel(int8_t pin, bool high)
-    {
-        const uint32_t bit = 1UL << (pin & 31);
-        if (pin < 32)
-        {
-            REG_WRITE(high ? GPIO_OUT_W1TS_REG : GPIO_OUT_W1TC_REG, bit);
-            return;
-        }
+    constexpr size_t kStartFrameBytes = 4;
+    constexpr size_t kBytesPerPixel   = 4;
 
-        #if defined(GPIO_OUT1_W1TS_REG) && defined(GPIO_OUT1_W1TC_REG)
-            REG_WRITE(high ? GPIO_OUT1_W1TS_REG : GPIO_OUT1_W1TC_REG, bit);
-        #else
-            gpio_set_level(static_cast<gpio_num_t>(pin), high ? 1 : 0);
-        #endif
-    }
-
-    void WriteBit(int8_t dataPin, int8_t clockPin, bool bit)
-    {
-        SetGpioLevel(dataPin, bit);
-        SetGpioLevel(clockPin, true);
-        SetGpioLevel(clockPin, false);
-    }
-
-    void WriteByte(int8_t dataPin, int8_t clockPin, uint8_t value)
-    {
-        for (int bit = 7; bit >= 0; --bit)
-            WriteBit(dataPin, clockPin, (value & (1U << bit)) != 0);
-    }
-
-    void WriteStartFrame(int8_t dataPin, int8_t clockPin)
-    {
-        SetGpioLevel(dataPin, false);
-        for (size_t i = 0; i < 4; ++i)
-            WriteByte(dataPin, clockPin, 0x00);
-    }
-
-    void WriteEndFrame(int8_t dataPin, int8_t clockPin, size_t ledCount)
+    constexpr size_t EndFrameBytes(size_t ledCount)
     {
         // APA102 needs at least ledCount / 2 extra clock pulses after the pixel
-        // frames. Use a conservative byte count with a small fixed floor for
-        // short strips.
-        const size_t endBytes = std::max<size_t>(4, (ledCount + 15) / 16);
-        SetGpioLevel(dataPin, true);
-        for (size_t i = 0; i < endBytes; ++i)
-            WriteByte(dataPin, clockPin, 0xFF);
+        // frames; use ceil(N/16) bytes with a small fixed floor for short strips.
+        const size_t needed = (ledCount + 15) / 16;
+        return needed < 4 ? 4 : needed;
     }
 
-    void WritePixel(int8_t dataPin,
-                    int8_t clockPin,
-                    CRGB color,
-                    uint8_t brightness,
-                    uint8_t fader,
-                    DeviceConfig::WS281xColorOrder colorOrder)
+    constexpr size_t FrameBufferSize(size_t ledCount)
     {
-        const auto indices = PixelFormatHelpers::IndicesFor(colorOrder);
-        uint8_t wire[3] = {};
-        wire[indices.rIdx] = PixelFormatHelpers::Scale(color.r, brightness, fader);
-        wire[indices.gIdx] = PixelFormatHelpers::Scale(color.g, brightness, fader);
-        wire[indices.bIdx] = PixelFormatHelpers::Scale(color.b, brightness, fader);
+        return kStartFrameBytes + kBytesPerPixel * ledCount + EndFrameBytes(ledCount);
+    }
 
-        WriteByte(dataPin, clockPin, 0xE0 | kGlobalBrightness);
-        WriteByte(dataPin, clockPin, wire[0]);
-        WriteByte(dataPin, clockPin, wire[1]);
-        WriteByte(dataPin, clockPin, wire[2]);
+    constexpr spi_host_device_t HostForChannel(size_t channelIndex)
+    {
+        return channelIndex == 0 ? SPI2_HOST : SPI3_HOST;
     }
 
     void LogRuntimeAPA102Configuration(const DeviceConfig& config, const std::vector<std::shared_ptr<GFXBase>>& devices, const char* reason)
     {
-        debugI("APA102 config (%s): path=bitbang driver=%s channels=%zu matrix=%ux%u serpentine=%d colorOrder=%s leds=%zu",
+        debugI("APA102 config (%s): path=spi-dma@%uHz driver=%s channels=%zu matrix=%ux%u serpentine=%d colorOrder=%s leds=%zu",
                reason ? reason : "update",
+               static_cast<unsigned>(APA102_SPI_HZ),
                config.GetRuntimeDriverName().c_str(),
                config.GetChannelCount(),
                static_cast<unsigned>(config.GetMatrixWidth()),
@@ -128,8 +90,9 @@ namespace
         for (size_t channel = 0; channel < config.GetChannelCount() && channel < devices.size(); ++channel)
         {
             const auto& graphics = *devices[channel];
-            debugI("APA102 channel %zu: data=%d clock=%d leds=%zu matrix=%ux%u serpentine=%d buffer=%p",
+            debugI("APA102 channel %zu: host=SPI%d data=%d clock=%d leds=%zu matrix=%ux%u serpentine=%d buffer=%p",
                    channel,
+                   HostForChannel(channel) == SPI2_HOST ? 2 : 3,
                    dataPins[channel],
                    clockPins[channel],
                    graphics.GetLEDCount(),
@@ -162,44 +125,104 @@ void APA102OutputManager::Reset()
     _colorOrder = DeviceConfig::GetCompiledWS281xColorOrder();
 }
 
-void APA102OutputManager::ConfigureChannel(size_t channelIndex, int8_t dataPin, int8_t clockPin, size_t ledCount)
+bool APA102OutputManager::ConfigureChannel(size_t channelIndex, int8_t dataPin, int8_t clockPin, size_t ledCount, String* errorMessage)
 {
     auto& state = _channels[channelIndex];
 
-    if (state.active && (state.dataPin != dataPin || state.clockPin != clockPin))
+    const size_t requiredBytes = FrameBufferSize(ledCount);
+    const bool pinsChanged   = state.dataPin != dataPin || state.clockPin != clockPin;
+    const bool bufferTooSmall = state.bufferSize < requiredBytes;
+
+    // If the bus is already initialized but anything material changed, tear it down before re-binding.
+    if (state.active && (pinsChanged || bufferTooSmall))
         ReleaseChannel(channelIndex);
 
-    pinMode(dataPin, OUTPUT);
-    pinMode(clockPin, OUTPUT);
-    SetGpioLevel(dataPin, false);
-    SetGpioLevel(clockPin, false);
+    if (!state.active)
+    {
+        state.host = HostForChannel(channelIndex);
 
-    state.dataPin = dataPin;
-    state.clockPin = clockPin;
+        spi_bus_config_t busCfg = {};
+        busCfg.mosi_io_num     = dataPin;
+        busCfg.miso_io_num     = -1;
+        busCfg.sclk_io_num     = clockPin;
+        busCfg.quadwp_io_num   = -1;
+        busCfg.quadhd_io_num   = -1;
+        busCfg.max_transfer_sz = static_cast<int>(requiredBytes);
+
+        esp_err_t err = spi_bus_initialize(state.host, &busCfg, SPI_DMA_CH_AUTO);
+        if (err != ESP_OK)
+        {
+            if (errorMessage)
+                *errorMessage = String("spi_bus_initialize failed: ") + esp_err_to_name(err);
+            return false;
+        }
+
+        spi_device_interface_config_t devCfg = {};
+        devCfg.clock_speed_hz = APA102_SPI_HZ;
+        devCfg.mode           = 0;          // CPOL=0, CPHA=0 — APA102/SK9822
+        devCfg.spics_io_num   = -1;         // no chip select
+        devCfg.queue_size     = 1;
+        devCfg.flags          = SPI_DEVICE_NO_DUMMY;
+
+        err = spi_bus_add_device(state.host, &devCfg, &state.device);
+        if (err != ESP_OK)
+        {
+            spi_bus_free(state.host);
+            state.device = nullptr;
+            if (errorMessage)
+                *errorMessage = String("spi_bus_add_device failed: ") + esp_err_to_name(err);
+            return false;
+        }
+
+        state.buffer = static_cast<uint8_t*>(heap_caps_malloc(requiredBytes, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL));
+        if (!state.buffer)
+        {
+            spi_bus_remove_device(state.device);
+            spi_bus_free(state.host);
+            state.device = nullptr;
+            if (errorMessage)
+                *errorMessage = "APA102 DMA buffer allocation failed";
+            return false;
+        }
+
+        state.bufferSize = requiredBytes;
+        state.dataPin    = dataPin;
+        state.clockPin   = clockPin;
+        state.active     = true;
+    }
+
     state.ledCount = ledCount;
-    state.active = true;
+
+    // Pre-fill the start frame (zeros) and end frame (0xFF padding); Show() only fills the pixel bytes.
+    std::memset(state.buffer, 0x00, kStartFrameBytes);
+    const size_t endOffset = kStartFrameBytes + kBytesPerPixel * ledCount;
+    std::memset(state.buffer + endOffset, 0xFF, requiredBytes - endOffset);
+
+    return true;
 }
 
 void APA102OutputManager::ReleaseChannel(size_t channelIndex)
 {
     auto& state = _channels[channelIndex];
 
-    if (state.dataPin >= 0)
+    if (state.device)
     {
-        pinMode(state.dataPin, OUTPUT);
-        SetGpioLevel(state.dataPin, false);
+        spi_bus_remove_device(state.device);
+        state.device = nullptr;
+        spi_bus_free(state.host);
     }
 
-    if (state.clockPin >= 0)
+    if (state.buffer)
     {
-        pinMode(state.clockPin, OUTPUT);
-        SetGpioLevel(state.clockPin, false);
+        heap_caps_free(state.buffer);
+        state.buffer = nullptr;
     }
 
-    state.dataPin = -1;
-    state.clockPin = -1;
-    state.ledCount = 0;
-    state.active = false;
+    state.bufferSize = 0;
+    state.dataPin    = -1;
+    state.clockPin   = -1;
+    state.ledCount   = 0;
+    state.active     = false;
 }
 
 bool APA102OutputManager::ApplyConfig(const DeviceConfig& config, const std::vector<std::shared_ptr<GFXBase>>& devices, String* errorMessage)
@@ -213,14 +236,21 @@ bool APA102OutputManager::ApplyConfig(const DeviceConfig& config, const std::vec
         return false;
     }
 
-    const size_t channelCount = std::min(config.GetChannelCount(), devices.size());
-    const size_t ledCount = config.GetActiveLEDCount();
-    const auto& dataPins = config.GetAPA102DataPins();
-    const auto& clockPins = config.GetAPA102ClockPins();
+    const size_t requestedChannels = std::min(config.GetChannelCount(), devices.size());
+    if (requestedChannels > kMaxChannels)
+    {
+        if (errorMessage)
+            *errorMessage = String("APA102 hardware-SPI driver supports at most ") + kMaxChannels + " channels";
+        return false;
+    }
+
+    const size_t ledCount  = config.GetActiveLEDCount();
+    const auto& dataPins   = config.GetAPA102DataPins();
+    const auto& clockPins  = config.GetAPA102ClockPins();
 
     for (size_t i = 0; i < _channels.size(); ++i)
     {
-        const bool shouldBeActive = i < channelCount;
+        const bool shouldBeActive = i < requestedChannels;
         if (!shouldBeActive)
         {
             ReleaseChannel(i);
@@ -229,12 +259,15 @@ bool APA102OutputManager::ApplyConfig(const DeviceConfig& config, const std::vec
 
         auto& state = _channels[i];
         if (!state.active || state.dataPin != dataPins[i] || state.clockPin != clockPins[i] || state.ledCount != ledCount)
-            ConfigureChannel(i, dataPins[i], clockPins[i], ledCount);
+        {
+            if (!ConfigureChannel(i, dataPins[i], clockPins[i], ledCount, errorMessage))
+                return false;
+        }
     }
 
-    _activeChannelCount = channelCount;
-    _activeLEDCount = ledCount;
-    _colorOrder = config.GetWS281xColorOrder();
+    _activeChannelCount = requestedChannels;
+    _activeLEDCount     = ledCount;
+    _colorOrder         = config.GetWS281xColorOrder();
 
     if (errorMessage)
         *errorMessage = "";
@@ -243,18 +276,15 @@ bool APA102OutputManager::ApplyConfig(const DeviceConfig& config, const std::vec
     return true;
 }
 
-// 
-// Show() 
 //
-// Render the given pixel data to the LED strip(s) using the APA102 protocol. This method is called on the critical path of rendering frames, 
-// so it is optimized for performance. It assumes that the caller has already acquired the transport mutex and that the channel/LED counts 
-// have been validated. The method iterates over each active channel/device, sends the APA102 start frame, then sends pixel data for each LED 
-// (up to pixelsDrawn), applying brightness and fader scaling, and finally sends the end frame. If rendering takes an unusually long time, it 
-// logs a warning with details about the configuration and elapsed time.
+// Show()
 //
-// This method is on the critical path of rendering frames to the LED strip, so it is carefully optimized for performance. It assumes that 
-// the caller has already acquired the transport mutex and that the channel/LED counts have been validated.
-
+// Render the given pixel data to the LED strip(s) using the APA102 protocol over hardware SPI + DMA.
+// Caller must already hold the transport mutex (or rely on the one we acquire here). The pre-built
+// frame buffer for each channel already contains the start frame (zeros) and end frame (0xFF
+// padding); we only fill the per-pixel bytes between them, then hand the whole buffer to the SPI
+// master in a single transaction.
+//
 void APA102OutputManager::Show(const std::vector<std::shared_ptr<GFXBase>>& devices, uint16_t pixelsDrawn, uint8_t brightness, uint8_t fader)
 {
     std::lock_guard guard(WS281xGFX::TransportMutex());
@@ -268,21 +298,38 @@ void APA102OutputManager::Show(const std::vector<std::shared_ptr<GFXBase>>& devi
     for (size_t channelIndex = 0; channelIndex < _activeChannelCount && channelIndex < devices.size(); ++channelIndex)
     {
         auto& state = _channels[channelIndex];
-        if (!state.active)
+        if (!state.active || !state.device || !state.buffer)
             continue;
 
         auto& device = devices[channelIndex];
-        const size_t ledCount = std::min(_activeLEDCount, device->GetLEDCount());
+        const size_t ledCount = std::min(state.ledCount, device->GetLEDCount());
+        const auto indices = PixelFormatHelpers::IndicesFor(_colorOrder);
 
-        WriteStartFrame(state.dataPin, state.clockPin);
-
+        uint8_t* p = state.buffer + kStartFrameBytes;
         for (size_t i = 0; i < ledCount; ++i)
         {
             CRGB color = (i < pixelsToShow) ? device->leds[i] : CRGB::Black;
-            WritePixel(state.dataPin, state.clockPin, color, brightness, fader, _colorOrder);
+            uint8_t wire[3] = {};
+            wire[indices.rIdx] = PixelFormatHelpers::Scale(color.r, brightness, fader);
+            wire[indices.gIdx] = PixelFormatHelpers::Scale(color.g, brightness, fader);
+            wire[indices.bIdx] = PixelFormatHelpers::Scale(color.b, brightness, fader);
+
+            p[0] = 0xE0 | kGlobalBrightness;
+            p[1] = wire[0];
+            p[2] = wire[1];
+            p[3] = wire[2];
+            p += kBytesPerPixel;
         }
 
-        WriteEndFrame(state.dataPin, state.clockPin, ledCount);
+        spi_transaction_t txn = {};
+        txn.length    = state.bufferSize * 8;  // bits
+        txn.tx_buffer = state.buffer;
+
+        const esp_err_t err = spi_device_transmit(state.device, &txn);
+        if (err != ESP_OK)
+        {
+            debugW("APA102 spi_device_transmit failed on channel %zu: %s", channelIndex, esp_err_to_name(err));
+        }
     }
 
     const auto showElapsedMicros = micros() - showStartMicros;
