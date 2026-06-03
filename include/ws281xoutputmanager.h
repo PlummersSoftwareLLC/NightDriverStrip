@@ -21,13 +21,13 @@
 #include <vector>
 
 #include "deviceconfig.h"
-#include "types.h"
+#include "stripoutputmanager.h"
 
 class GFXBase;
 class Transport;
 class PixelFormat;
 
-class WS281xOutputManager
+class WS281xOutputManager : public IStripOutputManager
 {
     struct ChannelState
     {
@@ -51,14 +51,14 @@ class WS281xOutputManager
 
   public:
     WS281xOutputManager();
-    ~WS281xOutputManager();
+    ~WS281xOutputManager() override;
 
-    SuccessResultWithMessage ApplyConfig(const DeviceConfig& config, const std::vector<std::shared_ptr<GFXBase>>& devices);
-    void Show(const std::vector<std::shared_ptr<GFXBase>>& devices, uint16_t pixelsDrawn, uint8_t brightness, uint8_t fader);
-    void Reset();
+    SuccessResultWithMessage ApplyConfig(const DeviceConfig& config, const std::vector<std::shared_ptr<GFXBase>>& devices) override;
+    void Show(const std::vector<std::shared_ptr<GFXBase>>& devices, uint16_t pixelsDrawn, uint8_t brightness, uint8_t fader) override;
+    void Reset() override;
 
-    size_t GetActiveChannelCount() const { return _activeChannelCount; }
-    size_t GetActiveLEDCount() const { return _activeLEDCount; }
+    size_t GetActiveChannelCount() const override { return _activeChannelCount; }
+    size_t GetActiveLEDCount() const override { return _activeLEDCount; }
 };
 
 #endif

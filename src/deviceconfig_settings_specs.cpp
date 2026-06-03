@@ -259,49 +259,96 @@ const std::vector<std::reference_wrapper<SettingSpec>>& DeviceConfig::GetSetting
             .ApiPath           = "outputs.driver",
             .Widget            = SettingSpec::WidgetKind::Select,
             .Options           = SettingSpec::OptionsSource::SchemaPath,
-            .OptionValues      = {"ws281x", "hub75"},
-            .OptionLabels      = {"WS281x", "HUB75"},
+            .OptionValues      = {"ws281x", "apa102", "hub75"},
+            .OptionLabels      = {"WS281x", "APA102", "HUB75"},
             .OptionsSchemaPath = "outputs.allowedDrivers"
         }));
         settingSpecs.push_back(SettingSpec::Validate(SettingSpec{
             .Name              = WS281xChannelCountTag,
-            .FriendlyName      = "WS281x channel count",
-            .Description       = "Number of active strip channels within the compiled maximum. Live updates are limited to WS281x builds.",
+            .FriendlyName      = "Strip channel count",
+            .Description       = "Number of active strip channels within the compiled maximum.",
             .Type              = SettingSpec::SettingType::PositiveBigInteger,
             .MinimumValue      = 1.0,
             .MaximumValue      = (double)GetCompiledChannelCount(),
             .Section           = kSectionOutput,
             .Priority          = 11,
-            .ApiPath           = "outputs.ws281x.channelCount",
+            .ApiPath           =
+            #if USE_APA102
+                "outputs.apa102.channelCount",
+            #else
+                "outputs.ws281x.channelCount",
+            #endif
             .Widget            = SettingSpec::WidgetKind::Select,
             .Options           = SettingSpec::OptionsSource::SchemaPath,
-            .OptionsSchemaPath = "outputs.ws281x.allowedChannelCounts"
+            .OptionsSchemaPath =
+            #if USE_APA102
+                "outputs.apa102.allowedChannelCounts"
+            #else
+                "outputs.ws281x.allowedChannelCounts"
+            #endif
         }));
         settingSpecs.push_back(SettingSpec::Validate(SettingSpec{
             .Name              = WS281xColorOrderTag,
-            .FriendlyName      = "WS281x color order",
-            .Description       = "Byte order used when streaming RGB values to WS281x LEDs. This applies live on strip builds and is ignored on HUB75 builds.",
+            .FriendlyName      = "Strip color order",
+            .Description       = "Byte order used when streaming RGB values to the strip. This applies live on strip builds and is ignored on HUB75 builds.",
             .Type              = SettingSpec::SettingType::String,
             .Section           = kSectionOutput,
             .Priority          = 12,
-            .ApiPath           = "outputs.ws281x.colorOrder",
+            .ApiPath           =
+            #if USE_APA102
+                "outputs.apa102.colorOrder",
+            #else
+                "outputs.ws281x.colorOrder",
+            #endif
             .Widget            = SettingSpec::WidgetKind::Select,
             .Options           = SettingSpec::OptionsSource::SchemaPath,
-            .OptionsSchemaPath = "outputs.ws281x.allowedColorOrders"
+            .OptionsSchemaPath =
+            #if USE_APA102
+                "outputs.apa102.allowedColorOrders"
+            #else
+                "outputs.ws281x.allowedColorOrders"
+            #endif
         }));
 
-        constexpr size_t kPinStringsPerChannel = 4;
+        constexpr size_t kPinStringsPerChannel =
+        #if USE_APA102
+            8;
+        #else
+            4;
+        #endif
         const auto compiledChannelCount = GetCompiledChannelCount();
-        settingSpecs.reserve(settingSpecs.size() + compiledChannelCount);
+        settingSpecs.reserve(settingSpecs.size() + compiledChannelCount
+        #if USE_APA102
+            * 2
+        #endif
+        );
         pinSpecStrings.reserve(compiledChannelCount * kPinStringsPerChannel);
         const auto stableCStr = [](const String& s) { return s.c_str(); };
 
         for (size_t i = 0; i < compiledChannelCount; ++i)
         {
-            const auto& nameStr        = pinSpecStrings.emplace_back(str_sprintf("ws281xPin%zu", i));
-            const auto& friendlyStr    = pinSpecStrings.emplace_back(str_sprintf("WS281x pin %zu", i + 1));
-            const auto& descriptionStr = pinSpecStrings.emplace_back(str_sprintf("GPIO assigned to WS281x channel %zu.", i + 1));
-            const auto& apiPathStr     = pinSpecStrings.emplace_back(str_sprintf("outputs.ws281x.pins[%zu]", i));
+            const auto& nameStr        = pinSpecStrings.emplace_back(str_sprintf("stripDataPin%zu", i));
+            const auto& friendlyStr    = pinSpecStrings.emplace_back(
+                #if USE_APA102
+                    str_sprintf("APA102 data pin %zu", i + 1)
+                #else
+                    str_sprintf("WS281x pin %zu", i + 1)
+                #endif
+            );
+            const auto& descriptionStr = pinSpecStrings.emplace_back(
+                #if USE_APA102
+                    str_sprintf("GPIO assigned to APA102 data for channel %zu.", i + 1)
+                #else
+                    str_sprintf("GPIO assigned to WS281x channel %zu.", i + 1)
+                #endif
+            );
+            const auto& apiPathStr     = pinSpecStrings.emplace_back(
+                #if USE_APA102
+                    str_sprintf("outputs.apa102.dataPins[%zu]", i)
+                #else
+                    str_sprintf("outputs.ws281x.pins[%zu]", i)
+                #endif
+            );
 
             settingSpecs.push_back(SettingSpec::Validate(SettingSpec{
                 .Name         = stableCStr(nameStr),
@@ -314,6 +361,25 @@ const std::vector<std::reference_wrapper<SettingSpec>>& DeviceConfig::GetSetting
                 .Priority     = 3 + static_cast<int>(i),
                 .ApiPath      = stableCStr(apiPathStr)
             }));
+
+            #if USE_APA102
+            const auto& clockNameStr        = pinSpecStrings.emplace_back(str_sprintf("apa102ClockPin%zu", i));
+            const auto& clockFriendlyStr    = pinSpecStrings.emplace_back(str_sprintf("APA102 clock pin %zu", i + 1));
+            const auto& clockDescriptionStr = pinSpecStrings.emplace_back(str_sprintf("GPIO assigned to APA102 clock for channel %zu.", i + 1));
+            const auto& clockApiPathStr     = pinSpecStrings.emplace_back(str_sprintf("outputs.apa102.clockPins[%zu]", i));
+
+            settingSpecs.push_back(SettingSpec::Validate(SettingSpec{
+                .Name         = stableCStr(clockNameStr),
+                .FriendlyName = stableCStr(clockFriendlyStr),
+                .Description  = stableCStr(clockDescriptionStr),
+                .Type         = SettingSpec::SettingType::Integer,
+                .MinimumValue = -1.0,
+                .MaximumValue = 48.0,
+                .Section      = kSectionOutput,
+                .Priority     = 3 + static_cast<int>(compiledChannelCount) + static_cast<int>(i),
+                .ApiPath      = stableCStr(clockApiPathStr)
+            }));
+            #endif
         }
 
         settingSpecReferences.insert(settingSpecReferences.end(), settingSpecs.begin(), settingSpecs.end());

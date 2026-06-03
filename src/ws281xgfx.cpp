@@ -43,6 +43,12 @@
 #if USE_WS281X
 #include "ws281xoutputmanager.h"
 #endif
+#if USE_APA102
+#include "apa102outputmanager.h"
+#endif
+#if USE_STRIP
+#include "stripoutputmanager.h"
+#endif
 
 namespace
 {
@@ -256,17 +262,17 @@ void WS281xGFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& device
 
     for (int i = 0; i < NUM_CHANNELS; i++)
     {
-        debugW("Allocating WS281xGFX for channel %d", i);
+        debugW("Allocating strip GFX for channel %d", i);
         auto device = make_shared_psram<WS281xGFX>(deviceConfig.GetMatrixWidth(), deviceConfig.GetMatrixHeight());
         device->ConfigureTopology(deviceConfig.GetMatrixWidth(), deviceConfig.GetMatrixHeight(), deviceConfig.IsMatrixSerpentine());
         devices.push_back(device);
     }
 
-    // Use a single WS281x transport path for both boot and live reconfiguration. The compiled pin macros still
+    // Use a single strip transport path for both boot and live reconfiguration. The compiled pin macros still
     // define the default configuration, but driving LEDs through one runtime-capable manager avoids fragile
-    // handoffs between different ESP32 RMT implementations.
-    #if USE_WS281X
-    auto& outputManager = g_ptrSystem->SetupWS281xOutputManager();
+    // handoffs between different driver implementations.
+    #if USE_STRIP
+    auto& outputManager = g_ptrSystem->SetupStripOutputManager();
     auto [configApplied, errorMessage] = outputManager.ApplyConfig(deviceConfig, devices);
     if (!configApplied)
         throw std::runtime_error(errorMessage.c_str());
@@ -288,14 +294,12 @@ void WS281xGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsD
         return;
     }
 
-    #if USE_WS281X
+    #if USE_STRIP
     auto& effectManager = g_ptrSystem->GetEffectManager();
     const auto& deviceConfig = g_ptrSystem->GetDeviceConfig();
 
-    if (!g_ptrSystem->HasWS281xOutputManager())
-    {
+    if (!g_ptrSystem->HasStripOutputManager())
         return;
-    }
 
     for (int i = 0; i < NUM_CHANNELS; i++)
     {
@@ -314,7 +318,7 @@ void WS281xGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsD
         }
     }
 
-    auto& outputManager = g_ptrSystem->GetWS281xOutputManager();
+    auto& outputManager = g_ptrSystem->GetStripOutputManager();
     uint32_t unscaledPowerMw = 0;
     const size_t activeChannelCount = std::min<size_t>(outputManager.GetActiveChannelCount(), NUM_CHANNELS);
     const size_t activeLEDCount = outputManager.GetActiveLEDCount();
@@ -355,10 +359,10 @@ void HexagonGFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devic
         devices.push_back(make_shared_psram<HexagonGFX>(NUM_LEDS));
     }
 
-    #if USE_WS281X
     // Hexagon layouts are always driven through the runtime manager because their physical mapping is
     // board-specific and does not benefit from the compiled FastLED fallback assumptions used by strips.
-    auto& outputManager = g_ptrSystem->SetupWS281xOutputManager();
+    #if USE_STRIP
+    auto& outputManager = g_ptrSystem->SetupStripOutputManager();
     auto [configApplied, errorMessage] = outputManager.ApplyConfig(g_ptrSystem->GetDeviceConfig(), devices);
     if (!configApplied)
         throw std::runtime_error(errorMessage.c_str());

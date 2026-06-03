@@ -76,12 +76,20 @@ std::array<int8_t, NUM_CHANNELS> DeviceConfig::GetCompiledWS281xPins()
     return DeviceConfigInternal::GetCompiledWS281xPins();
 }
 
+std::array<int8_t, NUM_CHANNELS> DeviceConfig::GetCompiledAPA102ClockPins()
+{
+    return DeviceConfigInternal::GetCompiledAPA102ClockPins();
+}
+
 const char* DeviceConfig::DriverName(OutputDriver driver)
 {
     switch (driver)
     {
         case OutputDriver::HUB75:
             return "hub75";
+
+        case OutputDriver::APA102:
+            return "apa102";
 
         case OutputDriver::WS281x:
         default:
@@ -123,6 +131,14 @@ void DeviceConfig::LogRuntimeConfig(const char* reason) const
         activePins += String(runtimeOutputs.outputPins[i]);
     }
 
+    String activeClockPins;
+    for (size_t i = 0; i < runtimeOutputs.channelCount && i < runtimeOutputs.clockPins.size(); ++i)
+    {
+        if (!activeClockPins.isEmpty())
+            activeClockPins += ',';
+        activeClockPins += String(runtimeOutputs.clockPins[i]);
+    }
+
     debugI("Runtime config (%s): driver=%s matrix=%ux%u leds=%u serpentine=%d channels=%u colorOrder=%s audioPin=%d",
            reason,
            DriverName(runtimeOutputs.driver),
@@ -133,7 +149,7 @@ void DeviceConfig::LogRuntimeConfig(const char* reason) const
             static_cast<unsigned>(runtimeOutputs.channelCount),
            GetColorOrderName(runtimeOutputs.colorOrder).c_str(),
            audioInputPin);
-    debugI("Runtime config pins (%s): activeChannels=%s", reason, activePins.c_str());
+    debugI("Runtime config pins (%s): data=%s clock=%s", reason, activePins.c_str(), activeClockPins.c_str());
 }
 
 DeviceConfig::DeviceConfig()
@@ -142,6 +158,7 @@ DeviceConfig::DeviceConfig()
     runtimeOutputs.driver = GetCompiledOutputDriver();
     runtimeOutputs.channelCount = NUM_CHANNELS;
     runtimeOutputs.outputPins = GetCompiledWS281xPins();
+    runtimeOutputs.clockPins = GetCompiledAPA102ClockPins();
     runtimeOutputs.colorOrder = GetCompiledWS281xColorOrder();
 
     writerIndex = g_ptrSystem->GetJSONWriter().RegisterWriter(
@@ -208,6 +225,10 @@ bool DeviceConfig::SerializeToJSON(JsonObject& jsonObject, bool includeSensitive
     for (auto pin : runtimeOutputs.outputPins)
         ws281xPins.add(pin);
 
+    auto apa102ClockPins = jsonDoc[APA102ClockPinsTag].to<JsonArray>();
+    for (auto pin : runtimeOutputs.clockPins)
+        apa102ClockPins.add(pin);
+
     if (includeSensitive)
         jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
 
@@ -266,6 +287,8 @@ bool DeviceConfig::DeserializeFromJSON(const JsonObjectConst& jsonObject, bool s
         const auto driverName = jsonObject[OutputDriverTag].as<String>();
         if (driverName == DriverName(OutputDriver::HUB75))
             updated.outputs.driver = OutputDriver::HUB75;
+        else if (driverName == DriverName(OutputDriver::APA102))
+            updated.outputs.driver = OutputDriver::APA102;
         else if (driverName == DriverName(OutputDriver::WS281x))
             updated.outputs.driver = OutputDriver::WS281x;
     }
@@ -291,6 +314,16 @@ bool DeviceConfig::DeserializeFromJSON(const JsonObjectConst& jsonObject, bool s
         {
             if (pinArray[i].is<int>())
                 updated.outputs.outputPins[i] = pinArray[i].as<int>();
+        }
+    }
+
+    if (jsonObject[APA102ClockPinsTag].is<JsonArrayConst>())
+    {
+        auto pinArray = jsonObject[APA102ClockPinsTag].as<JsonArrayConst>();
+        for (size_t i = 0; i < updated.outputs.clockPins.size() && i < pinArray.size(); ++i)
+        {
+            if (pinArray[i].is<int>())
+                updated.outputs.clockPins[i] = pinArray[i].as<int>();
         }
     }
 
@@ -553,4 +586,3 @@ SuccessResultWithMessage DeviceConfig::ValidateOpenWeatherAPIKey(const String &n
     }
 }
 #endif  // ENABLE_WIFI
-

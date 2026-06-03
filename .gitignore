@@ -4,6 +4,7 @@
 .idea/**
 .pio
 .vscode/**
+compile_commands.json
 **/.idea/**
 **/*.iml
 **/*.swn

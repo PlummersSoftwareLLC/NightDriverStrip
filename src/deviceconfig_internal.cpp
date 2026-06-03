@@ -33,38 +33,79 @@ namespace
         }
     }
 
-    #if USE_WS281X
+    #if USE_STRIP
     constexpr auto kCompiledWS281xColorOrder = ToRuntimeColorOrder(COLOR_ORDER);
     #else
     constexpr auto kCompiledWS281xColorOrder = DeviceConfig::WS281xColorOrder::GRB;
     #endif
 
+    #if USE_STRIP
+        #define ND_DATA_PIN(p)  static_cast<int8_t>(p)
+    #else
+        #define ND_DATA_PIN(p)  static_cast<int8_t>(-1)
+    #endif
+    #if USE_APA102
+        #define ND_CLOCK_PIN(p) static_cast<int8_t>(p)
+    #else
+        #define ND_CLOCK_PIN(p) static_cast<int8_t>(-1)
+    #endif
+
     constexpr std::array<int8_t, NUM_CHANNELS> kCompiledWS281xPins = {
         #if NUM_CHANNELS >= 1
-        LED_PIN0,
+            ND_DATA_PIN(LED_PIN0),
         #endif
         #if NUM_CHANNELS >= 2
-        LED_PIN1,
+            ND_DATA_PIN(LED_PIN1),
         #endif
         #if NUM_CHANNELS >= 3
-        LED_PIN2,
+            ND_DATA_PIN(LED_PIN2),
         #endif
         #if NUM_CHANNELS >= 4
-        LED_PIN3,
+            ND_DATA_PIN(LED_PIN3),
         #endif
         #if NUM_CHANNELS >= 5
-        LED_PIN4,
+            ND_DATA_PIN(LED_PIN4),
         #endif
         #if NUM_CHANNELS >= 6
-        LED_PIN5,
+            ND_DATA_PIN(LED_PIN5),
         #endif
         #if NUM_CHANNELS >= 7
-        LED_PIN6,
+            ND_DATA_PIN(LED_PIN6),
         #endif
         #if NUM_CHANNELS >= 8
-        LED_PIN7,
+            ND_DATA_PIN(LED_PIN7),
         #endif
     };
+
+    constexpr std::array<int8_t, NUM_CHANNELS> kCompiledAPA102ClockPins = {
+        #if NUM_CHANNELS >= 1
+            ND_CLOCK_PIN(LED_CLOCK_PIN0),
+        #endif
+        #if NUM_CHANNELS >= 2
+            ND_CLOCK_PIN(LED_CLOCK_PIN1),
+        #endif
+        #if NUM_CHANNELS >= 3
+            ND_CLOCK_PIN(LED_CLOCK_PIN2),
+        #endif
+        #if NUM_CHANNELS >= 4
+            ND_CLOCK_PIN(LED_CLOCK_PIN3),
+        #endif
+        #if NUM_CHANNELS >= 5
+            ND_CLOCK_PIN(LED_CLOCK_PIN4),
+        #endif
+        #if NUM_CHANNELS >= 6
+            ND_CLOCK_PIN(LED_CLOCK_PIN5),
+        #endif
+        #if NUM_CHANNELS >= 7
+            ND_CLOCK_PIN(LED_CLOCK_PIN6),
+        #endif
+        #if NUM_CHANNELS >= 8
+            ND_CLOCK_PIN(LED_CLOCK_PIN7),
+        #endif
+    };
+
+    #undef ND_DATA_PIN
+    #undef ND_CLOCK_PIN
 }
 
 namespace DeviceConfigInternal
@@ -77,6 +118,11 @@ namespace DeviceConfigInternal
     std::array<int8_t, NUM_CHANNELS> GetCompiledWS281xPins()
     {
         return kCompiledWS281xPins;
+    }
+
+    std::array<int8_t, NUM_CHANNELS> GetCompiledAPA102ClockPins()
+    {
+        return kCompiledAPA102ClockPins;
     }
 
     DeviceConfig::WS281xColorOrder GetCompiledWS281xColorOrder()

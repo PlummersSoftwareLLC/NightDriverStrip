@@ -44,6 +44,8 @@ std::optional<DeviceConfig::OutputDriver> DeviceConfig::ParseOutputDriverName(co
 {
     if (name == "hub75")
         return OutputDriver::HUB75;
+    if (name == "apa102")
+        return OutputDriver::APA102;
     if (name == "ws281x")
         return OutputDriver::WS281x;
 
@@ -75,6 +77,7 @@ SuccessResultWithMessage DeviceConfig::SetRuntimeConfig(const RuntimeConfig& con
         || runtimeOutputs.driver != config.outputs.driver
         || runtimeOutputs.channelCount != config.outputs.channelCount
         || runtimeOutputs.outputPins != config.outputs.outputPins
+        || runtimeOutputs.clockPins != config.outputs.clockPins
         || runtimeOutputs.colorOrder != config.outputs.colorOrder;
 
     runtimeTopology = config.topology;
@@ -178,6 +181,14 @@ void DeviceConfig::SerializeUnifiedSettings(JsonObject root) const
     ws281x["colorOrder"] = GetColorOrderName(GetWS281xColorOrder());
     ws281x["compiledColorOrder"] = GetColorOrderName(GetCompiledWS281xColorOrder());
     AppendPins(ws281x["pins"].to<JsonArray>(), GetWS281xPins());
+
+    auto apa102 = outputs["apa102"].to<JsonObject>();
+    apa102["channelCount"] = GetChannelCount();
+    apa102["compiledMaxChannels"] = GetCompiledChannelCount();
+    apa102["colorOrder"] = GetColorOrderName(GetWS281xColorOrder());
+    apa102["compiledColorOrder"] = GetColorOrderName(GetCompiledWS281xColorOrder());
+    AppendPins(apa102["dataPins"].to<JsonArray>(), GetAPA102DataPins());
+    AppendPins(apa102["clockPins"].to<JsonArray>(), GetAPA102ClockPins());
 }
 
 void DeviceConfig::SerializeUnifiedSettingsSchema(JsonObject root) const
@@ -222,6 +233,24 @@ void DeviceConfig::SerializeUnifiedSettingsSchema(JsonObject root) const
     allowedColorOrders.add("BRG");
     allowedColorOrders.add("BGR");
     AppendPins(ws281x["compiledPins"].to<JsonArray>(), GetCompiledWS281xPins());
+
+    auto apa102 = outputs["apa102"].to<JsonObject>();
+    apa102["compiledMaxChannels"] = compiledChannels;
+    apa102["compiledMaxLEDs"] = GetCompiledLEDCount();
+    apa102["compiledColorOrder"] = GetColorOrderName(GetCompiledWS281xColorOrder());
+    auto apa102AllowedChannelCounts = apa102["allowedChannelCounts"].to<JsonArray>();
+    for (size_t channel = 1; channel <= compiledChannels; ++channel)
+        apa102AllowedChannelCounts.add(channel);
+
+    auto apa102AllowedColorOrders = apa102["allowedColorOrders"].to<JsonArray>();
+    apa102AllowedColorOrders.add("RGB");
+    apa102AllowedColorOrders.add("RBG");
+    apa102AllowedColorOrders.add("GRB");
+    apa102AllowedColorOrders.add("GBR");
+    apa102AllowedColorOrders.add("BRG");
+    apa102AllowedColorOrders.add("BGR");
+    AppendPins(apa102["compiledDataPins"].to<JsonArray>(), GetCompiledWS281xPins());
+    AppendPins(apa102["compiledClockPins"].to<JsonArray>(), GetCompiledAPA102ClockPins());
 
     auto device = root["device"].to<JsonObject>();
     auto remote = device["remote"].to<JsonObject>();
@@ -339,6 +368,49 @@ SuccessResultWithMessage DeviceConfig::ParseAndValidateUnifiedSettings(JsonObjec
                     if (pins[i].is<int>())
                     {
                         out.requestedRuntimeConfig.outputs.outputPins[i] = pins[i].as<int>();
+                        out.runtimeConfigTouched = true;
+                    }
+                }
+            }
+        }
+
+        if (outputs["apa102"].is<JsonObjectConst>())
+        {
+            auto apa102 = outputs["apa102"].as<JsonObjectConst>();
+            if (apa102["channelCount"].is<size_t>())
+            {
+                out.requestedRuntimeConfig.outputs.channelCount = apa102["channelCount"].as<size_t>();
+                out.runtimeConfigTouched = true;
+            }
+            if (apa102["colorOrder"].is<String>())
+            {
+                auto colorOrder = ParseWS281xColorOrderName(apa102["colorOrder"].as<String>());
+                if (!colorOrder.has_value())
+                    return { false, "invalid APA102 color order" };
+
+                out.requestedRuntimeConfig.outputs.colorOrder = colorOrder.value();
+                out.runtimeConfigTouched = true;
+            }
+            if (apa102["dataPins"].is<JsonArrayConst>())
+            {
+                auto pins = apa102["dataPins"].as<JsonArrayConst>();
+                for (size_t i = 0; i < out.requestedRuntimeConfig.outputs.outputPins.size() && i < pins.size(); ++i)
+                {
+                    if (pins[i].is<int>())
+                    {
+                        out.requestedRuntimeConfig.outputs.outputPins[i] = pins[i].as<int>();
+                        out.runtimeConfigTouched = true;
+                    }
+                }
+            }
+            if (apa102["clockPins"].is<JsonArrayConst>())
+            {
+                auto pins = apa102["clockPins"].as<JsonArrayConst>();
+                for (size_t i = 0; i < out.requestedRuntimeConfig.outputs.clockPins.size() && i < pins.size(); ++i)
+                {
+                    if (pins[i].is<int>())
+                    {
+                        out.requestedRuntimeConfig.outputs.clockPins[i] = pins[i].as<int>();
                         out.runtimeConfigTouched = true;
                     }
                 }

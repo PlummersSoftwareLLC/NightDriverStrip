@@ -43,7 +43,10 @@ SuccessResultWithMessage DeviceConfig::ValidateOutputDriver(OutputDriver driver)
     return { true, "" };
 }
 
-SuccessResultWithMessage DeviceConfig::ValidateWS281xSettings(size_t channelCount, const std::array<int8_t, NUM_CHANNELS>& pins, WS281xColorOrder colorOrder) const
+SuccessResultWithMessage DeviceConfig::ValidateStripSettings(size_t channelCount,
+                                                             const std::array<int8_t, NUM_CHANNELS>& dataPins,
+                                                             const std::array<int8_t, NUM_CHANNELS>& clockPins,
+                                                             WS281xColorOrder colorOrder) const
 {
     if (channelCount == 0)
         return { false, "channel count must be greater than zero" };
@@ -56,25 +59,54 @@ SuccessResultWithMessage DeviceConfig::ValidateWS281xSettings(size_t channelCoun
         if (channelCount != GetCompiledChannelCount())
             return { false, DeviceConfigInternal::RecompileNeededMessage() };
 
-        if (pins != GetCompiledWS281xPins())
+        if (dataPins != GetCompiledWS281xPins())
+            return { false, DeviceConfigInternal::RecompileNeededMessage() };
+
+        if (clockPins != GetCompiledAPA102ClockPins())
             return { false, DeviceConfigInternal::RecompileNeededMessage() };
 
         if (colorOrder != GetCompiledWS281xColorOrder())
             return { false, DeviceConfigInternal::RecompileNeededMessage() };
+
+        return { true, "" };
     }
 
     for (size_t i = 0; i < channelCount; ++i)
     {
-        if (pins[i] < 0)
+        if (dataPins[i] < 0)
             return { false, "active channels require valid GPIO pins" };
 
-        if (!GPIO_IS_VALID_OUTPUT_GPIO(static_cast<gpio_num_t>(pins[i])))
-            return { false, "WS281x channel pins must be valid output GPIOs" };
+        if (!GPIO_IS_VALID_OUTPUT_GPIO(static_cast<gpio_num_t>(dataPins[i])))
+            return { false, "strip data pins must be valid output GPIOs" };
 
         for (size_t j = i + 1; j < channelCount; ++j)
         {
-            if (pins[i] == pins[j])
-                return { false, "WS281x channel pins must be unique" };
+            if (dataPins[i] == dataPins[j])
+                return { false, "strip data pins must be unique" };
+        }
+    }
+
+    if (GetCompiledOutputDriver() == OutputDriver::APA102)
+    {
+        for (size_t i = 0; i < channelCount; ++i)
+        {
+            if (clockPins[i] < 0)
+                return { false, "APA102 channels require valid clock GPIO pins" };
+
+            if (!GPIO_IS_VALID_OUTPUT_GPIO(static_cast<gpio_num_t>(clockPins[i])))
+                return { false, "APA102 clock pins must be valid output GPIOs" };
+
+            if (clockPins[i] == dataPins[i])
+                return { false, "APA102 data and clock pins must be different" };
+
+            for (size_t j = i + 1; j < channelCount; ++j)
+            {
+                if (clockPins[i] == clockPins[j])
+                    return { false, "APA102 clock pins must be unique" };
+
+                if (clockPins[i] == dataPins[j] || dataPins[i] == clockPins[j])
+                    return { false, "APA102 data and clock pins must be unique" };
+            }
         }
     }
 
@@ -91,9 +123,12 @@ SuccessResultWithMessage DeviceConfig::ValidateRuntimeConfig(const RuntimeConfig
     if (!topologyValid)
         return { false, topologyMessage };
 
-    auto [ws281xValid, ws281xMessage] = ValidateWS281xSettings(config.outputs.channelCount, config.outputs.outputPins, config.outputs.colorOrder);
-    if (!ws281xValid)
-        return { false, ws281xMessage };
+    auto [stripValid, stripMessage] = ValidateStripSettings(config.outputs.channelCount,
+                                                            config.outputs.outputPins,
+                                                            config.outputs.clockPins,
+                                                            config.outputs.colorOrder);
+    if (!stripValid)
+        return { false, stripMessage };
 
     return { true, "" };
 }

@@ -46,9 +46,15 @@
 #include "taskmgr.h"
 #include "webserver.h"
 #include "websocketserver.h"
-#if USE_WS281X
+#if USE_STRIP
 #include "ws281xgfx.h"
+#include "stripoutputmanager.h"
+#endif
+#if USE_WS281X
 #include "ws281xoutputmanager.h"
+#endif
+#if USE_APA102
+#include "apa102outputmanager.h"
 #endif
 
 // SystemContainer
@@ -154,11 +160,11 @@ SocketServer& SystemContainer::GetSocketServer() const
 }
 #endif
 
-#if USE_WS281X
-WS281xOutputManager& SystemContainer::GetWS281xOutputManager() const
+#if USE_STRIP
+IStripOutputManager& SystemContainer::GetStripOutputManager() const
 {
-    CheckPointer(!!_ptrWS281xOutputManager, "WS281xOutputManager");
-    return *_ptrWS281xOutputManager;
+    CheckPointer(!!_ptrStripOutputManager, "StripOutputManager");
+    return *_ptrStripOutputManager;
 }
 #endif
 
@@ -315,13 +321,13 @@ SuccessResultWithMessage SystemContainer::ApplyRuntimeConfiguration()
     if (config.RequiresRecompileForCurrentRuntimeConfig())
         return { false, "recompile needed" };
 
-    #if USE_WS281X
+    #if USE_STRIP
     try
     {
         if (_ptrDevices)
         {
             // Reconfiguring the already-owned GFX objects keeps the rest of the renderer stable while
-            // still letting the active WS281x layout, channel count, and pins move inside build limits.
+            // still letting the active strip layout, channel count, and pins move inside build limits.
             for (auto& device : *_ptrDevices)
                 device->ConfigureTopology(config.GetMatrixWidth(), config.GetMatrixHeight(), config.IsMatrixSerpentine());
         }
@@ -337,11 +343,11 @@ SuccessResultWithMessage SystemContainer::ApplyRuntimeConfiguration()
             _ptrSocketServer->SetLEDCount(config.GetActiveLEDCount());
         #endif
 
-        // The mutable WS281x output layer is now always owned by NightDriver so live pin/count/color-order
-        // changes stay on one transport path instead of handing off between different ESP32 RMT backends.
+        // The mutable strip output layer is now always owned by NightDriver so live pin/count/color-order
+        // changes stay on one transport path instead of handing off between different driver backends.
         if (_ptrDevices)
         {
-            auto [applyConfigSucceeded, applyConfigError] = SetupWS281xOutputManager().ApplyConfig(config, *_ptrDevices);
+            auto [applyConfigSucceeded, applyConfigError] = SetupStripOutputManager().ApplyConfig(config, *_ptrDevices);
             if (!applyConfigSucceeded)
                 return { false, applyConfigError };
         }
@@ -428,12 +434,18 @@ SocketServer& SystemContainer::SetupSocketServer(NetworkPort port, int ledCount)
 }
 #endif
 
-#if USE_WS281X
-WS281xOutputManager& SystemContainer::SetupWS281xOutputManager()
+#if USE_STRIP
+IStripOutputManager& SystemContainer::SetupStripOutputManager()
 {
-    if (!_ptrWS281xOutputManager)
-        _ptrWS281xOutputManager = make_unique_internal<WS281xOutputManager>();
-    return *_ptrWS281xOutputManager;
+    if (!_ptrStripOutputManager)
+    {
+        #if USE_WS281X
+            _ptrStripOutputManager = make_unique_internal<WS281xOutputManager>();
+        #elif USE_APA102
+            _ptrStripOutputManager = make_unique_internal<APA102OutputManager>();
+        #endif
+    }
+    return *_ptrStripOutputManager;
 }
 #endif
 

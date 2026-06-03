@@ -16,5 +16,6 @@ namespace DeviceConfigInternal
 {
     const char* RecompileNeededMessage();
     std::array<int8_t, NUM_CHANNELS> GetCompiledWS281xPins();
+    std::array<int8_t, NUM_CHANNELS> GetCompiledAPA102ClockPins();
     DeviceConfig::WS281xColorOrder GetCompiledWS281xColorOrder();
 }
