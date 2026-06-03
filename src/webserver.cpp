@@ -126,6 +126,14 @@ namespace
         ws281x["compiledColorOrder"] = DeviceConfig::GetColorOrderName(DeviceConfig::GetCompiledWS281xColorOrder());
         AppendPins(ws281x["pins"].to<JsonArray>(), deviceConfig.GetWS281xPins());
 
+        auto apa102 = outputs["apa102"].to<JsonObject>();
+        apa102["channelCount"] = deviceConfig.GetChannelCount();
+        apa102["compiledMaxChannels"] = DeviceConfig::GetCompiledChannelCount();
+        apa102["colorOrder"] = DeviceConfig::GetColorOrderName(deviceConfig.GetWS281xColorOrder());
+        apa102["compiledColorOrder"] = DeviceConfig::GetColorOrderName(DeviceConfig::GetCompiledWS281xColorOrder());
+        AppendPins(apa102["dataPins"].to<JsonArray>(), deviceConfig.GetAPA102DataPins());
+        AppendPins(apa102["clockPins"].to<JsonArray>(), deviceConfig.GetAPA102ClockPins());
+
         auto effects = root["effects"].to<JsonObject>();
         effects["effectInterval"] = effectManager.GetInterval();
     }
@@ -176,6 +184,23 @@ namespace
         allowedColorOrders.add("BRG");
         allowedColorOrders.add("BGR");
         AppendPins(ws281x["compiledPins"].to<JsonArray>(), DeviceConfig::GetCompiledWS281xPins());
+
+        auto apa102 = outputs["apa102"].to<JsonObject>();
+        apa102["compiledMaxChannels"] = compiledChannels;
+        apa102["compiledMaxLEDs"] = DeviceConfig::GetCompiledLEDCount();
+        apa102["compiledColorOrder"] = DeviceConfig::GetColorOrderName(DeviceConfig::GetCompiledWS281xColorOrder());
+        auto apa102AllowedChannelCounts = apa102["allowedChannelCounts"].to<JsonArray>();
+        for (size_t channel = 1; channel <= compiledChannels; ++channel)
+            apa102AllowedChannelCounts.add(channel);
+        auto apa102AllowedColorOrders = apa102["allowedColorOrders"].to<JsonArray>();
+        apa102AllowedColorOrders.add("RGB");
+        apa102AllowedColorOrders.add("RBG");
+        apa102AllowedColorOrders.add("GRB");
+        apa102AllowedColorOrders.add("GBR");
+        apa102AllowedColorOrders.add("BRG");
+        apa102AllowedColorOrders.add("BGR");
+        AppendPins(apa102["compiledDataPins"].to<JsonArray>(), DeviceConfig::GetCompiledWS281xPins());
+        AppendPins(apa102["compiledClockPins"].to<JsonArray>(), DeviceConfig::GetCompiledAPA102ClockPins());
 
         auto device = root["device"].to<JsonObject>();
         auto remote = device["remote"].to<JsonObject>();
@@ -1214,7 +1239,11 @@ bool CWebServer::SetSettingsIfPresent(AsyncWebServerRequest * pRequest, String* 
     runtimeConfigChanged = PushPostParamIfPresent<size_t>(pRequest, DeviceConfig::MatrixHeightTag, SET_VALUE(runtimeConfig.topology.height = value)) || runtimeConfigChanged;
     runtimeConfigChanged = PushPostParamIfPresent<bool>(pRequest, DeviceConfig::MatrixSerpentineTag, SET_VALUE(runtimeConfig.topology.serpentine = value)) || runtimeConfigChanged;
     runtimeConfigChanged = PushPostParamIfPresent<size_t>(pRequest, DeviceConfig::WS281xChannelCountTag, SET_VALUE(runtimeConfig.outputs.channelCount = value)) || runtimeConfigChanged;
-    runtimeConfigChanged = PushPostParamIfPresent<String>(pRequest, DeviceConfig::OutputDriverTag, SET_VALUE(runtimeConfig.outputs.driver = value == "hub75" ? DeviceConfig::OutputDriver::HUB75 : DeviceConfig::OutputDriver::WS281x)) || runtimeConfigChanged;
+    runtimeConfigChanged = PushPostParamIfPresent<String>(pRequest, DeviceConfig::OutputDriverTag, SET_VALUE(
+        if (value == "hub75") runtimeConfig.outputs.driver = DeviceConfig::OutputDriver::HUB75;
+        else if (value == "apa102") runtimeConfig.outputs.driver = DeviceConfig::OutputDriver::APA102;
+        else runtimeConfig.outputs.driver = DeviceConfig::OutputDriver::WS281x;
+    )) || runtimeConfigChanged;
     runtimeConfigChanged = PushPostParamIfPresent<String>(pRequest, DeviceConfig::WS281xColorOrderTag, SET_VALUE(
         if (value == "RGB") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::RGB;
         else if (value == "RBG") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::RBG;
@@ -1338,7 +1367,9 @@ void CWebServer::SetUnifiedSettings(AsyncWebServerRequest * pRequest, JsonVarian
         if (outputs["driver"].is<String>())
         {
             const auto driver = outputs["driver"].as<String>();
-            runtimeConfig.outputs.driver = driver == "hub75" ? DeviceConfig::OutputDriver::HUB75 : DeviceConfig::OutputDriver::WS281x;
+            if (driver == "hub75") runtimeConfig.outputs.driver = DeviceConfig::OutputDriver::HUB75;
+            else if (driver == "apa102") runtimeConfig.outputs.driver = DeviceConfig::OutputDriver::APA102;
+            else runtimeConfig.outputs.driver = DeviceConfig::OutputDriver::WS281x;
         }
 
         if (outputs["ws281x"].is<JsonObjectConst>())
@@ -1362,6 +1393,40 @@ void CWebServer::SetUnifiedSettings(AsyncWebServerRequest * pRequest, JsonVarian
                 {
                     if (pins[i].is<int>())
                         runtimeConfig.outputs.outputPins[i] = pins[i].as<int>();
+                }
+            }
+        }
+
+        if (outputs["apa102"].is<JsonObjectConst>())
+        {
+            auto apa102 = outputs["apa102"].as<JsonObjectConst>();
+            if (apa102["channelCount"].is<size_t>()) runtimeConfig.outputs.channelCount = apa102["channelCount"].as<size_t>();
+            if (apa102["colorOrder"].is<String>())
+            {
+                const auto colorOrder = apa102["colorOrder"].as<String>();
+                if (colorOrder == "RGB") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::RGB;
+                else if (colorOrder == "RBG") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::RBG;
+                else if (colorOrder == "GRB") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::GRB;
+                else if (colorOrder == "GBR") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::GBR;
+                else if (colorOrder == "BRG") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::BRG;
+                else if (colorOrder == "BGR") runtimeConfig.outputs.colorOrder = DeviceConfig::WS281xColorOrder::BGR;
+            }
+            if (apa102["dataPins"].is<JsonArrayConst>())
+            {
+                auto pins = apa102["dataPins"].as<JsonArrayConst>();
+                for (size_t i = 0; i < runtimeConfig.outputs.outputPins.size() && i < pins.size(); ++i)
+                {
+                    if (pins[i].is<int>())
+                        runtimeConfig.outputs.outputPins[i] = pins[i].as<int>();
+                }
+            }
+            if (apa102["clockPins"].is<JsonArrayConst>())
+            {
+                auto pins = apa102["clockPins"].as<JsonArrayConst>();
+                for (size_t i = 0; i < runtimeConfig.outputs.clockPins.size() && i < pins.size(); ++i)
+                {
+                    if (pins[i].is<int>())
+                        runtimeConfig.outputs.clockPins[i] = pins[i].as<int>();
                 }
             }
         }

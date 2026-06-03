@@ -129,6 +129,7 @@ class DeviceConfig : public IJSONSerializable
     enum class OutputDriver : uint8_t
     {
         WS281x,
+        APA102,
         HUB75
     };
 
@@ -154,11 +155,14 @@ class DeviceConfig : public IJSONSerializable
         OutputDriver driver =
         #if USE_HUB75
             OutputDriver::HUB75;
+        #elif USE_APA102
+            OutputDriver::APA102;
         #else
             OutputDriver::WS281x;
         #endif
         size_t channelCount = NUM_CHANNELS;
         std::array<int8_t, NUM_CHANNELS> outputPins{};
+        std::array<int8_t, NUM_CHANNELS> clockPins{};
         WS281xColorOrder colorOrder = WS281xColorOrder::GRB;
     };
 
@@ -250,6 +254,7 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * WS281xChannelCountTag = "ws281xChannelCount";
     static constexpr const char * WS281xPinsTag = "ws281xPins";
     static constexpr const char * WS281xColorOrderTag = "ws281xColorOrder";
+    static constexpr const char * APA102ClockPinsTag = "apa102ClockPins";
     static constexpr const char * AudioInputPinTag = NAME_OF(audioInputPin);
 
     DeviceConfig();
@@ -334,12 +339,15 @@ class DeviceConfig : public IJSONSerializable
     static constexpr size_t GetCompiledChannelCount() { return NUM_CHANNELS; }
     static constexpr int GetCompiledAudioInputPin() { return AUDIO_INPUT_PIN; }
     static std::array<int8_t, NUM_CHANNELS> GetCompiledWS281xPins();
+    static std::array<int8_t, NUM_CHANNELS> GetCompiledAPA102ClockPins();
     static WS281xColorOrder GetCompiledWS281xColorOrder();
     static String GetColorOrderName(WS281xColorOrder colorOrder);
     static OutputDriver GetCompiledOutputDriver()
     {
         #if USE_HUB75
             return OutputDriver::HUB75;
+        #elif USE_APA102
+            return OutputDriver::APA102;
         #else
             return OutputDriver::WS281x;
         #endif
@@ -356,9 +364,11 @@ class DeviceConfig : public IJSONSerializable
     OutputDriver GetOutputDriver() const { return runtimeOutputs.driver; }
     size_t GetChannelCount() const { return runtimeOutputs.channelCount; }
     const std::array<int8_t, NUM_CHANNELS>& GetWS281xPins() const { return runtimeOutputs.outputPins; }
+    const std::array<int8_t, NUM_CHANNELS>& GetAPA102DataPins() const { return runtimeOutputs.outputPins; }
+    const std::array<int8_t, NUM_CHANNELS>& GetAPA102ClockPins() const { return runtimeOutputs.clockPins; }
     WS281xColorOrder GetWS281xColorOrder() const { return runtimeOutputs.colorOrder; }
-    bool SupportsLiveTopology() const { return !IsHub75Build() && runtimeOutputs.driver == OutputDriver::WS281x; }
-    bool SupportsLiveOutputReconfigure() const { return !IsHub75Build() && runtimeOutputs.driver == OutputDriver::WS281x; }
+    bool SupportsLiveTopology() const { return !IsHub75Build() && runtimeOutputs.driver == GetCompiledOutputDriver(); }
+    bool SupportsLiveOutputReconfigure() const { return !IsHub75Build() && runtimeOutputs.driver == GetCompiledOutputDriver(); }
     bool SupportsConfigurableAudioInputPin() const
     {
         #if ENABLE_AUDIO && !USE_M5 && (USE_I2S_AUDIO || ELECROW)
@@ -397,7 +407,10 @@ class DeviceConfig : public IJSONSerializable
     ValidateResponse ValidateAudioInputPin(int pin) const;
     ValidateResponse ValidateTopology(uint16_t width, uint16_t height, bool serpentine) const;
     ValidateResponse ValidateOutputDriver(OutputDriver driver) const;
-    ValidateResponse ValidateWS281xSettings(size_t channelCount, const std::array<int8_t, NUM_CHANNELS>& pins, WS281xColorOrder colorOrder) const;
+    ValidateResponse ValidateStripSettings(size_t channelCount,
+                                           const std::array<int8_t, NUM_CHANNELS>& dataPins,
+                                           const std::array<int8_t, NUM_CHANNELS>& clockPins,
+                                           WS281xColorOrder colorOrder) const;
     ValidateResponse ValidateRuntimeConfig(const RuntimeConfig& config) const;
     bool SetRuntimeConfig(const RuntimeConfig& config, bool skipWrite = false, String* errorMessage = nullptr);
     void SetAudioInputPin(int newAudioInputPin);

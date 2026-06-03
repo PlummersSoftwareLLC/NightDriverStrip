@@ -225,8 +225,8 @@ void ConfirmUpdate();
 
 #include "websocketserver.h"
 
-#if USE_WS281X
-#include "ws281xgfx.h"
+#if USE_STRIP
+    #include "ws281xgfx.h"
 #endif
 
 
@@ -618,8 +618,8 @@ void setup()
     #elif HEXAGON
         // Hexagon is for a PCB wtih 271 LEDss arranged in the face of a hexagon
         HexagonGFX::InitializeHardware(devices);
-    #elif USE_WS281X
-        // WS281xGFX is used for simple strips or for matrices woven from strips
+    #elif USE_STRIP
+        // WS281xGFX owns the CRGB framebuffers for strip outputs.
         WS281xGFX::InitializeHardware(devices);
     #endif
 
@@ -788,7 +788,7 @@ void loop()
             strOutput += str_sprintf("Mem: %zu, LargestBlk: %zu, PSRAM Free: %zu/%zu, ", (size_t)ESP.getFreeHeap(), (size_t)ESP.getMaxAllocHeap(), (size_t)ESP.getFreePsram(), (size_t)ESP.getPsramSize());
             strOutput += str_sprintf("LED FPS: %lu ", (unsigned long)g_Values.FPS);
 
-            #if USE_WS281X
+            #if USE_STRIP
                 strOutput += str_sprintf("LED Bright: %3.0lf%%, LED Watts: %lu, ", g_Values.Brite, (unsigned long)g_Values.Watts);
             #endif
 

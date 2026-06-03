@@ -66,38 +66,82 @@ namespace
         }
     }
 
-    #if USE_WS281X
+    #if USE_STRIP
     constexpr auto kCompiledWS281xColorOrder = ToRuntimeColorOrder(COLOR_ORDER);
     #else
     constexpr auto kCompiledWS281xColorOrder = DeviceConfig::WS281xColorOrder::GRB;
     #endif
 
+    // Compile-time pin tables. For non-strip builds the data pin is -1; for non-APA102 builds the clock
+    // pin is -1. These two helper macros keep the per-channel entries to a single line each.
+    
+    #if USE_STRIP
+        #define ND_DATA_PIN(p)  static_cast<int8_t>(p)
+    #else
+        #define ND_DATA_PIN(p)  static_cast<int8_t>(-1)
+    #endif
+    #if USE_APA102
+        #define ND_CLOCK_PIN(p) static_cast<int8_t>(p)
+    #else
+        #define ND_CLOCK_PIN(p) static_cast<int8_t>(-1)
+    #endif
+
     constexpr std::array<int8_t, NUM_CHANNELS> kCompiledWS281xPins = {
         #if NUM_CHANNELS >= 1
-        LED_PIN0,
+            ND_DATA_PIN(LED_PIN0),
         #endif
         #if NUM_CHANNELS >= 2
-        LED_PIN1,
+            ND_DATA_PIN(LED_PIN1),
         #endif
         #if NUM_CHANNELS >= 3
-        LED_PIN2,
+            ND_DATA_PIN(LED_PIN2),
         #endif
         #if NUM_CHANNELS >= 4
-        LED_PIN3,
+            ND_DATA_PIN(LED_PIN3),
         #endif
         #if NUM_CHANNELS >= 5
-        LED_PIN4,
+            ND_DATA_PIN(LED_PIN4),
         #endif
         #if NUM_CHANNELS >= 6
-        LED_PIN5,
+            ND_DATA_PIN(LED_PIN5),
         #endif
         #if NUM_CHANNELS >= 7
-        LED_PIN6,
+            ND_DATA_PIN(LED_PIN6),
         #endif
         #if NUM_CHANNELS >= 8
-        LED_PIN7,
+            ND_DATA_PIN(LED_PIN7),
         #endif
     };
+
+    constexpr std::array<int8_t, NUM_CHANNELS> kCompiledAPA102ClockPins = {
+        #if NUM_CHANNELS >= 1
+            ND_CLOCK_PIN(LED_CLOCK_PIN0),
+        #endif
+        #if NUM_CHANNELS >= 2
+            ND_CLOCK_PIN(LED_CLOCK_PIN1),
+        #endif
+        #if NUM_CHANNELS >= 3
+            ND_CLOCK_PIN(LED_CLOCK_PIN2),
+        #endif
+        #if NUM_CHANNELS >= 4
+            ND_CLOCK_PIN(LED_CLOCK_PIN3),
+        #endif
+        #if NUM_CHANNELS >= 5
+            ND_CLOCK_PIN(LED_CLOCK_PIN4),
+        #endif
+        #if NUM_CHANNELS >= 6
+            ND_CLOCK_PIN(LED_CLOCK_PIN5),
+        #endif
+        #if NUM_CHANNELS >= 7
+            ND_CLOCK_PIN(LED_CLOCK_PIN6),
+        #endif
+        #if NUM_CHANNELS >= 8
+            ND_CLOCK_PIN(LED_CLOCK_PIN7),
+        #endif
+    };
+
+    #undef ND_DATA_PIN
+    #undef ND_CLOCK_PIN
 }
 
 // DeviceConfig holds, persists and loads device-wide configuration settings. Effect-specific settings should
@@ -129,12 +173,20 @@ std::array<int8_t, NUM_CHANNELS> DeviceConfig::GetCompiledWS281xPins()
     return kCompiledWS281xPins;
 }
 
+std::array<int8_t, NUM_CHANNELS> DeviceConfig::GetCompiledAPA102ClockPins()
+{
+    return kCompiledAPA102ClockPins;
+}
+
 const char* DeviceConfig::DriverName(OutputDriver driver)
 {
     switch (driver)
     {
         case OutputDriver::HUB75:
             return "hub75";
+
+        case OutputDriver::APA102:
+            return "apa102";
 
         case OutputDriver::WS281x:
         default:
@@ -176,6 +228,14 @@ void DeviceConfig::LogRuntimeConfig(const char* reason) const
         activePins += String(runtimeOutputs.outputPins[i]);
     }
 
+    String activeClockPins;
+    for (size_t i = 0; i < runtimeOutputs.channelCount && i < runtimeOutputs.clockPins.size(); ++i)
+    {
+        if (!activeClockPins.isEmpty())
+            activeClockPins += ',';
+        activeClockPins += String(runtimeOutputs.clockPins[i]);
+    }
+
     debugI("Runtime config (%s): driver=%s matrix=%ux%u leds=%u serpentine=%d channels=%u colorOrder=%s audioPin=%d",
            reason,
            DriverName(runtimeOutputs.driver),
@@ -186,7 +246,7 @@ void DeviceConfig::LogRuntimeConfig(const char* reason) const
             static_cast<unsigned>(runtimeOutputs.channelCount),
            GetColorOrderName(runtimeOutputs.colorOrder).c_str(),
            audioInputPin);
-    debugI("Runtime config pins (%s): activeChannels=%s", reason, activePins.c_str());
+    debugI("Runtime config pins (%s): data=%s clock=%s", reason, activePins.c_str(), activeClockPins.c_str());
 }
 
 DeviceConfig::DeviceConfig()
@@ -195,6 +255,7 @@ DeviceConfig::DeviceConfig()
     runtimeOutputs.driver = GetCompiledOutputDriver();
     runtimeOutputs.channelCount = NUM_CHANNELS;
     runtimeOutputs.outputPins = GetCompiledWS281xPins();
+    runtimeOutputs.clockPins = GetCompiledAPA102ClockPins();
     runtimeOutputs.colorOrder = GetCompiledWS281xColorOrder();
 
     writerIndex = g_ptrSystem->GetJSONWriter().RegisterWriter(
@@ -261,6 +322,10 @@ bool DeviceConfig::SerializeToJSON(JsonObject& jsonObject, bool includeSensitive
     for (auto pin : runtimeOutputs.outputPins)
         ws281xPins.add(pin);
 
+    auto apa102ClockPins = jsonDoc[APA102ClockPinsTag].to<JsonArray>();
+    for (auto pin : runtimeOutputs.clockPins)
+        apa102ClockPins.add(pin);
+
     if (includeSensitive)
         jsonDoc[OpenWeatherApiKeyTag] = openWeatherApiKey;
 
@@ -319,6 +384,8 @@ bool DeviceConfig::DeserializeFromJSON(const JsonObjectConst& jsonObject, bool s
         const auto driverName = jsonObject[OutputDriverTag].as<String>();
         if (driverName == DriverName(OutputDriver::HUB75))
             updated.outputs.driver = OutputDriver::HUB75;
+        else if (driverName == DriverName(OutputDriver::APA102))
+            updated.outputs.driver = OutputDriver::APA102;
         else if (driverName == DriverName(OutputDriver::WS281x))
             updated.outputs.driver = OutputDriver::WS281x;
     }
@@ -344,6 +411,16 @@ bool DeviceConfig::DeserializeFromJSON(const JsonObjectConst& jsonObject, bool s
         {
             if (pinArray[i].is<int>())
                 updated.outputs.outputPins[i] = pinArray[i].as<int>();
+        }
+    }
+
+    if (jsonObject[APA102ClockPinsTag].is<JsonArrayConst>())
+    {
+        auto pinArray = jsonObject[APA102ClockPinsTag].as<JsonArrayConst>();
+        for (size_t i = 0; i < updated.outputs.clockPins.size() && i < pinArray.size(); ++i)
+        {
+            if (pinArray[i].is<int>())
+                updated.outputs.clockPins[i] = pinArray[i].as<int>();
         }
     }
 
@@ -617,14 +694,14 @@ const std::vector<std::reference_wrapper<SettingSpec>>& DeviceConfig::GetSetting
             .Widget            = SettingSpec::WidgetKind::Select,
             // Friendly labels for the raw driver identifiers the schema exposes.
             .Options           = SettingSpec::OptionsSource::SchemaPath,
-            .OptionValues      = {"ws281x", "hub75"},
-            .OptionLabels      = {"WS281x", "HUB75"},
+            .OptionValues      = {"ws281x", "apa102", "hub75"},
+            .OptionLabels      = {"WS281x", "APA102", "HUB75"},
             .OptionsSchemaPath = "outputs.allowedDrivers"
         }));
         settingSpecs.push_back(SettingSpec::Validate(SettingSpec{
             .Name              = WS281xChannelCountTag,
-            .FriendlyName      = "WS281x channel count",
-            .Description       = "Number of active strip channels within the compiled maximum. Live updates are limited to WS281x builds.",
+            .FriendlyName      = "Strip channel count",
+            .Description       = "Number of active strip channels within the compiled maximum. Live updates are limited to strip builds.",
             .Type              = SettingSpec::SettingType::PositiveBigInteger,
             .MinimumValue      = 1.0,
             .MaximumValue      = (double)GetCompiledChannelCount(),
@@ -639,8 +716,8 @@ const std::vector<std::reference_wrapper<SettingSpec>>& DeviceConfig::GetSetting
         }));
         settingSpecs.push_back(SettingSpec::Validate(SettingSpec{
             .Name              = WS281xColorOrderTag,
-            .FriendlyName      = "WS281x color order",
-            .Description       = "Byte order used when streaming RGB values to WS281x LEDs. This applies live on strip builds and is ignored on HUB75 builds.",
+            .FriendlyName      = "Strip color order",
+            .Description       = "Byte order used when streaming RGB values to strip LEDs. This applies live on strip builds and is ignored on HUB75 builds.",
             .Type              = SettingSpec::SettingType::String,
             .Section           = kSectionOutput,
             .Priority          = 12,
@@ -656,17 +733,26 @@ const std::vector<std::reference_wrapper<SettingSpec>>& DeviceConfig::GetSetting
         // range) are DeviceConfig internals.
         // pinSpecStrings holds the String backing; settingSpecs owns the specs.
         // Both are sized up front so no reallocation can invalidate pointers.
-        constexpr size_t kPinStringsPerChannel = 4; // name, friendly, description, apiPath
+        constexpr size_t kPinStringsPerChannel =
+        #if USE_APA102
+            8;
+        #else
+            4;
+        #endif
         const auto compiledChannelCount = GetCompiledChannelCount();
-        settingSpecs.reserve(settingSpecs.size() + compiledChannelCount);
+        settingSpecs.reserve(settingSpecs.size() + compiledChannelCount
+        #if USE_APA102
+            + compiledChannelCount
+        #endif
+        );
         pinSpecStrings.reserve(compiledChannelCount * kPinStringsPerChannel);
         const auto stableCStr = [](const String& s) { return s.c_str(); };
 
         for (size_t i = 0; i < compiledChannelCount; ++i)
         {
             const auto& nameStr        = pinSpecStrings.emplace_back(str_sprintf("ws281xPin%zu", i));
-            const auto& friendlyStr    = pinSpecStrings.emplace_back(str_sprintf("WS281x pin %zu", i + 1));
-            const auto& descriptionStr = pinSpecStrings.emplace_back(str_sprintf("GPIO assigned to WS281x channel %zu.", i + 1));
+            const auto& friendlyStr    = pinSpecStrings.emplace_back(str_sprintf("Strip data pin %zu", i + 1));
+            const auto& descriptionStr = pinSpecStrings.emplace_back(str_sprintf("GPIO assigned to strip data channel %zu.", i + 1));
             const auto& apiPathStr     = pinSpecStrings.emplace_back(str_sprintf("outputs.ws281x.pins[%zu]", i));
 
             settingSpecs.push_back(SettingSpec::Validate(SettingSpec{
@@ -680,6 +766,25 @@ const std::vector<std::reference_wrapper<SettingSpec>>& DeviceConfig::GetSetting
                 .Priority     = 3 + static_cast<int>(i),
                 .ApiPath      = stableCStr(apiPathStr)
             }));
+
+            #if USE_APA102
+            const auto& clockNameStr        = pinSpecStrings.emplace_back(str_sprintf("apa102ClockPin%zu", i));
+            const auto& clockFriendlyStr    = pinSpecStrings.emplace_back(str_sprintf("APA102 clock pin %zu", i + 1));
+            const auto& clockDescriptionStr = pinSpecStrings.emplace_back(str_sprintf("GPIO assigned to APA102 clock for channel %zu.", i + 1));
+            const auto& clockApiPathStr     = pinSpecStrings.emplace_back(str_sprintf("outputs.apa102.clockPins[%zu]", i));
+
+            settingSpecs.push_back(SettingSpec::Validate(SettingSpec{
+                .Name         = stableCStr(clockNameStr),
+                .FriendlyName = stableCStr(clockFriendlyStr),
+                .Description  = stableCStr(clockDescriptionStr),
+                .Type         = SettingSpec::SettingType::Integer,
+                .MinimumValue = -1.0,
+                .MaximumValue = 48.0,
+                .Section      = kSectionOutput,
+                .Priority     = 3 + static_cast<int>(compiledChannelCount) + static_cast<int>(i),
+                .ApiPath      = stableCStr(clockApiPathStr)
+            }));
+            #endif
         }
 
         settingSpecReferences.insert(settingSpecReferences.end(), settingSpecs.begin(), settingSpecs.end());
@@ -1015,7 +1120,10 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateOutputDriver(OutputDriver d
     return { true, "" };
 }
 
-DeviceConfig::ValidateResponse DeviceConfig::ValidateWS281xSettings(size_t channelCount, const std::array<int8_t, NUM_CHANNELS>& pins, WS281xColorOrder colorOrder) const
+DeviceConfig::ValidateResponse DeviceConfig::ValidateStripSettings(size_t channelCount,
+                                                                    const std::array<int8_t, NUM_CHANNELS>& dataPins,
+                                                                    const std::array<int8_t, NUM_CHANNELS>& clockPins,
+                                                                    WS281xColorOrder colorOrder) const
 {
     if (channelCount == 0)
         return { false, "channel count must be greater than zero" };
@@ -1028,25 +1136,54 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateWS281xSettings(size_t chann
         if (channelCount != GetCompiledChannelCount())
             return { false, kRecompileNeededMessage };
 
-        if (pins != GetCompiledWS281xPins())
+        if (dataPins != GetCompiledWS281xPins())
+            return { false, kRecompileNeededMessage };
+
+        if (clockPins != GetCompiledAPA102ClockPins())
             return { false, kRecompileNeededMessage };
 
         if (colorOrder != GetCompiledWS281xColorOrder())
             return { false, kRecompileNeededMessage };
+
+        return { true, "" };
     }
 
     for (size_t i = 0; i < channelCount; ++i)
     {
-        if (pins[i] < 0)
-            return { false, "active channels require valid GPIO pins" };
+        if (dataPins[i] < 0)
+            return { false, "active channels require valid data GPIO pins" };
 
-        if (!GPIO_IS_VALID_OUTPUT_GPIO(static_cast<gpio_num_t>(pins[i])))
-            return { false, "WS281x channel pins must be valid output GPIOs" };
+        if (!GPIO_IS_VALID_OUTPUT_GPIO(static_cast<gpio_num_t>(dataPins[i])))
+            return { false, "strip data pins must be valid output GPIOs" };
 
         for (size_t j = i + 1; j < channelCount; ++j)
         {
-            if (pins[i] == pins[j])
-                return { false, "WS281x channel pins must be unique" };
+            if (dataPins[i] == dataPins[j])
+                return { false, "strip data pins must be unique" };
+        }
+    }
+
+    if (GetCompiledOutputDriver() == OutputDriver::APA102)
+    {
+        for (size_t i = 0; i < channelCount; ++i)
+        {
+            if (clockPins[i] < 0)
+                return { false, "APA102 channels require valid clock GPIO pins" };
+
+            if (!GPIO_IS_VALID_OUTPUT_GPIO(static_cast<gpio_num_t>(clockPins[i])))
+                return { false, "APA102 clock pins must be valid output GPIOs" };
+
+            if (clockPins[i] == dataPins[i])
+                return { false, "APA102 data and clock pins must be different" };
+
+            for (size_t j = i + 1; j < channelCount; ++j)
+            {
+                if (clockPins[i] == clockPins[j])
+                    return { false, "APA102 clock pins must be unique" };
+
+                if (clockPins[i] == dataPins[j] || dataPins[i] == clockPins[j])
+                    return { false, "APA102 data and clock pins must be unique" };
+            }
         }
     }
 
@@ -1063,9 +1200,12 @@ DeviceConfig::ValidateResponse DeviceConfig::ValidateRuntimeConfig(const Runtime
     if (!topologyValid)
         return { false, topologyMessage };
 
-    auto [ws281xValid, ws281xMessage] = ValidateWS281xSettings(config.outputs.channelCount, config.outputs.outputPins, config.outputs.colorOrder);
-    if (!ws281xValid)
-        return { false, ws281xMessage };
+    auto [stripValid, stripMessage] = ValidateStripSettings(config.outputs.channelCount,
+                                                            config.outputs.outputPins,
+                                                            config.outputs.clockPins,
+                                                            config.outputs.colorOrder);
+    if (!stripValid)
+        return { false, stripMessage };
 
     return { true, "" };
 }
@@ -1087,6 +1227,7 @@ bool DeviceConfig::SetRuntimeConfig(const RuntimeConfig& config, bool skipWrite,
         || runtimeOutputs.driver != config.outputs.driver
         || runtimeOutputs.channelCount != config.outputs.channelCount
         || runtimeOutputs.outputPins != config.outputs.outputPins
+        || runtimeOutputs.clockPins != config.outputs.clockPins
         || runtimeOutputs.colorOrder != config.outputs.colorOrder;
 
     runtimeTopology = config.topology;
