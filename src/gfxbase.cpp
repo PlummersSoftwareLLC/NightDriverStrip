@@ -36,7 +36,6 @@
 #include <cmath>
 #include <gfxfont.h>
 #include <memory>
-#include <mutex>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -44,12 +43,6 @@
 #include "effects/matrix/Boid.h"
 #include "gfxbase.h"
 #include "systemcontainer.h"
-
-namespace
-{
-    DRAM_ATTR allocated_unique_ptr<GFXBase::PolarMapArray> g_polarMap;
-    DRAM_ATTR std::mutex g_polarMapMutex;
-}
 
 // 32 Entries in the 5-bit gamma table
 const uint8_t GFXBase::gamma5[32] =
@@ -618,13 +611,11 @@ uint16_t XY(uint16_t x, uint16_t y)
 
 const GFXBase::PolarMapArray& GFXBase::getPolarMap()
 {
-    std::lock_guard guard(g_polarMapMutex);
-    if (!g_polarMap)
+    // C++11 magic static keeps initialization thread-safe and lazy.
+    static const PolarMapArray* pMap = []()
     {
-        // Allocate from PSRAM using the project's helper.
-        g_polarMap = make_unique_psram<PolarMapArray>();
-
-        auto& rMap = *g_polarMap;
+        auto p = make_unique_psram<PolarMapArray>();
+        auto& rMap = *p;
         const uint16_t C_X = kMatrixWidth / 2;
         const uint16_t C_Y = kMatrixHeight / 2;
         const float mapp = 255.0f / kMatrixWidth;
@@ -653,7 +644,8 @@ const GFXBase::PolarMapArray& GFXBase::getPolarMap()
         // The scaling is normalized by the matrix width, which is a common
         // technique to make radial effects work consistently across different
         // matrix sizes.
-    }
+        return p.release();
+    }();
 
-    return *g_polarMap;
+    return *pMap;
 }
