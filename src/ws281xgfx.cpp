@@ -330,9 +330,7 @@ void WS281xGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsD
     }
 
     uint8_t outputBrightness = deviceConfig.GetBrightness();
-    #ifdef POWER_LIMIT_MW
-        outputBrightness = LimitBrightnessForPower(unscaledPowerMw, outputBrightness, g_Values.Fader, POWER_LIMIT_MW);
-    #endif
+    outputBrightness = LimitBrightnessForPower(unscaledPowerMw, outputBrightness, g_Values.Fader, deviceConfig.GetPowerLimit());
     outputManager.Show(g_ptrSystem->GetDevices(), pixelsDrawn, outputBrightness, g_Values.Fader);
 
     g_Values.Brite = 100.0 * outputBrightness / 255;

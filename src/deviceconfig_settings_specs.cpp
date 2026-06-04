@@ -42,8 +42,7 @@ const std::vector<std::reference_wrapper<SettingSpec>>& DeviceConfig::GetSetting
         settingSpecs.push_back(SettingSpec::Validate(SettingSpec{
             .Name          = PowerLimitTag,
             .FriendlyName  = "Power limit",
-            .Description   = "The maximum power in mW that the matrix attached to the board is allowed to use. As the previous sentence implies, this "
-                             "setting only applies if a matrix is used.",
+            .Description   = "The maximum power in mW that the LEDs attached to the board are allowed to use.",
             .Type          = SettingSpec::SettingType::Integer,
             .HasValidation = true,
             .MinimumValue  = (double)POWER_LIMIT_MIN,
