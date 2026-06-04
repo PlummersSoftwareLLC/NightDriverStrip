@@ -314,6 +314,17 @@ To build all available configurations, use the following command (this might tak
 pio run
 ```
 
+### Optional audit policy
+
+Builds run coding-standard audits from `tools/pio_audit.py` in soft-fail mode by default, meaning violations are reported but do not fail the build.
+
+To enable strict (hard-fail) mode locally:
+
+1. Copy `config/audit.example.ini` to `config/audit.ini`
+2. Set `[audit] hard_fail = true` in `config/audit.ini`
+
+`config/audit.ini` is intentionally gitignored so this remains a local/CI policy choice.
+
 ## File system
 
 To build and upload the file system that can be used by effects (although currently none do), you will need to build and upload the SPIFFS image to your board's flash using PlatformIO. You can do this using the platformio user interface, or using the `pio` command line tool:

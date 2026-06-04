@@ -14,6 +14,7 @@ compile_commands.json
 # Recursive IDE and swap junk
 build/**
 custom_*.ini
+config/audit.ini
 include/secrets.h
 lib/*
 NightDriverStrip.code-workspace
