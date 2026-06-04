@@ -43,12 +43,17 @@ INCLUDE_DIRS = [
 INCLUDE_RE = re.compile(r'^\s*#\s*include\s*(["<])([^">]+)([">])')
 
 
+def to_posix(path):
+    return path.replace('\\', '/')
+
+
 def collect_files():
     files = []
     for base in INCLUDE_DIRS:
         for root, _, filenames in os.walk(base):
+            root_posix = to_posix(root)
             # Skip third-party source directories
-            if 'src/uzlib' in root or '.pio' in root:
+            if '/src/uzlib' in root_posix or '/.pio' in root_posix:
                 continue
             for name in filenames:
                 if name.endswith(('.h', '.hpp', '.cpp', '.c')):
@@ -129,7 +134,7 @@ def find_path(graph, start, targets):
 
 
 def rel(path):
-    return os.path.relpath(path, PROJECT_ROOT)
+    return to_posix(os.path.relpath(path, PROJECT_ROOT))
 
 
 def audit_include_ordering(path, rel_path, violations):
@@ -144,9 +149,9 @@ def audit_include_ordering(path, rel_path, violations):
     try:
         with open(path, 'r', encoding='utf-8', errors='ignore') as f:
             lines = f.readlines()
-            
+
             current_block = []
-            
+
             for line_no, line in enumerate(lines, 1):
                 match = INCLUDE_RE.match(line)
                 if match:
@@ -166,11 +171,11 @@ def audit_include_ordering(path, rel_path, violations):
                     if len(current_block) > 1:
                         verify_block_order(rel_path, current_block, violations)
                     current_block = []
-            
+
             # Check last block
             if len(current_block) > 1:
                 verify_block_order(rel_path, current_block, violations)
-                
+
     except OSError:
         pass
 
@@ -189,23 +194,23 @@ def verify_block_order(rel_path, block, violations):
             if item['file'] == "globals.h":
                 violations.append(f"Style violation: globals.h must be the FIRST include in {rel_path} at line {item['no']}")
                 # We don't return here so we can find other issues in the block
-        
+
     if len(block) <= 1:
         return
 
     # Rule 1: Tiered precedence: System <...> MUST precede Local "..."
     # Rule 2: Each tier must be alphabetized independently.
-    
+
     systems = [b for b in block if b['delim'] == '<']
     locals = [b for b in block if b['delim'] == '"']
-    
+
     # Check if any local precedes a system
     first_local_idx = -1
     for i, b in enumerate(block):
         if b['delim'] == '"':
             first_local_idx = i
             break
-            
+
     if first_local_idx != -1:
         for i in range(first_local_idx + 1, len(block)):
             if block[i]['delim'] == '<':
@@ -259,16 +264,16 @@ def main():
     ]
 
     transitive_rules = []
-    
+
     # Rules for core headers
     for core in core_headers:
         core_path = os.path.join(PROJECT_ROOT, core)
         if not os.path.isfile(core_path):
             continue
-            
+
         # Target specific heavy headers that shouldn't leak into core
         targets = heavy_headers.copy()
-        
+
         transitive_rules.append({
             'from': core_path,
             'targets': targets,
@@ -288,13 +293,13 @@ def main():
     # Self-Contained Header and Pragma Once checks
     for path in files:
         rel_path = rel(path)
-        
+
         # Style Rule: Alphabetical includes
         audit_include_ordering(path, rel_path, violations)
 
         if not path.endswith('.h'):
             continue
-        
+
         # Files that are allowed to not include globals.h
         skip_globals_check = [
             'include/globals.h',
@@ -303,7 +308,7 @@ def main():
             'include/secrets.example.h',
             'include/amoled/lv_conf.h'
         ]
-        
+
         # Files that are allowed to skip #pragma once
         skip_pragma_check = [
             'include/secrets.h',
@@ -314,12 +319,12 @@ def main():
         try:
             with open(path, 'r', encoding='utf-8', errors='ignore') as f:
                 content = f.read()
-                
+
                 # Rule 1: Mandatory #pragma once (except exempted headers)
                 if rel_path not in skip_pragma_check:
                     if '#pragma once' not in content:
                         violations.append(f"Header violation: Missing #pragma once in {rel_path}")
-                
+
                 # Rule 2: Mandatory globals.h inclusion (except leaf effects and exempted headers)
                 if rel_path not in skip_globals_check and 'include/effects/' not in rel_path:
                     if '#include "globals.h"' not in content and '#include <globals.h>' not in content:

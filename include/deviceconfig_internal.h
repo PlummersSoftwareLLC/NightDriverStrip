@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "globals.h"
+
 #include <array>
 
 #include "deviceconfig.h"

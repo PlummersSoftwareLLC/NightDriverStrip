@@ -47,8 +47,8 @@
 #include "webserver.h"
 #include "websocketserver.h"
 #if USE_STRIP
-#include "ws281xgfx.h"
 #include "stripoutputmanager.h"
+#include "ws281xgfx.h"
 #endif
 #if USE_WS281X
 #include "ws281xoutputmanager.h"

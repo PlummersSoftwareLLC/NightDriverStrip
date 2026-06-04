@@ -36,14 +36,14 @@
 
 #include <algorithm>
 #include <AsyncJson.h>
-#include <FS.h>
 #include <cstdlib>
+#include <FS.h>
 #include <limits>
 #include <utility>
 
 #include "deviceconfig.h"
-#include "effects.h"
 #include "effectmanager.h"
+#include "effects.h"
 #include "gfxbase.h"
 #include "improvserial.h"
 #include "soundanalyzer.h"
