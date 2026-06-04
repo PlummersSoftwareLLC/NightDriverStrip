@@ -43,8 +43,8 @@
 #include <Arduino.h>
 
 #include <ArduinoJson.h>
-#include <string.h>
 #include <map>
+#include <string.h>
 
 #include "effects.h"
 #include "GifDecoder.h"
@@ -106,26 +106,7 @@ struct GIFInfo : public EmbeddedFile
     {}
 };
 
-static const std::map<GIFIdentifier, const GIFInfo> AnimatedGIFs =
-{
-    // Banana has 8 frames.  Most music is around 120BPM, so we need to play each frame for 1/15th of a second to somewhat align with a typical beat
-    { GIFIdentifier::OnAir,        GIFInfo(onair_start,       onair_end,       64, 32, 14 ) },      //  8 KB
-    { GIFIdentifier::Banana,       GIFInfo(banana_start,      banana_end,      32, 32, 10 ) },      //  4 KB
-    { GIFIdentifier::Nyancat,      GIFInfo(nyancat_start,     nyancat_end,     64, 32, 18 ) },      // 20 KB
-    { GIFIdentifier::Pacman,       GIFInfo(pacman_start,      pacman_end,      64, 12, 20 ) },      // 36 KB
-    { GIFIdentifier::Atomic,       GIFInfo(atomic_start,      atomic_end,      32, 32, 60 ) },      // 21 KB
-    { GIFIdentifier::ColorSphere,  GIFInfo(colorsphere_start, colorsphere_end, 32, 32, 16 ) },      // 52 KB
-    { GIFIdentifier::ThreeRings,   GIFInfo(threerings_start,  threerings_end,  64, 32, 24 ) },      //  9 KB
-    { GIFIdentifier::Tesseract,    GIFInfo(tesseract_start,   tesseract_end,   40, 32, 40 ) },      // 24 KB
-    { GIFIdentifier::Firelog,      GIFInfo(firelog_start,     firelog_end,     64, 32, 16 ) },      // 24 KB
-};
-
-// The decoder needs us to track some state, but there's only one instance of the decoder, and
-// we can't pass it a pointer to our state because the callback doesn't allow you to pass any
-// context, and you can't use a lambda that captures the this pointer because that can't be
-// converted to a callback function pointer.  So we have to use a global.
-
-struct
+struct GIFDecoderState
 {
     int             _offsetX   = 0;
     int             _offsetY   = 0;
@@ -138,13 +119,39 @@ struct
     uint16_t        _srcHeight = 0;
     uint16_t        _dstWidth  = 0;
     uint16_t        _dstHeight = 0;
+};
+
+inline const std::map<GIFIdentifier, const GIFInfo>& AnimatedGIFs()
+{
+    static const std::map<GIFIdentifier, const GIFInfo> animatedGifs =
+    {
+        // Banana has 8 frames.  Most music is around 120BPM, so we need to play each frame for 1/15th of a second to somewhat align with a typical beat
+        { GIFIdentifier::OnAir,        GIFInfo(onair_start,       onair_end,       64, 32, 14 ) },      //  8 KB
+        { GIFIdentifier::Banana,       GIFInfo(banana_start,      banana_end,      32, 32, 10 ) },      //  4 KB
+        { GIFIdentifier::Nyancat,      GIFInfo(nyancat_start,     nyancat_end,     64, 32, 18 ) },      // 20 KB
+        { GIFIdentifier::Pacman,       GIFInfo(pacman_start,      pacman_end,      64, 12, 20 ) },      // 36 KB
+        { GIFIdentifier::Atomic,       GIFInfo(atomic_start,      atomic_end,      32, 32, 60 ) },      // 21 KB
+        { GIFIdentifier::ColorSphere,  GIFInfo(colorsphere_start, colorsphere_end, 32, 32, 16 ) },      // 52 KB
+        { GIFIdentifier::ThreeRings,   GIFInfo(threerings_start,  threerings_end,  64, 32, 24 ) },      //  9 KB
+        { GIFIdentifier::Tesseract,    GIFInfo(tesseract_start,   tesseract_end,   40, 32, 40 ) },      // 24 KB
+        { GIFIdentifier::Firelog,      GIFInfo(firelog_start,     firelog_end,     64, 32, 16 ) },      // 24 KB
+    };
+
+    return animatedGifs;
 }
-g_gifDecoderState;
 
-// We dynamically allocate the GIF decoder because it's pretty big and we don't want to waste the base
-// ram on it.  This way it, and the GIFs it decodes, can live in PSRAM.
+inline GIFDecoderState& SharedGIFDecoderState()
+{
+    static GIFDecoderState state;
+    return state;
+}
 
-const allocated_unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 16, true>> g_ptrGIFDecoder = make_unique_psram<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 16, true>>();
+inline allocated_unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 16, true>>& SharedGIFDecoder()
+{
+    static allocated_unique_ptr<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 16, true>> decoder =
+        make_unique_psram<GifDecoder<MATRIX_WIDTH, MATRIX_HEIGHT, 16, true>>();
+    return decoder;
+}
 
 // PatternAnimatedGIF
 //
@@ -168,7 +175,7 @@ class PatternAnimatedGIF : public EffectWithId<PatternAnimatedGIF>
     static void screenClearCallback(void)
     {
         auto& g = g_ptrSystem->GetEffectManager().g();
-        g.Clear(g_gifDecoderState._bkColor);
+        g.Clear(SharedGIFDecoderState()._bkColor);
     }
 
     // We decide when to update the screen, so this is a no-op
@@ -187,8 +194,8 @@ class PatternAnimatedGIF : public EffectWithId<PatternAnimatedGIF>
         auto& g = g_ptrSystem->GetEffectManager().g(0);
 
         // Apply scaling transformation
-        int16_t scaledX = (int16_t)(x * g_gifDecoderState._scaleX) + g_gifDecoderState._offsetX;
-        int16_t scaledY = (int16_t)(y * g_gifDecoderState._scaleY) + g_gifDecoderState._offsetY;
+        int16_t scaledX = (int16_t)(x * SharedGIFDecoderState()._scaleX) + SharedGIFDecoderState()._offsetX;
+        int16_t scaledY = (int16_t)(y * SharedGIFDecoderState()._scaleY) + SharedGIFDecoderState()._offsetY;
 
         if (false == g.isValidPixel(scaledX, scaledY))
         {
@@ -218,12 +225,12 @@ class PatternAnimatedGIF : public EffectWithId<PatternAnimatedGIF>
 
     static bool FrameDoubling()
     {
-        return g_gifDecoderState._fps <= 15;
+        return SharedGIFDecoderState()._fps <= 15;
     }
 
     size_t DesiredFramesPerSecond() const override
     {
-        return FrameDoubling() ? g_gifDecoderState._fps * 2 : g_gifDecoderState._fps;
+        return FrameDoubling() ? SharedGIFDecoderState()._fps * 2 : SharedGIFDecoderState()._fps;
     }
 
 public:
@@ -264,8 +271,9 @@ public:
 
         // Open the GIF and start decoding
 
-        auto gif = AnimatedGIFs.find(_gifIndex);
-        if (gif == AnimatedGIFs.end())
+        const auto& animatedGifs = AnimatedGIFs();
+        auto gif = animatedGifs.find(_gifIndex);
+        if (gif == animatedGifs.end())
             throw std::runtime_error(str_sprintf("Unable to locate GIF by index %d in the map.", (int) _gifIndex).c_str());
 
         // Set up the gifDecoderState with all of the context that it will need to decode and
@@ -301,25 +309,25 @@ public:
         debugI("GIF scaling: %dx%d -> %dx%d (scale %.2f,%.2f) offset (%d,%d)",
                (int)gifWidth, (int)gifHeight, (int)dstWidth, (int)dstHeight, scaleX, scaleY, (int)offsetX, (int)offsetY);
 
-        g_gifDecoderState._offsetX   = offsetX;
-        g_gifDecoderState._offsetY   = offsetY;
-        g_gifDecoderState._fps       = gif->second._fps;
-        g_gifDecoderState._bkColor   = _bkColor;
-        g_gifDecoderState._scaleX    = scaleX;
-        g_gifDecoderState._scaleY    = scaleY;
-        g_gifDecoderState._srcWidth  = gifWidth;
-        g_gifDecoderState._srcHeight = gifHeight;
-        g_gifDecoderState._dstWidth  = dstWidth;
-        g_gifDecoderState._dstHeight = dstHeight;
+        SharedGIFDecoderState()._offsetX   = offsetX;
+        SharedGIFDecoderState()._offsetY   = offsetY;
+        SharedGIFDecoderState()._fps       = gif->second._fps;
+        SharedGIFDecoderState()._bkColor   = _bkColor;
+        SharedGIFDecoderState()._scaleX    = scaleX;
+        SharedGIFDecoderState()._scaleY    = scaleY;
+        SharedGIFDecoderState()._srcWidth  = gifWidth;
+        SharedGIFDecoderState()._srcHeight = gifHeight;
+        SharedGIFDecoderState()._dstWidth  = dstWidth;
+        SharedGIFDecoderState()._dstHeight = dstHeight;
 
         // Set the GIF decoder callbacks to our static functions
 
-        g_ptrGIFDecoder->setScreenClearCallback( screenClearCallback );
-        g_ptrGIFDecoder->setUpdateScreenCallback( updateScreenCallback );
-        g_ptrGIFDecoder->setDrawPixelCallback( drawPixelCallback );
-        g_ptrGIFDecoder->setDrawLineCallback( drawLineCallback );
+        SharedGIFDecoder()->setScreenClearCallback( screenClearCallback );
+        SharedGIFDecoder()->setUpdateScreenCallback( updateScreenCallback );
+        SharedGIFDecoder()->setDrawPixelCallback( drawPixelCallback );
+        SharedGIFDecoder()->setDrawLineCallback( drawLineCallback );
 
-        _gifReadyToDraw = (ERROR_NONE == g_ptrGIFDecoder->startDecoding((uint8_t *) gif->second.contents, gif->second.length));
+        _gifReadyToDraw = (ERROR_NONE == SharedGIFDecoder()->startDecoding((uint8_t *) gif->second.contents, gif->second.length));
         if (!_gifReadyToDraw)
             debugW("Failed to start decoding GIF");
     }
@@ -345,7 +353,7 @@ public:
             g().Clear(_bkColor);
 
         if (_gifReadyToDraw)
-            g_ptrGIFDecoder->decodeFrame(false);
+            SharedGIFDecoder()->decodeFrame(false);
 
     }
 };
