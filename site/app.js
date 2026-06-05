@@ -1732,18 +1732,34 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     ctx.clearRect(0, 0, metrics.displayWidth, metrics.displayHeight);
     ctx.imageSmoothingEnabled = false;
 
-    let offset = 0;
+    const serpentine = getPreviewSerpentine();
     for (let y = 0; y < height; y += 1) {
       const top = y * metrics.pixelHeight;
       for (let x = 0; x < width; x += 1) {
+        const offset = getPreviewFrameOffset(x, y, width, height, serpentine);
         const red = frame[offset] || 0;
         const green = frame[offset + 1] || 0;
         const blue = frame[offset + 2] || 0;
-        offset += 3;
         ctx.fillStyle = `rgb(${red}, ${green}, ${blue})`;
         ctx.fillRect(x * metrics.pixelWidth, top, metrics.pixelWidth, metrics.pixelHeight);
       }
     }
+  }
+
+  function getPreviewSerpentine() {
+    const staticStats = state.staticStats || {};
+    if (staticStats.ACTIVE_MATRIX_SERPENTINE !== undefined) {
+      return !!staticStats.ACTIVE_MATRIX_SERPENTINE;
+    }
+    if (staticStats.CONFIGURED_MATRIX_SERPENTINE !== undefined) {
+      return !!staticStats.CONFIGURED_MATRIX_SERPENTINE;
+    }
+    return true;
+  }
+
+  function getPreviewFrameOffset(x, y, width, height, serpentine) {
+    const sourceY = serpentine && x % 2 === 1 ? height - 1 - y : y;
+    return (x * height + sourceY) * 3;
   }
 
   function getPreviewDisplayMetrics() {
