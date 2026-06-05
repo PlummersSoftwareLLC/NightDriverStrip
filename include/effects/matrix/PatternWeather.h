@@ -38,6 +38,7 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <HTTPClient.h>
@@ -152,6 +153,9 @@ class PatternWeather : public EffectWithId<PatternWeather>
     size_t readerIndex        = SIZE_MAX;
     system_clock::time_point latestUpdate = system_clock::from_time_t(0);
     mutable std::mutex weatherDataMutex;
+
+    static constexpr int WeatherFontHeight = 7;
+    static constexpr int WeatherFontWidth  = 5;
 
     /**
      * @brief Should this effect show its title.
@@ -484,6 +488,43 @@ class PatternWeather : public EffectWithId<PatternWeather>
         return configLocation != strLocation || configCountryCode != strCountryCode;
     }
 
+    String GetLocationDisplayText(const String& displayLocationName, const String& displayLocation, bool hasWeatherApiKey) const
+    {
+        if (!hasWeatherApiKey)
+            return "No API Key";
+
+        String showLocation = displayLocation;
+        showLocation.toUpperCase();
+        return displayLocationName.isEmpty() ? showLocation : displayLocationName;
+    }
+
+    static String GetTemperatureDisplayText(float displayTemperature, bool displayDataReady)
+    {
+        if (!displayDataReady)
+            return "--";
+
+        return String((int)displayTemperature);
+    }
+
+    void DrawCompactWeather(int screenHeight,
+                            const String& locationText,
+                            const String& temperatureText,
+                            bool showLocationLine)
+    {
+        if (showLocationLine)
+        {
+            const int topLineHeight = screenHeight / 2;
+            g().DrawTextInBand(locationText, 0, topLineHeight, WHITE16);
+            g().DrawTextInBand(temperatureText, topLineHeight, screenHeight - topLineHeight, g().to16bit(CRGB(192,192,192)));
+            return;
+        }
+
+        g().DrawTextInBand(temperatureText.isEmpty() ? locationText : temperatureText,
+                           0,
+                           screenHeight,
+                           g().to16bit(CRGB(192,192,192)));
+    }
+
 public:
 
     /**
@@ -533,13 +574,13 @@ public:
      */
     void Draw() override
     {
-        const int fontHeight = 7;
-        const int fontWidth  = 5;
-        const int xHalf      = MATRIX_WIDTH / 2 - 1;
+        const int screenWidth  = static_cast<int>(g().GetMatrixWidth());
+        const int screenHeight = static_cast<int>(g().GetMatrixHeight());
+        const int xHalf        = screenWidth / 2 - 1;
 
         g().fillScreen(BLACK16);
-        g().fillRect(0, 0, MATRIX_WIDTH, 9, g().to16bit(CRGB(0,0,128)));
         g().setFont(&Apple5x7);
+        g().setTextWrap(false);
 
         auto now = system_clock::now();
 
@@ -575,6 +616,23 @@ public:
         const float   displayHighTomorrow = highTomorrow;
         const float   displayLoTomorrow   = loTomorrow;
         const bool    displayDataReady    = dataReady;
+        const bool    hasWeatherApiKey    = !g_ptrSystem->GetDeviceConfig().GetOpenWeatherAPIKey().isEmpty();
+        const String  locationText        = GetLocationDisplayText(displayLocationName, displayLocation, hasWeatherApiKey);
+        const String  temperatureText     = hasWeatherApiKey ? GetTemperatureDisplayText(displayTemperature, displayDataReady) : "";
+
+        if (screenHeight < 16)
+        {
+            DrawCompactWeather(screenHeight, locationText, temperatureText, false);
+            return;
+        }
+
+        if (screenHeight < 32)
+        {
+            DrawCompactWeather(screenHeight, locationText, temperatureText, true);
+            return;
+        }
+
+        g().fillRect(0, 0, screenWidth, 9, g().to16bit(CRGB(0,0,128)));
 
         // Draw the graphics
         auto iconEntry = weatherIcons.find(displayIconToday);
@@ -595,22 +653,17 @@ public:
 
         // Print the town/city name
         int x = 0;
-        int y = fontHeight + 1;
+        int y = WeatherFontHeight + 1;
         g().setCursor(x, y);
         g().setTextColor(WHITE16);
-        String showLocation = displayLocation;
-        showLocation.toUpperCase();
-        if (g_ptrSystem->GetDeviceConfig().GetOpenWeatherAPIKey().isEmpty())
-            g().print("No API Key");
-        else
-            g().print((displayLocationName.isEmpty() ? showLocation : displayLocationName).substring(0, (MATRIX_WIDTH - 2 * fontWidth)/fontWidth));
+        g().print(g().FitTextToWidth(locationText, screenWidth - 2 * WeatherFontWidth));
 
         // Display the temperature, right-justified
 
         if (displayDataReady)
         {
             String strTemp((int)displayTemperature);
-            x = MATRIX_WIDTH - fontWidth * strTemp.length();
+            x = std::max(0, screenWidth - WeatherFontWidth * static_cast<int>(strTemp.length()));
             g().setCursor(x, y);
             g().setTextColor(g().to16bit(CRGB(192,192,192)));
             g().print(strTemp);
@@ -620,9 +673,9 @@ public:
 
         y+=1;
 
-        g().drawLine(0, y, MATRIX_WIDTH-1, y, CRGB(0,0,128));
-        g().drawLine(xHalf, y, xHalf, MATRIX_HEIGHT-1, CRGB(0,0,128));
-        y+=2 + fontHeight;
+        g().drawLine(0, y, screenWidth-1, y, CRGB(0,0,128));
+        g().drawLine(xHalf, y, xHalf, screenHeight-1, CRGB(0,0,128));
+        y+=2 + WeatherFontHeight;
 
         // Figure out which day of the week it is
 
@@ -633,9 +686,9 @@ public:
 
         // Draw the day of the week and tomorrow's day as well
         g().setTextColor(WHITE16);
-        g().setCursor(0, MATRIX_HEIGHT);
+        g().setCursor(0, screenHeight);
         g().print(pszToday);
-        g().setCursor(xHalf+2, MATRIX_HEIGHT);
+        g().setCursor(xHalf+2, screenHeight);
         g().print(pszTomorrow);
 
         // Draw the temperature in lighter white
@@ -648,12 +701,12 @@ public:
 
             // Draw today's HI and LO temperatures
 
-            x = xHalf - fontWidth * strHi.length();
-            y = MATRIX_HEIGHT - fontHeight;
+            x = std::max(0, xHalf - WeatherFontWidth * static_cast<int>(strHi.length()));
+            y = screenHeight - WeatherFontHeight;
             g().setCursor(x,y);
             g().print(strHi);
-            x = xHalf - fontWidth * strLo.length();
-            y+= fontHeight;
+            x = std::max(0, xHalf - WeatherFontWidth * static_cast<int>(strLo.length()));
+            y+= WeatherFontHeight;
             g().setCursor(x,y);
             g().print(strLo);
 
@@ -661,12 +714,12 @@ public:
 
             strHi = String((int)displayHighTomorrow);
             strLo = String((int)displayLoTomorrow);
-            x = MATRIX_WIDTH - fontWidth * strHi.length();
-            y = MATRIX_HEIGHT - fontHeight;
+            x = std::max(0, screenWidth - WeatherFontWidth * static_cast<int>(strHi.length()));
+            y = screenHeight - WeatherFontHeight;
             g().setCursor(x,y);
             g().print(strHi);
-            x = MATRIX_WIDTH - fontWidth * strLo.length();
-            y+= fontHeight;
+            x = std::max(0, screenWidth - WeatherFontWidth * static_cast<int>(strLo.length()));
+            y+= WeatherFontHeight;
             g().setCursor(x,y);
             g().print(strLo);
         }

@@ -80,6 +80,15 @@ void LoadEffectFactories();
 std::optional<JsonObjectConst> LoadEffectsJSONFile(JsonDocument& jsonDoc);
 void WriteCurrentEffectIndexFile();
 
+namespace
+{
+    void WriteEffectManagerConfigFile()
+    {
+        if (!SaveToJSONFile(EFFECTS_CONFIG_FILE, g_ptrSystem->GetEffectManager()) && EFFECT_PERSISTENCE_CRITICAL)
+            throw std::runtime_error("Effects serialization failed");
+    }
+}
+
 // InitEffectsManager
 //
 // Initializes the effect manager.  Reboots on failure, since it's not optional
@@ -92,8 +101,7 @@ void InitEffectsManager()
 
     l_EffectsManagerJSONWriterIndex = g_ptrSystem->GetJSONWriter().RegisterWriter([]()
     {
-        if (!SaveToJSONFile(EFFECTS_CONFIG_FILE, g_ptrSystem->GetEffectManager()) && EFFECT_PERSISTENCE_CRITICAL)
-            throw std::runtime_error("Effects serialization failed");
+        WriteEffectManagerConfigFile();
     });
     l_CurrentEffectWriterIndex = g_ptrSystem->GetJSONWriter().RegisterWriter(WriteCurrentEffectIndexFile);
 
@@ -135,10 +143,12 @@ void InitEffectsManager()
     if (!loadedPersistedEffects)
     {
         // Persist the default effect set after initialization suppression is
-        // lifted. Otherwise first boot, missing config, or an effect-set hash
-        // change would run from defaults but never write the new config until
-        // some later user mutation happened.
-        SaveEffectManagerConfig();
+        // lifted. Do the first write synchronously before the high-activity
+        // startup services are running; stale or incompatible SPIFFS config
+        // from older builds can force SPIFFS garbage collection, and doing
+        // that before render/audio/remote/network tasks start avoids an early
+        // flash-write overlap with cache-sensitive drivers.
+        WriteEffectManagerConfigFile();
     }
 }
 

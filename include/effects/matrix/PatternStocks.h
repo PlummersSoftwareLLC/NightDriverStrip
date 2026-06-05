@@ -41,6 +41,7 @@
 #include <string.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
+#include <algorithm>
 #include <chrono>
 #include <thread>
 #include <vector>
@@ -206,6 +207,29 @@ private:
     using StockDataCallback = function<void(const StockData&)>;
 
     HTTPClient http;
+
+    void DrawCompactQuoteDisplay(int screenHeight)
+    {
+        const int topLineHeight = screenHeight / 2;
+
+        if (stockData.empty())
+        {
+            g().DrawTextInBand("STOCKS", 0, topLineHeight, CRGB::White);
+            g().DrawTextInBand("--", topLineHeight, screenHeight - topLineHeight, CRGB::LightGrey);
+            return;
+        }
+
+        const size_t stockIndex = std::min(static_cast<size_t>(std::max(0, iCurrentStock)), stockData.size() - 1);
+        auto it = stockData.begin();
+        std::advance(it, stockIndex);
+        const StockData& currentStock = it->second;
+
+        const String priceText = currentStock.close >= 10000 ? String(currentStock.close, 0) : String(currentStock.close, 2);
+        const CRGB priceColor = currentStock.close >= currentStock.previousClose ? CRGB::LightGreen : CRGB::Red;
+
+        g().DrawTextInBand(currentStock.symbol, 0, topLineHeight, CRGB::White);
+        g().DrawTextInBand(priceText, topLineHeight, screenHeight - topLineHeight, priceColor);
+    }
 
     void GetQuote(const String &symbol, StockDataCallback callback = nullptr)
     {
@@ -510,8 +534,12 @@ public:
     void Draw() override
     {
         auto& graphics = g();
+        const int screenWidth = static_cast<int>(graphics.GetMatrixWidth());
+        const int screenHeight = static_cast<int>(graphics.GetMatrixHeight());
+
         graphics.fillScreen(BLACK16);
-        graphics.fillRect(0, 0, MATRIX_WIDTH, 9, graphics.to16bit(CRGB(0,0,128)));
+        graphics.setFont(&Apple5x7);
+        graphics.setTextWrap(false);
 
         // Periodically refetch the stock data from the server
 
@@ -550,6 +578,13 @@ public:
 
         // Paint Frame
 
+        if (screenHeight < 32)
+        {
+            DrawCompactQuoteDisplay(screenHeight);
+            return;
+        }
+
+        graphics.fillRect(0, 0, screenWidth, 9, graphics.to16bit(CRGB(0,0,128)));
         UpdateQuoteDisplay();
     }
 

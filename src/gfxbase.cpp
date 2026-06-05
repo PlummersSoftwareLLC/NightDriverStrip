@@ -129,6 +129,79 @@ uint16_t GFXBase::to16bit(CRGB::HTMLColorCode code)
     return to16bit(CRGB(code));
 }
 
+// Returns the longest substring of 'text' that fits within 'maxWidth' when rendered with 
+// the current font
+
+String GFXBase::FitTextToWidth(const String& text, int maxWidth)
+{
+    if (maxWidth <= 0)
+        return "";
+
+    String fitted = text;
+    int16_t x1, y1;
+    uint16_t textWidth, textHeight;
+
+    while (!fitted.isEmpty())
+    {
+        getTextBounds(fitted, 0, 0, &x1, &y1, &textWidth, &textHeight);
+        if (textWidth <= maxWidth)
+            break;
+
+        fitted.remove(fitted.length() - 1);
+    }
+
+    return fitted;
+}
+
+// Draws the specified text centered within the given rectangle, using the current font 
+// and text color.
+
+void GFXBase::DrawTextInRect(const String& text, int x, int y, int width, int height, uint16_t color)
+{
+    if (text.isEmpty() || width <= 0 || height <= 0)
+        return;
+
+    const String fitted = FitTextToWidth(text, width);
+    if (fitted.isEmpty())
+        return;
+
+    int16_t x1, y1;
+    uint16_t textWidth, textHeight;
+    getTextBounds(fitted, 0, 0, &x1, &y1, &textWidth, &textHeight);
+
+    const int drawX = x + std::max(0, (width - static_cast<int>(textWidth)) / 2 - x1);
+    const int drawY = y + (height - static_cast<int>(textHeight)) / 2 - y1;
+
+    setTextColor(color);
+    setCursor(drawX, drawY);
+    print(fitted);
+}
+
+void GFXBase::DrawTextInRect(const String& text, int x, int y, int width, int height, const CRGB& color)
+{
+    DrawTextInRect(text, x, y, width, height, to16bit(color));
+}
+
+void GFXBase::DrawTextInRect(const String& text, int x, int y, int width, int height, CRGB::HTMLColorCode color)
+{
+    DrawTextInRect(text, x, y, width, height, to16bit(color));
+}
+
+void GFXBase::DrawTextInBand(const String& text, int bandTop, int bandHeight, uint16_t color)
+{
+    DrawTextInRect(text, 0, bandTop, static_cast<int>(GetMatrixWidth()), bandHeight, color);
+}
+
+void GFXBase::DrawTextInBand(const String& text, int bandTop, int bandHeight, const CRGB& color)
+{
+    DrawTextInBand(text, bandTop, bandHeight, to16bit(color));
+}
+
+void GFXBase::DrawTextInBand(const String& text, int bandTop, int bandHeight, CRGB::HTMLColorCode color)
+{
+    DrawTextInBand(text, bandTop, bandHeight, to16bit(color));
+}
+
 void GFXBase::Clear(CRGB color)
 {
     const size_t count = _width * _height;
