@@ -239,7 +239,7 @@ class CWebServer : public IService
             response->addHeader("Cache-Control", "no-store, max-age=0");
             response->addHeader("Pragma", "no-cache");
 
-                        this->AddCORSHeaderAndSendResponse(request, response);
+            this->AddCORSHeaderAndSendResponse(request, response);
         });
     }
 
