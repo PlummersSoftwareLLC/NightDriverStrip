@@ -15,8 +15,12 @@ AUDIT_SCRIPTS = [
 ]
 
 # PlatformIO extra_script callback policy:
-# - Pre-build: only run audits in hard-fail mode (strict mode).
-# - Post-build: run audits in soft-fail mode so findings are visible at end.
+# - Pre-build: always run audits using the configured policy
+#   (hard-fail when enabled, otherwise soft-fail).
+# - Post-build: run audits only when hard-fail is disabled, in soft-fail mode,
+#   so findings are still visible at the end of the build.
+# - Note: post-build is attached to the .bin output action and may not trigger
+#   on cache hits; soft mode also runs in pre-build so audits still execute.
 
 
 def read_hard_fail_setting(project_dir: str) -> bool:
