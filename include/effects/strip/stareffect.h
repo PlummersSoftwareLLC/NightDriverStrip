@@ -617,6 +617,127 @@ class StarEffect : public StarEffectBase<StarType, StarEffect<StarType>>
     using StarEffectBase<StarType, StarEffect<StarType>>::StarEffectBase;
 };
 
+// NightTwinkleEffect
+//
+// Fills the strip with a base night color, then overlays randomly triggered
+// white stars using the standard particle pre-ignition/ignition/hold/fade cycle.
+
+class NightTwinkleEffect : public EffectWithId<NightTwinkleEffect>
+{
+  protected:
+
+    class NightTwinkleStar : public ColorStar
+    {
+      public:
+        NightTwinkleStar()
+          : ColorStar(CRGB::White, 0.0f, 1.0f)
+        {
+        }
+
+        float PreignitionTime() const override { return 0.0f;  }
+        float IgnitionTime()    const override { return 0.05f; }
+        float HoldTime()        const override { return 0.10f; }
+        float FadeTime()        const override { return 0.30f; }
+    };
+
+    static constexpr const char * PTY_DENSITY = "dns";
+    static constexpr const char * PTY_STARS_PER_FRAME = "spf";
+    static constexpr float  kDefaultDensity           = 1.0f;
+    static constexpr float  kLegacyDefaultDensity     = 0.01f;
+    static constexpr size_t kDefaultStarsPerFrame     = 10;
+    static constexpr float  kReferenceLEDCount        = 144.0f;
+
+    std::deque<NightTwinkleStar> _allParticles;
+    CRGB                         _baseColor;
+    float                        _density;
+    size_t                       _starsPerFrame;
+
+    static float DensityFromJSON(const JsonObjectConst& jsonObject)
+    {
+        if (!jsonObject[PTY_DENSITY].is<float>())
+            return kDefaultDensity;
+
+        const float density = jsonObject[PTY_DENSITY].as<float>();
+        if (!jsonObject[PTY_STARS_PER_FRAME].is<size_t>())
+            return density / kLegacyDefaultDensity;
+
+        return density;
+    }
+
+    void Update()
+    {
+        while (!_allParticles.empty() && _allParticles.front().Age() >= _allParticles.front().TotalLifetime())
+            _allParticles.pop_front();
+
+        while (_allParticles.size() > cMaxStars)
+            _allParticles.pop_back();
+    }
+
+    void CreateStars()
+    {
+        const float stripScale = static_cast<float>(_cLEDs) / kReferenceLEDCount;
+        const float requestedStars = _starsPerFrame * stripScale * std::max(0.0f, _density);
+        const size_t starsToCreate = requestedStars > 0.0f
+            ? std::max<size_t>(1, static_cast<size_t>(std::round(requestedStars)))
+            : 0;
+        if (starsToCreate == 0)
+            return;
+
+        for (size_t i = 0; i < starsToCreate && _allParticles.size() < cMaxStars; ++i)
+        {
+            NightTwinkleStar star;
+            star._iPos = static_cast<float>(random_range(0U, _cLEDs - 1));
+            _allParticles.push_back(star);
+        }
+    }
+
+  public:
+
+    NightTwinkleEffect(CRGB baseColor = CRGB(0, 0, 255), float density = kDefaultDensity, size_t starsPerFrame = kDefaultStarsPerFrame)
+      : EffectWithId<NightTwinkleEffect>("NightTwinkle"),
+        _baseColor(baseColor),
+        _density(density),
+        _starsPerFrame(starsPerFrame)
+    {
+    }
+
+    NightTwinkleEffect(const JsonObjectConst& jsonObject)
+      : EffectWithId<NightTwinkleEffect>(jsonObject),
+        _baseColor(jsonObject[PTY_COLOR].is<CRGB>() ? jsonObject[PTY_COLOR].as<CRGB>() : CRGB(0, 0, 255)),
+        _density(DensityFromJSON(jsonObject)),
+        _starsPerFrame(jsonObject[PTY_STARS_PER_FRAME].is<size_t>() ? jsonObject[PTY_STARS_PER_FRAME].as<size_t>() : kDefaultStarsPerFrame)
+    {
+    }
+
+    bool SerializeToJSON(JsonObject& jsonObject) override
+    {
+        auto jsonDoc = CreateJsonDocument();
+
+        JsonObject root = jsonDoc.to<JsonObject>();
+        LEDStripEffect::SerializeToJSON(root);
+
+        jsonDoc[PTY_COLOR] = _baseColor;
+        jsonDoc[PTY_DENSITY] = _density;
+        jsonDoc[PTY_STARS_PER_FRAME] = _starsPerFrame;
+
+        return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
+    }
+
+    void Draw() override
+    {
+        Update();
+        CreateStars();
+
+        fillSolidOnAllChannels(_baseColor);
+
+        for (auto& star : _allParticles)
+        {
+            star.UpdatePosition();
+            setPixelOnAllChannels(static_cast<int>(star._iPos), _baseColor + star.ObjectColor());
+        }
+    }
+};
+
 template <typename StarType> class BlurStarEffect : public StarEffectBase<StarType, BlurStarEffect<StarType>>
 {
   public:

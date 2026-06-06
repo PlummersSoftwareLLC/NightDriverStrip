@@ -273,6 +273,14 @@ public:
     static uint16_t to16bit(const CRGB rgb); // Convert CRGB -> 16 bit 5:6:5
     static uint16_t to16bit(CRGB::HTMLColorCode code); // Convert HtmlColorCode -> 16 bit 5:6:5
 
+    String FitTextToWidth(const String& text, int maxWidth);
+    void DrawTextInRect(const String& text, int x, int y, int width, int height, uint16_t color);
+    void DrawTextInRect(const String& text, int x, int y, int width, int height, const CRGB& color);
+    void DrawTextInRect(const String& text, int x, int y, int width, int height, CRGB::HTMLColorCode color);
+    void DrawTextInBand(const String& text, int bandTop, int bandHeight, uint16_t color);
+    void DrawTextInBand(const String& text, int bandTop, int bandHeight, const CRGB& color);
+    void DrawTextInBand(const String& text, int bandTop, int bandHeight, CRGB::HTMLColorCode color);
+
     virtual void Clear(CRGB color = CRGB::Black);
 
     __attribute__((always_inline))

@@ -102,8 +102,13 @@
 #ifndef BRIGHTNESS_MAX
     #define BRIGHTNESS_MAX          uint8_t(255)
 #endif
-#define POWER_LIMIT_MIN             1000
-#define POWER_LIMIT_DEFAULT         4500
+#define POWER_LIMIT_MIN             1
+#define POWER_LIMIT_LEGACY_DEFAULT  4500
+#ifdef POWER_LIMIT_MW
+    #define POWER_LIMIT_DEFAULT     POWER_LIMIT_MW
+#else
+    #define POWER_LIMIT_DEFAULT     POWER_LIMIT_LEGACY_DEFAULT
+#endif
 
 // DeviceConfig holds, persists and loads device-wide configuration settings. Effect-specific settings should
 // be managed using overrides of the respective methods in LEDStripEffect (mainly FillSettingSpecs(),
@@ -262,6 +267,7 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * NTPServerTag = NAME_OF(ntpServer);
     static constexpr const char * RememberCurrentEffectTag = NAME_OF(rememberCurrentEffect);
     static constexpr const char * PowerLimitTag = NAME_OF(powerLimit);
+    static constexpr const char * PowerLimitDefaultTag = "powerLimitDefault";
     static constexpr const char * BrightnessTag = NAME_OF(brightness);
     // No need to publish the show VU meter tag unless we're also publishing the setting
     #if SHOW_VU_METER

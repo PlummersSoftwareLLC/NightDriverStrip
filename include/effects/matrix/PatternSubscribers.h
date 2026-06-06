@@ -73,6 +73,21 @@ class PatternSubscribers : public EffectWithId<PatternSubscribers>
 
     time_t latestUpdate                     = 0;
 
+    void DrawCompactSubscribers(int screenHeight)
+    {
+        const int topLineHeight = screenHeight / 2;
+        const String subscriberText = str_sprintf("%ld", subscribers);
+
+        g().DrawTextInBand(youtubeChannelName.isEmpty() ? "Subscribers" : youtubeChannelName,
+                           0,
+                           topLineHeight,
+                           CRGB::White);
+        g().DrawTextInBand(subscriberText,
+                           topLineHeight,
+                           screenHeight - topLineHeight,
+                           borderColor);
+    }
+
     void SubscriberReader()
     {
         unsigned long msSinceLastCheck = millis() - msLastCheck;
@@ -231,13 +246,24 @@ class PatternSubscribers : public EffectWithId<PatternSubscribers>
 
     void Draw() override
     {
-        g().Clear(backgroundColor);
-
-        // Draw a border around the edge of the panel
-        g().drawRect(0, 1, MATRIX_WIDTH - 1, MATRIX_HEIGHT - 2, g().to16bit(borderColor));
+        const int screenWidth = static_cast<int>(g().GetMatrixWidth());
+        const int screenHeight = static_cast<int>(g().GetMatrixHeight());
 
         // Use the centralized Apple5x7 Adafruit font
         g().setFont(&Apple5x7);
+        g().setTextWrap(false);
+
+        if (screenHeight < 32)
+        {
+            g().fillScreen(BLACK16);
+            DrawCompactSubscribers(screenHeight);
+            return;
+        }
+
+        g().Clear(backgroundColor);
+
+        // Draw a border around the edge of the panel
+        g().drawRect(0, 1, screenWidth - 1, screenHeight - 2, g().to16bit(borderColor));
 
         // Draw the channel name
         g().setTextColor(g().to16bit(CRGB::White));
@@ -259,8 +285,8 @@ class PatternSubscribers : public EffectWithId<PatternSubscribers>
 
         // Center the text horizontally and vertically on the screen
         // Note: y1 is typically negative (above baseline), so we need to account for that
-        int x = (MATRIX_WIDTH - textWidth) / 2;
-        int y = (MATRIX_HEIGHT / 2) - (textHeight / 2) - y1;  // Properly center vertically
+        int x = (screenWidth - textWidth) / 2;
+        int y = (screenHeight / 2) - (textHeight / 2) - y1;  // Properly center vertically
 
         // Draw shadow effect by printing in black at offset positions, then white on top
         g().setTextColor(g().to16bit(CRGB::Black));

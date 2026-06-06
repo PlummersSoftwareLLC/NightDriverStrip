@@ -139,7 +139,7 @@
 
 // Global effect set version
 
-#define EFFECT_SET_VERSION 6
+#define EFFECT_SET_VERSION 9
 
 // Inform the linker which effects have setting specs, and in which class member
 
@@ -194,6 +194,7 @@ void LoadEffectFactories()
             Effect<FireEffect>("Medium Fire", NUM_LEDS, 1, 3, 100, 3, 4, true, true),
             Effect<BouncingBallEffect>(3, true, true, 1),
             Effect<MeteorEffect>(4, 4, 10, 2.0, 2.0),
+            Effect<NightTwinkleEffect>(),
             Effect<StarEffect<QuietStar>>("Rainbow Twinkle Stars", RainbowColors_p, kStarEffectProbability, 1, LINEARBLEND, 2.0, 0.0, kStarEffectMusicFactor),
             Effect<PaletteEffect>(RainbowColors_p)
         );
@@ -201,6 +202,12 @@ void LoadEffectFactories()
 
     #if defined(EFFECTS_TRIMLIGHT)
         // Trimlight intentionally has no local effects. It renders only incoming WiFi frames.
+    #endif
+
+    #if defined(EFFECTS_APA102_DEMO)
+        RegisterAll(*g_ptrEffectFactories,
+            Effect<NightTwinkleEffect>()
+        );
     #endif
 
     #if defined(EFFECTS_PDPWOPR)
@@ -232,6 +239,7 @@ void LoadEffectFactories()
             Effect<StarEffect<QuietStar>>("Green Twinkle Stars", GreenColors_p, kStarEffectProbability, 1, LINEARBLEND, 2.0, 0.0, kStarEffectMusicFactor),
             Effect<StarEffect<Star>>("Blue Sparkle Stars", BlueColors_p,  kStarEffectProbability, 1, LINEARBLEND, 2.0, 0.0, kStarEffectMusicFactor),
             Effect<StarEffect<QuietStar>>("Rainbow Twinkle Stars", RainbowColors_p, kStarEffectProbability, 1, LINEARBLEND, 2.0, 0.0, kStarEffectMusicFactor),
+            Effect<NightTwinkleEffect>(),
             Effect<TwinkleEffect>(NUM_LEDS / 2, 20, 50),
             Effect<PaletteEffect>(RainbowColors_p, .25, 1, 0, 1.0, 0.0, LINEARBLEND, true, 1.0),
             Effect<PaletteEffect>(RainbowColors_p),
@@ -417,6 +425,7 @@ void LoadEffectFactories()
             Effect<StarEffect<Star>>("Blue Sparkle Stars", BlueColors_p, kStarEffectProbability, 1, LINEARBLEND, 2.0, 0.0, kStarEffectMusicFactor),
             Effect<StarEffect<QuietStar>>("Red Twinkle Stars", RedColors_p, 1.0, 1, LINEARBLEND, 2.0),
             Effect<StarEffect<Star>>("Lava Stars", LavaColors_p, kStarEffectProbability, 1, LINEARBLEND, 2.0, 0.0, kStarEffectMusicFactor),
+            Effect<NightTwinkleEffect>(),
             Effect<PaletteEffect>(RainbowColors_p),
             Effect<PaletteEffect>(RainbowColors_p, 1.0, 1.0),
             Effect<PaletteEffect>(RainbowColors_p, .25)
@@ -567,6 +576,7 @@ void LoadEffectFactories()
             Effect<StarEffect<MusicStar>>("Blue Stars", BlueColors_p,  kStarEffectProbability, 1, LINEARBLEND, 2.0, 0.0, kStarEffectMusicFactor),
             Effect<StarEffect<Star>>("Green Sparkle Stars", GreenColors_p, kStarEffectProbability, 1, LINEARBLEND, 2.0, 0.0, kStarEffectMusicFactor),
             Effect<StarEffect<MusicStar>>("Green Stars", GreenColors_p, kStarEffectProbability, 1, LINEARBLEND, 2.0, 0.0, kStarEffectMusicFactor),
+            Effect<NightTwinkleEffect>(),
             Effect<TwinkleEffect>(NUM_LEDS / 2, 20, 50),
             Effect<PaletteEffect>(RainbowColors_p, .25, 1, 0, 1.0, 0.0, LINEARBLEND, true, 1.0),
             Effect<PaletteEffect>(RainbowColors_p),

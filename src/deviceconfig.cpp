@@ -205,6 +205,7 @@ bool DeviceConfig::SerializeToJSON(JsonObject& jsonObject, bool includeSensitive
     jsonDoc[NTPServerTag] = ntpServer;
     jsonDoc[RememberCurrentEffectTag] = rememberCurrentEffect;
     jsonDoc[PowerLimitTag] = powerLimit;
+    jsonDoc[PowerLimitDefaultTag] = POWER_LIMIT_DEFAULT;
     // Only serialize showVUMeter if the VU meter is enabled in the build
     #if SHOW_VU_METER
     jsonDoc[ShowVUMeterTag] = showVUMeter;
@@ -256,7 +257,28 @@ bool DeviceConfig::DeserializeFromJSON(const JsonObjectConst& jsonObject, bool s
     SetIfPresentIn(jsonObject, useCelsius, UseCelsiusTag);
     SetIfPresentIn(jsonObject, ntpServer, NTPServerTag);
     SetIfPresentIn(jsonObject, rememberCurrentEffect, RememberCurrentEffectTag);
-    SetIfPresentIn(jsonObject, powerLimit, PowerLimitTag);
+    if (jsonObject[PowerLimitTag].is<int>())
+    {
+        const int savedPowerLimit = jsonObject[PowerLimitTag].as<int>();
+        #ifdef POWER_LIMIT_MW
+        if (!jsonObject[PowerLimitDefaultTag].is<int>() && savedPowerLimit == POWER_LIMIT_LEGACY_DEFAULT)
+        {
+            debugW("Ignoring saved legacy powerLimit default %d; using compiled default %d", savedPowerLimit, POWER_LIMIT_DEFAULT);
+            powerLimit = POWER_LIMIT_DEFAULT;
+        }
+        else
+        #endif
+        {
+            auto [isValid, validationMessage] = ValidatePowerLimit(savedPowerLimit);
+            if (isValid)
+                powerLimit = savedPowerLimit;
+            else
+            {
+                debugW("Ignoring saved powerLimit %d: %s", savedPowerLimit, validationMessage.c_str());
+                powerLimit = POWER_LIMIT_DEFAULT;
+            }
+        }
+    }
     SetIfPresentIn(jsonObject, brightness, BrightnessTag);
     // Persisted config predates the newer brightness guardrails in some installs, so treat an invalid
     // saved brightness as "unset" and fall back to the normal 100% default instead of booting dark.
@@ -444,7 +466,8 @@ SuccessResultWithMessage DeviceConfig::ValidatePowerLimit(const String& newPower
 
 void DeviceConfig::SetPowerLimit(int newPowerLimit)
 {
-    if (newPowerLimit >= POWER_LIMIT_MIN)
+    auto [isValid, _] = ValidatePowerLimit(newPowerLimit);
+    if (isValid)
         SetAndSave(powerLimit, newPowerLimit);
 }
 
