@@ -3,16 +3,25 @@ import os
 import subprocess
 import sys
 
-# PlatformIO extra_script (pre:) runs during environment construction.
-# Audits are soft-fail by default to avoid blocking local or CI builds unless
-# a local opt-in config enables hard-fail mode.
+try:
+    Import("env")
+except Exception:
+    env = None
 
-project_dir = os.getcwd()
-audit_config_path = os.path.join(project_dir, "config", "audit.ini")
+# Audit scripts to run (located in tools/).
+AUDIT_SCRIPTS = [
+    "audit_globals_order.py",
+    "audit_include_rules.py"
+]
+
+# PlatformIO extra_script callback policy:
+# - Pre-build: only run audits in hard-fail mode (strict mode).
+# - Post-build: run audits in soft-fail mode so findings are visible at end.
 
 
-def read_hard_fail_setting(config_path: str) -> bool:
+def read_hard_fail_setting(project_dir: str) -> bool:
     """Return whether audit violations should fail the build."""
+    config_path = os.path.join(project_dir, "config", "audit.ini")
     if not os.path.exists(config_path):
         return False
 
@@ -32,38 +41,80 @@ def read_hard_fail_setting(config_path: str) -> bool:
     return False
 
 
-hard_fail = read_hard_fail_setting(audit_config_path)
+def run_audits(project_dir: str, *, hard_fail: bool, stage: str) -> bool:
+    """Run coding standard audits and return True when any check fails."""
+    print(">>>")
+    print(">>> NightDriver Coding Standard Audits")
+    print(f">>> Stage: {stage}")
+    print(f">>> Audit policy: {'hard-fail' if hard_fail else 'soft-fail'}")
+    print(">>>")
 
-print(">>> NightDriver Coding Standard Audits")
-print(f">>> Audit policy: {'hard-fail' if hard_fail else 'soft-fail'}")
+    failed = False
+    for script_name in AUDIT_SCRIPTS:
+        script = os.path.join(project_dir, "tools", script_name)
+        print(f"  Auditing: {script_name}...", end="", flush=True)
 
-audit_scripts = [
-    os.path.join(project_dir, "tools", "audit_globals_order.py"),
-    os.path.join(project_dir, "tools", "audit_include_rules.py")
-]
+        # Keep logs quiet unless a check fails.
+        result = subprocess.run([sys.executable, script], cwd=project_dir, capture_output=True, text=True)
 
-failed = False
-for script in audit_scripts:
-    script_name = os.path.basename(script)
-    print(f"  Auditing: {script_name}...", end="", flush=True)
+        if result.returncode != 0:
+            print(" FAILED!")
+            print("-" * 40)
+            print(result.stdout)
+            print(result.stderr)
+            print("-" * 40)
+            failed = True
+        else:
+            print(" PASSED")
 
-    # Run the script and capture output to keep the build log clean unless it fails
-    result = subprocess.run([sys.executable, script], cwd=project_dir, capture_output=True, text=True)
-
-    if result.returncode != 0:
-        print(" FAILED!")
-        print("-" * 40)
-        print(result.stdout)
-        print(result.stderr)
-        print("-" * 40)
-        failed = True
+    print(">>>")
+    if failed:
+        print(">>> Audits completed with violations found.")
     else:
-        print(" PASSED")
+        print(">>> Audits completed successfully.")
+    print(">>>")
 
-if failed:
-    if hard_fail:
+    return failed
+
+
+def _project_dir_from_env() -> str:
+    if env is not None:
+        return env.subst("$PROJECT_DIR")
+    return os.getcwd()
+
+
+def on_pre_build(source, target, env):
+    project_dir = _project_dir_from_env()
+    hard_fail = read_hard_fail_setting(project_dir)
+
+    failed = run_audits(project_dir, hard_fail=hard_fail, stage="pre-build")
+    if failed and hard_fail:
         print("!!! Build aborted due to coding standard violations (hard-fail enabled). !!!")
         sys.exit(1)
-    print("!!! Coding standard violations detected, but continuing (soft-fail policy). !!!")
 
-print(">>> Audits completed successfully.")
+
+def on_post_build(source, target, env):
+    project_dir = _project_dir_from_env()
+    hard_fail = read_hard_fail_setting(project_dir)
+
+    # Strict mode already enforced checks in pre-build.
+    if hard_fail:
+        return
+
+    run_audits(project_dir, hard_fail=False, stage="post-build")
+
+
+if env is not None:
+    # Pre-build runs unconditionally at script-load time so findings are always
+    # shown at least once, even on cache hits where no files are rebuilt.
+    on_pre_build(None, None, None)
+    env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", on_post_build)
+
+
+if __name__ == "__main__":
+    # Standalone helper mode for manual invocation.
+    project_dir = os.getcwd()
+    hard_fail = read_hard_fail_setting(project_dir)
+    failed = run_audits(project_dir, hard_fail=hard_fail, stage="manual")
+    if failed and hard_fail:
+        sys.exit(1)
