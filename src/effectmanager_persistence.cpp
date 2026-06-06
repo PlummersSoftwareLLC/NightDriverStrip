@@ -27,9 +27,6 @@
 
 #include "effects/strip/misceffects.h"
 #include "effects/strip/musiceffect.h"
-#if USE_HUB75
-#include "hub75gfx.h"
-#endif
 
 extern allocated_unique_ptr<EffectFactories> g_ptrEffectFactories;
 DRAM_ATTR size_t l_EffectsManagerJSONWriterIndex = SIZE_MAX;
@@ -113,12 +110,9 @@ void SaveEffectManagerConfig()
 
 void RemoveEffectManagerConfig()
 {
-    RemoveJSONFile(EFFECTS_CONFIG_FILE);
-
-    std::lock_guard renderPause(g_render_mutex);
-    #if USE_HUB75
-        HUB75GFX::WaitForMatrixSwap();
-    #endif
+    std::lock_guard filesystemGuard(JSONFilesystemWriteMutex());
+    WaitForRenderSwapBeforeFilesystemWrite();
+    SPIFFS.remove(EFFECTS_CONFIG_FILE);
     SPIFFS.remove(CURRENT_EFFECT_CONFIG_FILE);
 }
 
@@ -127,11 +121,8 @@ void WriteCurrentEffectIndexFile()
     // Capture the current effect index without holding g_render_mutex to avoid nested lock order issues.
     size_t currentIndex = g_ptrSystem->GetEffectManager().GetCurrentEffectIndex();
 
-    std::lock_guard renderPause(g_render_mutex);
-
-    #if USE_HUB75
-        HUB75GFX::WaitForMatrixSwap();
-    #endif
+    std::lock_guard filesystemGuard(JSONFilesystemWriteMutex());
+    WaitForRenderSwapBeforeFilesystemWrite();
 
     SPIFFS.remove(CURRENT_EFFECT_CONFIG_FILE);
 
