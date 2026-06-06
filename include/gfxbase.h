@@ -72,8 +72,8 @@
 #include <mutex>
 
 #include "Adafruit_GFX.h"
-#include "pixeltypes.h"
 #include "crgbw.h"
+#include "pixeltypes.h"
 
 // Calculates a weight for anti-aliasing in Wu's algorithm.
 constexpr static inline uint8_t WU_WEIGHT(uint8_t a, uint8_t b)

@@ -4,6 +4,10 @@ import os
 import re
 import sys
 
+
+def to_posix(path):
+    return path.replace('\\', '/')
+
 def audit_directory(dir_path):
     violations = []
 
@@ -12,8 +16,9 @@ def audit_directory(dir_path):
     re_if = re.compile(r'^\s*#\s*(if|ifdef|ifndef).*\b(USE_|ENABLE_|SHOW_|M5|TFT|WROVER|TTGO|ELECROW|AMOLED_S3|ARDUINO_HELTEC)\b.*')
 
     for root, dirs, files in os.walk(dir_path):
+        root_posix = to_posix(root)
         # Skip include/effects as they are leaf nodes that inherit globals.h from parents
-        if 'include/effects' in root:
+        if '/include/effects' in root_posix or '/src/uzlib' in root_posix or '/.pio' in root_posix:
             continue
 
         for file in files:
@@ -32,7 +37,7 @@ def audit_directory(dir_path):
                 for line_no, line in enumerate(f, 1):
                     if '#pragma once' in line:
                         pragma_once_count += 1
-                    
+
                     if re_globals.match(line):
                         if globals_line == -1:
                             globals_line = line_no

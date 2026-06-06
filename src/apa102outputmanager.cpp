@@ -19,8 +19,8 @@
 
 #include <algorithm>
 #include <cstring>
-#include <esp_heap_caps.h>
 #include <driver/spi_common.h>
+#include <esp_heap_caps.h>
 
 #include "gfxbase.h"
 #include "pixelformat.h"

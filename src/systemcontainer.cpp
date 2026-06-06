@@ -28,18 +28,18 @@
 //---------------------------------------------------------------------------
 
 #include "globals.h"
-#include "audioservice.h"
 #include "audioserialbridge.h"
+#include "audioservice.h"
 #include "colorstreamerservice.h"
 #include "debugconsole.h"
 #include "deviceconfig.h"
-#include "renderservice.h"
 #include "effectmanager.h"
 #include "gfxbase.h"
 #include "jsonserializer.h"
 #include "ledbuffer.h"
 #include "nd_network.h"
 #include "remotecontrol.h"
+#include "renderservice.h"
 #include "screen.h"
 #include "socketserver.h"
 #include "systemcontainer.h"
@@ -47,8 +47,8 @@
 #include "webserver.h"
 #include "websocketserver.h"
 #if USE_STRIP
-#include "ws281xgfx.h"
 #include "stripoutputmanager.h"
+#include "ws281xgfx.h"
 #endif
 #if USE_WS281X
 #include "ws281xoutputmanager.h"

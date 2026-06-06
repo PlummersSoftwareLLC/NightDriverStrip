@@ -212,7 +212,7 @@ bool CWebServer::EnsureDeviceSettingSpecsJson()
 {
     std::lock_guard guard(g_settingSpecsCacheMutex);
 
-    if (deviceSettingSpecsJson.length() > 0)
+    if (_deviceSettingSpecsJson.length() > 0)
         return true;
 
     String json;
@@ -221,8 +221,8 @@ bool CWebServer::EnsureDeviceSettingSpecsJson()
         return false;
     }
 
-    deviceSettingSpecsJson = json;
-    debugI("WebServer: cached device setting specs JSON (%zu bytes).", (size_t)deviceSettingSpecsJson.length());
+    _deviceSettingSpecsJson = json;
+    debugI("WebServer: cached device setting specs JSON (%zu bytes).", (size_t)_deviceSettingSpecsJson.length());
     return true;
 }
 
@@ -230,9 +230,9 @@ const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceS
 {
     std::lock_guard guard(g_settingSpecsCacheMutex);
 
-    if (deviceSettingSpecs.empty())
+    if (_deviceSettingSpecs.empty())
     {
-        mySettingSpecs.push_back(SettingSpec::Validate(SettingSpec{
+        _mySettingSpecs.push_back(SettingSpec::Validate(SettingSpec{
             .Name                = "effectInterval",
             .FriendlyName        = "Effect interval",
             .Description         = "The duration in milliseconds that an individual effect runs, before the next effect is activated. "
@@ -247,13 +247,13 @@ const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceS
             .IntervalUnitLabel   = "seconds"
         }));
 
-        deviceSettingSpecs.insert(deviceSettingSpecs.end(), mySettingSpecs.begin(), mySettingSpecs.end());
+        _deviceSettingSpecs.insert(_deviceSettingSpecs.end(), _mySettingSpecs.begin(), _mySettingSpecs.end());
 
         auto deviceConfigSpecs = g_ptrSystem->GetDeviceConfig().GetSettingSpecs();
-        deviceSettingSpecs.insert(deviceSettingSpecs.end(), deviceConfigSpecs.begin(), deviceConfigSpecs.end());
+        _deviceSettingSpecs.insert(_deviceSettingSpecs.end(), deviceConfigSpecs.begin(), deviceConfigSpecs.end());
     }
 
-    return deviceSettingSpecs;
+    return _deviceSettingSpecs;
 }
 
 void CWebServer::GetSettingSpecs(AsyncWebServerRequest * pRequest)
@@ -265,8 +265,8 @@ void CWebServer::GetSettingSpecs(AsyncWebServerRequest * pRequest)
     }
 
     auto response = pRequest->beginResponse(HttpOk, "application/json",
-        reinterpret_cast<const uint8_t*>(deviceSettingSpecsJson.c_str()),
-        deviceSettingSpecsJson.length());
+        reinterpret_cast<const uint8_t*>(_deviceSettingSpecsJson.c_str()),
+        _deviceSettingSpecsJson.length());
     AddCORSHeaderAndSendResponse(pRequest, response);
 }
 
@@ -469,8 +469,8 @@ void CWebServer::ValidateAndSetSetting(AsyncWebServerRequest * pRequest)
         return;
     }
 
-    auto validator = settingValidators.find(paramName);
-    if (validator != settingValidators.end())
+    auto validator = _settingValidators.find(paramName);
+    if (validator != _settingValidators.end())
     {
         const String &paramValue = pRequest->getParam(paramName, true)->value();
         bool isValid;

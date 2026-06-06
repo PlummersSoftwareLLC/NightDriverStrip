@@ -35,8 +35,8 @@
 #if ENABLE_WIFI
     #include <algorithm>
     #include <ArduinoOTA.h>
-    #include <ESPmDNS.h>
     #include <esp_wifi.h>
+    #include <ESPmDNS.h>
     #include <iterator>
     #include <limits>
     #include <mutex>

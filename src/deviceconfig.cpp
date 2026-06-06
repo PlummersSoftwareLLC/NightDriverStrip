@@ -30,10 +30,10 @@
 
 #include "globals.h"
 
-#include <HTTPClient.h>
 #include <algorithm>
 #include <array>
 #include <driver/gpio.h>
+#include <HTTPClient.h>
 #include <memory>
 #include <optional>
 #include <UrlEncode.h>

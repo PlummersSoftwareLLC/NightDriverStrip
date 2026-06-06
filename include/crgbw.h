@@ -36,8 +36,10 @@
 //
 //---------------------------------------------------------------------------
 
-#include <cstdint>
+#include "globals.h"
+
 #include <algorithm>
+#include <cstdint>
 
 struct CRGBW
 {

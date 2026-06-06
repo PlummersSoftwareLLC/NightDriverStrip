@@ -102,30 +102,32 @@ extern const uint8_t thunderstorm_night_end[]       asm("_binary_assets_bmp_thun
 
 static constexpr auto pszDaysOfWeek = to_array( { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" } );
 
-// This lookup table is tiny and constructed during global initialization, before the system has
-// completed its normal startup path. Keep it on the regular heap so boot does not depend on PSRAM.
-
-static std::map<const String, EmbeddedFile> weatherIcons =
+inline const std::map<const String, EmbeddedFile>& WeatherIcons()
 {
-    { "01d", EmbeddedFile(clearsky_start, clearsky_end) },
-    { "02d", EmbeddedFile(fewclouds_start, fewclouds_end) },
-    { "03d", EmbeddedFile(scatteredclouds_start, scatteredclouds_end) },
-    { "04d", EmbeddedFile(brokenclouds_start, brokenclouds_end) },
-    { "09d", EmbeddedFile(showerrain_start, showerrain_end) },
-    { "10d", EmbeddedFile(rain_start, rain_end) },
-    { "11d", EmbeddedFile(thunderstorm_start, thunderstorm_end) },
-    { "13d", EmbeddedFile(snow_start, snow_end) },
-    { "50d", EmbeddedFile(mist_start, mist_end) },
-    { "01n", EmbeddedFile(clearsky_night_start, clearsky_night_end) },
-    { "02n", EmbeddedFile(fewclouds_night_start, fewclouds_night_end) },
-    { "03n", EmbeddedFile(scatteredclouds_night_start, scatteredclouds_night_end) },
-    { "04n", EmbeddedFile(brokenclouds_night_start, brokenclouds_night_end) },
-    { "09n", EmbeddedFile(showerrain_night_start, showerrain_night_end) },
-    { "10n", EmbeddedFile(rain_night_start, rain_night_end) },
-    { "11n", EmbeddedFile(thunderstorm_night_start, thunderstorm_night_end) },
-    { "13n", EmbeddedFile(snow_night_start, snow_night_end) },
-    { "50n", EmbeddedFile(mist_night_start, mist_night_end) }
-};
+    static const std::map<const String, EmbeddedFile> weatherIcons =
+    {
+        { "01d", EmbeddedFile(clearsky_start, clearsky_end) },
+        { "02d", EmbeddedFile(fewclouds_start, fewclouds_end) },
+        { "03d", EmbeddedFile(scatteredclouds_start, scatteredclouds_end) },
+        { "04d", EmbeddedFile(brokenclouds_start, brokenclouds_end) },
+        { "09d", EmbeddedFile(showerrain_start, showerrain_end) },
+        { "10d", EmbeddedFile(rain_start, rain_end) },
+        { "11d", EmbeddedFile(thunderstorm_start, thunderstorm_end) },
+        { "13d", EmbeddedFile(snow_start, snow_end) },
+        { "50d", EmbeddedFile(mist_start, mist_end) },
+        { "01n", EmbeddedFile(clearsky_night_start, clearsky_night_end) },
+        { "02n", EmbeddedFile(fewclouds_night_start, fewclouds_night_end) },
+        { "03n", EmbeddedFile(scatteredclouds_night_start, scatteredclouds_night_end) },
+        { "04n", EmbeddedFile(brokenclouds_night_start, brokenclouds_night_end) },
+        { "09n", EmbeddedFile(showerrain_night_start, showerrain_night_end) },
+        { "10n", EmbeddedFile(rain_night_start, rain_night_end) },
+        { "11n", EmbeddedFile(thunderstorm_night_start, thunderstorm_night_end) },
+        { "13n", EmbeddedFile(snow_night_start, snow_night_end) },
+        { "50n", EmbeddedFile(mist_night_start, mist_night_end) }
+    };
+
+    return weatherIcons;
+}
 
 /**
  * @brief This class implements the Weather Data effect
@@ -635,6 +637,7 @@ public:
         g().fillRect(0, 0, screenWidth, 9, g().to16bit(CRGB(0,0,128)));
 
         // Draw the graphics
+        const auto& weatherIcons = WeatherIcons();
         auto iconEntry = weatherIcons.find(displayIconToday);
         if (iconEntry != weatherIcons.end())
         {

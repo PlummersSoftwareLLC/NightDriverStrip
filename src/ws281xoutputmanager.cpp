@@ -23,9 +23,9 @@
 #include <algorithm>
 #include <cstdint>
 
+#include <esp_err.h>
 #include <esp_heap_caps.h>
 #include <esp_idf_version.h>
-#include <esp_err.h>
 #include <esp_task_wdt.h>
 
 // Two RMT backends, picked at compile time. On IDF 4.x (Arduino-ESP32 2.x)

@@ -34,16 +34,16 @@
 
 #include "webserver.h"
 
-#include <AsyncJson.h>
-#include <FS.h>
 #include <algorithm>
+#include <AsyncJson.h>
 #include <cstdlib>
+#include <FS.h>
 #include <limits>
 #include <utility>
 
 #include "deviceconfig.h"
-#include "effects.h"
 #include "effectmanager.h"
+#include "effects.h"
 #include "gfxbase.h"
 #include "improvserial.h"
 #include "soundanalyzer.h"
@@ -51,21 +51,6 @@
 #include "taskmgr.h"
 #include "values.h"
 #include "websocketserver.h"   // Stop() tears down our websocket clients first
-
-// Static member initializers
-
-// Maps settings for which a validator is available to the invocation thereof
-const std::map<String, CWebServer::ValueValidator> CWebServer::settingValidators
-{
-    { DeviceConfig::OpenWeatherApiKeyTag, [](const String& value) { return g_ptrSystem->GetDeviceConfig().ValidateOpenWeatherAPIKey(value); } },
-    { DeviceConfig::PowerLimitTag,        [](const String& value) { return g_ptrSystem->GetDeviceConfig().ValidatePowerLimit(value); } },
-    { DeviceConfig::BrightnessTag,        [](const String& value) { return g_ptrSystem->GetDeviceConfig().ValidateBrightness(value); } },
-    { DeviceConfig::AudioInputPinTag,     [](const String& value) { return g_ptrSystem->GetDeviceConfig().ValidateAudioInputPin(value.toInt()); } }
-};
-
-std::vector<SettingSpec, psram_allocator<SettingSpec>> CWebServer::mySettingSpecs = {};
-std::vector<std::reference_wrapper<SettingSpec>> CWebServer::deviceSettingSpecs{};
-String CWebServer::deviceSettingSpecsJson{};
 
 // Member function template specializations
 
@@ -111,11 +96,21 @@ bool CWebServer::PushPostParamIfPresent<CRGB>(const AsyncWebServerRequest * pReq
 
 // Add CORS header to and send JSON response
 template<>
-void CWebServer::AddCORSHeaderAndSendResponse<AsyncJsonResponse>(AsyncWebServerRequest * pRequest, AsyncJsonResponse * pResponse)
+void CWebServer::AddCORSHeaderAndSendResponse<AsyncJsonResponse>(AsyncWebServerRequest * pRequest, AsyncJsonResponse * pResponse) const
 {
     pResponse->setLength();
     AddCORSHeaderAndSendResponse<AsyncWebServerResponse>(pRequest, pResponse);
 }
+
+CWebServer::CWebServer()
+        : _server(NetworkPort::Webserver), _staticStats(),
+            _settingValidators({
+                { DeviceConfig::OpenWeatherApiKeyTag, [](const String& value) { return g_ptrSystem->GetDeviceConfig().ValidateOpenWeatherAPIKey(value); } },
+                { DeviceConfig::PowerLimitTag,        [](const String& value) { return g_ptrSystem->GetDeviceConfig().ValidatePowerLimit(value); } },
+                { DeviceConfig::BrightnessTag,        [](const String& value) { return g_ptrSystem->GetDeviceConfig().ValidateBrightness(value); } },
+                { DeviceConfig::AudioInputPinTag,     [](const String& value) { return g_ptrSystem->GetDeviceConfig().ValidateAudioInputPin(value.toInt()); } }
+            })
+{}
 
 // Member function implementations
 
@@ -220,40 +215,40 @@ void CWebServer::begin()
     _server.on("/getStatistics",         HTTP_GET,  [this](AsyncWebServerRequest* pRequest)
                                                     { this->GetStatistics(pRequest); });
 
-    // Static handler requests
+    // Instance handler requests
 
-    _server.on("/effects",               HTTP_GET,  GetEffectListText);
-    _server.on("/getEffectList",         HTTP_GET,  GetEffectListText);
-    _server.on("/nextEffect",            HTTP_POST, NextEffect);
-    _server.on("/previousEffect",        HTTP_POST, PreviousEffect);
+    _server.on("/effects",               HTTP_GET,  [this](AsyncWebServerRequest* pRequest) { this->GetEffectListText(pRequest); });
+    _server.on("/getEffectList",         HTTP_GET,  [this](AsyncWebServerRequest* pRequest) { this->GetEffectListText(pRequest); });
+    _server.on("/nextEffect",            HTTP_POST, [this](AsyncWebServerRequest* pRequest) { this->NextEffect(pRequest); });
+    _server.on("/previousEffect",        HTTP_POST, [this](AsyncWebServerRequest* pRequest) { this->PreviousEffect(pRequest); });
 
-    _server.on("/currentEffect",         HTTP_POST, SetCurrentEffectIndex);
-    _server.on("/setCurrentEffectIndex", HTTP_POST, SetCurrentEffectIndex);
-    _server.on("/enableEffect",          HTTP_POST, EnableEffect);
-    _server.on("/disableEffect",         HTTP_POST, DisableEffect);
-    _server.on("/moveEffect",            HTTP_POST, MoveEffect);
-    _server.on("/copyEffect",            HTTP_POST, CopyEffect);
-    _server.on("/deleteEffect",          HTTP_POST, DeleteEffect);
+    _server.on("/currentEffect",         HTTP_POST, [this](AsyncWebServerRequest* pRequest) { this->SetCurrentEffectIndex(pRequest); });
+    _server.on("/setCurrentEffectIndex", HTTP_POST, [this](AsyncWebServerRequest* pRequest) { this->SetCurrentEffectIndex(pRequest); });
+    _server.on("/enableEffect",          HTTP_POST, [this](AsyncWebServerRequest* pRequest) { this->EnableEffect(pRequest); });
+    _server.on("/disableEffect",         HTTP_POST, [this](AsyncWebServerRequest* pRequest) { this->DisableEffect(pRequest); });
+    _server.on("/moveEffect",            HTTP_POST, [this](AsyncWebServerRequest* pRequest) { this->MoveEffect(pRequest); });
+    _server.on("/copyEffect",            HTTP_POST, [this](AsyncWebServerRequest* pRequest) { this->CopyEffect(pRequest); });
+    _server.on("/deleteEffect",          HTTP_POST, [this](AsyncWebServerRequest* pRequest) { this->DeleteEffect(pRequest); });
 
-    _server.on("/settings/effect/specs", HTTP_GET,  GetEffectSettingSpecs);
-    _server.on("/settings/effect",       HTTP_GET,  GetEffectSettings);
-    _server.on("/settings/effect",       HTTP_POST, SetEffectSettings);
-    _server.on("/settings/validated",    HTTP_POST, ValidateAndSetSetting);
-    _server.on("/settings/specs",        HTTP_GET,  GetSettingSpecs);
-    _server.on("/settings",              HTTP_GET,  GetSettings);
-    _server.on("/settings",              HTTP_POST, SetSettings);
-    _server.on("/api/v1/settings/schema",HTTP_GET,  GetUnifiedSettingsSchema);
-    _server.on("/api/v1/settings",       HTTP_GET,  GetUnifiedSettings);
+    _server.on("/settings/effect/specs", HTTP_GET,  [this](AsyncWebServerRequest* pRequest) { this->GetEffectSettingSpecs(pRequest); });
+    _server.on("/settings/effect",       HTTP_GET,  [this](AsyncWebServerRequest* pRequest) { this->GetEffectSettings(pRequest); });
+    _server.on("/settings/effect",       HTTP_POST, [this](AsyncWebServerRequest* pRequest) { this->SetEffectSettings(pRequest); });
+    _server.on("/settings/validated",    HTTP_POST, [this](AsyncWebServerRequest* pRequest) { this->ValidateAndSetSetting(pRequest); });
+    _server.on("/settings/specs",        HTTP_GET,  [this](AsyncWebServerRequest* pRequest) { this->GetSettingSpecs(pRequest); });
+    _server.on("/settings",              HTTP_GET,  [this](AsyncWebServerRequest* pRequest) { this->GetSettings(pRequest); });
+    _server.on("/settings",              HTTP_POST, [this](AsyncWebServerRequest* pRequest) { this->SetSettings(pRequest); });
+    _server.on("/api/v1/settings/schema",HTTP_GET,  [this](AsyncWebServerRequest* pRequest) { this->GetUnifiedSettingsSchema(pRequest); });
+    _server.on("/api/v1/settings",       HTTP_GET,  [this](AsyncWebServerRequest* pRequest) { this->GetUnifiedSettings(pRequest); });
 
     auto* settingsHandler = new AsyncCallbackJsonWebHandler("/api/v1/settings",
-        [](AsyncWebServerRequest* pRequest, JsonVariant& json)
+        [this](AsyncWebServerRequest* pRequest, JsonVariant& json)
         {
-            SetUnifiedSettings(pRequest, json.as<JsonVariantConst>());
+            this->SetUnifiedSettings(pRequest, json.as<JsonVariantConst>());
         });
     settingsHandler->setMethod(HTTP_POST);
     _server.addHandler(settingsHandler);
 
-    _server.on("/reset",                 HTTP_POST, Reset);
+    _server.on("/reset",                 HTTP_POST, [this](AsyncWebServerRequest* pRequest) { this->Reset(pRequest); });
 
     // Embedded file requests
 
