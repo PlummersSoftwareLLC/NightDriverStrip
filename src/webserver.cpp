@@ -122,6 +122,7 @@ void CWebServer::AddCORSHeaderAndSendResponse<AsyncJsonResponse>(AsyncWebServerR
 // IService::Start - delegates to begin(). begin() does the heavy lifting of
 // registering route handlers and calling AsyncWebServer::begin(); Start just
 // sets the running flag and reports the result.
+
 bool CWebServer::Start()
 {
     if (_running.load())

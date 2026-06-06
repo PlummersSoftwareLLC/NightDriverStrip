@@ -1000,17 +1000,16 @@ ITaskService::TaskConfig ColorStreamerService::GetTaskConfig() const
 
 void IRAM_ATTR ColorStreamerService::Run()
 {
-    // Preview cadence is naturally bounded by the render task's frame rate
-    // (CheckAndClearNewFrameAvailable gates each send on a fresh frame). The
-    // transports themselves handle backpressure: SendColorData skips when
-    // availableForWriteAll() is false, and the raw TCP path returns Failed
-    // when the socket buffer is full. So no artificial fps cap here; we send
-    // every frame the renderer produces as long as the client can keep up.
+    // Preview cadence is naturally bounded by the render task's frame rate.
+    // The frame listener below wakes this task immediately for each rendered
+    // frame, so there is no polling sleep or preview-specific fps cap in the
+    // device-side streamer. The transports handle backpressure: SendColorData
+    // skips when availableForWriteAll() is false, and the raw TCP path returns
+    // Failed when the socket buffer is full.
 
     LEDViewer _viewer(NetworkPort::ColorServer);
     int       socket = -1;
     bool      wsListenersPresent = false;
-    BaseFrameEventListener frameEventListener;
     auto previewPacket = make_unique_psram<ColorDataPacket>();
 
     auto &effectManager = g_ptrSystem->GetEffectManager();
@@ -1018,6 +1017,36 @@ void IRAM_ATTR ColorStreamerService::Run()
     auto *webSocketServer =
         (g_ptrSystem && g_ptrSystem->HasWebSocketServer()) ? &g_ptrSystem->GetWebSocketServer() : nullptr;
 #endif
+
+    struct NotifyingFrameEventListener : public IFrameEventListener
+    {
+        explicit NotifyingFrameEventListener(TaskHandle_t taskHandle)
+            : _taskHandle(taskHandle)
+        {
+        }
+
+        void OnNewFrameAvailable() override
+        {
+            _newFrameAvailable.store(true);
+            if (_wakeEnabled.load() && _taskHandle != nullptr)
+                xTaskNotifyGive(_taskHandle);
+        }
+
+        bool CheckAndClearNewFrameAvailable()
+        {
+            return _newFrameAvailable.exchange(false);
+        }
+
+        void SetWakeEnabled(bool enabled)
+        {
+            _wakeEnabled.store(enabled);
+        }
+
+      private:
+        TaskHandle_t _taskHandle = nullptr;
+        std::atomic_bool _wakeEnabled{false};
+        std::atomic_bool _newFrameAvailable{false};
+    } frameEventListener(xTaskGetCurrentTaskHandle());
 
     effectManager.AddFrameEventListener(frameEventListener);
 
@@ -1067,10 +1096,11 @@ void IRAM_ATTR ColorStreamerService::Run()
 #else
         wsListenersPresent = false;
 #endif
+        const auto previewActive = (socket >= 0) || wsListenersPresent;
+        frameEventListener.SetWakeEnabled(previewActive);
 
         if (frameEventListener.CheckAndClearNewFrameAvailable() && leds != nullptr)
         {
-            const auto previewActive = (socket >= 0) || wsListenersPresent;
             if (previewActive)
             {
                 previewPacket->header = COLOR_DATA_PACKET_HEADER;
@@ -1108,9 +1138,9 @@ void IRAM_ATTR ColorStreamerService::Run()
         }
 
         if (socket >= 0 || wsListenersPresent)
-            delay(10);
+            ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(100));
         else
-            delay(1000);
+            ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(1000));
     }
 
     if (socket >= 0)
