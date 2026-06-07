@@ -117,6 +117,7 @@ CWebServer::CWebServer()
 // IService::Start - delegates to begin(). begin() does the heavy lifting of
 // registering route handlers and calling AsyncWebServer::begin(); Start just
 // sets the running flag and reports the result.
+
 bool CWebServer::Start()
 {
     if (_running.load())
@@ -320,6 +321,7 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest, StatisticsType 
     const auto activeWidth    = g_ptrSystem->HasEffectManager() ? g_ptrSystem->GetEffectManager().g().GetMatrixWidth() : deviceConfig.GetMatrixWidth();
     const auto activeHeight   = g_ptrSystem->HasEffectManager() ? g_ptrSystem->GetEffectManager().g().GetMatrixHeight() : deviceConfig.GetMatrixHeight();
     const auto activeLEDCount = g_ptrSystem->HasEffectManager() ? g_ptrSystem->GetEffectManager().g().GetLEDCount() : deviceConfig.GetActiveLEDCount();
+    const auto activeSerpentine = g_ptrSystem->HasEffectManager() ? g_ptrSystem->GetEffectManager().g().IsSerpentine() : deviceConfig.IsMatrixSerpentine();
 
     if ((statsType & StatisticsType::Static) != StatisticsType::None)
     {
@@ -327,9 +329,11 @@ void CWebServer::GetStatistics(AsyncWebServerRequest * pRequest, StatisticsType 
         j["MATRIX_HEIGHT"]              = MATRIX_HEIGHT;
         j["CONFIGURED_MATRIX_WIDTH"]    = deviceConfig.GetMatrixWidth();
         j["CONFIGURED_MATRIX_HEIGHT"]   = deviceConfig.GetMatrixHeight();
+        j["CONFIGURED_MATRIX_SERPENTINE"] = deviceConfig.IsMatrixSerpentine();
         j["CONFIGURED_NUM_LEDS"]        = deviceConfig.GetActiveLEDCount();
         j["ACTIVE_MATRIX_WIDTH"]        = activeWidth;
         j["ACTIVE_MATRIX_HEIGHT"]       = activeHeight;
+        j["ACTIVE_MATRIX_SERPENTINE"]   = activeSerpentine;
         j["ACTIVE_NUM_LEDS"]            = activeLEDCount;
         j["COMPILED_NUM_LEDS"]          = DeviceConfig::GetCompiledLEDCount();
         j["COMPILED_NUM_CHANNELS"]      = DeviceConfig::GetCompiledChannelCount();

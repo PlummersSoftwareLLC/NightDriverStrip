@@ -99,7 +99,10 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
       latestFrame: null,
       dirty: false,
       animationFrameId: 0,
-      lastRenderMs: 0,
+      receivedFrames: 0,
+      receivedBytes: 0,
+      renderedFrames: 0,
+      lastMetricsMs: 0,
       shouldReconnect: false,
       reconnectTimer: null
     },
@@ -1601,7 +1604,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     socket.binaryType = "arraybuffer";
     socket.onopen = function () {
       state.preview.connected = true;
-      state.preview.lastRenderMs = 0;
+      resetPreviewMetrics();
       if (state.preview.reconnectTimer) {
         window.clearTimeout(state.preview.reconnectTimer);
         state.preview.reconnectTimer = null;
@@ -1616,7 +1619,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
       state.preview.frame = null;
       state.preview.latestFrame = null;
       state.preview.dirty = false;
-      state.preview.lastRenderMs = 0;
+      resetPreviewMetrics();
       stopPreviewRenderLoop();
       els.previewStatus.textContent = state.preview.shouldReconnect ? "Preview reconnecting..." : "Preview offline";
       refreshPreviewVisibility();
@@ -1628,7 +1631,10 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     socket.onmessage = function (event) {
       try {
         state.preview.latestFrame = new Uint8Array(event.data);
+        state.preview.receivedFrames += 1;
+        state.preview.receivedBytes += state.preview.latestFrame.length;
         state.preview.dirty = true;
+        updatePreviewMetrics();
         refreshPreviewVisibility();
         ensurePreviewRenderLoop();
       } catch (error) {
@@ -1652,7 +1658,7 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     state.preview.frame = null;
     state.preview.latestFrame = null;
     state.preview.dirty = false;
-    state.preview.lastRenderMs = 0;
+    resetPreviewMetrics();
     stopPreviewRenderLoop();
     els.previewStatus.textContent = "Preview offline";
     refreshPreviewVisibility();
@@ -1688,24 +1694,44 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     state.preview.animationFrameId = 0;
   }
 
-  function runPreviewRenderLoop(timestamp) {
-    const frameIntervalMs = 1000 / 30;
+  function runPreviewRenderLoop() {
     state.preview.animationFrameId = 0;
 
     if (!state.preview.connected) {
       return;
     }
 
-    if (state.preview.dirty && timestamp - state.preview.lastRenderMs >= frameIntervalMs) {
+    if (state.preview.dirty) {
       state.preview.frame = state.preview.latestFrame;
       state.preview.dirty = false;
-      state.preview.lastRenderMs = timestamp;
       drawPreviewFrame();
     }
+  }
 
-    if (state.preview.dirty) {
-      ensurePreviewRenderLoop();
+  function resetPreviewMetrics() {
+    state.preview.receivedFrames = 0;
+    state.preview.receivedBytes = 0;
+    state.preview.renderedFrames = 0;
+    state.preview.lastMetricsMs = performance.now();
+  }
+
+  function updatePreviewMetrics() {
+    if (!state.preview.connected) {
+      return;
     }
+
+    const now = performance.now();
+    const elapsedMs = now - state.preview.lastMetricsMs;
+    if (elapsedMs < 1000) {
+      return;
+    }
+
+    const elapsedSeconds = elapsedMs / 1000;
+    const receiveFps = state.preview.receivedFrames / elapsedSeconds;
+    const renderFps = state.preview.renderedFrames / elapsedSeconds;
+    const kibPerSecond = state.preview.receivedBytes / 1024 / elapsedSeconds;
+    els.previewStatus.textContent = `Preview connected - recv ${receiveFps.toFixed(1)} fps, draw ${renderFps.toFixed(1)} fps, ${kibPerSecond.toFixed(1)} KiB/s`;
+    resetPreviewMetrics();
   }
 
   function drawPreviewFrame() {
@@ -1721,29 +1747,60 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
     const width = metrics.width;
     const height = metrics.height;
     const dpr = window.devicePixelRatio || 1;
+    const canvasDisplayWidth = `${metrics.displayWidth}px`;
+    const canvasDisplayHeight = `${metrics.displayHeight}px`;
+    const canvasPixelWidth = Math.max(1, Math.round(metrics.displayWidth * dpr));
+    const canvasPixelHeight = Math.max(1, Math.round(metrics.displayHeight * dpr));
     canvas.classList.toggle("preview-canvas-thin", metrics.displayHeight <= 12);
-    canvas.style.width = `${metrics.displayWidth}px`;
-    canvas.style.height = `${metrics.displayHeight}px`;
-    canvas.width = Math.max(1, Math.round(metrics.displayWidth * dpr));
-    canvas.height = Math.max(1, Math.round(metrics.displayHeight * dpr));
+    if (canvas.style.width !== canvasDisplayWidth) {
+      canvas.style.width = canvasDisplayWidth;
+    }
+    if (canvas.style.height !== canvasDisplayHeight) {
+      canvas.style.height = canvasDisplayHeight;
+    }
+    if (canvas.width !== canvasPixelWidth) {
+      canvas.width = canvasPixelWidth;
+    }
+    if (canvas.height !== canvasPixelHeight) {
+      canvas.height = canvasPixelHeight;
+    }
 
     const ctx = canvas.getContext("2d");
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, metrics.displayWidth, metrics.displayHeight);
     ctx.imageSmoothingEnabled = false;
 
-    let offset = 0;
+    const serpentine = getPreviewSerpentine();
     for (let y = 0; y < height; y += 1) {
       const top = y * metrics.pixelHeight;
       for (let x = 0; x < width; x += 1) {
+        const offset = getPreviewFrameOffset(x, y, width, height, serpentine);
         const red = frame[offset] || 0;
         const green = frame[offset + 1] || 0;
         const blue = frame[offset + 2] || 0;
-        offset += 3;
         ctx.fillStyle = `rgb(${red}, ${green}, ${blue})`;
         ctx.fillRect(x * metrics.pixelWidth, top, metrics.pixelWidth, metrics.pixelHeight);
       }
     }
+
+    state.preview.renderedFrames += 1;
+    updatePreviewMetrics();
+  }
+
+  function getPreviewSerpentine() {
+    const staticStats = state.staticStats || {};
+    if (staticStats.ACTIVE_MATRIX_SERPENTINE !== undefined) {
+      return !!staticStats.ACTIVE_MATRIX_SERPENTINE;
+    }
+    if (staticStats.CONFIGURED_MATRIX_SERPENTINE !== undefined) {
+      return !!staticStats.CONFIGURED_MATRIX_SERPENTINE;
+    }
+    return true;
+  }
+
+  function getPreviewFrameOffset(x, y, width, height, serpentine) {
+    const sourceY = serpentine && x % 2 === 1 ? height - 1 - y : y;
+    return (x * height + sourceY) * 3;
   }
 
   function getPreviewDisplayMetrics() {

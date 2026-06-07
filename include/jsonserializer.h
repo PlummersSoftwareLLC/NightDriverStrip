@@ -87,6 +87,8 @@ bool BoolFromText(const String& text);
 bool LoadJSONFile(const String & fileName, JsonDocument& jsonDoc);
 bool SaveToJSONFile(const String & fileName, IJSONSerializable& object);
 bool RemoveJSONFile(const String & fileName);
+std::mutex& JSONFilesystemWriteMutex();
+void WaitForRenderSwapBeforeFilesystemWrite();
 
 namespace FieldAccess
 {

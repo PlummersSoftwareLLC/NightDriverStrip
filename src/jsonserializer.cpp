@@ -43,6 +43,11 @@
 #include "hub75gfx.h"
 #endif
 
+namespace
+{
+    std::mutex l_jsonFilesystemWriteMutex;
+}
+
 #if USE_PSRAM
 
     struct JsonPsramAllocator : ArduinoJson::Allocator
@@ -347,11 +352,8 @@ bool SaveToJSONFile(const String & fileName, IJSONSerializable& object)
         return false;
     }
 
-    std::lock_guard renderPause(g_render_mutex);
-
-    #if USE_HUB75
-        HUB75GFX::WaitForMatrixSwap();
-    #endif
+    WaitForRenderSwapBeforeFilesystemWrite();
+    std::lock_guard filesystemGuard(JSONFilesystemWriteMutex());
 
     SPIFFS.remove(fileName);
 
@@ -382,11 +384,24 @@ bool SaveToJSONFile(const String & fileName, IJSONSerializable& object)
 
 bool RemoveJSONFile(const String & fileName)
 {
-    std::lock_guard renderPause(g_render_mutex);
+    WaitForRenderSwapBeforeFilesystemWrite();
+    std::lock_guard filesystemGuard(JSONFilesystemWriteMutex());
+    return SPIFFS.remove(fileName);
+}
+
+std::mutex& JSONFilesystemWriteMutex()
+{
+    return l_jsonFilesystemWriteMutex;
+}
+
+void WaitForRenderSwapBeforeFilesystemWrite()
+{
+    // SPIFFS remove/write/flush can take long enough to cause visible frame
+    // stalls if the JSON writer holds g_render_mutex. Wait for an active HUB75
+    // buffer swap to settle, but do not block the next render frame on file I/O.
     #if USE_HUB75
         HUB75GFX::WaitForMatrixSwap();
     #endif
-    return SPIFFS.remove(fileName);
 }
 
 size_t JSONWriter::RegisterWriter(const std::function<void()>& writer)
