@@ -110,8 +110,8 @@ void SaveEffectManagerConfig()
 
 void RemoveEffectManagerConfig()
 {
-    std::lock_guard filesystemGuard(JSONFilesystemWriteMutex());
     WaitForRenderSwapBeforeFilesystemWrite();
+    std::lock_guard filesystemGuard(JSONFilesystemWriteMutex());
     SPIFFS.remove(EFFECTS_CONFIG_FILE);
     SPIFFS.remove(CURRENT_EFFECT_CONFIG_FILE);
 }
