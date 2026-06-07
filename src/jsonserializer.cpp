@@ -384,8 +384,8 @@ bool SaveToJSONFile(const String & fileName, IJSONSerializable& object)
 
 bool RemoveJSONFile(const String & fileName)
 {
-    std::lock_guard filesystemGuard(JSONFilesystemWriteMutex());
     WaitForRenderSwapBeforeFilesystemWrite();
+    std::lock_guard filesystemGuard(JSONFilesystemWriteMutex());
     return SPIFFS.remove(fileName);
 }
 
