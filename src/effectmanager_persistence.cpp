@@ -121,8 +121,8 @@ void WriteCurrentEffectIndexFile()
     // Capture the current effect index without holding g_render_mutex to avoid nested lock order issues.
     size_t currentIndex = g_ptrSystem->GetEffectManager().GetCurrentEffectIndex();
 
-    std::lock_guard filesystemGuard(JSONFilesystemWriteMutex());
     WaitForRenderSwapBeforeFilesystemWrite();
+    std::lock_guard filesystemGuard(JSONFilesystemWriteMutex());
 
     SPIFFS.remove(CURRENT_EFFECT_CONFIG_FILE);
 
