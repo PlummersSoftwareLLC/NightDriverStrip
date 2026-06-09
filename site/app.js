@@ -1799,8 +1799,23 @@ $$$$$$$b   *u    ^$L            $$  $$$$$$$$$$$$u@       $$  d$$$$$$
   }
 
   function getPreviewFrameOffset(x, y, width, height, serpentine) {
+    const outputDriver = getPreviewOutputDriver();
+
+    // HUB75 frame buffers are row-major (y * width + x).
+    if (outputDriver === "hub75") {
+      return (y * width + x) * 3;
+    }
+
+    // WS281x and legacy preview behavior use column-major addressing with
+    // optional serpentine column reversal on odd columns.
     const sourceY = serpentine && x % 2 === 1 ? height - 1 - y : y;
     return (x * height + sourceY) * 3;
+  }
+
+  function getPreviewOutputDriver() {
+    const staticStats = state.staticStats || {};
+    const outputDriver = staticStats.ACTIVE_OUTPUT_DRIVER || staticStats.COMPILED_OUTPUT_DRIVER || "";
+    return String(outputDriver).trim().toLowerCase();
   }
 
   function getPreviewDisplayMetrics() {
