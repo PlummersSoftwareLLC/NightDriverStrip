@@ -204,6 +204,7 @@ bool DeviceConfig::SerializeToJSON(JsonObject& jsonObject, bool includeSensitive
     jsonDoc[UseCelsiusTag] = useCelsius;
     jsonDoc[NTPServerTag] = ntpServer;
     jsonDoc[RememberCurrentEffectTag] = rememberCurrentEffect;
+    jsonDoc[RemoteEffectButtonsResetIntervalTag] = remoteEffectButtonsResetInterval;
     jsonDoc[PowerLimitTag] = powerLimit;
     jsonDoc[PowerLimitDefaultTag] = POWER_LIMIT_DEFAULT;
     // Only serialize showVUMeter if the VU meter is enabled in the build
@@ -257,6 +258,7 @@ bool DeviceConfig::DeserializeFromJSON(const JsonObjectConst& jsonObject, bool s
     SetIfPresentIn(jsonObject, useCelsius, UseCelsiusTag);
     SetIfPresentIn(jsonObject, ntpServer, NTPServerTag);
     SetIfPresentIn(jsonObject, rememberCurrentEffect, RememberCurrentEffectTag);
+    SetIfPresentIn(jsonObject, remoteEffectButtonsResetInterval, RemoteEffectButtonsResetIntervalTag);
     if (jsonObject[PowerLimitTag].is<int>())
     {
         const int savedPowerLimit = jsonObject[PowerLimitTag].as<int>();
@@ -418,6 +420,11 @@ void DeviceConfig::SetNTPServer(const String &newNTPServer)
 void DeviceConfig::SetRememberCurrentEffect(bool newRememberCurrentEffect)
 {
     SetAndSave(rememberCurrentEffect, newRememberCurrentEffect);
+}
+
+void DeviceConfig::SetRemoteEffectButtonsResetInterval(bool newRemoteEffectButtonsResetInterval)
+{
+    SetAndSave(remoteEffectButtonsResetInterval, newRemoteEffectButtonsResetInterval);
 }
 
 SuccessResultWithMessage DeviceConfig::ValidateBrightness(int newBrightness)

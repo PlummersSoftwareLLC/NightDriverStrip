@@ -538,13 +538,13 @@ public:
         // flash/PSRAM cache is disabled. Remote input can tolerate dropped frames
         // during flash writes, so keep this interrupt out of the cache-disabled path.
 
-        if (rmt_driver_install(_channel, 1024, 0) != ESP_OK) 
+        if (rmt_driver_install(_channel, 1024, 0) != ESP_OK)
             return false;
-        
-        if (rmt_get_ringbuf_handle(_channel, &_ringbuf) != ESP_OK) 
+
+        if (rmt_get_ringbuf_handle(_channel, &_ringbuf) != ESP_OK)
             return false;
-        
-        if (rmt_rx_start(_channel, true) != ESP_OK) 
+
+        if (rmt_rx_start(_channel, true) != ESP_OK)
             return false;
 
         _begun = true;
@@ -945,7 +945,8 @@ void RemoteControl::handle()
     else if (IR_BPLUS == result)
     {
         debugI("Remote: Bright/Speed +");
-        effectManager.SetInterval(DEFAULT_EFFECT_INTERVAL, true);
+        if (deviceConfig.RemoteEffectButtonsResetInterval())
+            effectManager.SetInterval(DEFAULT_EFFECT_INTERVAL, true);
         if (deviceConfig.ApplyGlobalColors())
             effectManager.ClearRemoteColor();
         else
@@ -956,7 +957,8 @@ void RemoteControl::handle()
     else if (IR_BMINUS == result)
     {
         debugI("Remote: Bright/Speed -");
-        effectManager.SetInterval(DEFAULT_EFFECT_INTERVAL, true);
+        if (deviceConfig.RemoteEffectButtonsResetInterval())
+            effectManager.SetInterval(DEFAULT_EFFECT_INTERVAL, true);
         if (deviceConfig.ApplyGlobalColors())
             effectManager.ClearRemoteColor();
         else

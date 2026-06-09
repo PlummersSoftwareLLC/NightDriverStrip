@@ -213,6 +213,16 @@ const std::vector<std::reference_wrapper<SettingSpec>>& DeviceConfig::GetSetting
             .Section      = kSectionAppearance,
             .ApiPath      = "device.rememberCurrentEffect"
         }));
+        settingSpecs.push_back(SettingSpec::Validate(SettingSpec{
+            .Name         = RemoteEffectButtonsResetIntervalTag,
+            .FriendlyName = "Remote effect buttons reset interval",
+            .Description  = "When enabled, remote B+/B- effect changes force the effect interval back to the default rotation speed (60 seconds). "
+                            "Disable this to keep your configured interval, including 0 (no timeout), when changing effects with the remote.",
+            .Type         = SettingSpec::SettingType::Boolean,
+            .Section      = kSectionAppearance,
+            .Priority     = 101,
+            .ApiPath      = "device.remote.resetEffectInterval"
+        }));
 
         // ---- topology section ----------------------------------------------
         settingSpecs.push_back(SettingSpec::Validate(SettingSpec{

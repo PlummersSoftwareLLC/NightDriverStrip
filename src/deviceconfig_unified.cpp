@@ -143,10 +143,12 @@ void DeviceConfig::SerializeUnifiedSettings(JsonObject root) const
     auto remote = device["remote"].to<JsonObject>();
     remote["enabled"] = true;
     remote["pin"] = IR_REMOTE_PIN;
+    remote["resetEffectInterval"] = RemoteEffectButtonsResetInterval();
     #else
     auto remote = device["remote"].to<JsonObject>();
     remote["enabled"] = false;
     remote["pin"] = -1;
+    remote["resetEffectInterval"] = RemoteEffectButtonsResetInterval();
     #endif
 
     auto audio = device["audio"].to<JsonObject>();
@@ -261,6 +263,7 @@ void DeviceConfig::SerializeUnifiedSettingsSchema(JsonObject root) const
         false;
     #endif
     remote["pin"] = IR_REMOTE_PIN;
+    remote["defaultResetEffectInterval"] = true;
 
     auto audio = device["audio"].to<JsonObject>();
     audio["enabled"] =
@@ -435,6 +438,14 @@ SuccessResultWithMessage DeviceConfig::ParseAndValidateUnifiedSettings(JsonObjec
         FieldAccess::AssignIfPresent(device, UseCelsiusTag, out.useCelsius);
         FieldAccess::AssignIfPresent(device, NTPServerTag, out.ntpServer);
         FieldAccess::AssignIfPresent(device, RememberCurrentEffectTag, out.rememberCurrentEffect);
+        FieldAccess::AssignIfPresent(device, RemoteEffectButtonsResetIntervalTag, out.remoteEffectButtonsResetInterval);
+
+        if (device["remote"].is<JsonObjectConst>())
+        {
+            auto remote = device["remote"].as<JsonObjectConst>();
+            if (remote["resetEffectInterval"].is<bool>())
+                out.remoteEffectButtonsResetInterval = remote["resetEffectInterval"].as<bool>();
+        }
 
         if (device[OpenWeatherApiKeyTag].is<String>())
         {
@@ -505,6 +516,7 @@ SuccessResultWithMessage DeviceConfig::ApplyUnifiedDeviceSettings(const UnifiedS
     FieldAccess::ApplyIfPresent(request.useCelsius, *this, &DeviceConfig::SetUseCelsius);
     FieldAccess::ApplyIfPresent(request.ntpServer, *this, &DeviceConfig::SetNTPServer);
     FieldAccess::ApplyIfPresent(request.rememberCurrentEffect, *this, &DeviceConfig::SetRememberCurrentEffect);
+    FieldAccess::ApplyIfPresent(request.remoteEffectButtonsResetInterval, *this, &DeviceConfig::SetRemoteEffectButtonsResetInterval);
     FieldAccess::ApplyIfPresent(request.powerLimit, *this, &DeviceConfig::SetPowerLimit);
     FieldAccess::ApplyIfPresent(request.brightness, *this, &DeviceConfig::SetBrightness);
 

@@ -239,6 +239,7 @@ const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceS
                                    "Disable rotation to keep the current effect active indefinitely.",
             .Type                = SettingSpec::SettingType::PositiveBigInteger,
             .Section             = "appearance",
+            .Priority            = 100,
             .ApiPath             = "effects.effectInterval",
             .Widget              = SettingSpec::WidgetKind::IntervalToggle,
             .IntervalUnitDivisor = 1000,
@@ -398,6 +399,7 @@ SuccessResultWithMessage CWebServer::SetSettingsIfPresent(AsyncWebServerRequest 
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::UseCelsiusTag, SET_VALUE(deviceConfig.SetUseCelsius(value)));
     PushPostParamIfPresent<String>(pRequest, DeviceConfig::NTPServerTag, SET_VALUE(deviceConfig.SetNTPServer(value)));
     PushPostParamIfPresent<bool>(pRequest, DeviceConfig::RememberCurrentEffectTag, SET_VALUE(deviceConfig.SetRememberCurrentEffect(value)));
+    PushPostParamIfPresent<bool>(pRequest, DeviceConfig::RemoteEffectButtonsResetIntervalTag, SET_VALUE(deviceConfig.SetRemoteEffectButtonsResetInterval(value)));
     PushPostParamIfPresent<int>(pRequest, DeviceConfig::PowerLimitTag, SET_VALUE(deviceConfig.SetPowerLimit(value)));
     PushPostParamIfPresent<int>(pRequest, DeviceConfig::BrightnessTag, SET_VALUE(deviceConfig.SetBrightness(value)));
 
