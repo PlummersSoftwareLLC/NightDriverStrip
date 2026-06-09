@@ -139,17 +139,15 @@ void DeviceConfig::SerializeUnifiedSettings(JsonObject root) const
     device["secondColor"] = SecondColor();
     device["applyGlobalColors"] = ApplyGlobalColors();
 
-    #if ENABLE_REMOTE
     auto remote = device["remote"].to<JsonObject>();
+    #if ENABLE_REMOTE
     remote["enabled"] = true;
     remote["pin"] = IR_REMOTE_PIN;
-    remote["resetEffectInterval"] = RemoteEffectButtonsResetInterval();
     #else
-    auto remote = device["remote"].to<JsonObject>();
     remote["enabled"] = false;
     remote["pin"] = -1;
-    remote["resetEffectInterval"] = RemoteEffectButtonsResetInterval();
     #endif
+    remote["resetEffectInterval"] = RemoteEffectButtonsResetInterval();
 
     auto audio = device["audio"].to<JsonObject>();
     audio["enabled"] =
@@ -438,7 +436,6 @@ SuccessResultWithMessage DeviceConfig::ParseAndValidateUnifiedSettings(JsonObjec
         FieldAccess::AssignIfPresent(device, UseCelsiusTag, out.useCelsius);
         FieldAccess::AssignIfPresent(device, NTPServerTag, out.ntpServer);
         FieldAccess::AssignIfPresent(device, RememberCurrentEffectTag, out.rememberCurrentEffect);
-        FieldAccess::AssignIfPresent(device, RemoteEffectButtonsResetIntervalTag, out.remoteEffectButtonsResetInterval);
 
         if (device["remote"].is<JsonObjectConst>())
         {
