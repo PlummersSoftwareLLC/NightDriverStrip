@@ -117,6 +117,10 @@ class NightDriver:
         """Gets the device settings."""
         return self._get("/settings")
 
+    def get_static_statistics(self):
+        """Gets static runtime statistics, including active output topology/driver."""
+        return self._get("/statistics/static")
+
     def set_settings(self, settings):
         """
         Sets device settings.
@@ -707,11 +711,22 @@ def live_view(host, layout="flat", verbose=False, gain=1.0, scale=None, mapping=
 
         # Auto-detect mapping if not specified
         if mapping == "auto":
-            if matrix_width == 48 and matrix_height == 16:
-                print("Auto-detected 48x16 matrix: Using 'spectrum' mapping.")
+            stats = NightDriver(host).get_static_statistics() or {}
+            output_driver = str(stats.get("ACTIVE_OUTPUT_DRIVER", "")).strip().lower()
+            active_serpentine = bool(stats.get("ACTIVE_MATRIX_SERPENTINE", False))
+
+            if output_driver == "hub75":
+                mapping = "row-major"
+                print("Auto-detected HUB75 output: using 'row-major' mapping.")
+            elif output_driver == "ws281x":
+                mapping = "serpentine" if active_serpentine else "column-major"
+                print(f"Auto-detected WS281x output: using '{mapping}' mapping.")
+            elif matrix_width == 48 and matrix_height == 16:
+                print("Auto-detected 48x16 matrix: using 'spectrum' mapping.")
                 mapping = "spectrum"
             else:
                 mapping = "row-major"
+                print("Auto mapping fallback: using 'row-major'.")
 
         screen = pygame.display.set_mode((screen_width, screen_height))
         print(f"Created pygame window: {screen_width}x{screen_height}")
@@ -783,6 +798,8 @@ def live_view(host, layout="flat", verbose=False, gain=1.0, scale=None, mapping=
                             else:
                                 # Even columns run forwards
                                 pixel_index = x * matrix_height + y
+                        elif mapping == "column-major":
+                            pixel_index = x * matrix_height + y
                         elif mapping == "spectrum":
                             # Special case: 3x 16x16 panels aligned horizontally.
                             # Each panel is 16x16, but internally it's mapped as 16 strips of 16.
@@ -952,7 +969,7 @@ def main():
     parser.add_argument("--backup", metavar="FILENAME", help="Save the device configuration to a JSON file.")
     parser.add_argument("--restore", metavar="FILENAME", help="Restore the device configuration from a JSON file.")
     parser.add_argument("--generate-gallery", action="store_true", help="Generate an HTML gallery from captured GIFs.")
-    parser.add_argument("--mapping", type=str, default="auto", choices=["auto", "row-major", "serpentine", "spectrum"], help="Specify the pixel mapping/layout (auto, row-major, serpentine, or spectrum). Default: auto.")
+    parser.add_argument("--mapping", type=str, default="auto", choices=["auto", "row-major", "column-major", "serpentine", "spectrum"], help="Specify pixel mapping (auto, row-major, column-major, serpentine, spectrum). Default: auto.")
     parser.add_argument("--verbose", action="store_true", help="Enable verbose output for debugging.")
     parser.add_argument("command", nargs="*", help="Optional command: next, prev, or an effect name/index.")
 
