@@ -193,6 +193,7 @@ class DeviceConfig : public IJSONSerializable
         std::optional<bool> useCelsius{};
         std::optional<String> ntpServer{};
         std::optional<bool> rememberCurrentEffect{};
+        std::optional<bool> remoteEffectButtonsResetInterval{};
         std::optional<int> powerLimit{};
         std::optional<int> brightness{};
         std::optional<int> audioInputPin{};
@@ -215,6 +216,7 @@ class DeviceConfig : public IJSONSerializable
     bool    useCelsius = false;
     String  ntpServer = NTP_SERVER_DEFAULT;
     bool    rememberCurrentEffect = true;
+    bool    remoteEffectButtonsResetInterval = true;
     int     powerLimit = POWER_LIMIT_DEFAULT;
     bool    showVUMeter = true;
     uint8_t brightness = BRIGHTNESS_MAX;
@@ -255,6 +257,8 @@ class DeviceConfig : public IJSONSerializable
 
   public:
 
+    static constexpr const char* kSectionAppearance = "appearance";
+
     // Add additional setting Tags to this list
     static constexpr const char * HostnameTag = NAME_OF(hostname);
     static constexpr const char * LocationTag = NAME_OF(location);
@@ -266,6 +270,7 @@ class DeviceConfig : public IJSONSerializable
     static constexpr const char * UseCelsiusTag = NAME_OF(useCelsius);
     static constexpr const char * NTPServerTag = NAME_OF(ntpServer);
     static constexpr const char * RememberCurrentEffectTag = NAME_OF(rememberCurrentEffect);
+    static constexpr const char * RemoteEffectButtonsResetIntervalTag = NAME_OF(remoteEffectButtonsResetInterval);
     static constexpr const char * PowerLimitTag = NAME_OF(powerLimit);
     static constexpr const char * PowerLimitDefaultTag = "powerLimitDefault";
     static constexpr const char * BrightnessTag = NAME_OF(brightness);
@@ -329,6 +334,9 @@ class DeviceConfig : public IJSONSerializable
 
     bool RememberCurrentEffect() const { return rememberCurrentEffect; }
     void SetRememberCurrentEffect(bool newRememberCurrentEffect);
+
+    bool RemoteEffectButtonsResetInterval() const { return remoteEffectButtonsResetInterval; }
+    void SetRemoteEffectButtonsResetInterval(bool newRemoteEffectButtonsResetInterval);
 
     uint8_t GetBrightness() const { return brightness; }
     static SuccessResultWithMessage ValidateBrightness(int newBrightness);
