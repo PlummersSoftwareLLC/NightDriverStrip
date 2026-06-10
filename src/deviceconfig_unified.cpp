@@ -440,8 +440,7 @@ SuccessResultWithMessage DeviceConfig::ParseAndValidateUnifiedSettings(JsonObjec
         if (device["remote"].is<JsonObjectConst>())
         {
             auto remote = device["remote"].as<JsonObjectConst>();
-            if (remote["resetEffectInterval"].is<bool>())
-                out.remoteEffectButtonsResetInterval = remote["resetEffectInterval"].as<bool>();
+            FieldAccess::AssignIfPresent(remote, "resetEffectInterval", out.remoteEffectButtonsResetInterval);
         }
 
         if (device[OpenWeatherApiKeyTag].is<String>())
