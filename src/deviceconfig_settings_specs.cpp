@@ -24,7 +24,6 @@ const std::vector<std::reference_wrapper<SettingSpec>>& DeviceConfig::GetSetting
         constexpr const char* kSectionLocation   = "location";
         constexpr const char* kSectionClock      = "clock";
         constexpr const char* kSectionAudio      = "audio";
-        constexpr const char* kSectionAppearance = "appearance";
         constexpr const char* kSectionTopology   = "topology";
         constexpr const char* kSectionOutput     = "output";
 
@@ -220,7 +219,6 @@ const std::vector<std::reference_wrapper<SettingSpec>>& DeviceConfig::GetSetting
                             "Disable this to keep your configured interval, including 0 (no timeout), when changing effects with the remote.",
             .Type         = SettingSpec::SettingType::Boolean,
             .Section      = kSectionAppearance,
-            .Priority     = 101,
             .ApiPath      = "device.remote.resetEffectInterval"
         }));
 

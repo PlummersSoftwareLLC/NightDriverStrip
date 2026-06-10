@@ -238,8 +238,7 @@ const std::vector<std::reference_wrapper<SettingSpec>> & CWebServer::LoadDeviceS
             .Description         = "The duration in milliseconds that an individual effect runs, before the next effect is activated. "
                                    "Disable rotation to keep the current effect active indefinitely.",
             .Type                = SettingSpec::SettingType::PositiveBigInteger,
-            .Section             = "appearance",
-            .Priority            = 100,
+            .Section             = DeviceConfig::kSectionAppearance,
             .ApiPath             = "effects.effectInterval",
             .Widget              = SettingSpec::WidgetKind::IntervalToggle,
             .IntervalUnitDivisor = 1000,

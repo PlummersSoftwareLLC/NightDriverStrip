@@ -257,6 +257,8 @@ class DeviceConfig : public IJSONSerializable
 
   public:
 
+    static constexpr const char* kSectionAppearance = "appearance";
+
     // Add additional setting Tags to this list
     static constexpr const char * HostnameTag = NAME_OF(hostname);
     static constexpr const char * LocationTag = NAME_OF(location);
