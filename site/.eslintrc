@@ -4,29 +4,13 @@
     "es2021": true
   },
   "extends": [
-    "eslint:recommended",
-    "plugin:react/recommended",
-    "plugin:react-hooks/recommended"
+    "eslint:recommended"
   ],
   "parserOptions": {
     "ecmaVersion": 12,
-    "sourceType": "module",
-    "ecmaFeatures": {
-      "jsx": true
-    }
-  },
-  "plugins": [
-    "react",
-    "react-hooks"
-  ],
-  "settings": {
-    "react": {
-      "version": "detect"
-    }
+    "sourceType": "module"
   },
   "rules": {
-        "react/jsx-uses-react": "off",
-        "react/react-in-jsx-scope": "off",
         "indent": [2, 4]
   },
   "globals": {
