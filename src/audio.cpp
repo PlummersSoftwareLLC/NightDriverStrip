@@ -44,6 +44,10 @@
 #include "soundanalyzer.h"
 #include "time_utils.h"
 
+#if ENABLE_VICE_SERVER && !ENABLE_AUDIO
+#include "nd_network.h"
+#endif
+
 // AudioSamplerTaskEntry
 // A background task that samples audio, computes the VU, stores it for effect use, etc.
 

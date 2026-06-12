@@ -290,7 +290,7 @@ class ColorFillEffect : public EffectWithId<ColorFillEffect>
     }
 };
 
-#if USE_HUB75
+#if USE_HUB75 || USE_ESP_HUB75
 
 // SplashLogoEffect
 //
@@ -339,7 +339,7 @@ class SplashLogoEffect : public EffectWithId<SplashLogoEffect>
     }
 };
 
-#endif // USE_HUB75
+#endif // USE_HUB75 || USE_ESP_HUB75
 
 // StatusEffect
 //

@@ -110,7 +110,7 @@ extern std::mutex g_buffer_mutex;
 
 #define FLASH_VERSION          40   // Update ONLY this to increment the version number
 
-#ifndef USE_HUB75                   // We support strips by default unless specifically defined out
+#if !defined(USE_HUB75) && !defined(USE_ESP_HUB75) // We support strips by default unless specifically defined out
     #ifndef USE_WS281X
         #define USE_WS281X 1
     #endif
@@ -149,7 +149,7 @@ extern std::mutex g_buffer_mutex;
     #define USE_M5 1
 #endif
 
-#if USE_HUB75
+#if USE_HUB75 || USE_ESP_HUB75
     #ifndef USE_MATRIX
         #define USE_MATRIX 1
     #endif

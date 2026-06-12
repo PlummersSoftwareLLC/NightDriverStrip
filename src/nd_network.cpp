@@ -47,7 +47,270 @@
 #include "deviceconfig.h"
 #include "effectmanager.h"
 #include "ledbuffer.h"
+#include "ledviewer.h"              // For the LEDViewer task and object
 #include "nd_network.h"
+#include "soundanalyzer.h"
+
+extern DRAM_ATTR std::mutex g_buffer_mutex;
+
+static DRAM_ATTR WiFiUDP l_Udp;              // UDP object used for NNTP, etc
+
+
+String urlEncode(const String& str)
+{
+    String encodedString = "";
+    char c;
+    char code0;
+    char code1;
+    for (int i = 0; i < str.length(); i++) {
+        c = str.charAt(i);
+        if (isalnum(c)) {
+            encodedString += c;
+        } else {
+            code1 = (c & 0xf) + '0';
+            if ((c & 0xf) > 9) {
+                code1 = (c & 0xf) - 10 + 'A';
+            }
+            c = (c >> 4) & 0xf;
+            code0 = c + '0';
+            if (c > 9) {
+                code0 = c - 10 + 'A';
+            }
+            encodedString += '%';
+            encodedString += code0;
+            encodedString += code1;
+        }
+    }
+    return encodedString;
+}
+
+void DoStatsCommand()
+{
+    auto& bufferManager = g_ptrSystem->BufferManagers()[0];
+
+    DebugCLI::cli_printf("%s:%zux%d %zuK", FLASH_VERSION_NAME, g_ptrSystem->Devices().size(), NUM_LEDS, (size_t)(ESP.getFreeHeap() / 1024));
+    DebugCLI::cli_printf("%sdB:%s",String(WiFi.RSSI()).substring(1).c_str(), WiFi.isConnected() ? WiFi.localIP().toString().c_str() : "None");
+    DebugCLI::cli_printf("BUFR:%02zu/%02zu [%lufps]", (size_t)bufferManager.Depth(), (size_t)bufferManager.BufferCount(), (unsigned long)g_Values.FPS);
+    DebugCLI::cli_printf("DATA:%+04.2lf-%+04.2lf", bufferManager.AgeOfOldestBuffer(), bufferManager.AgeOfNewestBuffer());
+
+    #if ENABLE_AUDIO
+    DebugCLI::cli_printf("g_Analyzer._VU: %.2f, g_Analyzer._MinVU: %.2f, g_Analyzer.g_Analyzer._PeakVU: %.2f, g_Analyzer.gVURatio: %.2f", g_Analyzer.VU(), g_Analyzer.MinVU(), g_Analyzer.PeakVU(), g_Analyzer.VURatio());
+    #endif
+
+    #if INCOMING_WIFI_ENABLED
+    DebugCLI::cli_printf("Socket Buffer _cbReceived: %zu", g_ptrSystem->SocketServer()._cbReceived);
+    #endif
+}
+
+static const DebugCLI::command network_commands[] = {
+#if ENABLE_NTP
+    { "clock", "Refresh time from server", "Refreshing Time from Server",
+        [](const DebugCLI::cli_argv&) { NTPTimeClient::UpdateClockFromWeb(&l_Udp); } },
+#endif
+    { "stats", "Display system statistics", "Displaying statistics",
+        [](const DebugCLI::cli_argv&) { DoStatsCommand(); } },
+};
+
+void InitNetworkCLI() {
+    DebugCLI::RegisterCommands(network_commands, sizeof(network_commands)/sizeof(network_commands[0]));
+}
+#endif // ENABLE_WIFI
+
+#if ENABLE_ESPNOW
+
+// ESPNOW Support
+//
+// We accept ESPNOW commands to change effects and so on.  This is a simple structure that we'll receive over ESPNOW.
+enum class ESPNowCommand : uint8_t
+{
+    ESPNOW_NEXTEFFECT = 1,
+    ESPNOW_PREVEFFECT,
+    ESPNOW_SETEFFECT,
+    ESPNOW_INVALID = 255    // Followed by a uint32_t argument
+};
+
+// Message class
+//
+// Encapsulates an ESPNOW message, which is a command and an optional argument
+class Message
+{
+public:
+    constexpr Message(ESPNowCommand cmd, uint32_t argument)
+        : cbSize(sizeof(Message)), command(cmd), arg1(argument)
+    {
+    }
+
+    constexpr Message()
+        : cbSize(sizeof(Message)), command(ESPNowCommand::ESPNOW_INVALID), arg1(0)
+    {
+    }
+
+    const uint8_t* data() const
+    {
+        return reinterpret_cast<const uint8_t*>(this);
+    }
+
+    constexpr size_t byte_size() const
+    {
+        return sizeof(Message);
+    }
+
+    uint8_t       cbSize;
+    ESPNowCommand command;
+    uint32_t      arg1;
+} __attribute__((packed));
+
+// onReceiveESPNOW
+//
+// Callback function for ESPNOW that is called when a data packet is received
+
+void onReceiveESPNOW(const uint8_t *macAddr, const uint8_t *data, int dataLen)
+{
+    Message message;
+
+    memcpy(&message, data, sizeof(message));
+    debugI("ESPNOW Message received.");
+
+    if (message.cbSize != sizeof(message))
+    {
+        debugE("ESPNOW Message received with wrong structure size: %u but should be %zu", message.cbSize, sizeof(message));
+        return;
+    }
+
+    switch(message.command)
+    {
+        case ESPNowCommand::ESPNOW_NEXTEFFECT:
+            debugI("ESPNOW Next effect");
+            g_ptrSystem->EffectManager().NextEffect();
+            break;
+
+        case ESPNowCommand::ESPNOW_PREVEFFECT:
+            debugI("ESPNOW Previous effect");
+            g_ptrSystem->EffectManager().PreviousEffect();
+            break;
+
+        case ESPNowCommand::ESPNOW_SETEFFECT:
+            debugI("ESPNOW Setting effect index to %u", message.arg1);
+            g_ptrSystem->EffectManager().SetCurrentEffectIndex(message.arg1);
+            break;
+
+        default:
+            debugE("ESPNOW Message received with unknown command: %d", (byte) message.command);
+            break;
+    }
+}
+
+#endif
+
+// processRemoteDebugCmd
+//
+// Callback function that the debug library (which exposes a little console over telnet and serial) calls
+// in order to allow us to add custom commands.  I've added a clock reset and stats command, for example.
+
+#if ENABLE_WIFI
+void processRemoteDebugCmd()
+{
+    String str = Debug.getLastCommand();
+    DebugCLI::RunCommand(str.c_str());
+
+}
+#endif
+
+// SetupOTA
+//
+// Set up the over-the-air programming info so that we can be flashed over WiFi
+
+void SetupOTA(const String & strHostname)
+{
+#if ENABLE_OTA
+    ArduinoOTA.setRebootOnSuccess(true);
+
+    if (strHostname.isEmpty())
+        ArduinoOTA.setMdnsEnabled(false);
+    else
+        ArduinoOTA.setHostname(strHostname.c_str());
+
+    ArduinoOTA
+        .onStart([]()
+        {
+            g_Values.UpdateStarted = true;
+
+            String type;
+            if (ArduinoOTA.getCommand() == U_FLASH)
+                type = "sketch";
+            else // U_SPIFFS
+                type = "filesystem";
+
+            debugI("Stopping IR remote");
+            #if ENABLE_REMOTE
+            g_ptrSystem->RemoteControl().end();
+            #endif
+
+            debugI("Start updating from OTA ");
+            debugI("%s", type.c_str());
+        })
+        .onEnd([]()
+        {
+            debugI("\nEnd OTA");
+            g_Values.UpdateStarted = false;
+        })
+        .onProgress([](unsigned int progress, unsigned int total)
+        {
+            static uint last_time = millis();
+            if (millis() - last_time > 1000)
+            {
+                last_time = millis();
+                auto p = (progress / (total / 100));
+                debugI("OTA Progress: %u%%\r", p);
+
+                #if USE_HUB75 || USE_ESP_HUB75
+                    auto pMatrix = g_ptrSystem->EffectManager().GetBaseGraphics()[0];
+                    pMatrix->SetCaption(str_sprintf("Update:%d%%", p), CAPTION_TIME);
+                #endif
+            }
+            else
+            {
+                debugV("OTA Progress: %u%%\r", (progress / (total / 100)));
+            }
+
+        })
+        .onError([](ota_error_t error)
+        {
+            g_Values.UpdateStarted = false;
+            debugW("Error[%u]: ", error);
+            if (error == OTA_AUTH_ERROR)
+            {
+                debugW("Auth Failed");
+            }
+            else if (error == OTA_BEGIN_ERROR)
+            {
+                debugW("Begin Failed");
+            }
+            else if (error == OTA_CONNECT_ERROR)
+            {
+                debugW("Connect Failed");
+            }
+            else if (error == OTA_RECEIVE_ERROR)
+            {
+                debugW("Receive Failed");
+            }
+            else if (error == OTA_END_ERROR)
+            {
+                debugW("End Failed");
+            }
+            throw std::runtime_error("OTA Flash update failed.");
+        });
+
+    ArduinoOTA.begin();
+#endif
+}
+
+// RemoteLoopEntry
+//
+// If enabled, this is the main thread loop for the remote control.  It is initialized and then
+// called once every 20ms to pump its work queue and scan for new remote codes, etc.  If no
+// remote is being used, this code and thread doesn't exist in the build.
+>>>>>>> 8bb9007e (feat: Integrate esp-hub75 driver for MatrixS3 under USE_ESP_HUB75, port to Arduino 3 platform, and fix macOS case-insensitive header collisions):src/nd_network.cpp
 
 #if ENABLE_REMOTE
     #include "remotecontrol.h"

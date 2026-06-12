@@ -32,19 +32,17 @@
 //
 //---------------------------------------------------------------------------
 
+#include <improv.h>
+#include <numeric>
+#include <SPIFFS.h>
 #include "globals.h"
+#include "hexdump.h"
+#include "nd_network.h"
 
 #if ENABLE_WIFI
 #include <IPAddress.h>
 #include <WiFi.h>
 #endif
-
-#include <improv.h>
-#include <numeric>
-#include <SPIFFS.h>
-
-#include "hexdump.h"
-#include "nd_network.h"
 
 #define IMPROV_LOG_FILE             "/improv.log"
 

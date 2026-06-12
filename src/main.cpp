@@ -185,6 +185,9 @@
 #if USE_HUB75
 #include "hub75gfx.h"
 #endif
+#if USE_ESP_HUB75
+#include "esphub75gfx.h"
+#endif
 #if ENABLE_WIFI
 #include "improvserial.h"
 #endif
@@ -550,7 +553,9 @@ void setup()
 
     // Initialize the strand controllers depending on how many channels we have
 
-    #if USE_HUB75
+    #if USE_ESP_HUB75
+        ESPHUB75GFX::InitializeHardware(devices);
+    #elif USE_HUB75
         // HUB75GFX is used for HUB75 projects like the Mesmerizer
         HUB75GFX::InitializeHardware(devices);
     #elif HEXAGON
@@ -584,7 +589,7 @@ void setup()
     g_ptrSystem->SetupBufferManagers();
 
     // Show splash effect on matrix
-    #if USE_HUB75
+    #if USE_HUB75 || USE_ESP_HUB75
         debugI("Initializing splash effect manager...");
         InitSplashEffectManager();
     #endif
@@ -674,6 +679,8 @@ void loop()
 
             #if USE_HUB75
                 strOutput += str_sprintf("Refresh: %d Hz, Power: %d mW, Brite: %3.0lf%%, ", HUB75GFX::matrix.getRefreshRate(), g_Values.MatrixPowerMilliwatts, g_Values.MatrixScaledBrightness / 2.55);
+            #elif USE_ESP_HUB75
+                strOutput += str_sprintf("Power: %d mW, Brite: %3.0lf%%, ", g_Values.MatrixPowerMilliwatts, g_Values.MatrixScaledBrightness / 2.55);
             #endif
 
             #if ENABLE_AUDIO
