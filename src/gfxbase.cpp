@@ -1465,6 +1465,9 @@ void GFXBase::DrawCaptionOverlay()
     if (_height < 8)
         return;
 
+    // Prevent Adafruit_GFX from wrapping sliding text off the bottom of the screen
+    setTextWrap(false);
+
     float transparency = GetCaptionTransparency();
     uint8_t textVal = (uint8_t)(transparency * 255.0f);
     uint16_t titleColor = to16bit(textVal, textVal, textVal);

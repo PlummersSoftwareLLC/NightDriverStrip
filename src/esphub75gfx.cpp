@@ -28,6 +28,7 @@ void ESPHUB75GFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devi
     Hub75Config config{};
     config.panel_width = MATRIX_WIDTH;
     config.panel_height = MATRIX_HEIGHT;
+    config.scan_pattern = Hub75ScanPattern::SCAN_1_16;
     config.double_buffer = true;
     config.shift_driver = Hub75ShiftDriver::GENERIC;
 
@@ -42,10 +43,10 @@ void ESPHUB75GFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devi
     config.pins.b = 36;
     config.pins.c = 48;
     config.pins.d = 35;
-    config.pins.e = 8;
-    config.pins.lat = 13;
+    config.pins.e = -1; // 64x32 is 1/16 scan, no E pin
+    config.pins.lat = 47;
     config.pins.oe = 14;
-    config.pins.clk = 16;
+    config.pins.clk = 2;
 
     driver = std::make_unique<Hub75Driver>(config);
     driver->begin();

@@ -134,9 +134,10 @@ void EffectManager::StartEffect()
 
     std::shared_ptr<LEDStripEffect> & effect = _tempEffect ? _tempEffect : _vEffects[_iCurrentEffect];
 
-    #if USE_HUB75
-        auto pMatrix = std::static_pointer_cast<HUB75GFX>(_gfx[0]);
-        pMatrix->SetCaption(effect->FriendlyName(), CAPTION_TIME);
+    #if USE_HUB75 || USE_ESP_HUB75
+        if (!_gfx.empty()) {
+            _gfx[0]->SetCaption(effect->FriendlyName(), CAPTION_TIME);
+        }
     #endif
 
     effect->Start();
