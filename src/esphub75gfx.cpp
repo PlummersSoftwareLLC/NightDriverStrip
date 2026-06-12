@@ -43,7 +43,11 @@ void ESPHUB75GFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devi
     config.pins.b = 36;
     config.pins.c = 48;
     config.pins.d = 35;
+#if MATRIX_HEIGHT > 32
+    config.pins.e = 21;
+#else
     config.pins.e = -1; // 64x32 is 1/16 scan, no E pin
+#endif
     config.pins.lat = 47;
     config.pins.oe = 14;
     config.pins.clk = 2;
