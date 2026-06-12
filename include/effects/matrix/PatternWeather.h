@@ -100,27 +100,31 @@ extern const uint8_t thunderstorm_night_end[]       asm("_binary_assets_bmp_thun
 
 static constexpr auto pszDaysOfWeek = to_array( { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" } );
 
-static std::map<const String, EmbeddedFile, std::less<const String>, psram_allocator<std::pair<const String, EmbeddedFile>>> weatherIcons =
+static const std::map<const String, EmbeddedFile, std::less<const String>, psram_allocator<std::pair<const String, EmbeddedFile>>>& GetWeatherIcons()
 {
-    { "01d", EmbeddedFile(clearsky_start, clearsky_end) },
-    { "02d", EmbeddedFile(fewclouds_start, fewclouds_end) },
-    { "03d", EmbeddedFile(scatteredclouds_start, scatteredclouds_end) },
-    { "04d", EmbeddedFile(brokenclouds_start, brokenclouds_end) },
-    { "09d", EmbeddedFile(showerrain_start, showerrain_end) },
-    { "10d", EmbeddedFile(rain_start, rain_end) },
-    { "11d", EmbeddedFile(thunderstorm_start, thunderstorm_end) },
-    { "13d", EmbeddedFile(snow_start, snow_end) },
-    { "50d", EmbeddedFile(mist_start, mist_end) },
-    { "01n", EmbeddedFile(clearsky_night_start, clearsky_night_end) },
-    { "02n", EmbeddedFile(fewclouds_night_start, fewclouds_night_end) },
-    { "03n", EmbeddedFile(scatteredclouds_night_start, scatteredclouds_night_end) },
-    { "04n", EmbeddedFile(brokenclouds_night_start, brokenclouds_night_end) },
-    { "09n", EmbeddedFile(showerrain_night_start, showerrain_night_end) },
-    { "10n", EmbeddedFile(rain_night_start, rain_night_end) },
-    { "11n", EmbeddedFile(thunderstorm_night_start, thunderstorm_night_end) },
-    { "13n", EmbeddedFile(snow_night_start, snow_night_end) },
-    { "50n", EmbeddedFile(mist_night_start, mist_night_end) }
-};
+    static const std::map<const String, EmbeddedFile, std::less<const String>, psram_allocator<std::pair<const String, EmbeddedFile>>> weatherIcons =
+    {
+        { "01d", EmbeddedFile(clearsky_start, clearsky_end) },
+        { "02d", EmbeddedFile(fewclouds_start, fewclouds_end) },
+        { "03d", EmbeddedFile(scatteredclouds_start, scatteredclouds_end) },
+        { "04d", EmbeddedFile(brokenclouds_start, brokenclouds_end) },
+        { "09d", EmbeddedFile(showerrain_start, showerrain_end) },
+        { "10d", EmbeddedFile(rain_start, rain_end) },
+        { "11d", EmbeddedFile(thunderstorm_start, thunderstorm_end) },
+        { "13d", EmbeddedFile(snow_start, snow_end) },
+        { "50d", EmbeddedFile(mist_start, mist_end) },
+        { "01n", EmbeddedFile(clearsky_night_start, clearsky_night_end) },
+        { "02n", EmbeddedFile(fewclouds_night_start, fewclouds_night_end) },
+        { "03n", EmbeddedFile(scatteredclouds_night_start, scatteredclouds_night_end) },
+        { "04n", EmbeddedFile(brokenclouds_night_start, brokenclouds_night_end) },
+        { "09n", EmbeddedFile(showerrain_night_start, showerrain_night_end) },
+        { "10n", EmbeddedFile(rain_night_start, rain_night_end) },
+        { "11n", EmbeddedFile(thunderstorm_night_start, thunderstorm_night_end) },
+        { "13n", EmbeddedFile(snow_night_start, snow_night_end) },
+        { "50n", EmbeddedFile(mist_night_start, mist_night_end) }
+    };
+    return weatherIcons;
+}
 
 /**
  * @brief This class implements the Weather Data effect
@@ -510,16 +514,16 @@ public:
         }
 
         // Draw the graphics
-        auto iconEntry = weatherIcons.find(iconToday);
-        if (iconEntry != weatherIcons.end())
+        auto iconEntry = GetWeatherIcons().find(iconToday);
+        if (iconEntry != GetWeatherIcons().end())
         {
             auto icon = iconEntry->second;
             if (JDR_OK != TJpgDec.drawJpg(0, 10, icon.contents, icon.length))        // Draw the image
                 debugW("Could not display icon %s", iconToday.c_str());
         }
 
-        iconEntry = weatherIcons.find(iconTomorrow);
-        if (iconEntry != weatherIcons.end())
+        iconEntry = GetWeatherIcons().find(iconTomorrow);
+        if (iconEntry != GetWeatherIcons().end())
         {
             auto icon = iconEntry->second;
             if (JDR_OK != TJpgDec.drawJpg(xHalf+1, 10, icon.contents, icon.length))        // Draw the image

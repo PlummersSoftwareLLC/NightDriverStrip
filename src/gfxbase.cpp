@@ -1465,6 +1465,12 @@ void GFXBase::DrawCaptionOverlay()
     if (_height < 8)
         return;
 
+    // Reset graphics state that might have been changed by an effect (e.g. PatternPongClock uses setFont)
+    // Adafruit_GFX has a quirk where default font positions by top-left, but custom fonts position by baseline!
+    // We MUST reset to default font to ensure our Y calculation is predictable.
+    setFont(NULL);
+    setTextSize(1);
+
     // Prevent Adafruit_GFX from wrapping sliding text off the bottom of the screen
     setTextWrap(false);
 
