@@ -104,8 +104,10 @@
     #include "effects/matrix/PatternMaze.h"
     #include "effects/matrix/PatternMisc.h"
     #include "effects/matrix/PatternPongClock.h"
+#if ENABLE_AUDIO
     #include "effects/matrix/PatternPulse.h"
-    #include "effects/matrix/PatternQR.h"
+#endif
+    // #include "effects/matrix/PatternQR.h"
     #include "effects/matrix/PatternRadar.h"
     #include "effects/matrix/PatternSerendipity.h"
     #include "effects/matrix/PatternSM2DDPR.h"
@@ -295,16 +297,24 @@ void LoadEffectFactories()
 
         // Full matrix effect set for advanced displays (Mesmerizer, etc.)
         RegisterAll(*g_ptrEffectFactories,
+#if ENABLE_AUDIO
             Effect<SpectrumBarEffect>("Audiograph", 16, 4, 0),
             Effect<SpectrumAnalyzerEffect>("Spectrum", NUM_BANDS, spectrumAltColors, false, 0, 0, 1.6, 1.6),
             Effect<SpectrumAnalyzerEffect>("AudioWave", MATRIX_WIDTH, CRGB(0,0,40), 0, 1.25, 1.25, true),
+            Effect<GhostWave>("GhostWave", 0, 30, false, 10),
+            Effect<SpectrumAnalyzerEffect>("USA", NUM_BANDS, USAColors_p, true, 0, 0, 0.75, 0.75),
+            Effect<SpectrumAnalyzerEffect>("Spectrum 2", 32, spectrumBasicColors, false, 100, 0, 0.75, 0.75),
+            Effect<SpectrumAnalyzerEffect>("Spectrum++", NUM_BANDS, spectrumBasicColors, false, 0, 40, -1.0, 2.0),
+            Effect<WaveformEffect>("WaveIn", 8),
+            Effect<GhostWave>("WaveOut", 0, 0, true, 0),
+            Effect<StarEffect<MusicStar>>("Stars", RainbowColors_p, 1.0, 1, LINEARBLEND, 2.0, 0.5, 10.0)
+#endif
             Effect<PatternSMRadialWave>(),
             Effect<PatternAnimatedGIF>("Fire Log", GIFIdentifier::Firelog),
             Effect<PatternAnimatedGIF>("Pacman", GIFIdentifier::Pacman),
             Effect<PatternPongClock>(),
             Effect<PatternAnimatedGIF>("Colorball", GIFIdentifier::ColorSphere),
             Effect<PatternSMFire2021>(),
-            Effect<GhostWave>("GhostWave", 0, 30, false, 10),
             Effect<PatternSMGamma>(),
             Effect<PatternAnimatedGIF>("Rings", GIFIdentifier::ThreeRings),
             Effect<PatternAnimatedGIF>("Atomic", GIFIdentifier::Atomic),
@@ -315,13 +325,7 @@ void LoadEffectFactories()
             Effect<PatternAnimatedGIF>("Tesseract", GIFIdentifier::Tesseract),
             Effect<PatternAnimatedGIF>("Nyancat", GIFIdentifier::Nyancat),
             Effect<PatternLife>(),
-            Effect<PatternCircuit>(),
-            Effect<SpectrumAnalyzerEffect>("USA", NUM_BANDS, USAColors_p, true, 0, 0, 0.75, 0.75),
-            Effect<SpectrumAnalyzerEffect>("Spectrum 2", 32, spectrumBasicColors, false, 100, 0, 0.75, 0.75),
-            Effect<SpectrumAnalyzerEffect>("Spectrum++", NUM_BANDS, spectrumBasicColors, false, 0, 40, -1.0, 2.0),
-            Effect<WaveformEffect>("WaveIn", 8),
-            Effect<GhostWave>("WaveOut", 0, 0, true, 0),
-            Effect<StarEffect<MusicStar>>("Stars", RainbowColors_p, 1.0, 1, LINEARBLEND, 2.0, 0.5, 10.0)
+            Effect<PatternCircuit>()
         );
 
         #if ENABLE_WIFI
@@ -334,7 +338,10 @@ void LoadEffectFactories()
 
         RegisterAll(*g_ptrEffectFactories,
             Effect<PatternSMSmoke>(),
+#if ENABLE_AUDIO
             Effect<GhostWave>("PlasmaWave", 0, 255, false),
+            Effect<PatternPulsar>(),
+#endif
             Effect<PatternSMNoise>("Shikon", PatternSMNoise::EffectType::Shikon_t),
             Effect<PatternSMRadialFire>(),
             Effect<PatternSMFlowFields>(),
@@ -356,7 +363,6 @@ void LoadEffectFactories()
             Effect<PatternSunburst>(),
             Effect<PatternClock>(),
             Effect<PatternAlienText>(),
-            Effect<PatternPulsar>(),
             Effect<PatternBounce>(),
             Effect<PatternWave>(),
             Effect<PatternSwirl>(),
