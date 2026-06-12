@@ -312,7 +312,13 @@ void IRAM_ATTR DrawLoopTaskEntry(void *)
             g_ptrSystem->GetEffectManager().ReportNewFrameAvailable();
         }
 
+        if (g_ptrSystem->EffectManager().GetCurrentEffect().ShouldShowTitle())
+        {
+            graphics->DrawCaptionOverlay();
+        }
+
         graphics->PostProcessFrame(localPixelsDrawn, wifiPixelsDrawn);
+
 
         // Delay at least 2ms and not more than 1s until next frame is due
 

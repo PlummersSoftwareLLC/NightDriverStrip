@@ -71,7 +71,6 @@ public:
     static const uint8_t kDefaultBrightness = 255; // full (100%) brightness
 
     static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> backgroundLayer;
-    static SMLayerBackground<SM_RGB, kBackgroundLayerOptions> titleLayer;
     static SmartMatrixHub75Calc<COLOR_DEPTH, kMatrixWidth, kMatrixHeight, kPanelType, kMatrixOptions> matrix;
 
     HUB75GFX(size_t w, size_t h);

@@ -45,7 +45,6 @@
 // The declarations create the "layers" that make up the matrix display
 
 SMLayerBackground<HUB75GFX::SM_RGB, HUB75GFX::kBackgroundLayerOptions> HUB75GFX::backgroundLayer(kMatrixWidth, kMatrixHeight);
-SMLayerBackground<HUB75GFX::SM_RGB, HUB75GFX::kBackgroundLayerOptions> HUB75GFX::titleLayer(kMatrixWidth, kMatrixHeight);
 SmartMatrixHub75Calc<COLOR_DEPTH, HUB75GFX::kMatrixWidth, HUB75GFX::kMatrixHeight, HUB75GFX::kPanelType, HUB75GFX::kMatrixOptions> HUB75GFX::matrix;
 
 HUB75GFX::HUB75GFX(size_t w, size_t h) : GFXBase(w, h)
@@ -210,7 +209,7 @@ void HUB75GFX::MoveOutwardsX(int startY, int endY)
 void HUB75GFX::StartMatrix()
 {
     matrix.addLayer(&backgroundLayer);
-    matrix.addLayer(&titleLayer);
+
 
     // When the matrix starts, you can ask it to leave N bytes of memory free, and this amount must be tuned.  Too much free
     // will cause a dim panel with a low refresh, too little will starve other things.  We currently have enough RAM for
@@ -249,74 +248,9 @@ void HUB75GFX::PrepareFrame()
         auto pMatrix = std::static_pointer_cast<HUB75GFX>(g_ptrSystem->GetEffectManager().GetBaseGraphics()[0]);
         pMatrix->setLeds(GetMatrixBackBuffer());
 
-        // We set ourselves to the lower of the fader value or the brightness value,
-        // so that we can fade between effects without having to change the brightness
-        // setting.
-
-        if (g_ptrSystem->GetEffectManager().GetCurrentEffect().ShouldShowTitle() && pMatrix->GetCaptionTransparency() > 0.00)
-        {
-            titleLayer.setFont(font3x5);
-            uint8_t brite = (uint8_t)(pMatrix->GetCaptionTransparency() * 255.0);
-            debugV("Caption: %d", brite);
-
-            rgb24 chromaKeyColor = rgb24(255, 0, 255);
-            rgb24 shadowColor = rgb24(0, 0, 0);
-            rgb24 titleColor = rgb24(255, 255, 255);
-
-            titleLayer.setChromaKeyColor(chromaKeyColor);
-            titleLayer.setFont(font6x10);
-
-            const size_t kCharWidth = 6;
-            const size_t kCharHeight = 10;
-
-            const auto caption = pMatrix->GetCaption();
-
-            int y = MATRIX_HEIGHT - 2 - kCharHeight;
-            int w = caption.length() * kCharWidth;
-
-            unsigned long elapsed = millis() - captionStartTime;
-
-            int x;
-            if (w > MATRIX_WIDTH)
-            {
-                // Scroll if too wide to fit
-                float progress = (float)elapsed / totalCaptionDuration;
-                x = MATRIX_WIDTH - (int)(progress * (w + MATRIX_WIDTH));
-            }
-
-            else
-            {
-                // Center if it fits
-                x = (MATRIX_WIDTH / 2) - (w / 2) + 1;
-            }
-
-            // Generic fill that's way faster than the rectangle base impl
-            for (int i = y * _width; i < (y + 1 + kCharHeight) * _width; ++i)
-                titleLayer.backBuffer()[i] = chromaKeyColor;
-
-            auto szCaption = caption.c_str();
-            titleLayer.drawString(x - 1, y, shadowColor, szCaption);
-            titleLayer.drawString(x + 1, y, shadowColor, szCaption);
-            titleLayer.drawString(x, y - 1, shadowColor, szCaption);
-            titleLayer.drawString(x, y + 1, shadowColor, szCaption);
-            titleLayer.drawString(x, y, titleColor, szCaption);
-
-            // We enable the chromakey overlay just for the strip of screen where it appears.  This support is only
-            // present in the private fork of SmartMatrix that is linked to the mesmerizer project.
-
-            titleLayer.swapBuffers(false);
-            titleLayer.enableChromaKey(true, y, y + kCharHeight);
-            titleLayer.setBrightness(brite); // 255 would obscure it entirely
-        }
-        else
-        {
-            titleLayer.enableChromaKey(false);
-            titleLayer.setBrightness(0);
-        }
-
-
     }
 }
+
 
 // PostProcessFrame
 //

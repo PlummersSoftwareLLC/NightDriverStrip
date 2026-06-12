@@ -153,6 +153,14 @@ protected:
     static constexpr int _heatColorsPaletteIndex = 6;
     static constexpr int _randomPaletteIndex = 9;
 
+    String strCaption;
+    unsigned long captionStartTime = 0;
+    float captionDuration = 0;
+    const float captionFadeInTime = 500.0f;
+    float captionFadeOutTime = 1000.0f;
+    float totalCaptionDuration = 0.0f;
+
+
 public:
     static const uint16_t kMatrixWidth = MATRIX_WIDTH;                                  // known working for actual matrix effects: 32, 64, 96, 128
     static const uint16_t kMatrixHeight = MATRIX_HEIGHT;                                // known working for actual matrix effects: 16, 32, 48, 64
@@ -200,6 +208,41 @@ public:
     {
         return _ledcount;
     }
+
+    const String & GetCaption() const
+    {
+        return strCaption;
+    }
+
+    float GetCaptionTransparency() const
+    {
+        unsigned long now = millis();
+        if (strCaption == nullptr || strCaption.isEmpty())
+            return 0.0f;
+
+        if (now > (captionStartTime + totalCaptionDuration))
+            return 0.0f;
+
+        float elapsed = now - captionStartTime;
+
+        if (elapsed < captionFadeInTime)
+            return elapsed / captionFadeInTime;
+
+        if (elapsed > captionFadeInTime + captionDuration)
+            return 1.0f - ((elapsed - captionFadeInTime - captionDuration) / captionFadeOutTime);
+
+        return 1.0f;
+    }
+
+    void SetCaption(const String & str, uint32_t duration)
+    {
+        captionDuration = (float)duration;
+        totalCaptionDuration = captionFadeInTime + captionDuration + captionFadeOutTime;
+        strCaption = str;
+        captionStartTime = millis();
+    }
+
+    void DrawCaptionOverlay();
 
     static uint8_t beatcos8(accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highest = 255, uint32_t timebase = 0, uint8_t phase_offset = 0);
     static uint8_t mapsin8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255);

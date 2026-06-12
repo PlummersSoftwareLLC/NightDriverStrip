@@ -1456,3 +1456,57 @@ const GFXBase::PolarMapArray& GFXBase::getPolarMap()
 
     return *rMap_ptr;
 }
+
+void GFXBase::DrawCaptionOverlay()
+{
+    if (strCaption.isEmpty() || GetCaptionTransparency() <= 0.0f)
+        return;
+
+    if (_height < 8)
+        return;
+
+    float transparency = GetCaptionTransparency();
+    uint8_t textVal = (uint8_t)(transparency * 255.0f);
+    uint16_t titleColor = to16bit(textVal, textVal, textVal);
+    uint16_t shadowColor = to16bit(0, 0, 0);
+
+    const size_t kCharWidth = 6;
+    const size_t kCharHeight = 8;
+    int w = strCaption.length() * kCharWidth;
+
+    int y = (int)_height - 2 - (int)kCharHeight;
+    unsigned long elapsed = millis() - captionStartTime;
+
+    int x;
+    if (w > (int)_width)
+    {
+        // Scroll if too wide to fit
+        float progress = (float)elapsed / totalCaptionDuration;
+        x = (int)_width - (int)(progress * (w + _width));
+    }
+    else
+    {
+        // Center if it fits
+        x = ((int)_width / 2) - (w / 2) + 1;
+    }
+
+    // Draw shadow first (4-way offset)
+    setTextColor(shadowColor);
+
+    setCursor(x - 1, y);
+    print(strCaption);
+
+    setCursor(x + 1, y);
+    print(strCaption);
+
+    setCursor(x, y - 1);
+    print(strCaption);
+
+    setCursor(x, y + 1);
+    print(strCaption);
+
+    // Draw main text
+    setTextColor(titleColor);
+    setCursor(x, y);
+    print(strCaption);
+}
