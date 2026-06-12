@@ -1499,7 +1499,7 @@ void GFXBase::DrawCaptionOverlay()
     else
     {
         // Center if it fits
-        x = ((int)_width / 2) - (w / 2) + 1;
+        x = ((int)_width - w) / 2;
     }
 
     // Draw shadow first (4-way offset)
