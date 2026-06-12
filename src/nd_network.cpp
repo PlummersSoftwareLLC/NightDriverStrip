@@ -53,10 +53,6 @@
 
 extern DRAM_ATTR std::mutex g_buffer_mutex;
 
-static DRAM_ATTR WiFiUDP l_Udp;              // UDP object used for NNTP, etc
-
-
-
 #if ENABLE_ESPNOW
 
 // ESPNOW Support
