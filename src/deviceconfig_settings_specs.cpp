@@ -24,7 +24,6 @@ const std::vector<std::reference_wrapper<SettingSpec>>& DeviceConfig::GetSetting
         constexpr const char* kSectionLocation   = "location";
         constexpr const char* kSectionClock      = "clock";
         constexpr const char* kSectionAudio      = "audio";
-        constexpr const char* kSectionAppearance = "appearance";
         constexpr const char* kSectionTopology   = "topology";
         constexpr const char* kSectionOutput     = "output";
 
@@ -212,6 +211,15 @@ const std::vector<std::reference_wrapper<SettingSpec>>& DeviceConfig::GetSetting
             .Type         = SettingSpec::SettingType::Boolean,
             .Section      = kSectionAppearance,
             .ApiPath      = "device.rememberCurrentEffect"
+        }));
+        settingSpecs.push_back(SettingSpec::Validate(SettingSpec{
+            .Name         = RemoteEffectButtonsResetIntervalTag,
+            .FriendlyName = "Remote effect buttons reset interval",
+            .Description  = "When enabled, remote B+/B- effect changes force the effect interval back to the default rotation speed (60 seconds). "
+                            "Disable this to keep your configured interval, including 0 (no timeout), when changing effects with the remote.",
+            .Type         = SettingSpec::SettingType::Boolean,
+            .Section      = kSectionAppearance,
+            .ApiPath      = "device.remote.resetEffectInterval"
         }));
 
         // ---- topology section ----------------------------------------------
