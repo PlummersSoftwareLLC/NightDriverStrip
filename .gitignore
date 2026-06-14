@@ -1,4 +1,5 @@
-.cache# User test files
+.cache
+# User test files
 .DS_Store
 .history
 .idea/**
@@ -20,9 +21,6 @@ lib/*
 NightDriverStrip.code-workspace
 site/dist
 site/favicon.ico
-site/local/**
-site/node_modules
-site/yarn-error.log
 src/-defines-.cpp
 src/uzlib/src/*.o
 tools/__pycache__

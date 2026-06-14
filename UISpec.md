@@ -305,7 +305,7 @@ Theme classes:
 - `backdrop-filter: blur(10px)`
 - a pseudo-element border sheen
 
-### Background
+### Page Background
 
 The page background is dark. `.backdrop` uses layered radial gradients and a dark linear gradient. `.grid-overlay` adds a 48px grid, low opacity, and a vertical fade mask.
 
@@ -397,7 +397,7 @@ The preview canvas:
 - has dark background, cyan border, 14px radius.
 - toggles `.preview-canvas-thin` when rendered height is <= 12px to remove border/background for one-row strips.
 
-### Toasts
+### Toast Stack
 
 Toast stack is fixed bottom-right. Toasts have dark background, 12px radius, cyan border. `.toast.error` uses danger border; `.toast.success` uses good border. Toasts auto-remove after 4200ms.
 
@@ -891,7 +891,7 @@ Visual states:
 - `.online`: green dot
 - `.offline`: pink/red dot
 
-### Summary Cards
+### Summary Cards Rendering
 
 Render summaries only when `effects`, `staticStats`, and `dynamicStats` are all available.
 
@@ -946,7 +946,7 @@ The toolbar interval input is in seconds. On apply:
 
 Periodic refresh must not overwrite a user edit while the input is focused or dirty. If a pending value is later reflected by the server, clear dirty/pending state.
 
-### Effects Table
+### Effects Table Build-up
 
 If effects are unavailable, show `No effects loaded.`
 
@@ -994,7 +994,7 @@ Drag reorder:
 - Drop calls `POST /moveEffect` with `{ effectIndex: fromIndex, newIndex: targetIndex }`.
 - Clear all drag styles after drag end/drop.
 
-### Settings Form
+### Settings Form Build-up
 
 Settings render from specs and current values.
 
@@ -1136,7 +1136,7 @@ Used for type Palette.
 - Store an array of integer RGB values.
 - Current UI supports editing existing entries; it does not add/remove palette entries.
 
-### Effect Settings Dialog
+### Effect Settings Dialog Logic
 
 Opening:
 

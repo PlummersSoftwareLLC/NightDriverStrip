@@ -50,7 +50,7 @@ The text in this document regularly mentions "LED display" as the visualization 
 
 ### `EffectManager`
 
-- Located in: [effectmanager.h](./include/effectmanager.h) and [effectmanager.cpp](./src/effectmanager.cpp)
+- Located in: [effectmanager.h](./include/effectmanager.h), [effectmanager.cpp](./src/effectmanager.cpp), [effectmanager_access.cpp](./src/effectmanager_access.cpp), [effectmanager_playback.cpp](./src/effectmanager_playback.cpp), [effectmanager_runtime.cpp](./src/effectmanager_runtime.cpp), and [effectmanager_persistence.cpp](./src/effectmanager_persistence.cpp)
 - Role: Handles the creation and management of visual effects on the LED display.
 - Key functionalities: Creating effects, managing effect transitions.
 
@@ -63,14 +63,14 @@ The text in this document regularly mentions "LED display" as the visualization 
 
 ### Device configuration
 
-- Located in: [deviceconfig.h](./include/deviceconfig.h) and [deviceconfig.cpp](./src/deviceconfig.cpp)
+- Located in: [deviceconfig.h](./include/deviceconfig.h), [deviceconfig.cpp](./src/deviceconfig.cpp), [deviceconfig_color.cpp](./src/deviceconfig_color.cpp), [deviceconfig_internal.cpp](./src/deviceconfig_internal.cpp), [deviceconfig_validation.cpp](./src/deviceconfig_validation.cpp), [deviceconfig_settings_specs.cpp](./src/deviceconfig_settings_specs.cpp), and [deviceconfig_unified.cpp](./src/deviceconfig_unified.cpp)
 - Role: Holds device-wide configuration settings.
 - Key functionalities: Loading, saving, and accessing configurations.
 - Explanation: The `DeviceConfig` class holds essential configuration settings for the device. It's important to understand how configurations are loaded, saved, and accessed as they influence how certain effects are rendered.
 
 ### Networking
 
-- Located in: [network.h](./include/network.h),  [network.cpp](./src/network.cpp), [socketserver.h](./include/socketserver.h), [socketserver.cpp](./src/socketserver.cpp), [webserver.h](./include/webserver.h) and [webserver.cpp](./src/webserver.cpp)
+- Located in: [nd_network.h](./include/nd_network.h),  [network.cpp](./src/network.cpp), [socketserver.h](./include/socketserver.h), [socketserver.cpp](./src/socketserver.cpp), [webserver.h](./include/webserver.h) and [webserver.cpp](./src/webserver.cpp)
 - Role: Handling networking functionalities.
 - Key functionalities: Data transmission and reception.
 - Explanation: The codebase provides functionalities for outgoing and incoming data via a WiFI network, using raw and web protocols. Familiarize yourself with the mentioned files to understand how data is transmitted, received, and processed.
@@ -94,7 +94,7 @@ Note that the following list is not exhaustive; only the key threads are discuss
 - **Audio thread** (from [audio.cpp](./src/audio.cpp)): Responsible for audio processing.
   Captures audio input, processes it, and then uses the processed data to influence the LED animations.
 
-- **Network thread** (from [network.cpp](./src/network.cpp)): Handles core network-related tasks.
+- **Network thread** (from [network.cpp](./src/network.cpp), coordinated through [nd_network.h](./include/nd_network.h)): Handles core network-related tasks.
   Sets up and monitors the WiFi connection. Runs the main network loop that executes network tasks that are scheduled by effects or other functionalities.
 
 - **Remote Control thread** (from [remotecontrol.cpp](./src/remotecontrol.cpp)): Manages remote control functionalities.
@@ -139,7 +139,7 @@ Once all the initializations are complete, the application enters its main event
 
 The `EffectManager` and the drawing loop work together to render the effects that have been enabled within the application.
 
-- **`EffectManager`**: The `EffectManager` is a class that is present in the [effectmanager.h](./include/effectmanager.h), [effectmanager.cpp](./src/effectmanager.cpp) and, for a few methods and support functions, [effects.cpp](./src/effects.cpp) files. It  manages the LED effects by holding the list of effect objects that represent individual effects that can be shown on the LED display.
+- **`EffectManager`**: The `EffectManager` is a class that is present in the [effectmanager.h](./include/effectmanager.h), [effectmanager.cpp](./src/effectmanager.cpp), [effectmanager_access.cpp](./src/effectmanager_access.cpp), [effectmanager_playback.cpp](./src/effectmanager_playback.cpp), [effectmanager_runtime.cpp](./src/effectmanager_runtime.cpp), [effectmanager_persistence.cpp](./src/effectmanager_persistence.cpp) and, for a few methods and support functions, [effects.cpp](./src/effects.cpp) files. It manages the LED effects by holding the list of effect objects that represent individual effects that can be shown on the LED display.
   The `EffectManager` has a method named `Update()`, which is responsible for drawing the current effect on the LED display. This method is called within the main draw loop to render the effect.
 
 - **Drawing loop**: The drawing loop is present in the [drawing.cpp](./src/drawing.cpp) file. It's a continuous loop that updates the LED display with the current effect.
