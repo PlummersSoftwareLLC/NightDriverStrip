@@ -1,0 +1,58 @@
+{
+  "profiles": [
+    {
+      "id": "strip",
+      "kind": "strip",
+      "projectTag": "installer_strip",
+      "name": "Strip",
+      "kicker": "WS281x Starter",
+      "summary": "Generic ESP32 strip setup for one data wire, power, and ground.",
+      "description": "Use this for common WS2812B/SK6812-style strips. The starter image supports live runtime setup for LED count, GPIO, color order, brightness, and power limit.",
+      "card": "card-cyan",
+      "defaults": {
+        "ledCount": 144,
+        "pin": 5,
+        "colorOrder": "GRB",
+        "brightnessPercent": 100,
+        "powerLimit": 4500,
+        "effectIntervalSeconds": 20
+      }
+    },
+    {
+      "id": "matrix",
+      "kind": "matrix",
+      "projectTag": "installer_matrix",
+      "name": "Matrix",
+      "kicker": "HUB75 Starter",
+      "summary": "Mesmerizer-class HUB75 setup with the known-good 64x32 panel profile.",
+      "description": "Use this for the current Mesmerizer/HUB75 hardware path. HUB75 panel mapping is build-defined today, so the MVP keeps the known-good 64x32 topology fixed.",
+      "card": "card-green",
+      "defaults": {
+        "width": 64,
+        "height": 32,
+        "fixedTopology": true,
+        "brightnessPercent": 100,
+        "powerLimit": 4500
+      }
+    },
+    {
+      "id": "m5",
+      "kind": "strip",
+      "projectTag": "installer_m5",
+      "name": "M5",
+      "kicker": "M5Stick Starter",
+      "summary": "M5StickC Plus/Plus2 setup using the Grove LED output path.",
+      "description": "Use this when the controller is an M5Stick-style device. The default data pin is GPIO 32 for the Grove connector, with audio-capable firmware and the device web UI enabled.",
+      "card": "card-orange",
+      "flashBaudRate": 2000000,
+      "defaults": {
+        "ledCount": 144,
+        "pin": 32,
+        "colorOrder": "RGB",
+        "brightnessPercent": 100,
+        "powerLimit": 4500,
+        "effectIntervalSeconds": 0
+      }
+    }
+  ]
+}
