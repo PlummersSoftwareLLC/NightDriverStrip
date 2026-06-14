@@ -39,17 +39,6 @@
             ]
         },
         {
-            "tag": "esp32-s3",
-            "chipfamily": "ESP32-S3",
-            "name": "ESP32-S3-DevKitC-1",
-            "projects": [
-                {
-                    "tag": "panlee",
-                    "name":"Panlee"
-                }
-            ]
-        },
-        {
             "tag": "wrover",
             "chipfamily": "ESP32",
             "name": "ESP-WROVER-KIT",
