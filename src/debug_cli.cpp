@@ -47,9 +47,15 @@
 #include "debug_cli.h"
 #include "deviceconfig.h"
 #include "effectmanager.h"
+#include "gfxbase.h"
 #include "ledstripeffect.h"
+#include "nd_network.h"
 #include "soundanalyzer.h"
 #include "systemcontainer.h"
+
+#if USE_MATRIX && ENABLE_WIFI
+#include "effects/matrix/PatternStocks.h"
+#endif
 
 namespace DebugCLI
 {
@@ -421,6 +427,59 @@ static void DoEmitMix(const cli_argv &)
     debugT("This is a TRACE message");
 }
 
+static void DoQuotes(const cli_argv &)
+{
+#if USE_MATRIX && ENABLE_WIFI
+    auto effects = g_ptrSystem->GetEffectManager().EffectsList();
+    std::shared_ptr<PatternStocks> stocksEffect = nullptr;
+
+    for (const auto& effect : effects)
+    {
+        if (effect && effect->effectId() == PatternStocks::ID)
+        {
+            stocksEffect = std::static_pointer_cast<PatternStocks>(effect);
+            break;
+        }
+    }
+
+    if (!stocksEffect)
+    {
+        cli_printf("Stocks effect is not loaded.\n");
+        return;
+    }
+
+    cli_printf("Stock server: %s\n", stocksEffect->StockServer().c_str());
+
+    size_t received = 0;
+    stocksEffect->RefreshQuotes([&received](const StockData& quote)
+    {
+        if (quote.symbol.isEmpty())
+        {
+            cli_printf("Quote fetch failed.\n");
+            return;
+        }
+
+        received++;
+        cli_printf("%s: State %s, Open %.2f, Current %.2f, High %.2f, Low %.2f, Close %.2f, Change %.2f (%.2f%%), Prev %.2f, Volume %.0f\n",
+                   quote.symbol.c_str(),
+                   quote.marketState.isEmpty() ? "unknown" : quote.marketState.c_str(),
+                   quote.open,
+                   quote.DisplayPrice(),
+                   quote.high,
+                   quote.low,
+                   quote.close,
+                   quote.DisplayChange(),
+                   quote.changePercent,
+                   quote.previousClose,
+                   quote.volume);
+    });
+
+    cli_printf("Quotes refreshed: %zu\n", received);
+#else
+    cli_printf("Stocks effect is not available in this build.\n");
+#endif
+}
+
 //
 // Core Commands Table
 //
@@ -581,6 +640,7 @@ static const command core_commands[] = {
      }},
     {"heap", "Display heap memory info",
      "Heap usage:", [](const cli_argv &) { heap_caps_print_heap_info(MALLOC_CAP_DEFAULT); }},
+    {"quotes", "Refresh and display stock quotes", "Refreshing quotes...", DoQuotes},
     {"log", "[tag] <level> Get/set log level", nullptr,
      [](const cli_argv &argv) {
          static const struct
