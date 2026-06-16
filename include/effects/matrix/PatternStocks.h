@@ -46,6 +46,7 @@
 #include <thread>
 #include <vector>
 #include <map>
+#include <mutex>
 #include <sstream>
 
 #include "formatsize.h"
@@ -171,7 +172,16 @@ public:
     float volume = 0.0f;
 
     bool hasCurrentPrice = false;
+    bool hasPreviousClose = false;
+    bool hasOpen = false;
+    bool hasHigh = false;
+    bool hasLow = false;
+    bool hasClose = false;
+    bool hasOfficialClose = false;
     bool hasRegularClose = false;
+    bool hasChange = false;
+    bool hasChangePercent = false;
+    bool hasVolume = false;
 
     vector<StockPoint> points;
 
@@ -230,6 +240,8 @@ private:
     system_clock::time_point nextFetch = system_clock::now();  // Time of last quote pull
 
     std::map<String, StockData> stockData;  // map of stock symbols to quotes
+    mutable std::mutex stockDataMutex;
+    std::mutex quoteFetchMutex;
 
     using StockDataCallback = function<void(const StockData&)>;
 
@@ -247,17 +259,21 @@ private:
     {
         const int topLineHeight = screenHeight / 2;
 
-        if (stockData.empty())
+        StockData currentStock;
         {
-            g().DrawTextInBand("STOCKS", 0, topLineHeight, CRGB::White);
-            g().DrawTextInBand("--", topLineHeight, screenHeight - topLineHeight, CRGB::LightGrey);
-            return;
-        }
+            std::lock_guard dataGuard(stockDataMutex);
+            if (stockData.empty())
+            {
+                g().DrawTextInBand("STOCKS", 0, topLineHeight, CRGB::White);
+                g().DrawTextInBand("--", topLineHeight, screenHeight - topLineHeight, CRGB::LightGrey);
+                return;
+            }
 
-        const size_t stockIndex = std::min(static_cast<size_t>(std::max(0, iCurrentStock)), stockData.size() - 1);
-        auto it = stockData.begin();
-        std::advance(it, stockIndex);
-        const StockData& currentStock = it->second;
+            const size_t stockIndex = std::min(static_cast<size_t>(std::max(0, iCurrentStock)), stockData.size() - 1);
+            auto it = stockData.begin();
+            std::advance(it, stockIndex);
+            currentStock = it->second;
+        }
 
         const float displayPrice = currentStock.DisplayPrice();
         const String priceText = displayPrice >= 10000 ? String(displayPrice, 0) : String(displayPrice, 2);
@@ -270,6 +286,11 @@ private:
     static float JsonFloatOr(JsonVariantConst value, float fallback = 0.0f)
     {
         return value.is<float>() || value.is<double>() || value.is<int>() ? value.as<float>() : fallback;
+    }
+
+    static bool JsonHasNumber(JsonVariantConst value)
+    {
+        return value.is<float>() || value.is<double>() || value.is<int>() || value.is<unsigned int>();
     }
 
     static String JsonStringOr(JsonVariantConst value, const String& fallback = "")
@@ -287,14 +308,20 @@ private:
             stockData.symbol               = JsonStringOr(doc["s"]);
             stockData.marketState          = JsonStringOr(doc["st"]);
             stockData.currentPrice         = JsonFloatOr(doc["p"]);
-            stockData.hasCurrentPrice      = doc["p"].is<float>() || doc["p"].is<double>() || doc["p"].is<int>();
+            stockData.hasCurrentPrice      = JsonHasNumber(doc["p"]);
             stockData.previousClose        = JsonFloatOr(doc["pc"]);
+            stockData.hasPreviousClose     = JsonHasNumber(doc["pc"]);
             stockData.officialClose        = JsonFloatOr(doc["oc"]);
+            stockData.hasOfficialClose     = JsonHasNumber(doc["oc"]);
+            stockData.close                = stockData.officialClose;
+            stockData.hasClose             = stockData.hasOfficialClose;
             stockData.officialCloseDate    = JsonStringOr(doc["ocd"]);
-            stockData.hasRegularClose      = !doc["rc"].isNull();
+            stockData.hasRegularClose      = JsonHasNumber(doc["rc"]);
             stockData.regularClose         = JsonFloatOr(doc["rc"]);
             stockData.change               = JsonFloatOr(doc["chg"]);
+            stockData.hasChange            = JsonHasNumber(doc["chg"]);
             stockData.changePercent        = JsonFloatOr(doc["chgp"]);
+            stockData.hasChangePercent     = JsonHasNumber(doc["chgp"]);
             stockData.currentPriceTimeZone = JsonStringOr(doc["tz"]);
 
             for (JsonArray point : doc["h"].as<JsonArray>())
@@ -317,23 +344,32 @@ private:
             stockData.symbol               = JsonStringOr(doc["symbol"]);
             stockData.marketState          = JsonStringOr(doc["market_state"]);
             stockData.currentPrice         = JsonFloatOr(doc["current_price"]);
-            stockData.hasCurrentPrice      = doc["current_price"].is<float>() || doc["current_price"].is<double>() || doc["current_price"].is<int>();
+            stockData.hasCurrentPrice      = JsonHasNumber(doc["current_price"]);
             stockData.currentPriceTime     = JsonStringOr(doc["current_price_time"]);
             stockData.currentPriceTimeZone = JsonStringOr(doc["current_price_time_zone"]);
             stockData.previousClose        = JsonFloatOr(doc["previous_close"]);
+            stockData.hasPreviousClose     = JsonHasNumber(doc["previous_close"]);
             stockData.officialClose        = JsonFloatOr(doc["official_close"]);
+            stockData.hasOfficialClose     = JsonHasNumber(doc["official_close"]);
             stockData.officialCloseDate    = JsonStringOr(doc["official_close_date"]);
-            stockData.hasRegularClose      = !doc["regular_close"].isNull();
+            stockData.hasRegularClose      = JsonHasNumber(doc["regular_close"]);
             stockData.regularClose         = JsonFloatOr(doc["regular_close"]);
             stockData.change               = JsonFloatOr(doc["change"]);
+            stockData.hasChange            = JsonHasNumber(doc["change"]);
             stockData.changePercent        = JsonFloatOr(doc["change_percent"]);
+            stockData.hasChangePercent     = JsonHasNumber(doc["change_percent"]);
 
             JsonObjectConst day = doc["day"].as<JsonObjectConst>();
             stockData.open   = JsonFloatOr(day["open"]);
+            stockData.hasOpen = JsonHasNumber(day["open"]);
             stockData.high   = JsonFloatOr(day["high"]);
+            stockData.hasHigh = JsonHasNumber(day["high"]);
             stockData.low    = JsonFloatOr(day["low"]);
+            stockData.hasLow = JsonHasNumber(day["low"]);
             stockData.close  = JsonFloatOr(day["close"], stockData.officialClose);
+            stockData.hasClose = JsonHasNumber(day["close"]) || stockData.hasOfficialClose;
             stockData.volume = JsonFloatOr(day["volume"]);
+            stockData.hasVolume = JsonHasNumber(day["volume"]);
 
             JsonArrayConst points = doc["history"]["points"].as<JsonArrayConst>();
             for (JsonObjectConst point : points)
@@ -391,6 +427,8 @@ private:
 
     void GetAllQuotes(const String& symbols, StockDataCallback callback = nullptr)
     {
+        std::lock_guard fetchGuard(quoteFetchMutex);
+
         // Lambda to split the symbols string by comma, because somehow this is cooler than strtok() was in 1989
         // and I want to flex, but also because strtok() is not thread-safe and we're using threads here.  So there.
         // Also, I'm using std::string here because std::getline() is easier to use with std::string than with String.
@@ -421,7 +459,10 @@ private:
             GetQuote(symbol, [this, callback](const StockData& stockDataReceived)
             {
                 if (!stockDataReceived.symbol.isEmpty())    // Check if the stock data is not empty
+                {
+                    std::lock_guard dataGuard(stockDataMutex);
                     this->stockData[stockDataReceived.symbol] = stockDataReceived;
+                }
                 if (callback)
                     callback(stockDataReceived);            // Optionally, call the callback for each symbol's data
             });
@@ -559,7 +600,7 @@ public:
         auto changelen  = changetext.length();
 
         constexpr auto formatVolumeLargerThan = 1000000;
-        auto voltext = formatSize(data.volume, formatVolumeLargerThan);
+        auto voltext = data.hasVolume ? formatSize(data.volume, formatVolumeLargerThan, 0) : String("--");
         auto vollen  = voltext.length();
 
         textSymbol = AnimatedText(data.symbol, CRGB::White, &Apple5x7, 0.50f, -MATRIX_WIDTH, 8, 0, 8);
@@ -588,12 +629,19 @@ public:
         textChange.Draw(&graphics);
         textVolume.Draw(&graphics);
 
-        if (stockData.empty())
-            return;
+        StockData currentStock;
+        {
+            std::lock_guard dataGuard(stockDataMutex);
+            if (stockData.empty())
+                return;
 
-        auto it = stockData.begin();
-        std::advance(it, iCurrentStock);
-        StockData & currentStock = it->second;
+            if (iCurrentStock >= static_cast<int>(stockData.size()))
+                iCurrentStock = 0;
+
+            auto it = stockData.begin();
+            std::advance(it, iCurrentStock);
+            currentStock = it->second;
+        }
 
         // Draw the stock history graph
 
@@ -682,23 +730,29 @@ public:
         auto now = system_clock::now();
 
         // We move on to next stock if the interval has passed, or we have less stock data available than before
-        auto showNextStock = now - lastUpdate >= STOCKS_UPDATE_INTERVAL_SECONDS || stockData.size() < lastCount;
-
-        // Only do something if we should and have stock data to show
-        if (showNextStock && !stockData.empty())
+        StockData nextStock;
+        bool hasNextStock = false;
         {
-            lastUpdate = now;
-            lastCount = stockData.size();
+            std::lock_guard dataGuard(stockDataMutex);
+            const size_t stockCount = stockData.size();
+            auto showNextStock = now - lastUpdate >= STOCKS_UPDATE_INTERVAL_SECONDS || stockCount < lastCount;
 
-            if (showNextStock)
+            // Only do something if we should and have stock data to show
+            if (showNextStock && stockCount > 0)
             {
-                iCurrentStock = (iCurrentStock + 1) % stockData.size();
+                lastUpdate = now;
+                lastCount = stockCount;
+                iCurrentStock = (iCurrentStock + 1) % stockCount;
 
                 auto it = stockData.begin();
                 std::advance(it, iCurrentStock);
-                StartQuoteDisplay(it->second);
+                nextStock = it->second;
+                hasNextStock = true;
             }
         }
+
+        if (hasNextStock)
+            StartQuoteDisplay(nextStock);
 
         // Paint Frame
 
@@ -736,9 +790,12 @@ public:
         // have and trigger a reload.
         if (FieldAccess::AssignIfSelected(name, NAME_OF(tickerSymbols), tickerSymbols, value))
         {
-            iCurrentStock = 0;
-            stockData.clear();
-            lastCount = SIZE_MAX;
+            {
+                std::lock_guard dataGuard(stockDataMutex);
+                iCurrentStock = 0;
+                stockData.clear();
+                lastCount = SIZE_MAX;
+            }
             g_ptrSystem->GetNetworkReader().FlagReader(readerIndex);
             return true;
         }

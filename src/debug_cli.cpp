@@ -427,6 +427,14 @@ static void DoEmitMix(const cli_argv &)
     debugT("This is a TRACE message");
 }
 
+#if USE_MATRIX && ENABLE_WIFI
+static void PrintQuoteField(const char* label, bool hasValue, float value)
+{
+    if (hasValue)
+        cli_printf(", %s %.2f", label, value);
+}
+#endif
+
 static void DoQuotes(const cli_argv &)
 {
 #if USE_MATRIX && ENABLE_WIFI
@@ -460,18 +468,30 @@ static void DoQuotes(const cli_argv &)
         }
 
         received++;
-        cli_printf("%s: State %s, Open %.2f, Current %.2f, High %.2f, Low %.2f, Close %.2f, Change %.2f (%.2f%%), Prev %.2f, Volume %.0f\n",
+        cli_printf("%s: State %s",
                    quote.symbol.c_str(),
-                   quote.marketState.isEmpty() ? "unknown" : quote.marketState.c_str(),
-                   quote.open,
-                   quote.DisplayPrice(),
-                   quote.high,
-                   quote.low,
-                   quote.close,
-                   quote.DisplayChange(),
-                   quote.changePercent,
-                   quote.previousClose,
-                   quote.volume);
+                   quote.marketState.isEmpty() ? "unknown" : quote.marketState.c_str());
+
+        PrintQuoteField("Open", quote.hasOpen, quote.open);
+        PrintQuoteField("Current", quote.hasCurrentPrice, quote.currentPrice);
+        PrintQuoteField("High", quote.hasHigh, quote.high);
+        PrintQuoteField("Low", quote.hasLow, quote.low);
+        PrintQuoteField("Close", quote.hasClose, quote.close);
+
+        if (quote.hasChange)
+        {
+            if (quote.hasChangePercent)
+                cli_printf(", Change %.2f (%.2f%%)", quote.change, quote.changePercent);
+            else
+                cli_printf(", Change %.2f", quote.change);
+        }
+
+        PrintQuoteField("Prev", quote.hasPreviousClose, quote.previousClose);
+
+        if (quote.hasVolume)
+            cli_printf(", Volume %.0f", quote.volume);
+
+        cli_printf("\n");
     });
 
     cli_printf("Quotes refreshed: %zu\n", received);

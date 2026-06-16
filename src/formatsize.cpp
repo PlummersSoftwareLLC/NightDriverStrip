@@ -32,7 +32,7 @@
 #include <iomanip>
 #include <sstream>
 
-String formatSize(size_t size, size_t threshold)
+String formatSize(size_t size, size_t threshold, int scaledPrecision)
 {
     const char* suffixes[] = {"", "K", "M", "G", "T", "P", "E", "Z"};
     size_t suffixIndex = 0;
@@ -44,8 +44,10 @@ String formatSize(size_t size, size_t threshold)
         ++suffixIndex;
     }
 
+    const int precision = suffixIndex == 0 ? 0 : scaledPrecision;
+
     std::ostringstream oss;
-    oss << std::fixed << std::setprecision(0) << sizeDouble << suffixes[suffixIndex];
+    oss << std::fixed << std::setprecision(precision) << sizeDouble << suffixes[suffixIndex];
     std::string result = oss.str();
     return String(result.c_str());
 }
