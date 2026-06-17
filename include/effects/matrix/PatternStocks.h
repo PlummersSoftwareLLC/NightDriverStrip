@@ -247,6 +247,13 @@ private:
 
     HTTPClient http;
 
+    void AddRealtimeQuoteKeyHeader()
+    {
+        const char * realtimeQuoteKey = cszRealtimeQuoteKey;
+        if (realtimeQuoteKey != nullptr && realtimeQuoteKey[0] != '\0')
+            http.addHeader("X-Stockserver-Realtime-Key", realtimeQuoteKey);
+    }
+
     void NormalizeStockServer()
     {
 #if MESMERIZER
@@ -387,6 +394,7 @@ private:
     void GetQuote(const String &symbol, StockDataCallback callback = nullptr)
     {
         http.begin("http://" + stockServer + "/?ticker=" + symbol + "&v=2&points=64");
+        AddRealtimeQuoteKeyHeader();
 
         int httpCode = http.GET();
         if (httpCode == HTTP_CODE_OK)
