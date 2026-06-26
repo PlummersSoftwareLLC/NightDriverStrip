@@ -149,7 +149,13 @@ extern std::mutex g_buffer_mutex;
     #define USE_M5 1
 #endif
 
-#if USE_HUB75 || USE_ESP_HUB75 || USE_MPDMA_HUB75
+#if defined(USE_ESP_HUB75) || defined(USE_MPDMA_HUB75)
+    #ifndef USE_HUB75
+        #define USE_HUB75 1
+    #endif
+#endif
+
+#if USE_HUB75
     #ifndef USE_MATRIX
         #define USE_MATRIX 1
     #endif

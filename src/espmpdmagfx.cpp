@@ -60,7 +60,13 @@ void ESPMPDMAGFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devi
         .lat = 47, .oe = 14, .clk = 2
     };
 #else
-#error "Unrecognized hardware configuration for ESPMPDMAGFX. Please define WAVESHARE_ESP32_S3_RGB_MATRIX or MATRIX_S3."
+    // Default fallback to Mesmerizer ESP32 WROVER pinout
+    config.gpio = {
+        .r1 = 2, .g1 = 0, .b1 = 32,
+        .r2 = 25, .g2 = 33, .b2 = 27,
+        .a = 5, .b = 4, .c = 19, .d = 18, .e = 26,
+        .lat = 21, .oe = 23, .clk = 22
+    };
 #endif
 
     // SRAM Optimization: We disabled library double-buffer to save RAM, but keep 8-bit color depth for fidelity

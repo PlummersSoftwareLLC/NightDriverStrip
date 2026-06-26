@@ -34,16 +34,16 @@
 #include <hub75.h>
 #include <memory>
 #include <vector>
-#include "gfxbase.h"
+#include "hub75gfx.h"
 
-class ESPHUB75GFX : public GFXBase
+class ESPHUB75GFX : public HUB75GFX
 {
 protected:
     static std::unique_ptr<Hub75Driver> driver;
     static std::unique_ptr<CRGB[]> drawBuffer;
 
 public:
-    ESPHUB75GFX(size_t w, size_t h) : GFXBase(w, h)
+    ESPHUB75GFX(size_t w, size_t h) : HUB75GFX(w, h)
     {
     }
 
@@ -64,21 +64,7 @@ public:
 
     static void InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devices);
 
-    __attribute__((always_inline)) inline void setLeds(CRGB *pLeds)
-    {
-        leds = pLeds;
-    }
-
-    void fillLeds(std::unique_ptr<CRGB []> & pLEDs) override
-    {
-        memcpy(leds, pLEDs.get(), sizeof(CRGB) * GetLEDCount());
-    }
-
-    void PrepareFrame() override
-    {
-    }
-
-    static void SetBrightness(byte amount);
+    void SetBrightness(byte amount) override;
 
     void PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn) override;
 };

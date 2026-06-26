@@ -28,23 +28,23 @@
 //
 //---------------------------------------------------------------------------
 
+#include "globals.h"
 
 #if USE_MPDMA_HUB75
 
-#include "globals.h"
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include <memory>
 #include <vector>
-#include "gfxbase.h"
+#include "hub75gfx.h"
 
-class ESPMPDMAGFX : public GFXBase
+class ESPMPDMAGFX : public HUB75GFX
 {
 protected:
     static std::unique_ptr<MatrixPanel_I2S_DMA> driver;
     static std::unique_ptr<CRGB[]> drawBuffer;
 
 public:
-    ESPMPDMAGFX(size_t w, size_t h) : GFXBase(w, h)
+    ESPMPDMAGFX(size_t w, size_t h) : HUB75GFX(w, h)
     {
     }
 
@@ -65,21 +65,7 @@ public:
 
     static void InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devices);
 
-    __attribute__((always_inline)) inline void setLeds(CRGB *pLeds)
-    {
-        leds = pLeds;
-    }
-
-    void fillLeds(std::unique_ptr<CRGB []> & pLEDs) override
-    {
-        memcpy(leds, pLEDs.get(), sizeof(CRGB) * GetLEDCount());
-    }
-
-    void PrepareFrame() override
-    {
-    }
-
-    static void SetBrightness(byte amount);
+    void SetBrightness(byte amount) override;
 
     void PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn) override;
 };

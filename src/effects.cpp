@@ -307,7 +307,7 @@ void LoadEffectFactories()
             Effect<SpectrumAnalyzerEffect>("Spectrum++", NUM_BANDS, spectrumBasicColors, false, 0, 40, -1.0, 2.0),
             Effect<WaveformEffect>("WaveIn", 8),
             Effect<GhostWave>("WaveOut", 0, 0, true, 0),
-            Effect<StarEffect<MusicStar>>("Stars", RainbowColors_p, 1.0, 1, LINEARBLEND, 2.0, 0.5, 10.0)
+            Effect<StarEffect<MusicStar>>("Stars", RainbowColors_p, 1.0, 1, LINEARBLEND, 2.0, 0.5, 10.0),
 #endif
             Effect<PatternSMRadialWave>(),
             Effect<PatternAnimatedGIF>("Fire Log", GIFIdentifier::Firelog),

@@ -66,7 +66,7 @@ void ESPHUB75GFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devi
     config.pins.lat = 40;
     config.pins.oe = 2;
     config.pins.clk = 41;
-#else
+#elif MATRIX_S3
     // Adafruit MatrixPortal S3 physical pinout mapping
     config.pins.r1 = 42;
     config.pins.g1 = 41;
@@ -86,6 +86,22 @@ void ESPHUB75GFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devi
     config.pins.lat = 47;
     config.pins.oe = 14;
     config.pins.clk = 2;
+#else
+    // Default fallback to Mesmerizer ESP32 WROVER pinout
+    config.pins.r1 = 2;
+    config.pins.g1 = 0;
+    config.pins.b1 = 32;
+    config.pins.r2 = 25;
+    config.pins.g2 = 33;
+    config.pins.b2 = 27;
+    config.pins.a = 5;
+    config.pins.b = 4;
+    config.pins.c = 19;
+    config.pins.d = 18;
+    config.pins.e = 26;
+    config.pins.lat = 21;
+    config.pins.oe = 23;
+    config.pins.clk = 22;
 #endif
 
     driver = std::make_unique<Hub75Driver>(config);
@@ -104,8 +120,17 @@ void ESPHUB75GFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devi
     std::static_pointer_cast<ESPHUB75GFX>(devices[0])->setLeds(drawBuffer.get());
 }
 
+void ESPHUB75GFX::SetBrightness(byte amount)
+{
+    // Note: The esp-hub75 driver sets brightness through its internal drawing calls or API.
+    // If it lacks a dynamic global brightness, you might need to scale the pixels directly.
+    // For now, this is a placeholder if a hardware brightness API is available.
+}
+
 void ESPHUB75GFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
 {
+    HUB75GFX::PostProcessFrame(localPixelsDrawn, wifiPixelsDrawn);
+
     if ((localPixelsDrawn + wifiPixelsDrawn) == 0)
         return;
 
