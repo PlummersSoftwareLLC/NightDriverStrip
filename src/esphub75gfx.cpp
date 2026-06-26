@@ -32,6 +32,27 @@ void ESPHUB75GFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devi
     config.double_buffer = true;
     config.shift_driver = Hub75ShiftDriver::GENERIC;
 
+#if USE_WS_S3_HUB75
+    // Waveshare ESP32-S3-RGB-Matrix
+    config.pins.r1 = 4;
+    config.pins.g1 = 5;
+    config.pins.b1 = 6;
+    config.pins.r2 = 7;
+    config.pins.g2 = 15;
+    config.pins.b2 = 16;
+    config.pins.a = 18;
+    config.pins.b = 8;
+    config.pins.c = 3;
+    config.pins.d = 42;
+#if MATRIX_HEIGHT > 32
+    config.pins.e = 9;
+#else
+    config.pins.e = -1; // 64x32 is 1/16 scan, no E pin
+#endif
+    config.pins.lat = 40;
+    config.pins.oe = 2;
+    config.pins.clk = 41;
+#else
     // Adafruit MatrixPortal S3 physical pinout mapping
     config.pins.r1 = 42;
     config.pins.g1 = 41;
@@ -51,6 +72,7 @@ void ESPHUB75GFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devi
     config.pins.lat = 47;
     config.pins.oe = 14;
     config.pins.clk = 2;
+#endif
 
     driver = std::make_unique<Hub75Driver>(config);
     driver->begin();
