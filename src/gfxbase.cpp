@@ -42,6 +42,10 @@
 #include "gfxbase.h"
 #include "systemcontainer.h"
 
+#if ENABLE_AUDIO
+#include "soundanalyzer.h"
+#endif
+
 // 32 Entries in the 5-bit gamma table
 const uint8_t GFXBase::gamma5[32] =
 {
@@ -1460,7 +1464,25 @@ const GFXBase::PolarMapArray& GFXBase::getPolarMap()
 void GFXBase::DrawCaptionOverlay()
 {
     if (strCaption.isEmpty() || GetCaptionTransparency() <= 0.0f)
+    {
+#if SHOW_FPS_ON_MATRIX
+        if (_height >= 8)
+        {
+            setFont(NULL);
+            setTextSize(1);
+            setTextWrap(false);
+            setTextColor(to16bit(255, 255, 255), to16bit(0, 0, 0));
+            setCursor(2, _height - 8);
+            String output = "LED: " + String(g_Values.FPS);
+#if ENABLE_AUDIO
+            extern class SoundAnalyzerBase g_Analyzer;
+            output += " AUD: " + String(g_Analyzer.AudioFPS());
+#endif
+            print(output);
+        }
+#endif
         return;
+    }
 
     if (_height < 8)
         return;

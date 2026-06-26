@@ -100,11 +100,10 @@ void ESPMPDMAGFX::SetBrightness(byte amount)
 
 void ESPMPDMAGFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
 {
-    // Determine the active brightness level (honoring the cross-fade fader)
-    uint8_t targetBrightness = g_ptrSystem->GetDeviceConfig().GetBrightness();
-    if (g_Values.Fader < targetBrightness)
-        targetBrightness = g_Values.Fader;
-    SetBrightness(targetBrightness);
+    HUB75GFX::PostProcessFrame(localPixelsDrawn, wifiPixelsDrawn);
+
+    if ((localPixelsDrawn + wifiPixelsDrawn) == 0)
+        return;
 
     // Render CRGB buffer to DMA using the XY() macro to match how effects populated it
     for (int y = 0; y < MATRIX_HEIGHT; y++)

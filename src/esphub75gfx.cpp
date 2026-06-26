@@ -122,9 +122,8 @@ void ESPHUB75GFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devi
 
 void ESPHUB75GFX::SetBrightness(byte amount)
 {
-    // Note: The esp-hub75 driver sets brightness through its internal drawing calls or API.
-    // If it lacks a dynamic global brightness, you might need to scale the pixels directly.
-    // For now, this is a placeholder if a hardware brightness API is available.
+    if (driver)
+        driver->set_brightness(amount);
 }
 
 void ESPHUB75GFX::PostProcessFrame(uint16_t localPixelsDrawn, uint16_t wifiPixelsDrawn)
