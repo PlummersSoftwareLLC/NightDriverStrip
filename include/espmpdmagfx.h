@@ -2,7 +2,7 @@
 
 //+--------------------------------------------------------------------------
 //
-// File:        esphub75gfx.h
+// File:        espmpdmagfx.h
 //
 // NightDriverStrip - (c) 2026 Robert Lipe.  All Rights Reserved.
 //
@@ -24,35 +24,36 @@
 //
 // Description:
 //
-//   Provides a modern HUB75 GFX implementation using esphome-libs/esp-hub75.
+//   Provides a modern HUB75 GFX implementation using ESP32-HUB75-MatrixPanel-DMA.
 //
 //---------------------------------------------------------------------------
 
-#if USE_ESP_HUB75
+
+#if USE_MPDMA_HUB75
 
 #include "globals.h"
-#include <hub75.h>
+#include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include <memory>
 #include <vector>
 #include "gfxbase.h"
 
-class ESPHUB75GFX : public GFXBase
+class ESPMPDMAGFX : public GFXBase
 {
 protected:
-    static std::unique_ptr<Hub75Driver> driver;
+    static std::unique_ptr<MatrixPanel_I2S_DMA> driver;
     static std::unique_ptr<CRGB[]> drawBuffer;
 
 public:
-    ESPHUB75GFX(size_t w, size_t h) : GFXBase(w, h)
+    ESPMPDMAGFX(size_t w, size_t h) : GFXBase(w, h)
     {
     }
 
-    ~ESPHUB75GFX() override = default;
+    ~ESPMPDMAGFX() override = default;
 
     __attribute__((always_inline)) uint16_t xy(uint16_t x, uint16_t y) const noexcept override
     {
         if (x < _width && y < _height)
-            return y * _width + x;
+            return XY(x, y);
         return 0;
     }
 

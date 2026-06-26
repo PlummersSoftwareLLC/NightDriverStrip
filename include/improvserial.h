@@ -32,10 +32,10 @@
 //
 //---------------------------------------------------------------------------
 
+#include "globals.h"
 #include <improv.h>
 #include <numeric>
 #include <SPIFFS.h>
-#include "globals.h"
 #include "hexdump.h"
 #include "nd_network.h"
 
