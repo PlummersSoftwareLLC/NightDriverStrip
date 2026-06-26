@@ -188,6 +188,9 @@
 #if USE_ESP_HUB75
 #include "esphub75gfx.h"
 #endif
+#if USE_MPDMA_HUB75
+#include "espmpdmagfx.h"
+#endif
 #if ENABLE_WIFI
 #include "improvserial.h"
 #endif
@@ -553,7 +556,9 @@ void setup()
 
     // Initialize the strand controllers depending on how many channels we have
 
-    #if USE_ESP_HUB75
+    #if USE_MPDMA_HUB75
+        ESPMPDMAGFX::InitializeHardware(devices);
+    #elif USE_ESP_HUB75
         ESPHUB75GFX::InitializeHardware(devices);
     #elif USE_HUB75
         // HUB75GFX is used for HUB75 projects like the Mesmerizer
