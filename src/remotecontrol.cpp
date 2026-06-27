@@ -35,9 +35,18 @@
 
 #if ENABLE_REMOTE
 
+#ifndef IS_IDF5
+#define IS_IDF5 (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0))
+#endif
+
+#if IS_IDF5
+#include <driver/rmt_rx.h>
+#else
 #include <driver/rmt.h>
+#endif
 #include <freertos/FreeRTOS.h>
 #include <freertos/ringbuf.h>
+#include <freertos/queue.h>
 
 #include "deviceconfig.h"
 #include "effectmanager.h"
@@ -215,8 +224,127 @@ static const RemoteColorCode RemoteColorCodes[] =
 #endif
 
 // ---------------------------------------------------------
-// Native RMT Decoder Implementation (Legacy 4.x API)
+// Native RMT Decoder Implementation
 // ---------------------------------------------------------
+
+#define NEC_DECODE_MARGIN 200  // Tolerance in microseconds
+#define RMT_RESOLUTION_HZ 1000000
+
+#if IS_IDF5
+
+class RemoteControlImpl
+{
+public:
+    RemoteControlImpl(int pin) : _pin(pin) {}
+
+    ~RemoteControlImpl() {
+        if (_begun) {
+            rmt_disable(_channel);
+            rmt_del_channel(_channel);
+            vQueueDelete(_rx_queue);
+        }
+    }
+
+    bool begin() {
+        rmt_rx_channel_config_t rx_chan_config = {};
+        rx_chan_config.clk_src = RMT_CLK_SRC_DEFAULT;
+        rx_chan_config.resolution_hz = RMT_RESOLUTION_HZ;
+        rx_chan_config.mem_block_symbols = 64;
+        rx_chan_config.gpio_num = (gpio_num_t)_pin;
+
+        if (rmt_new_rx_channel(&rx_chan_config, &_channel) != ESP_OK) return false;
+
+        _rx_queue = xQueueCreate(10, sizeof(rmt_rx_done_event_data_t));
+        if (!_rx_queue) return false;
+
+        rmt_rx_event_callbacks_t cbs = {
+            .on_recv_done = [](rmt_channel_handle_t rx_chan, const rmt_rx_done_event_data_t *edata, void *user_ctx) -> bool {
+                BaseType_t high_task_wakeup = pdFALSE;
+                QueueHandle_t rx_queue = (QueueHandle_t)user_ctx;
+                xQueueSendFromISR(rx_queue, edata, &high_task_wakeup);
+                return high_task_wakeup == pdTRUE;
+            }
+        };
+
+        if (rmt_rx_register_event_callbacks(_channel, &cbs, _rx_queue) != ESP_OK) return false;
+        if (rmt_enable(_channel) != ESP_OK) return false;
+
+        rmt_receive_config_t receive_config = {};
+        receive_config.signal_range_min_ns = 1250;
+        receive_config.signal_range_max_ns = 12000000;
+
+        if (rmt_receive(_channel, _raw_symbols, sizeof(_raw_symbols), &receive_config) != ESP_OK) return false;
+
+        _begun = true;
+        return true;
+    }
+
+    bool decode(uint32_t &code, bool &isRepeat) {
+        if (!_begun) return false;
+
+        rmt_rx_done_event_data_t rx_data;
+        if (xQueueReceive(_rx_queue, &rx_data, 0) == pdTRUE) {
+            bool success = parseNecFrame(rx_data.received_symbols, rx_data.num_symbols, code, isRepeat);
+
+            rmt_receive_config_t receive_config = {};
+            receive_config.signal_range_min_ns = 1250;
+            receive_config.signal_range_max_ns = 12000000;
+            rmt_receive(_channel, _raw_symbols, sizeof(_raw_symbols), &receive_config);
+
+            return success;
+        }
+        return false;
+    }
+
+private:
+    int _pin;
+    rmt_channel_handle_t _channel = NULL;
+    QueueHandle_t _rx_queue = NULL;
+    rmt_symbol_word_t _raw_symbols[64];
+    bool _begun = false;
+
+    bool match(uint32_t measured, uint32_t target) {
+        return (measured >= (target - NEC_DECODE_MARGIN)) &&
+               (measured <= (target + NEC_DECODE_MARGIN));
+    }
+
+    bool parseNecFrame(const rmt_symbol_word_t* items, size_t count, uint32_t &code, bool &isRepeat) {
+        isRepeat = false;
+        auto get_time = [&](int i) -> uint32_t {
+            if (i % 2 == 0) return items[i/2].duration0;
+            else return items[i/2].duration1;
+        };
+
+        size_t symbol_count = count * 2;
+        if (symbol_count < 2) return false;
+
+        if (!match(get_time(0), 9000)) return false;
+        if (match(get_time(1), 2250)) {
+            isRepeat = true;
+            return true;
+        }
+        if (!match(get_time(1), 4500)) return false;
+        if (symbol_count < 67) return false;
+
+        uint32_t data = 0;
+        for (int i = 2; i < 66; i += 2) {
+            if (!match(get_time(i), 560)) return false;
+            data <<= 1;
+            if (match(get_time(i+1), 1690)) {
+                data |= 1;
+            } else if (!match(get_time(i+1), 560)) {
+                return false;
+            }
+        }
+
+        code = data;
+        return true;
+    }
+};
+
+#else
+
+// Legacy 4.x API
 
 #define NEC_DECODE_MARGIN 200  // Tolerance in microseconds
 #define RMT_RESOLUTION_HZ 1000000
@@ -318,6 +446,8 @@ private:
     }
 };
 
+#endif
+
 // ---------------------------------------------------------
 // RemoteControl Wrappers
 // ---------------------------------------------------------
@@ -330,7 +460,11 @@ RemoteControl::~RemoteControl() = default;
 // Starts the IR remote task and sets up the IR receiver
 
 bool RemoteControl::begin() {
+#if IS_IDF5
+    debugW("Native Remote Control Decoding Started (RMT driver_ng)");
+#else
     debugW("Native Remote Control Decoding Started (RMT Legacy)");
+#endif
     return _pImpl->begin();
 }
 
