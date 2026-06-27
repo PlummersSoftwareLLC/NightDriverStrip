@@ -77,8 +77,12 @@ void ESPMPDMAGFX::InitializeHardware(std::vector<std::shared_ptr<GFXBase>>& devi
     // config.i2sspeed = HUB75_I2S_CFG::HZ_20M; // Up to HZ_40M on S3. Increases refresh rate, reduces flicker, frees CPU, but cheap panels may glitch.
     // config.latch_blanking = 2;               // Default is 1. Increase to fix "ghosting" (faint lines bleeding across the matrix).
     // config.min_refresh_rate = 120;           // Default is 60Hz. Force higher refresh for camera filming, at cost of CPU/DMA bandwidth.
-    // config.clkphase = false;                 // Flip clock phase if you see a "shimmering" effect or single pixels jumping around.
-
+    
+#if WAVESHARE_ESP32_S3_RGB_MATRIX
+    // The Waveshare panel tends to exhibit a checkerboard/dithered "shimmering" effect
+    // on text without flipping the clock phase.
+    config.clkphase = false;
+#endif
 
     driver = std::make_unique<MatrixPanel_I2S_DMA>(config);
     if (!driver->begin()) debugE("MatrixPanel_I2S_DMA::begin() FAILED!");
