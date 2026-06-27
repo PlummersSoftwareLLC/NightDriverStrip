@@ -130,9 +130,17 @@ void SoundAnalyzerBase::SampleAudio()
 
     if (bytesRead == 0) return;
 
+    // Calculate DC offset (mean) of the current frame to prevent windowing artifacts
+    float mean = 0.0f;
+    for (int i = 0; i < MAX_SAMPLES; i++) {
+        mean += ptrSampleBuffer[i];
+    }
+    mean /= MAX_SAMPLES;
+
     // Use std::transform for better code gen (SIMD) when copying/casting samples to FFT input
+    // Subtract the mean to remove DC offset before windowing
     std::transform(ptrSampleBuffer.get(), ptrSampleBuffer.get() + MAX_SAMPLES, _vReal.begin(),
-                   [](int16_t s) { return static_cast<float>(s); });
+                   [mean](int16_t s) { return static_cast<float>(s) - mean; });
 }
 
 // UpdateVU
@@ -603,17 +611,25 @@ size_t SoundAnalyzerBase::SampleADC_Modern()
     size_t ret_num = 0;
 #if !USE_M5 && !USE_I2S_AUDIO && IS_IDF5
     constexpr size_t bytesToRead = MAX_SAMPLES * sizeof(uint16_t);
-    esp_err_t err = adc_continuous_read(_adc_handle, (uint8_t*)ptrSampleBuffer.get(), bytesToRead, (uint32_t*)&ret_num, 0);
+    // Use 100ms timeout instead of 0 to wait for a full buffer
+    esp_err_t err = adc_continuous_read(_adc_handle, (uint8_t*)ptrSampleBuffer.get(), bytesToRead, (uint32_t*)&ret_num, 100);
 
-    if (err == ESP_OK)
+    // Process only if we got a full buffer
+    if (ret_num == bytesToRead)
     {
         for (int i = 0; i < MAX_SAMPLES; i++)
         {
-            if (i * 2 >= ret_num) break;
             uint16_t val = ptrSampleBuffer[i];
             uint16_t data = val & 0xFFF; // Keep 12 bits
-            ptrSampleBuffer[i] = (int16_t)((data - 2048) * 16);
+            // Do NOT scale by 16. Legacy ADC returned unscaled 12-bit values (0-4095).
+            // Scaling by 16 increases energy by 256x, which defeats the quietEnvFloorGate!
+            ptrSampleBuffer[i] = (int16_t)(data - 2048);
         }
+    }
+    else
+    {
+        // If we timed out or got partial data, discard it to prevent FFT discontinuities
+        ret_num = 0;
     }
 #endif
     return ret_num;
