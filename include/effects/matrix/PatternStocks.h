@@ -48,6 +48,7 @@
 #include <map>
 #include <mutex>
 #include <sstream>
+#include <limits>
 
 #include "formatsize.h"
 #include "gfxfont.h"                // Adafruit GFX font structs
@@ -187,7 +188,11 @@ public:
 
     float DisplayPrice() const
     {
-        return hasCurrentPrice ? currentPrice : close;
+        if (hasCurrentPrice)
+            return currentPrice;
+        if (hasClose)
+            return close;
+        return hasOfficialClose ? officialClose : 0.0f;
     }
 
     float DisplayChange() const
@@ -233,7 +238,7 @@ private:
     String       stockServer = DEFAULT_STOCK_SERVER;
     String       tickerSymbols = DEFAULT_TICKER_SYMBOLS;
 
-    int          iCurrentStock = 0;
+    int          iCurrentStock = -1;
     size_t       lastCount     = SIZE_MAX;
 
     system_clock::time_point lastUpdate;    // Time of last update
@@ -305,6 +310,39 @@ private:
         return value.is<const char*>() ? value.as<String>() : fallback;
     }
 
+    static std::vector<String> SplitSymbols(const String& symbols)
+    {
+        std::vector<String> tokens;
+        std::istringstream tokenStream(symbols.c_str());
+        std::string token;
+
+        while (std::getline(tokenStream, token, ','))
+        {
+            String symbol(token.c_str());
+            symbol.trim();
+            if (!symbol.isEmpty())
+                tokens.push_back(symbol);
+        }
+
+        return tokens;
+    }
+
+    static bool SymbolListContains(const String& symbols, const String& symbol)
+    {
+        String normalizedSymbol = symbol;
+        normalizedSymbol.trim();
+        normalizedSymbol.toUpperCase();
+
+        for (String candidate : SplitSymbols(symbols))
+        {
+            candidate.toUpperCase();
+            if (candidate == normalizedSymbol)
+                return true;
+        }
+
+        return false;
+    }
+
     static StockData ParseQuoteV2(JsonDocument& doc)
     {
         StockData stockData;
@@ -320,8 +358,6 @@ private:
             stockData.hasPreviousClose     = JsonHasNumber(doc["pc"]);
             stockData.officialClose        = JsonFloatOr(doc["oc"]);
             stockData.hasOfficialClose     = JsonHasNumber(doc["oc"]);
-            stockData.close                = stockData.officialClose;
-            stockData.hasClose             = stockData.hasOfficialClose;
             stockData.officialCloseDate    = JsonStringOr(doc["ocd"]);
             stockData.hasRegularClose      = JsonHasNumber(doc["rc"]);
             stockData.regularClose         = JsonFloatOr(doc["rc"]);
@@ -373,8 +409,8 @@ private:
             stockData.hasHigh = JsonHasNumber(day["high"]);
             stockData.low    = JsonFloatOr(day["low"]);
             stockData.hasLow = JsonHasNumber(day["low"]);
-            stockData.close  = JsonFloatOr(day["close"], stockData.officialClose);
-            stockData.hasClose = JsonHasNumber(day["close"]) || stockData.hasOfficialClose;
+            stockData.close  = JsonFloatOr(day["close"]);
+            stockData.hasClose = JsonHasNumber(day["close"]);
             stockData.volume = JsonFloatOr(day["volume"]);
             stockData.hasVolume = JsonHasNumber(day["volume"]);
 
@@ -437,28 +473,7 @@ private:
     {
         std::lock_guard fetchGuard(quoteFetchMutex);
 
-        // Lambda to split the symbols string by comma, because somehow this is cooler than strtok() was in 1989
-        // and I want to flex, but also because strtok() is not thread-safe and we're using threads here.  So there.
-        // Also, I'm using std::string here because std::getline() is easier to use with std::string than with String.
-
-        auto split = [](const String& s, char delimiter) -> std::vector<String>
-        {
-            std::vector<String> tokens;
-            std::istringstream tokenStream(s.c_str());
-            std::string token; // Change to std::string to work with std::getline
-
-            while (std::getline(tokenStream, token, delimiter)) {
-                String symbol(token.c_str()); // Convert std::string to String when pushing back
-                symbol.trim();
-                if (!symbol.isEmpty())
-                    tokens.push_back(symbol);
-            }
-            return tokens;
-        };
-
-        // Use the lambda to split the symbols string in a vector of strings
-
-        std::vector<String> symbolList = split(symbols, ',');
+        std::vector<String> symbolList = SplitSymbols(symbols);
 
         // And now for each symbol in the list, call GetQuote and save the data in the stockData map
 
@@ -469,7 +484,8 @@ private:
                 if (!stockDataReceived.symbol.isEmpty())    // Check if the stock data is not empty
                 {
                     std::lock_guard dataGuard(stockDataMutex);
-                    this->stockData[stockDataReceived.symbol] = stockDataReceived;
+                    if (SymbolListContains(tickerSymbols, stockDataReceived.symbol))
+                        this->stockData[stockDataReceived.symbol] = stockDataReceived;
                 }
                 if (callback)
                     callback(stockDataReceived);            // Optionally, call the callback for each symbol's data
@@ -479,7 +495,13 @@ private:
 
     void FetchQuotes()
     {
-        GetAllQuotes(tickerSymbols, [](const StockData& stockDataReceived)
+        String symbols;
+        {
+            std::lock_guard dataGuard(stockDataMutex);
+            symbols = tickerSymbols;
+        }
+
+        GetAllQuotes(symbols, [](const StockData& stockDataReceived)
         {
             if (stockDataReceived.symbol.isEmpty())
                 debugI("Failed to retrieve stock data");
@@ -556,7 +578,10 @@ public:
         LEDStripEffect::SerializeToJSON(root);
 
         jsonDoc["sds"] = stockServer;
-        jsonDoc["tsl"] = tickerSymbols;
+        {
+            std::lock_guard dataGuard(stockDataMutex);
+            jsonDoc["tsl"] = tickerSymbols;
+        }
 
         return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
@@ -581,7 +606,13 @@ public:
 
     void RefreshQuotes(const std::function<void(const StockData&)>& callback = nullptr)
     {
-        GetAllQuotes(tickerSymbols, callback);
+        String symbols;
+        {
+            std::lock_guard dataGuard(stockDataMutex);
+            symbols = tickerSymbols;
+        }
+
+        GetAllQuotes(symbols, callback);
     }
 
     const String& StockServer() const
@@ -608,7 +639,10 @@ public:
         auto changelen  = changetext.length();
 
         constexpr auto formatVolumeLargerThan = 1000000;
-        auto voltext = data.hasVolume ? formatSize(data.volume, formatVolumeLargerThan, 0) : String("--");
+        const double volume = static_cast<double>(data.volume);
+        auto voltext = data.hasVolume && volume >= 0.0 && volume <= static_cast<double>(std::numeric_limits<size_t>::max())
+            ? formatSize(static_cast<size_t>(volume), formatVolumeLargerThan, 0)
+            : String("--");
         auto vollen  = voltext.length();
 
         textSymbol = AnimatedText(data.symbol, CRGB::White, &Apple5x7, 0.50f, -MATRIX_WIDTH, 8, 0, 8);
@@ -643,7 +677,7 @@ public:
             if (stockData.empty())
                 return;
 
-            if (iCurrentStock >= static_cast<int>(stockData.size()))
+            if (iCurrentStock < 0 || static_cast<size_t>(iCurrentStock) >= stockData.size())
                 iCurrentStock = 0;
 
             auto it = stockData.begin();
@@ -750,7 +784,11 @@ public:
             {
                 lastUpdate = now;
                 lastCount = stockCount;
-                iCurrentStock = (iCurrentStock + 1) % stockCount;
+
+                if (iCurrentStock < 0 || static_cast<size_t>(iCurrentStock) >= stockCount)
+                    iCurrentStock = 0;
+                else
+                    iCurrentStock = static_cast<int>((static_cast<size_t>(iCurrentStock) + 1) % stockCount);
 
                 auto it = stockData.begin();
                 std::advance(it, iCurrentStock);
@@ -783,7 +821,10 @@ public:
         LEDStripEffect::SerializeSettingsToJSON(root);
 
         jsonDoc[NAME_OF(stockServer)] = stockServer;
-        jsonDoc[NAME_OF(tickerSymbols)] = tickerSymbols;
+        {
+            std::lock_guard dataGuard(stockDataMutex);
+            jsonDoc[NAME_OF(tickerSymbols)] = tickerSymbols;
+        }
 
         return SetIfNotOverflowed(jsonDoc, jsonObject, __PRETTY_FUNCTION__);
     }
@@ -796,11 +837,12 @@ public:
 
         // If we receive a new list of stock ticker symbols then forget what stock data we
         // have and trigger a reload.
-        if (FieldAccess::AssignIfSelected(name, NAME_OF(tickerSymbols), tickerSymbols, value))
+        if (name == NAME_OF(tickerSymbols))
         {
             {
                 std::lock_guard dataGuard(stockDataMutex);
-                iCurrentStock = 0;
+                tickerSymbols = value;
+                iCurrentStock = -1;
                 stockData.clear();
                 lastCount = SIZE_MAX;
             }
