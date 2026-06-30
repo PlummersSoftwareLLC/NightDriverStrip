@@ -277,12 +277,45 @@
       justify-content: flex-start;
       border-radius: 12px;
       min-height: 54px;
+      font: inherit;
+      text-align: left;
+      cursor: default;
+      transition: border-color 140ms ease, box-shadow 140ms ease, color 140ms ease, opacity 140ms ease;
     }
 
     .step-pill.active {
       color: var(--ink);
       border-color: rgba(57, 255, 136, 0.52);
       box-shadow: 0 0 22px rgba(57, 255, 136, 0.12), inset 0 0 18px rgba(57, 255, 136, 0.10);
+    }
+
+    .step-pill.walked {
+      cursor: pointer;
+    }
+
+    .step-pill.walked:hover {
+      border-color: rgba(191, 90, 242, 0.64);
+      box-shadow: 0 0 20px rgba(191, 90, 242, 0.14), inset 0 0 18px rgba(191, 90, 242, 0.10);
+    }
+
+    .step-pill.walked .step-label,
+    .step-pill.active .step-label {
+      color: #f1dcff;
+      color: color-mix(in srgb, rgb(var(--card-rgb)) 58%, white);
+      text-shadow: 0 0 14px rgba(var(--card-rgb), 0.46);
+    }
+
+    .step-pill.locked {
+      opacity: 0.58;
+    }
+
+    .step-pill.locked .step-index {
+      color: rgba(239, 248, 255, 0.58);
+      background: rgba(142, 167, 200, 0.24);
+    }
+
+    .step-pill:disabled {
+      cursor: not-allowed;
     }
 
     .step-index {
@@ -716,7 +749,8 @@
       devices: [],
       profiles: [],
       selectedProfile: null,
-      step: 0
+      step: 0,
+      maxWalkedStep: 0
     };
 
     const els = {
@@ -785,10 +819,10 @@
       document.querySelectorAll("[data-back]").forEach((button) => button.addEventListener("click", () => setStep(Math.max(0, state.step - 1))));
       [els.stripLedCount, els.stripPin, els.stripColorOrder, els.stripBrightness, els.stripPowerLimit, els.stripEffectInterval,
        els.matrixWidth, els.matrixHeight, els.matrixBrightness, els.matrixPowerLimit].forEach((input) => {
-        input.addEventListener("input", updatePayloadPreview);
-        input.addEventListener("change", updatePayloadPreview);
+        input.addEventListener("input", handleRuntimeConfigChanged);
+        input.addEventListener("change", handleRuntimeConfigChanged);
       });
-      els.deviceUrlInput.addEventListener("input", updateLaunchUrl);
+      els.deviceUrlInput.addEventListener("input", handleDeviceUrlChanged);
       els.devicesDropdown.addEventListener("change", () => {
         const selectedDevice = state.devices.find((device) => device.tag === els.devicesDropdown.value);
         populateProjectsDropdown(selectedDevice?.projects);
@@ -872,24 +906,77 @@
 
     function renderSteps() {
       els.stepList.replaceChildren(...steps.map((label, index) => {
-        const item = document.createElement("div");
+        const item = document.createElement("button");
+        item.type = "button";
         item.className = "step-pill";
         item.dataset.stepPill = String(index);
+        item.setAttribute("aria-label", `Step ${index + 1}: ${label}`);
         item.innerHTML = `<span class="step-index">${index + 1}</span><span class="step-label">${label}</span>`;
+        item.addEventListener("click", () => setStep(index));
         return item;
       }));
+      updateStepNavigation();
     }
 
     function setStep(step) {
-      state.step = step;
+      const nextStep = Math.max(0, Math.min(steps.length - 1, Number(step) || 0));
+      if (nextStep > state.maxWalkedStep + 1) {
+        return;
+      }
+
+      state.step = nextStep;
+      state.maxWalkedStep = Math.max(state.maxWalkedStep, nextStep);
       document.querySelectorAll(".step").forEach((node) => {
-        node.hidden = Number(node.dataset.step) !== step;
+        node.hidden = Number(node.dataset.step) !== state.step;
       });
-      document.querySelectorAll("[data-step-pill]").forEach((node) => {
-        node.classList.toggle("active", Number(node.dataset.stepPill) === step);
-      });
+      updateStepNavigation();
       updatePayloadPreview();
       updateLaunchUrl();
+    }
+
+    function updateStepNavigation() {
+      document.querySelectorAll("[data-step-pill]").forEach((node) => {
+        const stepIndex = Number(node.dataset.stepPill);
+        const walked = stepIndex <= state.maxWalkedStep;
+        const active = stepIndex === state.step;
+        node.classList.toggle("active", active);
+        node.classList.toggle("walked", walked);
+        node.classList.toggle("locked", !walked);
+        node.disabled = !walked;
+        node.setAttribute("aria-current", active ? "step" : "false");
+      });
+    }
+
+    function markStepsUnwalkedAfter(step) {
+      const lastValidStep = Math.max(0, Math.min(steps.length - 1, Number(step) || 0));
+      if (state.maxWalkedStep <= lastValidStep) {
+        return;
+      }
+
+      state.maxWalkedStep = lastValidStep;
+      if (state.step > lastValidStep) {
+        state.step = lastValidStep;
+        document.querySelectorAll(".step").forEach((node) => {
+          node.hidden = Number(node.dataset.step) !== state.step;
+        });
+      }
+      updateStepNavigation();
+    }
+
+    function handleRuntimeConfigChanged() {
+      updatePayloadPreview();
+      markStepsUnwalkedAfter(1);
+      if (state.maxWalkedStep >= 1) {
+        setStatus(els.applyStatus, "Runtime settings changed. Continue through setup to apply the updated configuration.", "");
+      }
+    }
+
+    function handleDeviceUrlChanged() {
+      updateLaunchUrl();
+      markStepsUnwalkedAfter(3);
+      if (state.maxWalkedStep >= 3) {
+        setStatus(els.applyStatus, "Device URL changed. Probe or apply runtime configuration again before launch.", "");
+      }
     }
 
     function renderProfiles() {
@@ -910,6 +997,7 @@
     }
 
     function selectProfile(id) {
+      const previousProfileId = state.selectedProfile?.id;
       state.selectedProfile = state.profiles.find((profile) => profile.id === id) || null;
       document.querySelectorAll(".project-card").forEach((card) => {
         card.setAttribute("aria-pressed", String(card.dataset.profileId === id));
@@ -919,6 +1007,13 @@
       }
 
       const profile = state.selectedProfile;
+      if (previousProfileId && previousProfileId !== profile.id) {
+        markStepsUnwalkedAfter(0);
+        els.deviceUrlInput.value = "";
+        setStatus(els.applyStatus, "Project changed. Continue through setup with the new firmware selection.", "");
+        updateLaunchUrl();
+      }
+
       els.profileDescription.textContent = profile.description || profile.summary || "";
       els.stripFields.hidden = profile.kind === "matrix";
       els.matrixFields.hidden = profile.kind !== "matrix";

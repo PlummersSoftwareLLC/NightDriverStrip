@@ -32,11 +32,8 @@
 #include <iomanip>
 #include <sstream>
 
-String formatSize(size_t size, size_t threshold)
+String formatSize(size_t size, size_t threshold, int scaledPrecision)
 {
-    // If the size is above the threshold, we want a precision of 2 to show more accurate value
-    const int precision = size < threshold ? 0 : 2;
-
     const char* suffixes[] = {"", "K", "M", "G", "T", "P", "E", "Z"};
     size_t suffixIndex = 0;
     double sizeDouble = static_cast<double>(size);
@@ -46,6 +43,8 @@ String formatSize(size_t size, size_t threshold)
         sizeDouble /= 1000;
         ++suffixIndex;
     }
+
+    const int precision = suffixIndex == 0 ? 0 : scaledPrecision;
 
     std::ostringstream oss;
     oss << std::fixed << std::setprecision(precision) << sizeDouble << suffixes[suffixIndex];

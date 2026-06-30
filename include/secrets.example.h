@@ -35,6 +35,7 @@
 #define cszHostname          ""                     // An empty hostname will make it default to esp32-XXXXXX,
                                                     //   with the Xs being 3 bytes of the device's MAC address
 #define cszOpenWeatherAPIKey ""                     // Your OpenWeatherMap API key goes Here
+#define cszRealtimeQuoteKey  ""                      // Optional Stockserver realtime quote key
 #define cszLocation          "98074"
 #define bLocationIsZip       true
 #define cszCountryCode       "us"                   // Look up the Alpha-2 code for your country at https://www.iban.com/country-codes

@@ -31,4 +31,4 @@
 
 #include "globals.h"
 
-String formatSize(size_t size, size_t threshold = 1000);
+String formatSize(size_t size, size_t threshold = 1000, int scaledPrecision = 2);

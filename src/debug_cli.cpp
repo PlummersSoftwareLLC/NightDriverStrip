@@ -47,9 +47,15 @@
 #include "debug_cli.h"
 #include "deviceconfig.h"
 #include "effectmanager.h"
+#include "gfxbase.h"
 #include "ledstripeffect.h"
+#include "nd_network.h"
 #include "soundanalyzer.h"
 #include "systemcontainer.h"
+
+#if USE_MATRIX && ENABLE_WIFI
+#include "effects/matrix/PatternStocks.h"
+#endif
 
 namespace DebugCLI
 {
@@ -421,6 +427,79 @@ static void DoEmitMix(const cli_argv &)
     debugT("This is a TRACE message");
 }
 
+#if USE_MATRIX && ENABLE_WIFI
+static void PrintQuoteField(const char* label, bool hasValue, float value)
+{
+    if (hasValue)
+        cli_printf(", %s %.2f", label, value);
+}
+#endif
+
+static void DoQuotes(const cli_argv &)
+{
+#if USE_MATRIX && ENABLE_WIFI
+    auto effects = g_ptrSystem->GetEffectManager().EffectsList();
+    std::shared_ptr<PatternStocks> stocksEffect = nullptr;
+
+    for (const auto& effect : effects)
+    {
+        if (effect && effect->effectId() == PatternStocks::ID)
+        {
+            stocksEffect = std::static_pointer_cast<PatternStocks>(effect);
+            break;
+        }
+    }
+
+    if (!stocksEffect)
+    {
+        cli_printf("Stocks effect is not loaded.\n");
+        return;
+    }
+
+    cli_printf("Stock server: %s\n", stocksEffect->StockServer().c_str());
+
+    size_t received = 0;
+    stocksEffect->RefreshQuotes([&received](const StockData& quote)
+    {
+        if (quote.symbol.isEmpty())
+        {
+            cli_printf("Quote fetch failed.\n");
+            return;
+        }
+
+        received++;
+        cli_printf("%s: State %s",
+                   quote.symbol.c_str(),
+                   quote.marketState.isEmpty() ? "unknown" : quote.marketState.c_str());
+
+        PrintQuoteField("Open", quote.hasOpen, quote.open);
+        PrintQuoteField("Current", quote.hasCurrentPrice, quote.currentPrice);
+        PrintQuoteField("High", quote.hasHigh, quote.high);
+        PrintQuoteField("Low", quote.hasLow, quote.low);
+        PrintQuoteField("Close", quote.hasClose, quote.close);
+
+        if (quote.hasChange)
+        {
+            if (quote.hasChangePercent)
+                cli_printf(", Change %.2f (%.2f%%)", quote.change, quote.changePercent);
+            else
+                cli_printf(", Change %.2f", quote.change);
+        }
+
+        PrintQuoteField("Prev", quote.hasPreviousClose, quote.previousClose);
+
+        if (quote.hasVolume)
+            cli_printf(", Volume %.0f", quote.volume);
+
+        cli_printf("\n");
+    });
+
+    cli_printf("Quotes refreshed: %zu\n", received);
+#else
+    cli_printf("Stocks effect is not available in this build.\n");
+#endif
+}
+
 //
 // Core Commands Table
 //
@@ -581,6 +660,7 @@ static const command core_commands[] = {
      }},
     {"heap", "Display heap memory info",
      "Heap usage:", [](const cli_argv &) { heap_caps_print_heap_info(MALLOC_CAP_DEFAULT); }},
+    {"quotes", "Refresh and display stock quotes", "Refreshing quotes...", DoQuotes},
     {"log", "[tag] <level> Get/set log level", nullptr,
      [](const cli_argv &argv) {
          static const struct

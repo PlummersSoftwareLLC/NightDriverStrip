@@ -89,6 +89,12 @@
 #define cszSSID ""
 #endif // ENABLE_WIFI
 
+// Optional secrets added after many local secrets.h files already existed should
+// default to disabled behavior when absent.
+#if !defined(cszRealtimeQuoteKey)
+#define cszRealtimeQuoteKey nullptr
+#endif
+
 // Define this to true to make the DeviceConfig ignore any JSON-persisted config that may be on the device.
 // Note that effect settings are not impacted by this setting. Their persisted config is part of the effects
 // list JSON, which can be ignored separately (search for EFFECT_SET_VERSION in effects.cpp).
