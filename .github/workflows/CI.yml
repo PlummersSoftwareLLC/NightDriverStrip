@@ -52,13 +52,19 @@ jobs:
         key: pio-espressif32-${{ hashFiles('platformio.ini') }}
         restore-keys: pio-espressif32-
 
+    # Everything below is skipped on an exact hit: the cache is already complete, and the
+    # priming builds would only add ~8 minutes to the critical path of every run. They do
+    # run when the restore-keys fallback matched, which is what makes a re-key cheap - the
+    # builds are near no-ops when the platform pin itself did not move.
     - name: Install PlatformIO
+      if: steps.cache.outputs.cache-hit != 'true'
       run: |
         curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py -o get-platformio.py
         python get-platformio.py
         echo "/home/runner/.platformio/penv/bin" >> $GITHUB_PATH
 
     - name: Copy secrets and clear SSID
+      if: steps.cache.outputs.cache-hit != 'true'
       run: |
         grep -v "^#define cszSSID" include/secrets.example.h > include/secrets.h
         echo '#define cszSSID ""' >> include/secrets.h
@@ -68,6 +74,7 @@ jobs:
     # "pio pkg install" because pioarduino defers part of its setup - esptool, scons -
     # to build time; installing packages alone leaves those out of the cache.
     - name: Prime package cache
+      if: steps.cache.outputs.cache-hit != 'true'
       run: |
         for attempt in 1 2 3; do
           pio run -e demo -e mesmerizer_tab && exit 0
