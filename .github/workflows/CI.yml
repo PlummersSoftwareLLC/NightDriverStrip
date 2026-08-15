@@ -44,7 +44,7 @@ jobs:
     # full re-download. Only an exact miss writes a new entry further down.
     - name: Restore PlatformIO packages
       id: cache
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v6
       with:
         path: |
           ~/.platformio/platforms
@@ -85,7 +85,7 @@ jobs:
 
     - name: Save PlatformIO packages
       if: steps.cache.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v6
       with:
         path: |
           ~/.platformio/platforms
@@ -112,7 +112,7 @@ jobs:
 
     # Restore only. 61 jobs saving the same key would be 60 wasted uploads.
     - name: Restore PlatformIO packages
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v6
       with:
         path: |
           ~/.platformio/platforms
