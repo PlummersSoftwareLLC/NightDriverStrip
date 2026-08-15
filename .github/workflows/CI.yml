@@ -24,10 +24,71 @@ jobs:
     outputs:
       envs: ${{ steps.envs.outputs.envs }}
 
+  # Downloads the platform, toolchains and tools once, before the build matrix fans out.
+  # A cache written here is readable by every later job in the same run, which a cache
+  # written by the matrix itself would not be: caches are scoped per branch, so fork PRs
+  # can never read the ones this repository's own branches produce.
+  prime-package-cache:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.11'
+
+    # Falls back to the newest existing cache when the pin in platformio.ini is unchanged
+    # and only unrelated lines moved, which turns a re-key into a no-op instead of a
+    # full re-download. Only an exact miss writes a new entry further down.
+    - name: Restore PlatformIO packages
+      id: cache
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/.platformio/platforms
+          ~/.platformio/packages
+        key: pio-espressif32-${{ hashFiles('platformio.ini') }}
+        restore-keys: pio-espressif32-
+
+    - name: Install PlatformIO
+      run: |
+        curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py -o get-platformio.py
+        python get-platformio.py
+        echo "/home/runner/.platformio/penv/bin" >> $GITHUB_PATH
+
+    - name: Copy secrets and clear SSID
+      run: |
+        grep -v "^#define cszSSID" include/secrets.example.h > include/secrets.h
+        echo '#define cszSSID ""' >> include/secrets.h
+
+    # One environment per toolchain family: demo is xtensa (esp32/esp32s3 share the
+    # unified toolchain), mesmerizer_tab is riscv32 (esp32p4). Full builds rather than
+    # "pio pkg install" because pioarduino defers part of its setup - esptool, scons -
+    # to build time; installing packages alone leaves those out of the cache.
+    - name: Prime package cache
+      run: |
+        for attempt in 1 2 3; do
+          pio run -e demo -e mesmerizer_tab && exit 0
+          echo "::warning title=Retrying cache priming::Attempt $attempt failed"
+          sleep $((attempt * 30))
+        done
+        exit 1
+
+    - name: Save PlatformIO packages
+      if: steps.cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/.platformio/platforms
+          ~/.platformio/packages
+        key: pio-espressif32-${{ hashFiles('platformio.ini') }}
+
   build-environment:
     runs-on: ubuntu-latest
 
-    needs: [collect-environments]
+    needs: [collect-environments, prime-package-cache]
 
     strategy:
       fail-fast: false
@@ -42,6 +103,16 @@ jobs:
       with:
         python-version: '3.11'
 
+    # Restore only. 61 jobs saving the same key would be 60 wasted uploads.
+    - name: Restore PlatformIO packages
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/.platformio/platforms
+          ~/.platformio/packages
+        key: pio-espressif32-${{ hashFiles('platformio.ini') }}
+        restore-keys: pio-espressif32-
+
     - name: Install PlatformIO
       run: |
         curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py -o get-platformio.py
@@ -52,6 +123,18 @@ jobs:
       run: |
         grep -v "^#define cszSSID" include/secrets.example.h > include/secrets.h
         echo '#define cszSSID ""' >> include/secrets.h
+
+    # Concentrates every download this environment still needs - notably the workspace-local
+    # .pio/libdeps, which the package cache does not cover - into one retryable step, so the
+    # build below can fail fast on real errors instead of recompiling three times.
+    - name: "Install packages: ${{ matrix.envname }}"
+      run: |
+        for attempt in 1 2 3; do
+          pio pkg install -e ${{ matrix.envname }} && exit 0
+          echo "::warning title=Retrying package install::Attempt $attempt failed for ${{ matrix.envname }}"
+          sleep $((attempt * 30))
+        done
+        exit 1
 
     - name: "Build environment: ${{ matrix.envname }}"
       run: pio run -e ${{ matrix.envname }}
