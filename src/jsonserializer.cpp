@@ -83,40 +83,6 @@ namespace
 
 #endif
 
-namespace
-{
-#if USE_PSRAM
-    struct JsonInternalAllocator : ArduinoJson::Allocator
-    {
-        void* allocate(size_t size) override
-        {
-            return heap_caps_malloc(size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
-        }
-
-        void deallocate(void* pointer) override
-        {
-            heap_caps_free(pointer);
-        }
-
-        void* reallocate(void* ptr, size_t new_size) override
-        {
-            return heap_caps_realloc(ptr, new_size, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
-        }
-    };
-
-    JsonDocument CreateInternalJsonDocument()
-    {
-        static auto jsonInternalAllocator = JsonInternalAllocator();
-
-        return JsonDocument(&jsonInternalAllocator);
-    }
-#else
-    JsonDocument CreateInternalJsonDocument()
-    {
-        return JsonDocument();
-    }
-#endif
-}
 
 // SetIfNotOverflowed
 //
@@ -337,7 +303,10 @@ bool LoadJSONFile(const String & fileName, JsonDocument& jsonDoc)
 
 bool SaveToJSONFile(const String & fileName, IJSONSerializable& object)
 {
-    auto jsonDoc = CreateInternalJsonDocument();
+    // Build the document with the regular (PSRAM-capable) allocator: the full effect list
+    // does not fit in the internal heap left on a HUB75 build. Only the serialized text,
+    // which is much smaller than the document, is kept in internal RAM for the flash write.
+    auto jsonDoc = CreateJsonDocument();
     auto jsonObject = jsonDoc.to<JsonObject>();
 
     if (!object.SerializeToJSON(jsonObject))
@@ -352,6 +321,19 @@ bool SaveToJSONFile(const String & fileName, IJSONSerializable& object)
         return false;
     }
 
+    const size_t textLength = measureJson(jsonDoc);
+    std::unique_ptr<char, decltype(&heap_caps_free)> text(
+        static_cast<char*>(heap_caps_malloc(textLength + 1, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT)), heap_caps_free);
+
+    if (!text)
+    {
+        debugE("Unable to allocate %zu bytes of internal RAM to write %s!", textLength + 1, fileName.c_str());
+        return false;
+    }
+
+    const size_t textWritten = serializeJson(jsonDoc, text.get(), textLength + 1);
+    jsonDoc.clear();
+
     WaitForRenderSwapBeforeFilesystemWrite();
     std::lock_guard filesystemGuard(JSONFilesystemWriteMutex());
 
@@ -365,14 +347,14 @@ bool SaveToJSONFile(const String & fileName, IJSONSerializable& object)
         return false;
     }
 
-    size_t bytesWritten = serializeJson(jsonDoc, file);
+    size_t bytesWritten = file.write(reinterpret_cast<const uint8_t*>(text.get()), textWritten);
 
     file.flush();
     file.close();
 
     debugI("Number of bytes written to JSON file %s: %zu", fileName.c_str(), (size_t)bytesWritten);
 
-    if (bytesWritten == 0)
+    if (bytesWritten == 0 || bytesWritten != textWritten)
     {
         debugE("Unable to write JSON to file %s!", fileName.c_str());
         SPIFFS.remove(fileName);
